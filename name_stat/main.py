@@ -14,7 +14,7 @@ def statistic(inputFile, outputFile):
   for index, word in enumerate(words):
     if(index/len(words) - process > 0.001):
       process = index/len(words)
-      print(str(process*100)+"%")
+      print(str("{:.2f}".format(process*100))+"%")
     results.append(wg.tokenize(word))
   
   results = np.concatenate(results).tolist() 
