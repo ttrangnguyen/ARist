@@ -16,7 +16,7 @@ def tokenize(word):
     # Do not predict snake_cases
     if(word.find("_") != -1 or len(word) == 0):
         return []
-    TAREG = re.compile("[<,>?]")
+    TAREG = re.compile("[<,>?\[\].]")
     for match in re.finditer("[A-Z][A-Z\d]+", word):
         result = ""
         s = match.start()
@@ -32,17 +32,26 @@ def tokenize(word):
 
         word = word[:s] + result + word[e:]
 
+    # Split ...
+    words = word.split("...")
+    
     # Split type argument character
-    tmpWord = ""
-    for char in word:
-        if(bool(TAREG.match(char))):
+    for w in words:
+        tmpWord = ""
+
+        for char in w:
+            if(bool(TAREG.match(char))):
+                camelCases.append(tmpWord)
+                camelCases.append(char)
+                tmpWord = ""
+            else:
+                tmpWord += char
+        if(len(tmpWord) > 0):
             camelCases.append(tmpWord)
-            camelCases.append(char)
-            tmpWord = ""
-        else:
-            tmpWord += char
-    if(len(tmpWord) > 0):
-        camelCases.append(tmpWord)
+        
+        camelCases.append("...")
+    
+    camelCases.pop()
 
     snake_cases = [re.sub(REG, snake, w, 0).lower() for w in camelCases]
     words = [re.split("_", w) for w in snake_cases]
@@ -59,4 +68,4 @@ def tokenize(word):
     return np.concatenate(result).tolist()
 
 
-# print(tokenize("HelloAreIam<HOWare,b?c>"))
+# print(tokenize("Hello.A[]r...eIam<HOWare,b?c>"))
