@@ -7,6 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class Logger {
+    static FileWriter fw;
+
     public static void write(String line) {
         write(line, "log.txt");
     }
@@ -29,5 +31,36 @@ public class Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void initDebug(String debugName){
+        try {
+            fw = new FileWriter(Config.LOG_DIR + debugName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void logDebug(Object obj){
+        try {
+            fw.append(obj +"\r\n");
+            fw.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void closeDebug(){
+        try {
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Logs the given object to console.
+     */
+    public static void log(Object obj){
+        System.out.println(obj);
     }
 }
