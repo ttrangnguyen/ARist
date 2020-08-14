@@ -2464,7 +2464,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         int numOfArgs = 0;
         if (n.getArguments() != null) {
             numOfArgs = n.getArguments().size();
-            System.out.println(n.getName() + "-" + numOfArgs);
+            //System.out.println(n.getName() + "-" + numOfArgs);
             if (n.getArguments().isNonEmpty()) {
                 for (int i = 0; i < n.getArguments().size(); i++) {
                     Expression methodArg = n.getArgument(i);
@@ -2474,7 +2474,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                     //System.out.println(methodArg.getClass());
                 }
             }
-            System.out.println("---------------");
+            //System.out.println("---------------");
         }
 
         // move ---> M_ACCESS([TYPE OF a],move,2)
