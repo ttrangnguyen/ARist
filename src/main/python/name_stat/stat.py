@@ -1,11 +1,12 @@
 import np
-import wg
+import name_tokenizer as nt
+
 
 # statistic
 
 
 def statistic(inputFile, outputFile):
-    file = open("input/"+inputFile, "r")
+    file = open("input/" + inputFile, "r")
     fileData = file.read()
     file.close()
     words = fileData.splitlines()
@@ -13,10 +14,10 @@ def statistic(inputFile, outputFile):
 
     process = 0
     for index, word in enumerate(words):
-        if(index/len(words) - process > 0.0001):
-            process = index/len(words)
-            print(str("{:.2f}".format(process*100))+"%")
-        results.append(wg.tokenize(word))
+        if (index / len(words) - process > 0.0001):
+            process = index / len(words)
+            print(str("{:.2f}".format(process * 100)) + "%")
+        results.append(nt.tokenize(word))
 
     results = np.concatenate(results).tolist()
 

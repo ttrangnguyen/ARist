@@ -1,6 +1,7 @@
 import re
 import np
 from wordsegment import load, segment
+
 load()
 
 REG = r"(.+?)([A-Z])"
@@ -14,14 +15,14 @@ def tokenize(word):
     camelCases = []
     snake_cases = []
     # Do not predict snake_cases
-    if(word.find("_") != -1 or len(word) == 0):
+    if (word.find("_") != -1 or len(word) == 0):
         return []
-    TAREG = re.compile("[<,>?\[\].]")
+    TAREG = re.compile("[<,>?\[\](){}&.|]")
     for match in re.finditer("[A-Z][A-Z\d]+", word):
         result = ""
         s = match.start()
         e = match.end()
-        if(e == len(word) or bool(TAREG.match(word[e]))):
+        if (e == len(word) or bool(TAREG.match(word[e]))):
             # CLASS => Class
             result = word[s:e][1:].lower()
             result = word[s:e][0] + result
@@ -34,23 +35,23 @@ def tokenize(word):
 
     # Split ...
     words = word.split("...")
-    
+
     # Split type argument character
     for w in words:
         tmpWord = ""
 
         for char in w:
-            if(bool(TAREG.match(char))):
+            if (bool(TAREG.match(char))):
                 camelCases.append(tmpWord)
                 camelCases.append(char)
                 tmpWord = ""
             else:
                 tmpWord += char
-        if(len(tmpWord) > 0):
+        if (len(tmpWord) > 0):
             camelCases.append(tmpWord)
-        
+
         camelCases.append("...")
-    
+
     camelCases.pop()
 
     snake_cases = [re.sub(REG, snake, w, 0).lower() for w in camelCases]
@@ -60,12 +61,11 @@ def tokenize(word):
 
     result = []
     for ele in words:
-        if(bool(TAREG.match(ele))):
+        if (bool(TAREG.match(ele))):
             result.append([ele])
         else:
             result.append(segment(ele))
 
     return np.concatenate(result).tolist()
-
 
 # print(tokenize("Hello.A[]r...eIam<HOWare,b?c>"))
