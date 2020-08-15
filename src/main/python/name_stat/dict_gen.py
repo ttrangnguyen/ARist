@@ -24,7 +24,7 @@ def filter(arr, result):
     for ele in arr:
         name = ele.split(":")[0]
         amount = int(ele.split(":")[1])
-        if(amount >= threshold and name.isalpha() and (name not in result)):
+        if (amount >= threshold and name.isalpha() and (name not in result)):
             result.append(name)
 
 
@@ -37,7 +37,7 @@ def gen():
     file = open("output/dict.txt", "x")
 
     for item in dictList:
-        file.write(item+"\n")
+        file.write(item + "\n")
 
     file.close()
 
