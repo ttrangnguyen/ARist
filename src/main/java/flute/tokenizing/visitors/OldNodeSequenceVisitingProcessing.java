@@ -474,9 +474,21 @@ public class OldNodeSequenceVisitingProcessing {
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
+
+	public static NodeSequenceInfo addENStmNode(short stm, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getENSTM(stm);
+		nodeSequenceList.add(nodeSequenceInfo);
+		return nodeSequenceInfo;
+	}
 	
 	public static NodeSequenceInfo addSTMethodNode(String type, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getStartMethod(type);
+		nodeSequenceList.add(nodeSequenceInfo);
+		return nodeSequenceInfo;
+	}
+
+	public static NodeSequenceInfo addENMethodNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getEndMethod();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
@@ -486,12 +498,7 @@ public class OldNodeSequenceVisitingProcessing {
         nodeSequenceList.add(nodeSequenceInfo);
         return nodeSequenceInfo;
     }
-	
-	public static NodeSequenceInfo addENStmNode(short stm, ArrayList<NodeSequenceInfo> nodeSequenceList) {
-		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getENSTM(stm);
-		nodeSequenceList.add(nodeSequenceInfo);
-		return nodeSequenceInfo;
-	}
+
 	public static NodeSequenceInfo addPartNode(short endMt, ArrayList<NodeSequenceInfo> nodeSequenceList, boolean isOpen) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getPartNode(endMt, isOpen);
 		nodeSequenceList.add(nodeSequenceInfo);

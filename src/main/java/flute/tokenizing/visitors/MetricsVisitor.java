@@ -4,15 +4,9 @@
 package flute.tokenizing.visitors;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
+import com.github.javaparser.Position;
 import flute.analysis.config.Config;
 import flute.utils.file_processing.DirProcessor;
 import flute.tokenizing.exe.GetDirStructureCrossProject;
@@ -226,7 +220,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                         previousControlFlowNodeStack, curID, parentNode);
                 String varName = n.getName().asString();
                 OldNodeSequenceVisitingProcessing.addVarNode(nodeInfo, varName, nodeSequenceStack, curMethodInfo,
-                        curTypeInfo, nodeSequenceList);
+                        curTypeInfo, nodeSequenceList).setPosition(n.getBegin(), n.getEnd());
                 curID++;
         //    }
         }
@@ -353,14 +347,14 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         // class X ---> CLASS{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin(), null);
         
         // {...} --->
         visitClassBody(n.getMembers(), arg);
         
         // ---> CLASS{END}
         OldNodeSequenceVisitingProcessing.addEndClassNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getEnd());
         
         curMethodInfo = null;
         typeStack.pop();
@@ -435,10 +429,15 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         // enum X ---> ENUM{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addEnumNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin(), null);
         
         // { ---> OPBLK
-        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
+        NodeSequenceInfo openBlock = OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
+        String content = n.toString();
+        if (n.getComment().isPresent()) {
+            content = content.substring(n.getComment().get().toString().length());
+        }
+        openBlock.setPosition(getPositionFrom(n.getBegin(), content.indexOf('{')));
         
         if (n.getEntries().isNonEmpty()) {
             for (int i = 0; i < n.getEntries().size() - 1; ++i) {
@@ -446,7 +445,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                 visit(n.getEntry(i), arg);
                 
                 // , ---> SEPA(,)
-                OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ',');
+                OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ',')
+                        .setPosition(getPositionFrom(n.getEntry(i).getEnd(), 1));
             }
             // B --->
             visit(n.getEntry(n.getEntries().size() - 1), arg);
@@ -454,18 +454,22 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         
         if (n.getMembers().isNonEmpty()) {
             // ; ---> SEPA(;)
-            OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ';');
+            NodeSequenceInfo sepa = OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ';');
+            if (n.getEntries().isNonEmpty()) {
+                sepa.setPosition(getPositionFrom(n.getEntry(n.getEntries().size() - 1).getEnd(), 1));
+            }
+
             
             // ... --->
             n.getMembers().forEach(p -> p.accept(this, arg));
         }
         
         // } ---> CLBLK
-        OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList);
+        OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList).setPosition(n.getEnd());
         
         // ---> ENUM{END}
         OldNodeSequenceVisitingProcessing.addEndEnumNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getEnd());
         
         curMethodInfo = null;
         typeStack.pop();
@@ -515,14 +519,14 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         // @interface X ---> CLASS{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin());
         
         // {...} --->
         visitClassBody(n.getMembers(), arg);
         
         // ---> CLASS{END}
         OldNodeSequenceVisitingProcessing.addEndClassNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getEnd());
         
         curMethodInfo = null;
         typeStack.pop();
@@ -541,7 +545,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         NodeInfo nodeInfo = NodeVisitProcessing.addTypeNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
         OldNodeSequenceVisitingProcessing.addTypeNode(nodeInfo, type, nodeSequenceStack, curMethodInfo, curTypeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin(), n.getEnd());
         curID++;
     }
     
@@ -556,7 +560,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         NodeInfo nodeInfo = NodeVisitProcessing.addTypeNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
         OldNodeSequenceVisitingProcessing.addTypeNode(nodeInfo, type, nodeSequenceStack, curMethodInfo, curTypeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin(), n.getEnd());
         curID++;
     }
     
@@ -579,7 +583,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         NodeInfo typeNodeInfo = NodeVisitProcessing.addTypeNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
         OldNodeSequenceVisitingProcessing.addTypeNode(typeNodeInfo, type, nodeSequenceStack, curMethodInfo, curTypeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin(), n.getEnd());
         curID++;
 
         //super.visit(n, arg);
@@ -597,7 +601,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         NodeInfo nodeInfo = NodeVisitProcessing.addTypeNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
         OldNodeSequenceVisitingProcessing.addTypeNode(nodeInfo, type, nodeSequenceStack, curMethodInfo, curTypeInfo,
-                nodeSequenceList);
+                nodeSequenceList).setPosition(n.getBegin(), n.getEnd());
         curID++;
     }
     
@@ -611,7 +615,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         
         // ? ---> LIT(wildcard)
         OldNodeSequenceVisitingProcessing.addLiteralNode(nodeInfo, literalType, nodeSequenceStack, curMethodInfo,
-                curTypeInfo, nodeSequenceList, isParam);
+                curTypeInfo, nodeSequenceList, isParam).setPosition(n.getBegin(), n.getEnd());
         curID++;
     }
     
@@ -767,6 +771,9 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             //        nodeSequenceStack, curTypeInfo, methodInfo, nodeSequenceList);
             // Logger.logDebug("Method Declaration:" + n);
             // Logger.logDebug("curTypeInfo.methodDecMap:" + curTypeInfo.methodDecMap);
+
+            // ---> ENDMETHOD
+            OldNodeSequenceVisitingProcessing.addENMethodNode(nodeSequenceList);
 
             // Logger.log("method local variables: " + methodInfo.shortLocalVariableMap);
 
@@ -2953,6 +2960,16 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             curTypeInfo.shortScopeVariableMap.put(varName, varType);
         }
 	}
+
+	private static Optional<Position> getPositionFrom(Optional<Position> origin, int lineDif, int colDif) {
+	    if (!origin.isPresent()) return Optional.empty();
+	    Position pos = origin.get();
+	    return Optional.of(new Position(pos.line + lineDif, pos.column + colDif));
+    }
+
+    private static Optional<Position> getPositionFrom(Optional<Position> origin, int colDif) {
+	    return getPositionFrom(origin, 0, colDif);
+    }
 	
 	public static void main(String[] args) {
         Logger.initDebug("debugVisitor.txt");

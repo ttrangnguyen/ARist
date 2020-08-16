@@ -3,75 +3,16 @@
  */
 package flute.tokenizing.excode_data;
 
-import java.lang.ref.WeakReference;
-import java.util.WeakHashMap;
+import com.github.javaparser.Position;
 
-class CombinedInfo {
-	public MethodInfo methodInfo;
-	public TypeInfo typeInfo;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((methodInfo == null) ? 0 : methodInfo.hashCode());
-		result = prime * result + ((typeInfo == null) ? 0 : typeInfo.hashCode());
-		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		CombinedInfo other = (CombinedInfo) obj;
-		if (methodInfo == null) {
-			if (other.methodInfo != null)
-				return false;
-		} else if (!methodInfo.equals(other.methodInfo))
-			return false;
-		if (typeInfo == null) {
-			if (other.typeInfo != null)
-				return false;
-		} else if (!typeInfo.equals(other.typeInfo))
-			return false;
-		return true;
-	}
-
-	private static final WeakHashMap<CombinedInfo, WeakReference<CombinedInfo>> internTable = new WeakHashMap<CombinedInfo, WeakReference<CombinedInfo>>();
-
-	static CombinedInfo intern(CombinedInfo combinedInfo) {
-		synchronized (internTable) {
-			WeakReference<?> ref = (WeakReference<?>) internTable.get(combinedInfo);
-			if (ref != null) {
-				CombinedInfo s = (CombinedInfo) ref.get();
-				// If s is null, then no strong references exist to the String;
-				// the weak hash map will soon delete the key.
-				if (s != null)
-					return s;
-			}
-			internTable.put(combinedInfo, new WeakReference<CombinedInfo>(combinedInfo));
-		}
-		return combinedInfo;
-	}
-}
+import java.util.Optional;
 
 public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static String alignToken = "\r\n";
+
+	public Position beginPosition;
+	public Position endPosition;
 
 	public long nodeSeqID = -1;
 	public int attachedTypeId = -1;
@@ -85,11 +26,20 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public MethodInfo methodInfo;
 	public TypeInfo typeInfo;
-	// public CombinedInfo combinedInfo;
 	public NodeInfo nodeInfo;
 
 	// NodeSequenceInfo previousNode;
 	String representStr = "";
+
+	public NodeSequenceInfo setPosition(Optional<Position> beginPosition, Optional<Position> endPosition) {
+		if (beginPosition != null && beginPosition.isPresent()) this.beginPosition = beginPosition.get();
+		if (endPosition != null && endPosition.isPresent()) this.endPosition = endPosition.get();
+		return this;
+	}
+
+	public NodeSequenceInfo setPosition(Optional<Position> position) {
+		return setPosition(position, position);
+	}
 
 	/**
 	 * @param attachedType
@@ -865,6 +815,13 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
 		op.representStr = "METHOD{" + type + "}";
+		return op;
+	}
+
+	public static NodeSequenceInfo getEndMethod() {
+		NodeSequenceInfo op = new NodeSequenceInfo();
+		op.nodeType = NodeSequenceConstant.METHOD;
+		op.representStr = "ENDMETHOD";
 		return op;
 	}
 	
