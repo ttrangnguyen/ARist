@@ -97,7 +97,7 @@ public class FileParser {
 //        return listVariable;
 //    }
 
-    public List<String> getNextParams() {
+    public MultiMap getNextParams() {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -123,8 +123,6 @@ public class FileParser {
 
         List<Member> listMember = new ArrayList<>();
 
-        parentValue(methodInvocation);
-
         classModel.getMembers().forEach(member -> {
             if (member instanceof MethodMember && methodName.equals(member.getMember().getName())) {
                 //Add filter for parent expression
@@ -139,17 +137,22 @@ public class FileParser {
 
         List<String> nextVariable = new ArrayList<>();
 
+        MultiMap nextVariableMap = new MultiMap();
+
         listMember.forEach(member ->
         {
             ITypeBinding[] params = ((IMethodBinding) member.getMember()).getParameterTypes();
             if (methodInvocation.arguments().size() == params.length) {
                 nextVariable.add(")");
+                nextVariableMap.put("CLOSE_PART", ")");
 
             } else {
 
                 visibleVariable.forEach(variable -> {
-                    if (variable.getTypeBinding().isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
+                    if (!nextVariable.contains(variable.getName()) && variable.getTypeBinding().isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
                         nextVariable.add(variable.getName());
+                        String exCode = "VAR(" + variable.getTypeBinding().getName() + "," + variable.getName() + ")";
+                        nextVariableMap.put(exCode, variable.getName());
                     }
 
                     ClassModel variableClass = visibleClass.get(variable.getTypeBinding().getKey());
@@ -160,7 +163,13 @@ public class FileParser {
                                 FieldMember varFieldMember = (FieldMember) varMember;
                                 ITypeBinding varMemberType = ((IVariableBinding) varFieldMember.getMember()).getType();
                                 if (varMemberType.isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
-                                    nextVariable.add(variable.getName() + "." + varFieldMember.getMember().getName());
+                                    String nextVar = variable.getName() + "." + varFieldMember.getMember().getName();
+                                    if (!nextVariable.contains(nextVar)) {
+                                        String exCode = "VAR(" + variable.getTypeBinding().getName() + "," + variable.getName() + ")\n"
+                                                + "F_ACCESS(" + varMemberType.getName() + "," + varFieldMember.getMember().getName() + ")";
+                                        nextVariable.add(nextVar);
+                                        nextVariableMap.put(exCode, nextVar);
+                                    }
                                 }
                             }
                         });
@@ -168,7 +177,7 @@ public class FileParser {
             }
         });
 
-        return nextVariable;
+        return nextVariableMap;
     }
 
     public ITypeBinding[] parentValue(MethodInvocation methodInvocation) {
