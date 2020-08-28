@@ -4,6 +4,10 @@ grammar Excode;
 //    :   typeDeclaration* EOF
 //    ;
 
+@header{
+    package flute.antlr4;
+}
+
 compilationUnit
     :   typeDeclaration* EOF
     ;
