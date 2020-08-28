@@ -1,9 +1,9 @@
 package flute.jdtparser;
 
-import flute.data.ClassModel;
-import flute.data.Variable;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
+
+import flute.data.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -85,6 +85,7 @@ public class FileParser {
 
         if (scope != null) {
             getVariableScope(scope);
+            getNextParams();
         } else {
             visibleVariable.clear();
         }
@@ -95,6 +96,88 @@ public class FileParser {
 //        getVariableScope(astNode, listVariable);
 //        return listVariable;
 //    }
+
+    public List<String> getNextParams() {
+        final ASTNode[] astNode = {null};
+
+        cu.accept(new ASTVisitor() {
+            public void preVisit(ASTNode node) {
+                if (node instanceof MethodInvocation && node.getStartPosition() <= curPosition
+                        && curPosition <= (node.getStartPosition() + node.getLength())) {
+                    astNode[0] = node;
+                }
+            }
+        });
+
+        if (astNode[0] == null) return null;
+
+        MethodInvocation methodInvocation = (MethodInvocation) astNode[0];
+        String methodName = methodInvocation.getName().getIdentifier();
+
+        ClassModel classModel = visibleClass.get(methodInvocation.getExpression().resolveTypeBinding().getKey());
+
+        List<Member> listMember = new ArrayList<>();
+
+        classModel.getMembers().forEach(member -> {
+            if (member instanceof MethodMember && methodName.equals(member.getMember().getName())) {
+                if (checkInvoMember(methodInvocation.arguments(), (MethodMember) member)) {
+                    listMember.add(member);
+                }
+            }
+            //need fill, add filter for parent expression
+        });
+
+        List<String> nextVariable = new ArrayList<>();
+
+        listMember.forEach(member -> {
+            ITypeBinding[] params = ((IMethodBinding) member.getMember()).getParameterTypes();
+            if (methodInvocation.arguments().size() == params.length) {
+                nextVariable.add(")");
+
+            } else {
+
+                visibleVariable.forEach(variable -> {
+                    if (variable.getTypeBinding().isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
+                        nextVariable.add(variable.getName());
+                    }
+
+                    ClassModel variableClass = visibleClass.get(variable.getTypeBinding().getKey());
+
+                    if (variableClass != null)
+                        variableClass.getMembers().forEach(varMember -> {
+                            if (varMember instanceof FieldMember) {
+                                FieldMember varFieldMember = (FieldMember) varMember;
+                                ITypeBinding varMemberType = ((IVariableBinding) varFieldMember.getMember()).getType();
+                                if (varMemberType.isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
+                                    nextVariable.add(variable.getName() + "." + varFieldMember.getMember().getName());
+                                }
+                            }
+                        });
+                });
+            }
+        });
+
+
+        return nextVariable;
+    }
+
+    public static boolean checkInvoMember(List args, MethodMember member) {
+        int index = 0;
+        for (Object argument :
+                args) {
+            if (argument instanceof Expression) {
+                Expression argExpr = (Expression) argument;
+                ITypeBinding[] params = ((IMethodBinding) member.getMember()).getParameterTypes();
+                if (!argExpr.resolveTypeBinding().isAssignmentCompatible(params[index++])) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     private void getVariableScope(ASTNode astNode) {
         if (astNode == null) return;
