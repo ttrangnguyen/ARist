@@ -11,6 +11,10 @@ public class MultiMap {
         multiMap = new HashMap<>();
     }
 
+    public HashMap<String, List<String>> getValue() {
+        return multiMap;
+    }
+
     public void put(String key, String value) {
         List<String> keyValue = multiMap.get(key);
         if (keyValue == null) {
