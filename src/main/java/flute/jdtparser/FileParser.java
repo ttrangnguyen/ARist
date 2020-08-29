@@ -180,6 +180,11 @@ public class FileParser {
         return nextVariableMap;
     }
 
+    public int getPosition(int line, int column) {
+        return cu.getPosition(line, column);
+    }
+
+
     public ITypeBinding[] parentValue(MethodInvocation methodInvocation) {
         ASTNode astNode = methodInvocation.getParent();
         if (astNode instanceof Assignment) {
@@ -268,7 +273,7 @@ public class FileParser {
                 args) {
             if (argument instanceof Expression) {
                 Expression argExpr = (Expression) argument;
-                if(argument.toString().equals("$missing$")){
+                if (argument.toString().equals("$missing$")) {
                     args.remove(argument);
                     break;
                 }
