@@ -10,11 +10,13 @@ import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.tokenizing.parsing.JavaFileParser;
 import flute.tokenizing.visitors.MetricsVisitor;
+import flute.utils.file_processing.DirProcessor;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class JavaExcodeTokenizer {
     private File project;
@@ -40,19 +42,18 @@ public class JavaExcodeTokenizer {
         SystemTableCrossProject systemTableCrossProject = new SystemTableCrossProject();
         JavaFileParser.visitFile(visitor, javaFile, systemTableCrossProject, project.getAbsolutePath());
         systemTableCrossProject.getTypeVarNodeSequence();
-        return systemTableCrossProject.fileList.get(0).nodeSequenceList;
+        if (systemTableCrossProject.fileList.isEmpty()) return new ArrayList<>();
+        else return systemTableCrossProject.fileList.get(0).nodeSequenceList;
     }
 
     public ArrayList<NodeSequenceInfo> tokenize(String javaFilePath) {
         File javaFile = new File(javaFilePath);
-        if (!javaFile.exists()) throw new IllegalArgumentException("File does not exist!");
-        if (!(javaFile.isFile() && javaFile.getName().toLowerCase().endsWith(".java"))) throw new IllegalArgumentException("Not a java file!");
-        if (javaFile.isHidden()) throw new IllegalArgumentException("File is hidden!");
+        validateJavaFile(javaFile);
         return tokenize(javaFile);
     }
 
-    public void tokenizeToFile(String javaFilePath, String outputFilePath) {
-        ArrayList<NodeSequenceInfo> nodeSequenceList = tokenize(javaFilePath);
+    public void tokenizeToFile(File javaFile, String outputFilePath) {
+        ArrayList<NodeSequenceInfo> nodeSequenceList = tokenize(javaFile);
         File output = new File(outputFilePath);
         try {
             FileWriter fileWriter = new FileWriter(output, false);
@@ -66,8 +67,45 @@ public class JavaExcodeTokenizer {
         }
     }
 
+    public void tokenizeToFile(String javaFilePath, String outputFilePath) {
+        File javaFile = new File(javaFilePath);
+        validateJavaFile(javaFile);
+        tokenizeToFile(javaFile, outputFilePath);
+    }
+
+    public void tokenizeProjectToFile(String outputFilePath) {
+        List<File> javaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
+        File output = new File(outputFilePath);
+        for (int i = 0; i < javaFiles.size(); ++i) {
+            File file = javaFiles.get(i);
+            ArrayList<NodeSequenceInfo> nodeSequenceList = tokenize(file);
+            try {
+                FileWriter fileWriter = new FileWriter(output, i > 0);
+                fileWriter.append(file.getAbsolutePath() + "\r\n");
+                for (NodeSequenceInfo nodeSequence: nodeSequenceList) {
+                    fileWriter.append(nodeSequence.toStringSimple() + "\r\n");
+                    fileWriter.flush();
+                }
+                fileWriter.append("\r\n");
+                fileWriter.flush();
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void validateJavaFile(File javaFile) {
+        if (!javaFile.exists()) throw new IllegalArgumentException("File does not exist!");
+        if (!(javaFile.isFile() && javaFile.getName().toLowerCase().endsWith(".java"))) throw new IllegalArgumentException("Not a java file!");
+        if (javaFile.isHidden()) throw new IllegalArgumentException("File is hidden!");
+    }
+
     public static void main(String[] args) {
         JavaExcodeTokenizer tokenizer = new JavaExcodeTokenizer(Config.REPO_DIR + "sampleproj/");
         tokenizer.tokenizeToFile(Config.REPO_DIR + "sampleproj/src/Main.java", Config.LOG_DIR + "debugTokenizer.txt");
+
+        //JavaExcodeTokenizer tokenizer = new JavaExcodeTokenizer(Config.REPO_DIR + "git/lucene/");
+        //tokenizer.tokenizeProjectToFile(Config.LOG_DIR + "debugTokenizer.txt");
     }
 }

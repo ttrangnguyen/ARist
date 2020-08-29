@@ -7,13 +7,20 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.github.javaparser.ast.body.MethodDeclaration;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseStart;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.stmt.Statement;
 import flute.tokenizing.excode_data.FileInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.tokenizing.excode_data.TypeInfo;
 import flute.tokenizing.visitors.MetricsVisitor;
+
+import static com.github.javaparser.Providers.provider;
 
 /**
  * @author ANH
@@ -97,10 +104,14 @@ public class JavaFileParser {
 
         try {
             cu = StaticJavaParser.parse(is);
+			//JavaParser parser = new JavaParser();
+			//cu = parser.parse(ParseStart.COMPILATION_UNIT, provider(content)).getResult().get();
         } catch (Error e) {
             e.printStackTrace();
         } catch (RuntimeException e) {
-            e.printStackTrace();
+			e.printStackTrace();
+		//} catch (IOException e) {
+        //	e.printStackTrace();
         } finally {
             try {
                 is.close();
