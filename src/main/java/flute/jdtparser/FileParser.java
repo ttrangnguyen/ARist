@@ -31,6 +31,13 @@ public class FileParser {
         cu = projectParser.createCU(curFile);
     }
 
+    public FileParser(ProjectParser projectParser, File curFile, int curLine, int curPosition) {
+        this.projectParser = projectParser;
+        this.curFile = curFile;
+        cu = projectParser.createCU(curFile);
+        this.curPosition = this.getPosition(curLine, curPosition);
+    }
+
     public List<IProblem> getErrors(int startPos, int stopPos) {
         List<IProblem> problemList = new ArrayList<>();
         IProblem[] iProblems = cu.getProblems();
