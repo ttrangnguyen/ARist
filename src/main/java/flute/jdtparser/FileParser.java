@@ -188,6 +188,14 @@ public class FileParser {
         } else if (astNode instanceof VariableDeclarationFragment) {
             VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) astNode;
             return new ITypeBinding[]{variableDeclarationFragment.resolveBinding().getType()};
+        } else if (astNode instanceof ReturnStatement) {
+            ASTNode methodNode = getMethodScope(astNode);
+            if (methodNode instanceof MethodDeclaration) {
+                ITypeBinding returnType = ((MethodDeclaration) methodNode).getReturnType2().resolveBinding();
+                return new ITypeBinding[]{returnType};
+            } else {
+                return null;
+            }
         } else if (astNode instanceof MethodInvocation) {
             MethodInvocation methodInvocationParent = (MethodInvocation) astNode;
             ITypeBinding[] parentTypes = parentValue(methodInvocationParent);
@@ -260,6 +268,10 @@ public class FileParser {
                 args) {
             if (argument instanceof Expression) {
                 Expression argExpr = (Expression) argument;
+                if(argument.toString().equals("$missing$")){
+                    args.remove(argument);
+                    break;
+                }
                 ITypeBinding[] params = ((IMethodBinding) member.getMember()).getParameterTypes();
                 if (!argExpr.resolveTypeBinding().isAssignmentCompatible(params[index++])) {
                     return false;
@@ -269,6 +281,15 @@ public class FileParser {
             }
         }
         return true;
+    }
+
+    public static ASTNode getMethodScope(ASTNode astNode) {
+        if (astNode instanceof MethodDeclaration || astNode instanceof Initializer) {
+            return astNode;
+        } else if (astNode.getParent() != null) {
+            return getMethodScope(astNode);
+        }
+        return null;
     }
 
 
