@@ -9,6 +9,7 @@ import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.utils.Pair;
 import flute.utils.file_processing.DirProcessor;
+import flute.utils.file_processing.JavaTokenizer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -30,6 +31,10 @@ public class Parser {
 
     private SystemTableCrossProject systemTableCrossProject;
 
+    public Parser() {
+        systemTableCrossProject = new SystemTableCrossProject();
+    }
+
     public void run() {
         translateJavaToExcode();
 //        checkExcodeGrammar();
@@ -41,7 +46,6 @@ public class Parser {
         List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectPath);
         Logger.log("allSubFiles size: " + allSubFilesTmp.size());
         MetricsVisitor visitor = new MetricsVisitor();
-        systemTableCrossProject = new SystemTableCrossProject();
         for (File file : allSubFilesTmp) {
             JavaFileParser.visitFile(visitor, file, systemTableCrossProject, "xxx/");
         }
@@ -106,6 +110,7 @@ public class Parser {
 
     private void createExcodeFiles() {
         try {
+            FileWriter testFilePaths = new FileWriter(new File("../testFilePaths.txt"));
             for (FileInfo fileInfo : systemTableCrossProject.fileList) {
                 StringBuilder builder = new StringBuilder();
                 for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
@@ -119,25 +124,42 @@ public class Parser {
                 }
 
                 String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
-                String excodeFile;
+                String excodeFilePath;
+                String javaFileTokenPath;
 
                 if (toTest()) {
-                    excodeFile = Config.testingPath +
+                    testFilePaths.write(fileInfo.file.getAbsolutePath() + "\n");
+                    javaFileTokenPath = "javaFileTokens/test/" +
+                            fileInfo.file.getName().replace(".java", ".txt");
+                    excodeFilePath = Config.testingPath +
                             filePath[filePath.length - 1].replace(".java", ".txt");
                 } else if (toValidate()){
-                    excodeFile = Config.validatingPath +
+                    javaFileTokenPath = "javaFileTokens/validate/" +
+                            fileInfo.file.getName().replace(".java", ".txt");
+                    excodeFilePath = Config.validatingPath +
                             filePath[filePath.length - 1].replace(".java", ".txt");
                 } else {
-                    excodeFile = Config.trainingPath +
+                    javaFileTokenPath = "javaFileTokens/train/" +
+                            fileInfo.file.getName().replace(".java", ".txt");
+                    excodeFilePath = Config.trainingPath +
                             filePath[filePath.length - 1].replace(".java", ".txt");
                 }
 
-                File fout = new File(excodeFile);
+                File fout = new File(excodeFilePath);
                 FileOutputStream fos = new FileOutputStream(fout);
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
                 bw.write(builder.toString());
                 bw.close();
+
+                FileWriter writer = new FileWriter(javaFileTokenPath);
+                String fileContent = JavaTokenizer.removePackagesAndImports(fileInfo.file.getAbsolutePath());
+                ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
+                for (String token : tokens) {
+                    writer.write(token + "\n");
+                }
+                writer.close();
             }
+            testFilePaths.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

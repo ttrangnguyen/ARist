@@ -23,15 +23,19 @@ if __name__ == '__main__':
     train_len = 20 + 1
     text_sequences = []
     count = 1
-    token_path = 'all_tokens.txt'
-    dict_path = 'dict_4.txt'
+    token_path = '../../../../../data_dict/excode/excode_tokens_n_symbols.txt'
+    dict_path = '../../../../../data_dict/excode/names.txt'
 
     tokenizer = Tokenizer(oov_token="<unk>")
     names = read_file(dict_path).split("\n")
     tokens = read_file(token_path).lower().split("\n")
-    vocab = [" "] + tokens + names + list(map(str, list(range(0, 10))))
+    vocab = tokens + names + list(map(str, list(range(0, 10))))
     tokenizer.fit_on_texts([vocab])
-
+    f = open('../../../../../data_dict/excode/excode_names.txt', "w")
+    for key in tokenizer.word_index:
+        f.write(key)
+        f.write('\n')
+    f.close()
     vocabulary_size = len(tokenizer.word_index)
 
 
