@@ -23,15 +23,19 @@ if __name__ == '__main__':
     train_len = 20 + 1
     text_sequences = []
     count = 1
-    token_path = 'all_tokens.txt'
-    dict_path = 'dict_4.txt'
+    token_path = '../../../../../data_dict/excode/excode_tokens_n_symbols.txt'
+    dict_path = '../../../../../data_dict/excode/names.txt'
 
     tokenizer = Tokenizer(oov_token="<unk>")
     names = read_file(dict_path).split("\n")
     tokens = read_file(token_path).lower().split("\n")
-    vocab = [" "] + tokens + names + list(map(str, list(range(0, 10))))
+    vocab = tokens + names + list(map(str, list(range(0, 10))))
     tokenizer.fit_on_texts([vocab])
-
+    f = open('../../../../../data_dict/excode/excode_names.txt', "w")
+    for key in tokenizer.word_index:
+        f.write(key)
+        f.write('\n')
+    f.close()
     vocabulary_size = len(tokenizer.word_index)
 
 
@@ -102,38 +106,3 @@ if __name__ == '__main__':
                         use_multiprocessing=True,
                         callbacks=[checkpoint],
                         shuffle=True)
-
-    # def prepare_sentence(seq, prefix_len):
-    #     # Pads seq and slides windows
-    #     x = []
-    #     y = []
-    #     for i in range(prefix_len + 1, len(seq)):
-    #         x_padded = pad_sequences([seq[:i]],
-    #                                  maxlen=train_len - 1,
-    #                                  padding='pre')[0]  # Pads before each sequence
-    #         x.append(x_padded)
-    #         y.append(seq[i])
-    #     return x, y
-    #
-    #
-    # # Compute probability of occurence of a sentence
-    # vocab = dict(tokenizer.word_index)
-    # prefix_len = 3
-    # sentence = ["ststm{for}", " ", "open_part", " ", "type", "(", "integer", ")", " ", "var", "(", "integer", ")"]
-    # tok = tokenizer.texts_to_sequences([sentence])[0]
-    # print(tok)
-    # x_test, y_test = prepare_sentence(tok, prefix_len)
-    # x_test = np.array(x_test)
-    # y_test = np.array(y_test) - 1  # The word <PAD> does not have a class
-    # p_pred = model.predict(x_test)
-    # vocab_inv = {v: k for k, v in vocab.items()}
-    # log_p_sentence = 0
-    #
-    # for i, prob in enumerate(p_pred):
-    #     word = vocab_inv[y_test[i] + 1]  # Index 0 from vocab is reserved to <PAD>
-    #     history = ''.join([vocab_inv[w] for w in x_test[i, :] if w != 0])
-    #     prob_word = prob[y_test[i]]
-    #     log_p_sentence += np.log(prob_word)
-    #     print('P(w={}|h={})={}'.format(word, history, prob_word))
-    #
-    # print('Prob. sentence: {}'.format(np.exp(log_p_sentence)))
