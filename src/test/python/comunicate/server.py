@@ -1,7 +1,8 @@
 import socket
 import json
 from name_stat.name_tokenizer import tokenize
-from model.java.java_preprocess import java_tokenize, create_java_tokenizer, prepare_sequence, java_tokenize_one_sentence
+from model.java.java_preprocess import java_tokenize, create_java_tokenizer, prepare_sequence, \
+    java_tokenize_one_sentence
 from model.tokenizer import Tokenizer
 from model.excode.excode_preprocess import excode_tokenize, create_excode_tokenizer, excode_tokenize_candidates
 from keras.models import load_model
@@ -16,7 +17,7 @@ def read_file(filepath):
 
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-serv.bind(('0.0.0.0', 18005))
+serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
 
 dataJson = [
@@ -73,7 +74,7 @@ while True:
         i = 0
         for java_suggestion in java_suggestions:
             score = predict(java_model, java_context + java_suggestion,
-                            tokenizer=java_tokenizer, train_len=train_len, start_pos=train_len-1)
+                            tokenizer=java_tokenizer, train_len=train_len, start_pos=train_len - 1)
             java_suggestion_scores.append((java_suggestion, score, i))
             i += 1
 
@@ -81,9 +82,15 @@ while True:
         print(sorted_scores)
         print('-----------------------------\n-----------------------------\n-----------------------------')
         print("Best java suggestion(s):")
+
+        result = []
+
         for i in range(min(top_k, len(sorted_scores))):
             print(data['next_lex'][sorted_scores[i][2]])
+            result.append(data['next_lex'][sorted_scores[i][2]]);
 
+        print(result)
+        conn.send(('{type:"predict",data:' + json.dumps(result) + '}\n').encode())
         # best_excode_suggestion = ""
         # best_excode_score = -1e9
         #

@@ -6,7 +6,6 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class PredictResponse {
-
     @SerializedName("type")
     @Expose
     private String type;
@@ -29,6 +28,4 @@ public class PredictResponse {
     public void setData(List<String> data) {
         this.data = data;
     }
-
-
 }
