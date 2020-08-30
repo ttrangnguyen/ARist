@@ -7,17 +7,19 @@ load()
 REG = r"(.+?)([A-Z])"
 
 
-def snake(match):
-    return match.group(1).lower() + "_" + match.group(2).lower()
+def splitCase(match):
+    return match.group(1).lower() + "/" + match.group(2).lower()
 
 
 def tokenize(word):
     camelCases = []
-    snake_cases = []
+    split_cases = []
+
     # Do not predict snake_cases
-    if (word.find("_") != -1 or len(word) == 0):
-        return []
-    TAREG = re.compile("[<,>?\[\](){}&.|]")
+    # if (word.find("_") != -1 or len(word) == 0):
+    # return []
+
+    TAREG = re.compile("[<,>?\[\](){}&.|_]")
     for match in re.finditer("[A-Z][A-Z\d]+", word):
         result = ""
         s = match.start()
@@ -54,8 +56,8 @@ def tokenize(word):
 
     camelCases.pop()
 
-    snake_cases = [re.sub(REG, snake, w, 0).lower() for w in camelCases]
-    words = [re.split("_", w) for w in snake_cases]
+    split_cases = [re.sub(REG, splitCase, w, 0).lower() for w in camelCases]
+    words = [re.split("/", w) for w in split_cases]
 
     words = np.concatenate(words).tolist()
 
@@ -68,4 +70,4 @@ def tokenize(word):
 
     return np.concatenate(result).tolist()
 
-# print(tokenize("Hello.A[]r...eIam<HOWare,b?c>"))
+# print(tokenize("logFactory.FACTORY_PROPERTIES"))
