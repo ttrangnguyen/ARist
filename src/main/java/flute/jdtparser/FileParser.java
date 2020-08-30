@@ -160,7 +160,7 @@ public class FileParser {
                 visibleVariable.forEach(variable -> {
                     if (!nextVariable.contains(variable.getName()) && variable.getTypeBinding().isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
                         nextVariable.add(variable.getName());
-                        String exCode = "VAR(" + variable.getTypeBinding().getName() + "," + variable.getName() + ")";
+                        String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, variable.getName());
                     }
 
@@ -250,10 +250,7 @@ public class FileParser {
 
     private boolean compareWithArrayType(ITypeBinding iTypeBinding, ITypeBinding[] iTypeBindings) {
         for (int i = 0; i < iTypeBindings.length; i++) {
-            Object a = iTypeBinding.isAssignmentCompatible(iTypeBindings[i]);
-            Object b = iTypeBindings[i].isAssignmentCompatible(iTypeBinding);
             if (iTypeBinding.isAssignmentCompatible(iTypeBindings[i])) {
-                System.out.println("a");
                 return true;
             }
         }
