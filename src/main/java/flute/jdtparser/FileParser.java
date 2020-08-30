@@ -174,7 +174,7 @@ public class FileParser {
                             if (varMemberType.isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
                                 String nextVar = variable.getName() + "." + varField.getName();
                                 if (!nextVariable.contains(nextVar)) {
-                                    String exCode = "VAR(" + variable.getTypeBinding().getName() + "," + variable.getName() + ")\n"
+                                    String exCode = "VAR(" + variable.getTypeBinding().getName() + "," + variable.getName() + ") "
                                             + "F_ACCESS(" + varMemberType.getName() + "," + varField.getName() + ")";
                                     nextVariable.add(nextVar);
                                     nextVariableMap.put(exCode, nextVar);
@@ -215,17 +215,17 @@ public class FileParser {
             List<ITypeBinding> typeResults = new ArrayList<>();
 
             for (ITypeBinding parentType : parentTypes) {
-                ClassModel classModel;
+                ClassParser classParser;
                 if (methodInvocation.getExpression() == null) {
-                    classModel = visibleClass.get(methodInvocation.getExpression().resolveTypeBinding().getKey());
+                    classParser = new ClassParser(curClass);
                 } else {
-                    classModel = visibleClass.get(curClass.getKey());
+                    classParser = new ClassParser(methodInvocation.getExpression().resolveTypeBinding());
                 }
-                classModel.getMembers().forEach(member -> {
-                    if (member instanceof MethodMember
-                            && ((MethodMember) member).getMember().getName().equals(methodInvocationParent.getName().getIdentifier())) {
-                        MethodMember methodMember = (MethodMember) member;
-                        if (methodMember.getMember().getReturnType().isAssignmentCompatible(parentType)) {
+
+                classParser.getMethods().forEach(methodMember -> {
+                    if (methodMember.getName().equals(methodInvocationParent.getName().getIdentifier())) {
+
+                        if (methodMember.getReturnType().isAssignmentCompatible(parentType)) {
                             int positionParam = -1;
 
                             for (int i = 0; i < methodInvocationParent.arguments().size(); i++) {
@@ -236,7 +236,7 @@ public class FileParser {
                             }
 
                             if (checkInvoMember(methodInvocationParent.arguments(), methodMember, positionParam)) {
-                                typeResults.add(methodMember.getMember().getParameterTypes()[positionParam]);
+                                typeResults.add(methodMember.getParameterTypes()[positionParam]);
                             }
                         }
                     }
@@ -256,7 +256,7 @@ public class FileParser {
         return false;
     }
 
-    public static boolean checkInvoMember(List args, MethodMember member, int ignorPos) {
+    public static boolean checkInvoMember(List args, IMethodBinding iMethodBinding, int ignorPos) {
         int index = 0;
         for (Object argument :
                 args) {
@@ -266,7 +266,7 @@ public class FileParser {
             }
             if (argument instanceof Expression) {
                 Expression argExpr = (Expression) argument;
-                ITypeBinding[] params = ((IMethodBinding) member.getMember()).getParameterTypes();
+                ITypeBinding[] params = iMethodBinding.getParameterTypes();
                 if (!argExpr.resolveTypeBinding().isAssignmentCompatible(params[index++])) {
                     return false;
                 }
