@@ -328,6 +328,13 @@ public class FileParser {
                     addVariableToList(position, variableBinding, true);
                 }
             });
+
+            if (!isStatic) {
+                Variable variable = new Variable(curClass, "this");
+                variable.setStatic(false);
+                visibleVariable.add(variable);
+            }
+
         } else if (astNode instanceof Initializer) {
             Initializer initializer = (Initializer) astNode;
             isStatic = true;

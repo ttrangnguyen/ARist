@@ -21,7 +21,6 @@ public class ProjectParser {
     private String[] classPaths;
     private int jdtLevel = 13;
     private String javaVersion = "13";
-    ASTParser parser = ASTParser.newParser(jdtLevel); //choose source code analyzing strategy
 
     public ProjectParser(String projectDir, String[] sourcePaths, String[] encodeSources, String[] classPaths, int jdtLevel, String javaVersion) {
         this.projectDir = projectDir;
@@ -30,17 +29,6 @@ public class ProjectParser {
         this.encodeSources = encodeSources;
         this.jdtLevel = jdtLevel;
         this.javaVersion = javaVersion;
-
-        parser.setResolveBindings(true); // turn on binding strategy
-        parser.setKind(ASTParser.K_COMPILATION_UNIT);// the source code is a file .java
-        parser.setBindingsRecovery(true);
-        parser.setStatementsRecovery(true);
-        Hashtable<String, String> options = JavaCore.getOptions();
-
-        JavaCore.setComplianceOptions(javaVersion, options);
-
-        parser.setCompilerOptions(options);
-        parser.setEnvironment(classPaths, sourcePaths, encodeSources, true);
     }
 
     public HashMap<String, ClassModel> getListAccess(ITypeBinding clazz) {
@@ -89,6 +77,19 @@ public class ProjectParser {
     }
 
     public CompilationUnit createCU(File file) {
+        ASTParser parser = ASTParser.newParser(jdtLevel); //choose source code analyzing strategy
+
+        parser.setResolveBindings(true); // turn on binding strategy
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);// the source code is a file .java
+        parser.setBindingsRecovery(true);
+        parser.setStatementsRecovery(true);
+        Hashtable<String, String> options = JavaCore.getOptions();
+
+        JavaCore.setComplianceOptions(javaVersion, options);
+
+        parser.setCompilerOptions(options);
+        parser.setEnvironment(classPaths, sourcePaths, encodeSources, true);
+
         parser.setUnitName(file.getName());
         parser.setSource(FileProcessor.read(file).toCharArray());
         CompilationUnit cu = (CompilationUnit) parser.createAST(new NullProgressMonitor());
