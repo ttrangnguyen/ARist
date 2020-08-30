@@ -127,10 +127,12 @@ public class FileParser {
             classBinding = methodInvocation.getExpression().resolveTypeBinding();
         }
 
+        ClassParser classParser = new ClassParser(classBinding);
+
         List<IMethodBinding> listMember = new ArrayList<>();
 
+        List<IMethodBinding> methodBindings = classParser.getMethods();
 
-        IMethodBinding[] methodBindings = classBinding.getDeclaredMethods();
         for (IMethodBinding methodBinding : methodBindings) {
             if (methodName.equals(methodBinding.getName())) {
                 //Add filter for parent expression
@@ -142,7 +144,6 @@ public class FileParser {
                 }
             }
         }
-        ;
 
         List<String> nextVariable = new ArrayList<>();
 
@@ -167,7 +168,7 @@ public class FileParser {
                     ITypeBinding variableClass = variable.getTypeBinding();
 
                     if (variableClass != null) {
-                        IVariableBinding[] varFields = variableClass.getDeclaredFields();
+                        List<IVariableBinding> varFields = new ClassParser(variableClass).getFields();
                         for (IVariableBinding varField : varFields) {
                             ITypeBinding varMemberType = varField.getType();
                             if (varMemberType.isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
@@ -199,8 +200,6 @@ public class FileParser {
             return new ITypeBinding[]{assignment.getLeftHandSide().resolveTypeBinding()};
         } else if (astNode instanceof VariableDeclarationFragment) {
             VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) astNode;
-            Object q = variableDeclarationFragment.getName().resolveTypeBinding();
-            Object k = variableDeclarationFragment.resolveBinding().getType();
             return new ITypeBinding[]{variableDeclarationFragment.resolveBinding().getType()};
         } else if (astNode instanceof ReturnStatement) {
             ASTNode methodNode = getMethodScope(astNode);
