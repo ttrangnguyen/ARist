@@ -23,7 +23,7 @@ public class ProjectTest {
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 
-        projectParser.parse();
+//        projectParser.parse();
 
         System.out.print("Project parse time: ");
         System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
@@ -37,7 +37,14 @@ public class ProjectTest {
             e.printStackTrace();
         }
         for (Map.Entry<String, List<String>> entry: fileParser.getNextParams().getValue().entrySet()) {
-            System.out.println(entry.getKey() + " ||||| " + entry.getValue());
+            System.out.print("\"" + entry.getKey() + "\",\n");
+        }
+        for (Map.Entry<String, List<String>> entry: fileParser.getNextParams().getValue().entrySet()) {
+            System.out.print("\"");
+            for(String val: entry.getValue()) {
+                System.out.print(val + " ");
+            }
+            System.out.println("\",");
         }
         System.out.print("File parse: ");
         System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
@@ -50,5 +57,8 @@ public class ProjectTest {
 
         //end parse
         System.out.println("Parse done!");
+
+
+
     }
 }

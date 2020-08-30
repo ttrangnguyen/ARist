@@ -21,6 +21,9 @@ public class JavaTokenizer extends Tokenizer{
             System.out.println(tokens);
             writer.close();
         }
+//        String testLexical = "categoryDetail = event.getTarget().getName();else {categoryString = categoryObject.getClass().getName();}}Log log = getLog(";
+//        ArrayList<String> tokens = JavaTokenizer.tokenize(testLexical);
+//        System.out.println(tokens);
 
 //        final String namePath = "src/main/python/model/java_names.txt";
 //
@@ -66,10 +69,12 @@ public class JavaTokenizer extends Tokenizer{
         return fileContent.toString();
     }
 
-    public static ArrayList<String> tokenize(String fileContent) {
+    public static ArrayList<String> tokenize(String fileContent) throws IOException {
         ArrayList<String> tokens = new ArrayList<>();
         try {
-            StreamTokenizer st = new StreamTokenizer(new StringReader(fileContent));
+            Reader inputString = new StringReader(fileContent);
+            BufferedReader reader = new BufferedReader(inputString);
+            StreamTokenizer st = new StreamTokenizer(reader);
 
             st.parseNumbers();
             st.wordChars('_', '_');
@@ -82,7 +87,6 @@ public class JavaTokenizer extends Tokenizer{
             StringBuilder op = new StringBuilder();
             String operatorStr = "&<>?+-*/%!~^|=";
             while (token != StreamTokenizer.TT_EOF) {
-                token = st.nextToken();
                 switch (token) {
                     case StreamTokenizer.TT_NUMBER:
                         if (!op.toString().equals("")) {
@@ -90,7 +94,8 @@ public class JavaTokenizer extends Tokenizer{
                             op = new StringBuilder();
                         }
                         double num = st.nval;
-                        tokens.add(String.valueOf(num));
+                        if (String.valueOf(num).equals("0.0")) tokens.add(".");
+                        else tokens.add(String.valueOf(num));
                         break;
                     case StreamTokenizer.TT_WORD:
                         if (!op.toString().equals("")) {
@@ -145,6 +150,7 @@ public class JavaTokenizer extends Tokenizer{
                         }
                         break;
                 }
+                token = st.nextToken();
             }
             if (op.toString() != "") {
                 tokens.add(op.toString());

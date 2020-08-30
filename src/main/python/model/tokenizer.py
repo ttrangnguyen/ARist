@@ -1,8 +1,6 @@
 class Tokenizer:
-    word_index = {}
-    oov_token = ""
-
     def __init__(self, oov_token=""):
+        self.word_index = {}
         self.oov_token = oov_token
         self.word_index[oov_token] = 1
 
@@ -24,3 +22,12 @@ class Tokenizer:
                     sequence.append(self.word_index.get(s))
             sequences.append(sequence)
         return sequences
+
+    def sequences_to_texts(self, sequences):
+        texts = []
+        for sequence in sequences:
+            text = []
+            for s in sequence:
+                text.append(list(self.word_index.keys())[list(self.word_index.values()).index(s)])
+            texts.append(text)
+        return texts
