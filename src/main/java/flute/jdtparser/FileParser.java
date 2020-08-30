@@ -131,7 +131,7 @@ public class FileParser {
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
-        List<IMethodBinding> methodBindings = classParser.getMethods();
+        List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass);
 
         for (IMethodBinding methodBinding : methodBindings) {
             if (methodName.equals(methodBinding.getName())) {
@@ -168,7 +168,7 @@ public class FileParser {
                     ITypeBinding variableClass = variable.getTypeBinding();
 
                     if (variableClass != null) {
-                        List<IVariableBinding> varFields = new ClassParser(variableClass).getFields();
+                        List<IVariableBinding> varFields = new ClassParser(variableClass).getFieldsFrom(curClass);
                         for (IVariableBinding varField : varFields) {
                             ITypeBinding varMemberType = varField.getType();
                             if (varMemberType.isAssignmentCompatible(params[methodInvocation.arguments().size()])) {
@@ -222,7 +222,7 @@ public class FileParser {
                     classParser = new ClassParser(methodInvocation.getExpression().resolveTypeBinding());
                 }
 
-                classParser.getMethods().forEach(methodMember -> {
+                classParser.getMethodsFrom(curClass).forEach(methodMember -> {
                     if (methodMember.getName().equals(methodInvocationParent.getName().getIdentifier())) {
 
                         if (methodMember.getReturnType().isAssignmentCompatible(parentType)) {
