@@ -10,7 +10,15 @@ public class PredictResponse extends Response {
     @Expose
     private List<String> data = null;
 
+    @SerializedName("runtime")
+    @Expose
+    private float runtime = -1;
+
     public List<String> getData() {
         return data;
+    }
+
+    public float getRuntime() {
+        return runtime;
     }
 }

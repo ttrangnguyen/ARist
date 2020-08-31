@@ -7,6 +7,7 @@ from model.tokenizer import Tokenizer
 from model.excode.excode_preprocess import excode_tokenize, create_excode_tokenizer, excode_tokenize_candidates
 from keras.models import load_model
 from model.predictor import predict
+from time import perf_counter
 
 
 def read_file(filepath):
@@ -20,12 +21,9 @@ serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
 
-dataJson = [
-    "hello",
-    "how are you"
-]
+excode_model = load_model("../model/excode_model.h5")
+java_model = load_model("../model/java_model.h5")
 
-jsonData = json.dumps(dataJson)
 excode_tokenizer = create_excode_tokenizer(token_path='../../../../data_dict/excode/excode_tokens_n_symbols.txt',
                                            dict_path='../../../../data_dict/excode/names.txt', )
 java_tokenizer = create_java_tokenizer(token_path='../../../../data_dict/java/java_words_n_symbols.txt',
@@ -36,9 +34,12 @@ train_len = 20 + 1
 while True:
     conn, addr = serv.accept()
     while True:
-        data = conn.recv(4096)
+        data = conn.recv(10240)
         if not data:
             break
+
+        startTime = perf_counter()
+
         data = data.decode("utf-8")
         data = json.loads(data)
         java_context = java_tokenize(data['lex_context'],
@@ -57,16 +58,16 @@ while True:
                                                         tokenizer=excode_tokenizer,
                                                         tokens=excode_tokens)
 
-        print(java_context)
-        print(java_tokenizer.sequences_to_texts([java_context]))
-        print(java_suggestions)
-        print(excode_context)
-        print(excode_tokenizer.sequences_to_texts([excode_context]))
-        print(excode_suggestions)
+        # print(java_context)
+        # print(java_tokenizer.sequences_to_texts([java_context]))
+        # print(java_suggestions)
+        # print(excode_context)
+        # print(excode_tokenizer.sequences_to_texts([excode_context]))
+        # print(excode_suggestions)
+
         for excode_suggestion in excode_suggestions:
             print(excode_tokenizer.sequences_to_texts([excode_suggestion]))
-        excode_model = load_model("../model/excode_model.h5")
-        java_model = load_model("../model/java_model.h5")
+
         scores = []
         java_suggestion_scores = []
         best_java_score = -1e9
@@ -87,10 +88,12 @@ while True:
 
         for i in range(min(top_k, len(sorted_scores))):
             print(data['next_lex'][sorted_scores[i][2]])
-            result.append(data['next_lex'][sorted_scores[i][2]]);
+            result.append(data['next_lex'][sorted_scores[i][2]])
 
-        print(result)
-        conn.send(('{type:"predict",data:' + json.dumps(result) + '}\n').encode())
+        runtime = perf_counter() - startTime
+
+        conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
+
         # best_excode_suggestion = ""
         # best_excode_score = -1e9
         #
@@ -102,6 +105,6 @@ while True:
         #         best_excode_suggestion = excode_suggestion
         #
         # print("Best excode suggestion:", ''.join(excode_tokenizer.sequences_to_texts([best_excode_suggestion])[0]))
-    conn.send(('{type:"predict",data:' + jsonData + '}\n').encode())
+
     conn.close()
-    print('client disconnected')
+    print('Client disconnected')
