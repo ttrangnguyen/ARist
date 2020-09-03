@@ -120,18 +120,23 @@ public class FileParser {
         MethodInvocation methodInvocation = (MethodInvocation) astNode[0];
         String methodName = methodInvocation.getName().getIdentifier();
 
+        boolean isStaticExpr = false;
         ITypeBinding classBinding;
+
         if (methodInvocation.getExpression() == null) {
             classBinding = curClass;
+            isStaticExpr = isStaticScope(methodInvocation);
         } else {
-            classBinding = methodInvocation.getExpression().resolveTypeBinding();
+            Expression expr = methodInvocation.getExpression();
+            classBinding = expr.resolveTypeBinding();
+            isStaticExpr = curClass.getName().equals(expr.toString());
         }
 
         ClassParser classParser = new ClassParser(classBinding);
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
-        List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass);
+        List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
 
         for (IMethodBinding methodBinding : methodBindings) {
             if (methodName.equals(methodBinding.getName())) {
@@ -298,11 +303,21 @@ public class FileParser {
         return true;
     }
 
+    public static boolean isStaticScope(ASTNode astNode){
+        ASTNode methodScope = getMethodScope(astNode);
+        if(methodScope instanceof MethodDeclaration){
+            return Modifier.isStatic(((MethodDeclaration) methodScope).getModifiers());
+        }else if(methodScope instanceof Initializer){
+            return Modifier.isStatic(((Initializer) methodScope).getModifiers());
+        }
+        return false;
+    }
+
     public static ASTNode getMethodScope(ASTNode astNode) {
         if (astNode instanceof MethodDeclaration || astNode instanceof Initializer) {
             return astNode;
         } else if (astNode.getParent() != null) {
-            return getMethodScope(astNode);
+            return getMethodScope(astNode.getParent());
         }
         return null;
     }
