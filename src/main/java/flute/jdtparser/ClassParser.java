@@ -87,9 +87,15 @@ public class ClassParser {
     }
 
     public List<IMethodBinding> getMethodsFrom(ITypeBinding iTypeBinding) {
+        return getMethodsFrom(iTypeBinding, false);
+    }
+
+    public List<IMethodBinding> getMethodsFrom(ITypeBinding iTypeBinding, boolean isStatic) {
         List<IMethodBinding> canSeenMethods = new ArrayList<>();
         methods.forEach(method -> {
-            if (canSeenFrom(method.getModifiers(), iTypeBinding)) canSeenMethods.add(method);
+            if (canSeenFrom(method.getModifiers(), iTypeBinding)
+                    && (!isStatic || Modifier.isStatic(method.getModifiers())))
+                canSeenMethods.add(method);
         });
         return canSeenMethods;
     }
@@ -99,9 +105,15 @@ public class ClassParser {
     }
 
     public List<IVariableBinding> getFieldsFrom(ITypeBinding iTypeBinding) {
+        return getFieldsFrom(iTypeBinding, false);
+    }
+
+    public List<IVariableBinding> getFieldsFrom(ITypeBinding iTypeBinding, boolean isStatic) {
         List<IVariableBinding> canSeenFields = new ArrayList<>();
         fields.forEach(field -> {
-            if (canSeenFrom(field.getModifiers(), iTypeBinding)) canSeenFields.add(field);
+            if (canSeenFrom(field.getModifiers(), iTypeBinding)
+                    && (!isStatic || Modifier.isStatic(field.getModifiers())))
+                canSeenFields.add(field);
         });
         return canSeenFields;
     }
