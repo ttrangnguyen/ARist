@@ -1,6 +1,5 @@
-package flute.data;
+package flute.data.typemodel;
 
-import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 public class MethodMember extends Member {
