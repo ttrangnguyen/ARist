@@ -160,7 +160,8 @@ public class FileParser {
         MultiMap nextVariableMap = new MultiMap();
 
         int methodArgLength = methodInvocation.arguments().size();
-        methodArgLength = methodInvocation.arguments().get(methodArgLength - 1).toString().equals("$missing$") ? methodArgLength - 1 : methodArgLength;
+        methodArgLength = methodArgLength > 0 && methodInvocation.arguments().get(methodArgLength - 1).toString().equals("$missing$")
+                ? methodArgLength - 1 : methodArgLength;
 
         int finalMethodArgLength = methodArgLength;
         listMember.forEach(methodBinding ->
@@ -199,7 +200,7 @@ public class FileParser {
                                     nextVariable.add(nextVar);
                                     nextVariableMap.put(exCode, nextVar);
                                 }
-                                if (compareFieldValue != ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+                                if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
                                     nextVariable.add(")");
                                     nextVariableMap.put("CLOSE_PART", ")");
                                 }
