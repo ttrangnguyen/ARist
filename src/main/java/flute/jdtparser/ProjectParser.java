@@ -1,7 +1,7 @@
 package flute.jdtparser;
 
-import flute.data.Member;
-import flute.data.ClassModel;
+import flute.data.typemodel.Member;
+import flute.data.typemodel.ClassModel;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;

@@ -1,4 +1,4 @@
-package flute.data;
+package flute.data.type;
 
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
