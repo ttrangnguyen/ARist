@@ -84,8 +84,8 @@ public class FileParser {
                 visibleClass = projectParser.getListAccess(clazz);
             }
         } catch (NullPointerException err) {
-            visibleClass.clear();
-            throw new Exception("Can not get class");
+            if (visibleClass != null) visibleClass.clear();
+            throw new Exception("Can not get class scope");
         }
 
         ASTNode scope = getScope(curPosition);
@@ -199,35 +199,41 @@ public class FileParser {
     }
 
     public ITypeBinding[] parentValue(MethodInvocation methodInvocation) {
-        ASTNode astNode = methodInvocation.getParent();
-        if (astNode instanceof Assignment) {
-            Assignment assignment = (Assignment) astNode;
+        ASTNode parentNode = methodInvocation.getParent();
+        if (parentNode instanceof Assignment) {
+            Assignment assignment = (Assignment) parentNode;
             return new ITypeBinding[]{assignment.getLeftHandSide().resolveTypeBinding()};
-        } else if (astNode instanceof VariableDeclarationFragment) {
-            VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) astNode;
+        } else if (parentNode instanceof VariableDeclarationFragment) {
+            VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) parentNode;
             return new ITypeBinding[]{variableDeclarationFragment.resolveBinding().getType()};
-        } else if (astNode instanceof ReturnStatement) {
-            ASTNode methodNode = getMethodScope(astNode);
+        } else if (parentNode instanceof ReturnStatement) {
+            ASTNode methodNode = getMethodScope(parentNode);
             if (methodNode instanceof MethodDeclaration) {
                 ITypeBinding returnType = ((MethodDeclaration) methodNode).getReturnType2().resolveBinding();
                 return new ITypeBinding[]{returnType};
             } else {
                 return null;
             }
-        } else if (astNode instanceof MethodInvocation) {
-            MethodInvocation methodInvocationParent = (MethodInvocation) astNode;
+        } else if (parentNode instanceof IfStatement) {
+            return new ITypeBinding[]{new IBooleanType()};
+        } else if (parentNode instanceof MethodInvocation) {
+            MethodInvocation methodInvocationParent = (MethodInvocation) parentNode;
             ITypeBinding[] parentTypes = parentValue(methodInvocationParent);
             List<ITypeBinding> typeResults = new ArrayList<>();
 
             for (ITypeBinding parentType : parentTypes) {
                 ClassParser classParser;
+                boolean isStaticExpr = false;
                 if (methodInvocation.getExpression() == null) {
                     classParser = new ClassParser(curClass);
+                    isStaticExpr = isStaticScope(methodInvocation);
                 } else {
-                    classParser = new ClassParser(methodInvocation.getExpression().resolveTypeBinding());
+                    Expression expr = methodInvocation.getExpression();
+                    classParser = new ClassParser(expr.resolveTypeBinding());
+                    isStaticExpr = expr.toString().equals(expr.resolveTypeBinding().getName());
                 }
 
-                classParser.getMethodsFrom(curClass).forEach(methodMember -> {
+                classParser.getMethodsFrom(curClass, isStaticExpr).forEach(methodMember -> {
                     if (methodMember.getName().equals(methodInvocationParent.getName().getIdentifier())) {
 
                         if (methodMember.getReturnType().isAssignmentCompatible(parentType)) {
@@ -254,7 +260,8 @@ public class FileParser {
 
     private boolean compareWithArrayType(ITypeBinding iTypeBinding, ITypeBinding[] iTypeBindings) {
         for (int i = 0; i < iTypeBindings.length; i++) {
-            if (iTypeBinding.isAssignmentCompatible(iTypeBindings[i])) {
+            if (iTypeBinding.isAssignmentCompatible(iTypeBindings[i])
+                    || (iTypeBindings[i] instanceof IGenericType && ((IGenericType) iTypeBindings[i]).canBeAssignmentBy(iTypeBinding))) {
                 return true;
             }
         }
@@ -293,7 +300,7 @@ public class FileParser {
                     break;
                 }
                 ITypeBinding[] params = iMethodBinding.getParameterTypes();
-                if (!argExpr.resolveTypeBinding().isAssignmentCompatible(params[index++])) {
+                if (argExpr.resolveTypeBinding() == null || !argExpr.resolveTypeBinding().isAssignmentCompatible(params[index++])) {
                     return false;
                 }
             } else {
@@ -303,11 +310,11 @@ public class FileParser {
         return true;
     }
 
-    public static boolean isStaticScope(ASTNode astNode){
+    public static boolean isStaticScope(ASTNode astNode) {
         ASTNode methodScope = getMethodScope(astNode);
-        if(methodScope instanceof MethodDeclaration){
+        if (methodScope instanceof MethodDeclaration) {
             return Modifier.isStatic(((MethodDeclaration) methodScope).getModifiers());
-        }else if(methodScope instanceof Initializer){
+        } else if (methodScope instanceof Initializer) {
             return Modifier.isStatic(((Initializer) methodScope).getModifiers());
         }
         return false;
