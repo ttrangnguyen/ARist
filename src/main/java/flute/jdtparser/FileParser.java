@@ -1,5 +1,6 @@
 package flute.jdtparser;
 
+import com.google.common.collect.Lists;
 import flute.data.constraint.ParserConstant;
 import flute.data.type.IBooleanType;
 import flute.data.type.IGenericType;
@@ -171,8 +172,7 @@ public class FileParser {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
-
-                visibleVariable.forEach(variable -> {
+                visibleVariable.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
@@ -367,6 +367,8 @@ public class FileParser {
     }
 
 
+    private HashMap<String, Integer> initVariables = new HashMap<>();
+
     private void getVariableScope(ASTNode astNode) {
         if (astNode == null) return;
         Block block = null;
@@ -384,13 +386,14 @@ public class FileParser {
                     int position = singleVariableDeclaration.getStartPosition();
 
                     IVariableBinding variableBinding = singleVariableDeclaration.resolveBinding();
-                    addVariableToList(position, variableBinding, true);
+                    addVariableToList(position, variableBinding, true, true);
                 }
             });
 
             if (!isStatic) {
                 Variable variable = new Variable(curClass, "this");
                 variable.setStatic(false);
+                variable.setInitialized(true);
                 visibleVariable.add(variable);
             }
 
@@ -410,7 +413,7 @@ public class FileParser {
                         IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
 
                         boolean isStatic = Modifier.isStatic(variableBinding.getModifiers());
-                        addVariableToList(position, variableBinding, isStatic);
+                        addVariableToList(position, variableBinding, isStatic, true);
                     }
                 });
             }
@@ -423,7 +426,7 @@ public class FileParser {
                     int position = variableDeclarationFragment.getStartPosition();
                     IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
 
-                    addVariableToList(position, variableBinding, false);
+                    addVariableToList(position, variableBinding, false, true);
                 }
             });
         } else if (astNode instanceof ForStatement) {
@@ -438,7 +441,7 @@ public class FileParser {
                         if (variableDeclarationItem instanceof VariableDeclarationFragment) {
                             IVariableBinding variableBinding = ((VariableDeclarationFragment) variableDeclarationItem).resolveBinding();
 
-                            addVariableToList(position, variableBinding, false);
+                            addVariableToList(position, variableBinding, false, true);
                         }
                     });
                 }
@@ -451,21 +454,34 @@ public class FileParser {
 
             IVariableBinding variableBinding = singleVariableDeclaration.resolveBinding();
 
-            addVariableToList(position, variableBinding, false);
+            addVariableToList(position, variableBinding, false, true);
         }
+
 
         if (block != null) {
             List listStatement = block.statements();
-            listStatement.forEach(stmt -> {
+            Lists.reverse(listStatement).forEach(stmt -> {
                 if (stmt instanceof VariableDeclarationStatement) {
                     VariableDeclarationStatement declareStmt = (VariableDeclarationStatement) stmt;
                     int position = declareStmt.getStartPosition();
                     declareStmt.fragments().forEach(fragment -> {
                         if (fragment instanceof VariableDeclarationFragment) {
-                            IVariableBinding variableBinding = ((VariableDeclarationFragment) fragment).resolveBinding();
-                            addVariableToList(position, variableBinding, false);
+                            VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
+                            IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
+                            addVariableToList(position, variableBinding, false,
+                                    initVariables.get(variableBinding.getName()) != null
+                                            || (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition));
                         }
                     });
+                }
+                if (stmt instanceof ExpressionStatement) {
+                    if (((ExpressionStatement) stmt).getExpression() instanceof Assignment) {
+                        Assignment assignment = (Assignment) ((ExpressionStatement) stmt).getExpression();
+                        if (assignment.getLeftHandSide() instanceof SimpleName) {
+                            addInitVariable(assignment.getLeftHandSide().toString(), assignment.getStartPosition() + assignment.getLength());
+                        }
+                    }
+
                 }
             });
         }
@@ -473,7 +489,13 @@ public class FileParser {
         getVariableScope(getParentBlock(astNode));
     }
 
-    private void addVariableToList(int startPosition, IVariableBinding variableBinding, boolean isStatic) {
+    private void addInitVariable(String variableName, int endPosition) {
+        if (endPosition < curPosition) {
+            initVariables.put(variableName, endPosition);
+        }
+    }
+
+    private void addVariableToList(int startPosition, IVariableBinding variableBinding, boolean isStatic, boolean isInitialized) {
         ITypeBinding typeBinding = variableBinding.getType();
         String varName = variableBinding.getName();
 
@@ -482,6 +504,7 @@ public class FileParser {
         if (!checkVariableInList(varName, visibleVariable) && startPosition <= curPosition) {
             Variable variable = new Variable(typeBinding, varName);
             variable.setStatic(isStatic);
+            variable.setInitialized(isInitialized);
             visibleVariable.add(variable);
         }
     }
