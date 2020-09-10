@@ -4,6 +4,7 @@
 package flute.tokenizing.excode_data;
 
 import com.github.javaparser.Position;
+import org.w3c.dom.Node;
 
 import java.util.Optional;
 
@@ -775,12 +776,26 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		if (endMt == NodeSequenceConstant.CASE_PART)
 			op.representStr = "CASE_PART";
 		else {
-			if (isOpen)
+			if (isOpen) {
 				op.representStr = "OPEN_PART";
-			else
+				op.startEnd = NodeSequenceConstant.START;
+			}
+			else {
 				op.representStr = "CLOSE_PART";
+				op.startEnd = NodeSequenceConstant.END;
+			}
 		}
 		return op;
+	}
+
+	public static boolean isOpenPart(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
+	}
+
+	public static boolean isClosePart(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 
 	private String toStringAGM_MT() {
@@ -814,15 +829,27 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 	public static NodeSequenceInfo getStartMethod(String type) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
+		op.startEnd = NodeSequenceConstant.START;
 		op.representStr = "METHOD{" + type + "}";
 		return op;
+	}
+
+	public static boolean isStartMethod(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHOD
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
 	}
 
 	public static NodeSequenceInfo getEndMethod() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
+		op.startEnd = NodeSequenceConstant.END;
 		op.representStr = "ENDMETHOD";
 		return op;
+	}
+
+	public static boolean isEndMethod(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHOD
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 	
 	public static NodeSequenceInfo getFieldDeclaration() {
@@ -839,10 +866,34 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
+	public static boolean isSEPA(NodeSequenceInfo nodeSequenceInfo, char type) {
+		return nodeSequenceInfo.representStr.equals("SEPA" + "(" + type + ")");
+	}
+
 	public static NodeSequenceInfo getConditionalExpr() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.CONDITIONAL_EXPR;
 		op.representStr = "CEXP";
 		return op;
+	}
+
+	public static boolean isConstructor(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTOR;
+	}
+
+	public static boolean isConstructorOrMethod(NodeSequenceInfo nodeSequenceInfo) {
+		return isConstructor(nodeSequenceInfo) || isStartMethod(nodeSequenceInfo);
+	}
+
+	public static boolean isMethodAccess(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHODACCESS;
+	}
+
+	public static boolean isOPBLK(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPBK;
+	}
+
+	public static boolean isCLBLK(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
 	}
 }
