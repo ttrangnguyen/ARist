@@ -6,6 +6,7 @@ public class Variable {
     private boolean isStatic = false;
     private ITypeBinding typeBinding;
     private String name;
+    private boolean isInitialized = false;
 
     public Variable(ITypeBinding typeBinding, String name) {
         this.typeBinding = typeBinding;
@@ -34,6 +35,14 @@ public class Variable {
 
     public void setStatic(boolean aStatic) {
         isStatic = aStatic;
+    }
+
+    public boolean isInitialized() {
+        return isInitialized;
+    }
+
+    public void setInitialized(boolean initialized) {
+        isInitialized = initialized;
     }
 
     @Override
