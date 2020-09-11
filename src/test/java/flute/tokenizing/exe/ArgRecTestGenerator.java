@@ -8,6 +8,8 @@ import flute.analysis.config.Config;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.ContextInfo;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.utils.StringUtils;
+import flute.utils.file_processing.JavaTokenizer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,12 +37,24 @@ public class ArgRecTestGenerator {
                 }
             }
             if (methodDeclaration == null) continue;
+            String methodDeclarationContent = methodDeclaration.toString();
 
             if (NodeSequenceInfo.isMethodAccess(excode)) stack.add(i);
             if (NodeSequenceInfo.isClosePart(excode)
                     && !stack.isEmpty() && excode.oriNode == excodes.get(stack.get(stack.size() - 1)).oriNode) {
 
                 MethodCallExpr methodCall = (MethodCallExpr) excode.oriNode;
+                String methodCallContent = methodCall.toString();
+
+                //TODO: Handle multiple-line method invocation
+                String contextMethodCall = methodDeclarationContent.substring(0, StringUtils.indexOf(methodDeclarationContent, StringUtils.getFirstLine(methodCallContent)));
+
+                String methodName = methodCall.getNameAsString();
+                if (methodCall.getScope().isPresent()) {
+                    methodName = methodCall.getScope().get() + "." + methodName;
+                }
+                contextMethodCall += methodName + '(';
+
                 int methodCallPos = stack.get(stack.size() - 1);
                 int k = methodCallPos + 1;
                 int contextPos = methodCallPos + 1;
@@ -53,14 +67,24 @@ public class ArgRecTestGenerator {
                             List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                             for (int t = contextPos + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
-                            ArgRecTest test = new ArgRecTest();
-                            test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
-                            test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
-                            test.setExpected_lex(arg.toString());
+                            try {
+                                ArgRecTest test = new ArgRecTest();
+                                List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall);
+                                while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
+                                    tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
+                                }
+                                test.setLex_context(tokenizedContextMethodCall);
+                                test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
+                                test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
+                                test.setExpected_lex(arg.toString());
 
-                            System.out.println(gson.toJson(test));
+                                System.out.println(gson.toJson(test));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
 
                             contextPos = k;
+                            contextMethodCall += arg.toString() + ',';
                             break;
                         }
                         ++k;
@@ -68,19 +92,28 @@ public class ArgRecTestGenerator {
                 }
                 ContextInfo context = new ContextInfo(excodes, contextPos);
 
-                ArgRecTest test = new ArgRecTest();
-                test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
-                if (methodCall.getArguments().isEmpty()) {
-                    test.setExpected_excode(excodes.get(i).toStringSimple());
-                    test.setExpected_lex(")");
-                } else {
-                    List<NodeSequenceInfo> argExcodes = new ArrayList<>();
-                    for (int t = contextPos + 1; t < i; ++t) argExcodes.add(excodes.get(t));
-                    test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
-                    test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
-                }
+                try {
+                    ArgRecTest test = new ArgRecTest();
+                    List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall);
+                    while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
+                        tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
+                    }
+                    test.setLex_context(tokenizedContextMethodCall);
+                    test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
+                    if (methodCall.getArguments().isEmpty()) {
+                        test.setExpected_excode(excodes.get(i).toStringSimple());
+                        test.setExpected_lex(")");
+                    } else {
+                        List<NodeSequenceInfo> argExcodes = new ArrayList<>();
+                        for (int t = contextPos + 1; t < i; ++t) argExcodes.add(excodes.get(t));
+                        test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
+                        test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
+                    }
 
-                System.out.println(gson.toJson(test));
+                    System.out.println(gson.toJson(test));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 stack.remove(stack.size() - 1);
             }
