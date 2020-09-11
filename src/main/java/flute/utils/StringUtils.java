@@ -81,4 +81,11 @@ public class StringUtils {
 		}
 		return -1;
 	}
+
+	public static String getFirstLine(String str) {
+		if (str.indexOf('\n') >= 0) {
+			str = str.substring(0, str.indexOf('\n'));
+		}
+		return str;
+	}
 }

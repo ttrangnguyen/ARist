@@ -752,10 +752,12 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                 // System.out.println(n.getType().toString() + "--" + n.getType().getClass());
                 OldNodeSequenceVisitingProcessing.addSTMethodNode(
                         MetricsVisitor.ID_SUFFIX + "," + n.getType().asString() + "," + n.getName(), nodeSequenceList)
-                        .setPosition(n.getBegin(), null);
+                        .setPosition(n.getBegin(), null)
+                        .oriNode = n;
             } else
                 OldNodeSequenceVisitingProcessing.addSTMethodNode(n.getType().asString() + "," + n.getName(), nodeSequenceList)
-                        .setPosition(n.getBegin(), null);
+                        .setPosition(n.getBegin(), null)
+                        .oriNode = n;
             
             // --->
             //short nodeType = NodeSequenceConstant.METHOD;
@@ -775,7 +777,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             // Logger.logDebug("curTypeInfo.methodDecMap:" + curTypeInfo.methodDecMap);
 
             // ---> ENDMETHOD
-            OldNodeSequenceVisitingProcessing.addENMethodNode(nodeSequenceList).setPosition(n.getEnd());
+            OldNodeSequenceVisitingProcessing.addENMethodNode(nodeSequenceList).setPosition(n.getEnd())
+                    .oriNode = n;
 
             // Logger.log("method local variables: " + methodInfo.shortLocalVariableMap);
 
@@ -2024,7 +2027,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                 doVisitExpression(methodArg, arg);
                 
                 // , ---> SEPA(,)
-                OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ',');
+                OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ',')
+                        .oriNode = methodArg;
             }
             
             // y --->
@@ -2358,7 +2362,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         
         // ---> M_ACCESS(X, this, 2)
         OldNodeSequenceVisitingProcessing.addMethodAccessNode(nodeInfo, varName, attachedType, methodName,
-                nodeSequenceStack, curMethodInfo, curTypeInfo, nodeSequenceList, numOfArgs);
+                nodeSequenceStack, curMethodInfo, curTypeInfo, nodeSequenceList, numOfArgs).oriNode = n;
         
         // ( ---> OPEN_PART
         // Start arguments
@@ -2369,7 +2373,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         NodeVisitProcessing.removeInvocNodeInfo(n, nodeInfo, parentNodeStack, previousControlFlowNodeStack);
         
         // ) ---> CLOSE_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false);
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false)
+                .oriNode = n;
         
         // ---> ENSTM{EXPL_CONSTR}
         OldNodeSequenceVisitingProcessing.addENStmNode(NodeSequenceConstant.EXPL_CONSTR, nodeSequenceList);
@@ -2523,7 +2528,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         // move ---> M_ACCESS([TYPE OF a],move,2)
         OldNodeSequenceVisitingProcessing.addMethodAccessNode(nodeInfo, varName, attachedType, methodName,
-                nodeSequenceStack, curMethodInfo, curTypeInfo, nodeSequenceList, numOfArgs);
+                nodeSequenceStack, curMethodInfo, curTypeInfo, nodeSequenceList, numOfArgs).oriNode = n;
 
         // ( ---> OPEN_PART
         // Start arguments
@@ -2534,7 +2539,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         NodeVisitProcessing.removeInvocNodeInfo(n, nodeInfo, parentNodeStack, previousControlFlowNodeStack);
         
         // ) ---> CLOSE_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false);
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false)
+                .oriNode = n;
         // Start arguments
     }
     
