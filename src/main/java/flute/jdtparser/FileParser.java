@@ -6,6 +6,7 @@ import flute.data.type.IBooleanType;
 import flute.data.type.IGenericType;
 import flute.data.typemodel.ClassModel;
 import flute.data.typemodel.Variable;
+import org.apache.commons.lang.time.StopWatch;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
@@ -27,8 +28,10 @@ public class FileParser {
 
     private boolean isStatic = false;
 
-    public List<Variable> visibleVariable = new ArrayList<>();
-    public HashMap<String, ClassModel> visibleClass;
+    public List<Variable> visibleVariables = new ArrayList<>();
+    private HashMap<String, Integer> initVariables = new HashMap<>();
+
+    public HashMap<String, ClassModel> visibleClass = new HashMap<>();
 
     public FileParser(ProjectParser projectParser, File curFile, int curPosition) {
         this.projectParser = projectParser;
@@ -85,12 +88,14 @@ public class FileParser {
     public void parse() throws Exception {
         try {
             ITypeBinding clazz = getClassScope(curPosition);
+
             if (clazz != curClass) {
                 curClass = clazz;
                 visibleClass = projectParser.getListAccess(clazz);
             }
+
         } catch (NullPointerException err) {
-            if (visibleClass != null) visibleClass.clear();
+            visibleClass.clear();
             throw new Exception("Can not get class scope");
         }
 
@@ -99,7 +104,8 @@ public class FileParser {
         if (scope != null) {
             getVariableScope(scope);
         } else {
-            visibleVariable.clear();
+            visibleVariables.clear();
+            initVariables.clear();
         }
     }
 
@@ -109,7 +115,15 @@ public class FileParser {
 //        return listVariable;
 //    }
 
+    public MultiMap getFirstParams() {
+        return getNextParams(true);
+    }
+
     public MultiMap getNextParams() {
+        return getNextParams(false);
+    }
+
+    private MultiMap getNextParams(boolean isFirst) {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -138,6 +152,8 @@ public class FileParser {
             isStaticExpr = curClass.getName().equals(expr.toString());
         }
 
+        List preArgs = isFirst ? new ArrayList() : methodInvocation.arguments();
+
         ClassParser classParser = new ClassParser(classBinding);
 
         List<IMethodBinding> listMember = new ArrayList<>();
@@ -149,7 +165,7 @@ public class FileParser {
                 //Add filter for parent expression
                 if (parentValue(methodInvocation) == null
                         || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation))) {
-                    if (checkInvoMember(methodInvocation.arguments(), methodBinding)) {
+                    if (checkInvoMember(preArgs, methodBinding)) {
                         listMember.add(methodBinding);
                     }
                 }
@@ -160,8 +176,8 @@ public class FileParser {
 
         MultiMap nextVariableMap = new MultiMap();
 
-        int methodArgLength = methodInvocation.arguments().size();
-        methodArgLength = methodArgLength > 0 && methodInvocation.arguments().get(methodArgLength - 1).toString().equals("$missing$")
+        int methodArgLength = preArgs.size();
+        methodArgLength = methodArgLength > 0 && preArgs.get(methodArgLength - 1).toString().equals("$missing$")
                 ? methodArgLength - 1 : methodArgLength;
 
         int finalMethodArgLength = methodArgLength;
@@ -172,7 +188,7 @@ public class FileParser {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
-                visibleVariable.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
+                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
@@ -366,9 +382,6 @@ public class FileParser {
         return null;
     }
 
-
-    private HashMap<String, Integer> initVariables = new HashMap<>();
-
     private void getVariableScope(ASTNode astNode) {
         if (astNode == null) return;
         Block block = null;
@@ -394,7 +407,7 @@ public class FileParser {
                 Variable variable = new Variable(curClass, "this");
                 variable.setStatic(false);
                 variable.setInitialized(true);
-                visibleVariable.add(variable);
+                visibleVariables.add(variable);
             }
 
         } else if (astNode instanceof Initializer) {
@@ -501,11 +514,11 @@ public class FileParser {
 
         if (this.isStatic == true && isStatic == false) return;
 
-        if (!checkVariableInList(varName, visibleVariable) && startPosition <= curPosition) {
+        if (!checkVariableInList(varName, visibleVariables) && startPosition <= curPosition) {
             Variable variable = new Variable(typeBinding, varName);
             variable.setStatic(isStatic);
             variable.setInitialized(isInitialized);
-            visibleVariable.add(variable);
+            visibleVariables.add(variable);
         }
     }
 
@@ -596,8 +609,8 @@ public class FileParser {
         return cu;
     }
 
-    public List<Variable> getVisibleVariable() {
-        return visibleVariable;
+    public List<Variable> getVisibleVariables() {
+        return visibleVariables;
     }
 
     public HashMap<String, ClassModel> getVisibleClass() {

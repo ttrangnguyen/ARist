@@ -35,6 +35,8 @@ public class ProjectTest {
         FileParser fileParser = new FileParser(projectParser, curFile, Config.TEST_POSITION);
 
         MultiMap nextParams = null;
+        MultiMap firstParams = null;
+
         try {
             timer.startCounter();
             fileParser.parse();
@@ -44,24 +46,17 @@ public class ProjectTest {
             nextParams = fileParser.getNextParams();
             System.out.print("Next param gen time: ");
             System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
+
+            firstParams = fileParser.getFirstParams();
+            System.out.print("First param gen time: ");
+            System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        System.out.println("===========Next param===========");
-        if (nextParams != null) {
-            for (Map.Entry<String, List<String>> entry : fileParser.getNextParams().getValue().entrySet()) {
-                System.out.printf("%-40s", "\"" + entry.getKey() + "\"");
-                System.out.print(" -> ");
-
-                System.out.print("[");
-                System.out.print(String.join(", ", entry.getValue().stream().map(item -> "\"" + item + "\"").collect(Collectors.toList())));
-                System.out.println("]");
-            }
-        } else {
-            System.out.println("Can't not find any match.");
-        }
-        System.out.println("================================");
+        printMap(nextParams, "Next param=");
+        System.out.println("");
+        printMap(firstParams, "First param");
 
         timer.startCounter();
         //type check
@@ -75,5 +70,22 @@ public class ProjectTest {
         System.out.println("Parse done!");
 
 
+    }
+
+    public static void printMap(MultiMap data, String title) {
+        System.out.println("===========" + title + "===========");
+        if (data != null) {
+            for (Map.Entry<String, List<String>> entry : data.getValue().entrySet()) {
+                System.out.printf("%-40s", "\"" + entry.getKey() + "\"");
+                System.out.print(" -> ");
+
+                System.out.print("[");
+                System.out.print(String.join(", ", entry.getValue().stream().map(item -> "\"" + item + "\"").collect(Collectors.toList())));
+                System.out.println("]");
+            }
+        } else {
+            System.out.println("Can't not find any match.");
+        }
+        System.out.println("================================");
     }
 }
