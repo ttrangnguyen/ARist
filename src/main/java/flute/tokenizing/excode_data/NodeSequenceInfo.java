@@ -4,11 +4,13 @@
 package flute.tokenizing.excode_data;
 
 import com.github.javaparser.Position;
-import org.w3c.dom.Node;
+import com.github.javaparser.ast.Node;
 
+import java.util.List;
 import java.util.Optional;
 
 public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
+	public Node oriNode;
 
 	public static String alignToken = "\r\n";
 
@@ -877,6 +879,13 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
+	public static NodeSequenceInfo getUnknown() {
+		NodeSequenceInfo node = new NodeSequenceInfo();
+		node.nodeType = NodeSequenceConstant.UNKNOWN;
+		node.representStr = "<unk>";
+		return node;
+	}
+
 	public static boolean isConstructor(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTOR;
 	}
@@ -895,5 +904,17 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static boolean isCLBLK(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
+	}
+
+	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
+		//TODO
+		if (nodeSequenceList.isEmpty()) return "LIT(null)";
+		StringBuilder sb = new StringBuilder();
+		for (NodeSequenceInfo nodeSequenceInfo: nodeSequenceList) {
+			sb.append(' ');
+			sb.append(nodeSequenceInfo.toStringSimple());
+		}
+		sb.deleteCharAt(0);
+		return sb.toString();
 	}
 }

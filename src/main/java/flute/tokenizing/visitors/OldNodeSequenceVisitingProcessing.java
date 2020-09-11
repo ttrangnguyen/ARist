@@ -504,14 +504,21 @@ public class OldNodeSequenceVisitingProcessing {
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
+
 	public static NodeSequenceInfo addSEPANode(short sepa, ArrayList<NodeSequenceInfo> nodeSequenceList, char type) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getSEPA(sepa,  type);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
-		
 	}
+
 	public static NodeSequenceInfo addConditionalExprNode(short conditionalExpr, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getConditionalExpr();
+		nodeSequenceList.add(nodeSequenceInfo);
+		return nodeSequenceInfo;
+	}
+
+	public static NodeSequenceInfo addUnknownNode(short sepa, ArrayList<NodeSequenceInfo> nodeSequenceList, char type) {
+		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getSEPA(sepa,  type);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}

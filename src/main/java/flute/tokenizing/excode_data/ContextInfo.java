@@ -28,15 +28,4 @@ public class ContextInfo {
         }
         return context;
     }
-
-    public String getContextFromMethodDeclarationAsString() {
-        List<NodeSequenceInfo> context = getContextFromMethodDeclaration();
-        StringBuilder sb = new StringBuilder();
-        for (NodeSequenceInfo excode: context) {
-            sb.append(' ');
-            sb.append(excode.toStringSimple());
-        }
-        sb.deleteCharAt(0);
-        return sb.toString();
-    }
 }
