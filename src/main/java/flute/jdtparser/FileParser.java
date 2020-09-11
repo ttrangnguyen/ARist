@@ -27,9 +27,18 @@ public class FileParser {
 
     private boolean isStatic = false;
 
-    public List<Variable> visibleVariable = new ArrayList<>();
-    public HashMap<String, ClassModel> visibleClass;
+    public List<Variable> visibleVariables = new ArrayList<>();
+    private HashMap<String, Integer> initVariables = new HashMap<>();
 
+    public HashMap<String, ClassModel> visibleClass = new HashMap<>();
+
+    /**
+     * Create parser with position by length
+     *
+     * @param projectParser
+     * @param curFile
+     * @param curPosition
+     */
     public FileParser(ProjectParser projectParser, File curFile, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = curFile;
@@ -37,6 +46,14 @@ public class FileParser {
         cu = projectParser.createCU(curFile);
     }
 
+    /**
+     * Create parser with position by line, height
+     *
+     * @param projectParser
+     * @param curFile
+     * @param curLine
+     * @param curPosition
+     */
     public FileParser(ProjectParser projectParser, File curFile, int curLine, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = curFile;
@@ -44,6 +61,14 @@ public class FileParser {
         this.curPosition = this.getPosition(curLine, curPosition);
     }
 
+
+    /**
+     * If the result is empty, type checking is passed
+     *
+     * @param startPos
+     * @param stopPos
+     * @return List of errors in between two position.
+     */
     public List<IProblem> getErrors(int startPos, int stopPos) {
         List<IProblem> problemList = new ArrayList<>();
         IProblem[] iProblems = cu.getProblems();
@@ -77,20 +102,33 @@ public class FileParser {
         });
     }
 
+    /**
+     * When change position, the parse process will run again.
+     *
+     * @param position
+     * @throws Exception
+     */
     public void setPosition(int position) throws Exception {
         this.curPosition = position;
         parse();
     }
 
+    /**
+     * Run it after generate file parser. It will parse visible variables with the current position.
+     *
+     * @throws Exception
+     */
     public void parse() throws Exception {
         try {
             ITypeBinding clazz = getClassScope(curPosition);
+
             if (clazz != curClass) {
                 curClass = clazz;
                 visibleClass = projectParser.getListAccess(clazz);
             }
+
         } catch (NullPointerException err) {
-            if (visibleClass != null) visibleClass.clear();
+            visibleClass.clear();
             throw new Exception("Can not get class scope");
         }
 
@@ -99,7 +137,8 @@ public class FileParser {
         if (scope != null) {
             getVariableScope(scope);
         } else {
-            visibleVariable.clear();
+            visibleVariables.clear();
+            initVariables.clear();
         }
     }
 
@@ -109,7 +148,21 @@ public class FileParser {
 //        return listVariable;
 //    }
 
+    /**
+     * @return First params can append the position of a method invocation.
+     */
+    public MultiMap getFirstParams() {
+        return getNextParams(true);
+    }
+
+    /**
+     * @return Next params can append the position of a method invocation with some some pre-written parameters.
+     */
     public MultiMap getNextParams() {
+        return getNextParams(false);
+    }
+
+    private MultiMap getNextParams(boolean isFirst) {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -138,6 +191,8 @@ public class FileParser {
             isStaticExpr = curClass.getName().equals(expr.toString());
         }
 
+        List preArgs = isFirst ? new ArrayList() : methodInvocation.arguments();
+
         ClassParser classParser = new ClassParser(classBinding);
 
         List<IMethodBinding> listMember = new ArrayList<>();
@@ -149,7 +204,7 @@ public class FileParser {
                 //Add filter for parent expression
                 if (parentValue(methodInvocation) == null
                         || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation))) {
-                    if (checkInvoMember(methodInvocation.arguments(), methodBinding)) {
+                    if (checkInvoMember(preArgs, methodBinding)) {
                         listMember.add(methodBinding);
                     }
                 }
@@ -160,8 +215,8 @@ public class FileParser {
 
         MultiMap nextVariableMap = new MultiMap();
 
-        int methodArgLength = methodInvocation.arguments().size();
-        methodArgLength = methodArgLength > 0 && methodInvocation.arguments().get(methodArgLength - 1).toString().equals("$missing$")
+        int methodArgLength = preArgs.size();
+        methodArgLength = methodArgLength > 0 && preArgs.get(methodArgLength - 1).toString().equals("$missing$")
                 ? methodArgLength - 1 : methodArgLength;
 
         int finalMethodArgLength = methodArgLength;
@@ -172,7 +227,7 @@ public class FileParser {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
-                visibleVariable.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
+                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
@@ -366,9 +421,6 @@ public class FileParser {
         return null;
     }
 
-
-    private HashMap<String, Integer> initVariables = new HashMap<>();
-
     private void getVariableScope(ASTNode astNode) {
         if (astNode == null) return;
         Block block = null;
@@ -394,7 +446,7 @@ public class FileParser {
                 Variable variable = new Variable(curClass, "this");
                 variable.setStatic(false);
                 variable.setInitialized(true);
-                visibleVariable.add(variable);
+                visibleVariables.add(variable);
             }
 
         } else if (astNode instanceof Initializer) {
@@ -501,11 +553,11 @@ public class FileParser {
 
         if (this.isStatic == true && isStatic == false) return;
 
-        if (!checkVariableInList(varName, visibleVariable) && startPosition <= curPosition) {
+        if (!checkVariableInList(varName, visibleVariables) && startPosition <= curPosition) {
             Variable variable = new Variable(typeBinding, varName);
             variable.setStatic(isStatic);
             variable.setInitialized(isInitialized);
-            visibleVariable.add(variable);
+            visibleVariables.add(variable);
         }
     }
 
@@ -518,23 +570,34 @@ public class FileParser {
         return false;
     }
 
+
+    /**
+     * @param astNode
+     * @return Get parent block nearest ASTNode, that have type MethodDeclaration, Initializer,
+     * TypeDeclaration, Block, LambdaExpression, ForStatement, ForStatement
+     */
     public static ASTNode getParentBlock(ASTNode astNode) {
         if (astNode == null) return null;
         ASTNode parentNode = astNode.getParent();
         if (parentNode instanceof Block) {
 //            if (parentNode.getParent() instanceof MethodDeclaration) return parentNode.getParent();
-            return (Block) parentNode; //block object
+            return parentNode; //block object
         } else if (parentNode instanceof MethodDeclaration || parentNode instanceof Initializer) {
             return parentNode;
         } else if (parentNode instanceof TypeDeclaration) {
             return parentNode;
         } else if (parentNode instanceof LambdaExpression) {
             return parentNode;
-        } else if (parentNode instanceof ForStatement || parentNode instanceof EnhancedForStatement) {
+        } else if (parentNode instanceof ForStatement || parentNode instanceof ForStatement) {
             return parentNode;
         } else return getParentBlock(parentNode);
     }
 
+    /**
+     * @param position
+     * @return Parent class nearest of position.
+     * @throws NullPointerException
+     */
     public ITypeBinding getClassScope(int position) throws NullPointerException {
         final TypeDeclaration[] result = {null};
         cu.accept(new ASTVisitor() {
@@ -596,8 +659,8 @@ public class FileParser {
         return cu;
     }
 
-    public List<Variable> getVisibleVariable() {
-        return visibleVariable;
+    public List<Variable> getVisibleVariables() {
+        return visibleVariables;
     }
 
     public HashMap<String, ClassModel> getVisibleClass() {

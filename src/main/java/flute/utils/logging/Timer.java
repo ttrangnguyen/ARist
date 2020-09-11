@@ -13,6 +13,11 @@ public class Timer {
         return lastTime;
     }
 
+    public void startCounter() {
+        lastTime = new Date();
+    }
+
+    //setup new time counter
     public long getTimeCounter() {
         Date newDate = new Date();
         long delta = newDate.getTime() - lastTime.getTime();
