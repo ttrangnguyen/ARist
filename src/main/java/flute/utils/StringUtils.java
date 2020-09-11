@@ -18,7 +18,8 @@ public class StringUtils {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Logger.log(isStartUpperCase(" Test"));
+		//Logger.log(isStartUpperCase(" Test"));
+		System.out.println(StringUtils.indexOf("abcdbcd", "cd"));
 	}
 
 	public static int countNumLines(String str){
@@ -60,5 +61,24 @@ public class StringUtils {
 
 	public static ArrayList<String> splitToArrayList(String str, String regex) {
 		return new ArrayList<>(Arrays.asList(str.split(regex)));
+	}
+
+	public static int indexOf(String s, String t) {
+		int[] next = new int[t.length()];
+		int j = -1;
+		next[0] = -1;
+		for (int i = 1; i < t.length(); ++i) {
+			while (j >= 0 && t.charAt(j + 1) != t.charAt(i)) j = next[j];
+			if (t.charAt(j + 1) == t.charAt(i)) ++j;
+			next[i] = j;
+		}
+
+		j = -1;
+		for (int i = 1; i < s.length(); ++i) {
+			while (j >= 0 && t.charAt(j + 1) != s.charAt(i)) j = next[j];
+			if (t.charAt(j + 1) == s.charAt(i)) ++j;
+			if (j == t.length() - 1) return i - j;
+		}
+		return -1;
 	}
 }
