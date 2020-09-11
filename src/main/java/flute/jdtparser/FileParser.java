@@ -6,7 +6,6 @@ import flute.data.type.IBooleanType;
 import flute.data.type.IGenericType;
 import flute.data.typemodel.ClassModel;
 import flute.data.typemodel.Variable;
-import org.apache.commons.lang.time.StopWatch;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
@@ -33,6 +32,13 @@ public class FileParser {
 
     public HashMap<String, ClassModel> visibleClass = new HashMap<>();
 
+    /**
+     * Create parser with position by length
+     *
+     * @param projectParser
+     * @param curFile
+     * @param curPosition
+     */
     public FileParser(ProjectParser projectParser, File curFile, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = curFile;
@@ -40,6 +46,14 @@ public class FileParser {
         cu = projectParser.createCU(curFile);
     }
 
+    /**
+     * Create parser with position by line, height
+     *
+     * @param projectParser
+     * @param curFile
+     * @param curLine
+     * @param curPosition
+     */
     public FileParser(ProjectParser projectParser, File curFile, int curLine, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = curFile;
@@ -47,6 +61,14 @@ public class FileParser {
         this.curPosition = this.getPosition(curLine, curPosition);
     }
 
+
+    /**
+     * If the result is empty, type checking is passed
+     *
+     * @param startPos
+     * @param stopPos
+     * @return List of errors in between two position.
+     */
     public List<IProblem> getErrors(int startPos, int stopPos) {
         List<IProblem> problemList = new ArrayList<>();
         IProblem[] iProblems = cu.getProblems();
@@ -80,11 +102,22 @@ public class FileParser {
         });
     }
 
+    /**
+     * When change position, the parse process will run again.
+     *
+     * @param position
+     * @throws Exception
+     */
     public void setPosition(int position) throws Exception {
         this.curPosition = position;
         parse();
     }
 
+    /**
+     * Run it after generate file parser. It will parse visible variables with the current position.
+     *
+     * @throws Exception
+     */
     public void parse() throws Exception {
         try {
             ITypeBinding clazz = getClassScope(curPosition);
@@ -115,10 +148,16 @@ public class FileParser {
 //        return listVariable;
 //    }
 
+    /**
+     * @return First params can append the position of a method invocation.
+     */
     public MultiMap getFirstParams() {
         return getNextParams(true);
     }
 
+    /**
+     * @return Next params can append the position of a method invocation with some some pre-written parameters.
+     */
     public MultiMap getNextParams() {
         return getNextParams(false);
     }
@@ -531,23 +570,34 @@ public class FileParser {
         return false;
     }
 
+
+    /**
+     * @param astNode
+     * @return Get parent block nearest ASTNode, that have type MethodDeclaration, Initializer,
+     * TypeDeclaration, Block, LambdaExpression, ForStatement, ForStatement
+     */
     public static ASTNode getParentBlock(ASTNode astNode) {
         if (astNode == null) return null;
         ASTNode parentNode = astNode.getParent();
         if (parentNode instanceof Block) {
 //            if (parentNode.getParent() instanceof MethodDeclaration) return parentNode.getParent();
-            return (Block) parentNode; //block object
+            return parentNode; //block object
         } else if (parentNode instanceof MethodDeclaration || parentNode instanceof Initializer) {
             return parentNode;
         } else if (parentNode instanceof TypeDeclaration) {
             return parentNode;
         } else if (parentNode instanceof LambdaExpression) {
             return parentNode;
-        } else if (parentNode instanceof ForStatement || parentNode instanceof EnhancedForStatement) {
+        } else if (parentNode instanceof ForStatement || parentNode instanceof ForStatement) {
             return parentNode;
         } else return getParentBlock(parentNode);
     }
 
+    /**
+     * @param position
+     * @return Parent class nearest of position.
+     * @throws NullPointerException
+     */
     public ITypeBinding getClassScope(int position) throws NullPointerException {
         final TypeDeclaration[] result = {null};
         cu.accept(new ASTVisitor() {
