@@ -432,8 +432,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                 nodeSequenceList).setPosition(n.getBegin(), null);
         
         // { ---> OPBLK
-        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList)
-                .setPosition(getPositionOfStringFrom(n.getBegin(), getStringWithoutComment(n), "{"));
+        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
+                //.setPosition(getPositionOfStringFrom(n.getBegin(), getStringWithoutComment(n), "{"));
         
         if (n.getEntries().isNonEmpty()) {
             for (int i = 0; i < n.getEntries().size() - 1; ++i) {
@@ -667,8 +667,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 	    Node parentNode = n.getParentNode().get();
 
         // { ---> OPBLK
-        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList)
-                .setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "{"));
+        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
+                //.setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "{"));
         
         // ... --->
         for (BodyDeclaration<?> p: n) p.accept(this, arg);
@@ -876,8 +876,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         Node parentNode = n.getParentNode().get();
 
 	    // ( ---> OPEN_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true)
-                .setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "("));
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true);
+                //.setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "("));
 
         if (n.isNonEmpty()) {
             for (int i = 0; i < n.size() - 1; i++) {
@@ -896,8 +896,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         }
         
         // ) ---> CLOSE_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false)
-                .setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), ")"));
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false);
+                //.setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), ")"));
     }
     
     @SuppressWarnings("unchecked")
@@ -1042,8 +1042,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 	    Node parentNode = n.getParentNode().get();
 
         // { ---> OPBLK
-        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList)
-                .setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "{"));
+        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
+                //.setPosition(getPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "{"));
         fileInfo.numBlocks++;
         // Logger.log("BlockStmt: " + n.getClass() + "\t" +
         // n.getParentNode().getClass());
@@ -1052,8 +1052,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         n.getStatements().forEach(p -> doVisitStatement(p, arg));
         
         // } ---> CLBLK
-        OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList)
-                .setPosition(getLastPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "}"));
+        OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList);
+                //.setPosition(getLastPositionOfStringFrom(parentNode.getBegin(), getStringWithoutComment(parentNode), "}"));
     }
     
     // Eg: class Y { } """in""" class X { void m() { class Y { } } }
@@ -1195,15 +1195,15 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         visit(new EnclosedExpr(n.getSelector()), arg);
 
         // { ---> OPBLK
-        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList)
-                .setPosition(getPositionOfStringFrom(n.getBegin(), getStringWithoutComment(n), "{"));
+        OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
+                //.setPosition(getPositionOfStringFrom(n.getBegin(), getStringWithoutComment(n), "{"));
         
         // case BANANA,PEAR -> println("uhuh"); default -> println("nope"); --->
         visitSwitchBlockStatementGroups(n.getEntries(), arg);
         
         // } ---> CLBLK
-        OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList)
-                .setPosition(getLastPositionOfStringFrom(n.getBegin(), getStringWithoutComment(n), "}"));
+        OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList);
+                //.setPosition(getLastPositionOfStringFrom(n.getBegin(), getStringWithoutComment(n), "}"));
 
         // --->
         //OldNodeSequenceVisitingProcessing.addEndControlNode(nodeType, nodeSeqInfo.nodeSeqID, nodeSequenceStack,
@@ -1319,8 +1319,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // super.visit(n, arg);
         
         // ---> OPEN_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true)
-                .setPosition(getPositionOfStringFrom(n.getBegin(), content, "("));
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true);
+                //.setPosition(getPositionOfStringFrom(n.getBegin(), content, "("));
         
         // int a=3, b=5 --->
         // Init
@@ -1332,8 +1332,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         }
         
         // ; ---> SEPA(;)
-        OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ';')
-                .setPosition(getPositionOfStringFrom(n.getBegin(), content, ";"));
+        OldNodeSequenceVisitingProcessing.addSEPANode(NodeSequenceConstant.SEPA, nodeSequenceList, ';');
+                //.setPosition(getPositionOfStringFrom(n.getBegin(), content, ";"));
         
         // a<99 --->
         // Condition
@@ -1393,8 +1393,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // super.visit(n, arg);
         
         // ---> OPEN_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true)
-                .setPosition(getPositionOfStringFrom(n.getBegin(), content, "("));
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true);
+                //.setPosition(getPositionOfStringFrom(n.getBegin(), content, "("));
         
         // Object o --->
         visit(n.getVariable(), arg);
