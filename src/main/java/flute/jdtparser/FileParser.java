@@ -151,18 +151,25 @@ public class FileParser {
     /**
      * @return First params can append the position of a method invocation.
      */
-    public MultiMap getFirstParams() {
-        return getNextParams(true);
+    public MultiMap genFirstParams() {
+        return genNextParams(0);
     }
 
     /**
-     * @return Next params can append the position of a method invocation with some some pre-written parameters.
+     * @return Next params can append the position of a method invocation with some pre-written parameters.
      */
-    public MultiMap getNextParams() {
-        return getNextParams(false);
+    public MultiMap genNextParams() {
+        return genNextParams(-1);
     }
 
-    private MultiMap getNextParams(boolean isFirst) {
+    /**
+     * @return Next params can append the input position of a method invocation with sublist of pre-written parameters.
+     */
+    public MultiMap genParamsAt(int position) {
+        return genNextParams(position);
+    }
+
+    private MultiMap genNextParams(int position) {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -191,7 +198,7 @@ public class FileParser {
             isStaticExpr = curClass.getName().equals(expr.toString());
         }
 
-        List preArgs = isFirst ? new ArrayList() : methodInvocation.arguments();
+        List preArgs = position >= 0 ? methodInvocation.arguments().subList(0, position) : methodInvocation.arguments();
 
         ClassParser classParser = new ClassParser(classBinding);
 
@@ -223,7 +230,7 @@ public class FileParser {
         listMember.forEach(methodBinding ->
         {
             ITypeBinding[] params = methodBinding.getParameterTypes();
-            if (finalMethodArgLength == params.length) {
+            if (finalMethodArgLength == params.length && !methodBinding.isVarargs()) {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
