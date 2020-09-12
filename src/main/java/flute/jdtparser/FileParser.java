@@ -2,8 +2,7 @@ package flute.jdtparser;
 
 import com.google.common.collect.Lists;
 import flute.data.constraint.ParserConstant;
-import flute.data.type.IBooleanType;
-import flute.data.type.IGenericType;
+import flute.data.type.*;
 import flute.data.typemodel.ClassModel;
 import flute.data.typemodel.Variable;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -278,9 +277,9 @@ public class FileParser {
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
         if (methodBinding.getParameterTypes().length > position
-                && (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
-                || compareWithGenericType(varType, methodBinding.getParameterTypes()[position])
-        )) {
+                && ((varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
+                || compareWithGenericType(varType, methodBinding.getParameterTypes()[position])))
+        ) {
             return ParserConstant.TRUE_VALUE;
         }
 
@@ -296,8 +295,16 @@ public class FileParser {
 
     public static boolean compareWithGenericType(ITypeBinding varType, ITypeBinding paramType) {
         ITypeBinding elementType = paramType.isArray() ? paramType.getElementType() : paramType;
+        if (varType.getDimensions() != paramType.getDimensions()) return false;
         if (elementType.isTypeVariable() && paramType.isCastCompatible(varType)) {
             return true;
+        } else if (varType.isPrimitive() || (varType.isArray() && varType.getElementType().isPrimitive())) {
+            //check type is primitive
+            if (TypeConstraintKey.WRAP_TYPES.contains(elementType.getSuperclass().getKey())) {
+                Object q = paramType.getDimensions();
+                Object l = varType.getDimensions();
+                return true;
+            }
         }
         return false;
     }
@@ -588,7 +595,6 @@ public class FileParser {
         }
         return false;
     }
-
 
     /**
      * @param astNode
