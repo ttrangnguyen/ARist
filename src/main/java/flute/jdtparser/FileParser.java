@@ -278,7 +278,9 @@ public class FileParser {
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
         if (methodBinding.getParameterTypes().length > position
-                && varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])) {
+                && (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
+                || compareWithGenericType(varType, methodBinding.getParameterTypes()[position])
+        )) {
             return ParserConstant.TRUE_VALUE;
         }
 
@@ -290,6 +292,14 @@ public class FileParser {
             }
         }
         return ParserConstant.FALSE_VALUE;
+    }
+
+    public static boolean compareWithGenericType(ITypeBinding varType, ITypeBinding paramType) {
+        ITypeBinding elementType = paramType.isArray() ? paramType.getElementType() : paramType;
+        if (elementType.isTypeVariable() && paramType.isCastCompatible(varType)) {
+            return true;
+        }
+        return false;
     }
 
     public int getPosition(int line, int column) {
