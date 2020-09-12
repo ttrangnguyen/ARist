@@ -316,10 +316,11 @@ public class FileParser {
             return new ITypeBinding[]{new IBooleanType()};
         } else if (parentNode instanceof MethodInvocation) {
             MethodInvocation methodInvocationParent = (MethodInvocation) parentNode;
-            ITypeBinding[] parentTypes = parentValue(methodInvocationParent);
-            List<ITypeBinding> typeResults = new ArrayList<>();
+            //if method call is a param of method call
+            if (methodInvocationParent.arguments().contains(methodInvocation)) {
+                ITypeBinding[] parentTypes = parentValue(methodInvocationParent);
+                List<ITypeBinding> typeResults = new ArrayList<>();
 
-            for (ITypeBinding parentType : parentTypes) {
                 ClassParser classParser;
                 boolean isStaticExpr = false;
                 if (methodInvocation.getExpression() == null) {
@@ -332,9 +333,10 @@ public class FileParser {
                 }
 
                 classParser.getMethodsFrom(curClass, isStaticExpr).forEach(methodMember -> {
-                    if (methodMember.getName().equals(methodInvocationParent.getName().getIdentifier())) {
+                    if (methodMember.getName().equals(methodInvocation.getName().getIdentifier())) {
 
-                        if (methodMember.getReturnType().isAssignmentCompatible(parentType)) {
+                        if (parentTypes == null ||
+                                compareWithMultiType(methodMember.getReturnType(), parentTypes)) {
                             int positionParam = -1;
 
                             for (int i = 0; i < methodInvocationParent.arguments().size(); i++) {
@@ -345,13 +347,13 @@ public class FileParser {
                             }
 
                             if (checkInvoMember(methodInvocationParent.arguments(), methodMember, positionParam)) {
-                                typeResults.add(methodMember.getParameterTypes()[positionParam]);
+                                typeResults.add(methodMember.getReturnType());
                             }
                         }
                     }
                 });
+                return typeResults.toArray(new ITypeBinding[0]);
             }
-            return typeResults.toArray(new ITypeBinding[0]);
         }
         return null;
     }
