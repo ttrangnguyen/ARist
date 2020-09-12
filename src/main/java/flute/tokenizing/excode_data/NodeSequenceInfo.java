@@ -4,10 +4,13 @@
 package flute.tokenizing.excode_data;
 
 import com.github.javaparser.Position;
+import com.github.javaparser.ast.Node;
 
+import java.util.List;
 import java.util.Optional;
 
 public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
+	public Node oriNode;
 
 	public static String alignToken = "\r\n";
 
@@ -775,12 +778,26 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		if (endMt == NodeSequenceConstant.CASE_PART)
 			op.representStr = "CASE_PART";
 		else {
-			if (isOpen)
+			if (isOpen) {
 				op.representStr = "OPEN_PART";
-			else
+				op.startEnd = NodeSequenceConstant.START;
+			}
+			else {
 				op.representStr = "CLOSE_PART";
+				op.startEnd = NodeSequenceConstant.END;
+			}
 		}
 		return op;
+	}
+
+	public static boolean isOpenPart(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
+	}
+
+	public static boolean isClosePart(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 
 	private String toStringAGM_MT() {
@@ -814,15 +831,27 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 	public static NodeSequenceInfo getStartMethod(String type) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
+		op.startEnd = NodeSequenceConstant.START;
 		op.representStr = "METHOD{" + type + "}";
 		return op;
+	}
+
+	public static boolean isStartMethod(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHOD
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
 	}
 
 	public static NodeSequenceInfo getEndMethod() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
+		op.startEnd = NodeSequenceConstant.END;
 		op.representStr = "ENDMETHOD";
 		return op;
+	}
+
+	public static boolean isEndMethod(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHOD
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 	
 	public static NodeSequenceInfo getFieldDeclaration() {
@@ -839,10 +868,53 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
+	public static boolean isSEPA(NodeSequenceInfo nodeSequenceInfo, char type) {
+		return nodeSequenceInfo.representStr.equals("SEPA" + "(" + type + ")");
+	}
+
 	public static NodeSequenceInfo getConditionalExpr() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.CONDITIONAL_EXPR;
 		op.representStr = "CEXP";
 		return op;
+	}
+
+	public static NodeSequenceInfo getUnknown() {
+		NodeSequenceInfo node = new NodeSequenceInfo();
+		node.nodeType = NodeSequenceConstant.UNKNOWN;
+		node.representStr = "<unk>";
+		return node;
+	}
+
+	public static boolean isConstructor(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTOR;
+	}
+
+	public static boolean isConstructorOrMethod(NodeSequenceInfo nodeSequenceInfo) {
+		return isConstructor(nodeSequenceInfo) || isStartMethod(nodeSequenceInfo);
+	}
+
+	public static boolean isMethodAccess(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHODACCESS;
+	}
+
+	public static boolean isOPBLK(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPBK;
+	}
+
+	public static boolean isCLBLK(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
+	}
+
+	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
+		//TODO
+		if (nodeSequenceList.isEmpty()) return "LIT(null)";
+		StringBuilder sb = new StringBuilder();
+		for (NodeSequenceInfo nodeSequenceInfo: nodeSequenceList) {
+			sb.append(' ');
+			sb.append(nodeSequenceInfo.toStringSimple());
+		}
+		sb.deleteCharAt(0);
+		return sb.toString();
 	}
 }

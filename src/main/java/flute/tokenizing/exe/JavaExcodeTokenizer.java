@@ -29,6 +29,10 @@ public class JavaExcodeTokenizer {
         configure();
     }
 
+    public File getProject() {
+        return project;
+    }
+
     private void configure() {
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
         combinedTypeSolver.add(new ReflectionTypeSolver());
@@ -71,6 +75,13 @@ public class JavaExcodeTokenizer {
         File javaFile = new File(javaFilePath);
         validateJavaFile(javaFile);
         tokenizeToFile(javaFile, outputFilePath);
+    }
+
+    public List<List<NodeSequenceInfo>> tokenizeProject() {
+        List<List<NodeSequenceInfo>> projectExcodes = new ArrayList<>();
+        List<File> javaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
+        for (File file: javaFiles) projectExcodes.add(tokenize(file));
+        return projectExcodes;
     }
 
     public void tokenizeProjectToFile(String outputFilePath) {

@@ -17,7 +17,7 @@ public class SocketClient {
 
     Gson gson = new Gson();
 
-    SocketClient(int PORT) throws Exception {
+    public SocketClient(int PORT) throws Exception {
         try {
             socketOfClient = new Socket("localhost", PORT);
 
