@@ -19,11 +19,11 @@ import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.utils.StringUtils;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.JavaTokenizer;
+import flute.utils.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ArgRecTestGenerator {
     private JavaExcodeTokenizer tokenizer;
@@ -127,7 +127,8 @@ public class ArgRecTestGenerator {
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
                                     test.setNext_lex(nextLexList);
-                                    tests.add(test);
+                                    Gson gson = new Gson();
+                                    if (gson.toJson(test).length() <= 8000) tests.add(test);
                                 } catch (IOException e) {
                                     //e.printStackTrace();
                                 }
@@ -175,7 +176,8 @@ public class ArgRecTestGenerator {
                         }
                         test.setNext_excode(nextExcodeList);
                         test.setNext_lex(nextLexList);
-                        tests.add(test);
+                        Gson gson = new Gson();
+                        if (gson.toJson(test).length() <= 8000) tests.add(test);
                     } catch (IOException e) {
                         //e.printStackTrace();
                     }
@@ -207,13 +209,24 @@ public class ArgRecTestGenerator {
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
         //List<ArgRecTest> tests = generator.generate(Config.REPO_DIR + "sampleproj/src/Main.java");
-        List<ArgRecTest> tests = generator.generateAll(1000);
+        //List<ArgRecTest> tests = generator.generateAll(10000);
         Gson gson = new Gson();
-//        for (ArgRecTest test: tests) {
-//            System.out.println(gson.toJson(test));
-//        }
-//        System.out.println(tests.size());
 
+//        for (ArgRecTest test: tests) {
+//            Logger.write(gson.toJson(test), "tests.txt");
+//        }
+
+        Scanner sc = new Scanner(new File(Config.LOG_DIR + "tests.txt"));
+        List<ArgRecTest> tests = new ArrayList<>();
+        while (sc.hasNextLine()) {
+            String line = sc.nextLine();
+            tests.add(gson.fromJson(line, ArgRecTest.class));
+        }
+        sc.close();
+
+        System.out.println(tests.size());
+        Collections.shuffle(tests);
+        int testCount = 0;
         int correctTop1PredictionCount = 0;
         int correctTopKPredictionCount = 0;
         try {
@@ -233,6 +246,7 @@ public class ArgRecTestGenerator {
                     System.out.println("==========================");
                     System.out.println("Runtime: " + predictResponse.getRuntime() + "s");
 
+                    ++testCount;
                     if (results.get(0).equals(test.getExpected_lex())) ++correctTop1PredictionCount;
                     for (String item: results) {
                         if (item.equals(test.getExpected_lex())) ++correctTopKPredictionCount;
@@ -244,7 +258,8 @@ public class ArgRecTestGenerator {
             e.printStackTrace();
         }
         System.out.println("==========================");
-        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / tests.size()));
-        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / tests.size()));
+        System.out.println("Number of tests: " + testCount);
+        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
+        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
     }
 }
