@@ -77,7 +77,7 @@ public class ProjectParser {
     }
 
     public CompilationUnit createCU(File file) {
-        return createCU(FileProcessor.read(file), file.getName());
+        return createCU(file.getName(), FileProcessor.read(file));
     }
 
     public CompilationUnit createCU(String fileName, String fileData) {
