@@ -171,7 +171,7 @@ while True:
             result.append(lexemes[sorted_scores[i][2]])
         runtime = perf_counter() - startTime
         print("Total n-gram runtime: ", runtime)
+        conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
 
-    conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
     conn.close()
     print('Client disconnected')
