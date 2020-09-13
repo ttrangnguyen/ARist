@@ -35,6 +35,7 @@ public class ArgRecTestGenerator {
     }
 
     public List<ArgRecTest> generate(String javaFilePath) {
+        System.out.println("File path: " + javaFilePath);
         List<ArgRecTest> tests = new ArrayList<>();
         List<NodeSequenceInfo> excodes = tokenizer.tokenize(javaFilePath);
         if (excodes.isEmpty()) return tests;
@@ -87,6 +88,8 @@ public class ArgRecTestGenerator {
                     continue;
                 }
 
+                //System.out.println("Position: " + methodCall.getBegin().get());
+
                 int methodCallIdx = stack.get(stack.size() - 1);
                 int k = methodCallIdx + 1;
                 int contextIdx = methodCallIdx + 1;
@@ -94,7 +97,13 @@ public class ArgRecTestGenerator {
                     Expression arg = methodCall.getArgument(j);
                     while (k <= i) {
                         if (NodeSequenceInfo.isSEPA(excodes.get(k), ',') && excodes.get(k).oriNode == arg) {
-                            MultiMap params = fileParser.genParamsAt(j);
+                            MultiMap params = null;
+                            try {
+                                params = fileParser.genParamsAt(j);
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                            } catch (Exception e) {
+                                //e.printStackTrace();
+                            }
                             if (params != null && !params.getValue().keySet().isEmpty()) {
                                 List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                                 List<List<String>> nextLexList = new ArrayList<>();
@@ -120,7 +129,7 @@ public class ArgRecTestGenerator {
                                     test.setNext_lex(nextLexList);
                                     tests.add(test);
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    //e.printStackTrace();
                                 }
                             }
 
@@ -132,7 +141,13 @@ public class ArgRecTestGenerator {
                     }
                 }
 
-                MultiMap params = fileParser.genParamsAt(methodCall.getArguments().size() - 1);
+                MultiMap params = null;
+                try {
+                    params = fileParser.genParamsAt(methodCall.getArguments().size() - 1);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                }
                 if (params != null && !params.getValue().keySet().isEmpty()) {
                     List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                     List<List<String>> nextLexList = new ArrayList<>();
@@ -144,7 +159,7 @@ public class ArgRecTestGenerator {
                     try {
                         ArgRecTest test = new ArgRecTest();
                         List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall);
-                        while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
+                        while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
                             tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
                         }
                         test.setLex_context(tokenizedContextMethodCall);
@@ -162,7 +177,7 @@ public class ArgRecTestGenerator {
                         test.setNext_lex(nextLexList);
                         tests.add(test);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
                 }
 
@@ -172,22 +187,27 @@ public class ArgRecTestGenerator {
         return tests;
     }
 
-    public List<ArgRecTest> generateAll() {
+    public List<ArgRecTest> generateAll(int threshold) {
         List<File> javaFiles = DirProcessor.walkJavaFile(tokenizer.getProject().getAbsolutePath());
         List<ArgRecTest> tests = new ArrayList<>();
         for (File file: javaFiles) {
             tests.addAll(generate(file.getAbsolutePath()));
+            if (threshold >= 0 && tests.size() >= threshold) break;
         }
         return tests;
     }
 
+    public List<ArgRecTest> generateAll() {
+        return generateAll(-1);
+    }
+
     public static void main(String[] args) throws IOException {
-        Config.loadConfig(Config.STORAGE_DIR + "/json/demo.json");
+        Config.loadConfig(Config.STORAGE_DIR + "/json/ant.json");
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
         //List<ArgRecTest> tests = generator.generate(Config.REPO_DIR + "sampleproj/src/Main.java");
-        List<ArgRecTest> tests = generator.generateAll();
+        List<ArgRecTest> tests = generator.generateAll(1000);
         Gson gson = new Gson();
 //        for (ArgRecTest test: tests) {
 //            System.out.println(gson.toJson(test));
@@ -224,7 +244,7 @@ public class ArgRecTestGenerator {
             e.printStackTrace();
         }
         System.out.println("==========================");
-        System.out.println("Top-1 accuracy: " + 100.0 * correctTop1PredictionCount / tests.size() + "%");
-        System.out.println("Top-K accuracy: " + 100.0 * correctTopKPredictionCount / tests.size() + "%");
+        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / tests.size()));
+        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / tests.size()));
     }
 }
