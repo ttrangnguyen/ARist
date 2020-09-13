@@ -8,6 +8,7 @@ import flute.tokenizing.excode_data.FileInfo;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.utils.Pair;
+import flute.utils.file_processing.CountLOC;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.JavaTokenizer;
 import org.antlr.v4.runtime.CharStreams;
@@ -29,10 +30,12 @@ public class Parser {
     public static final int recursionMaxDepth = 1;
     public static final int threshPerDepth = 7;
 
-    private SystemTableCrossProject systemTableCrossProject;
+    private HashMap<SystemTableCrossProject, String> systemTableCrossProjectMap;
+    private HashMap<String, Integer> LOC;
 
     public Parser() {
-        systemTableCrossProject = new SystemTableCrossProject();
+        systemTableCrossProjectMap = new HashMap<>();
+        LOC = new HashMap<>();
     }
 
     public void run() {
@@ -42,13 +45,40 @@ public class Parser {
     }
 
     private void translateJavaToExcode() {
+        File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
+        for (File project : projects) {
+            String srcPath = "";
+            if (project.getName().equals("ant")) {
+                srcPath = "/src/main";
+            } else if (project.getName().equals("batik")) {
+                srcPath = "/sources";
+            } else if (project.getName().equals("log4j")) {
+                srcPath = "/src/main/java";
+            } else if (project.getName().equals("lucene")) {
+                srcPath = "/lucene/src/java";
+            } else if (project.getName().equals("xalan")) {
+                srcPath = "/src/";
+            } else if (project.getName().equals("xerces")) {
+                srcPath = "/src/";
+            } else continue;
+            translateJavaToExcode(project.getName(), project.getName() + srcPath);
+        }
+    }
+
+    private void translateJavaToExcode(String projectName, String projectSrcPath) {
         Logger.initDebug("debugVisitor.txt");
-        List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectPath);
+        List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectsPath + projectSrcPath);
         Logger.log("allSubFiles size: " + allSubFilesTmp.size());
         MetricsVisitor visitor = new MetricsVisitor();
+        SystemTableCrossProject systemTableCrossProject = new SystemTableCrossProject();
+        systemTableCrossProjectMap.put(systemTableCrossProject, projectName);
+        Integer totalLOC = 0;
         for (File file : allSubFilesTmp) {
+            Integer linesOfCode = CountLOC.count(file);
+            totalLOC += linesOfCode;
             JavaFileParser.visitFile(visitor, file, systemTableCrossProject, "xxx/");
         }
+        LOC.put(projectName, totalLOC);
         GetDirStructureCrossProject.buildSystemPackageList(systemTableCrossProject);
         systemTableCrossProject.buildTypeFullMap();
         systemTableCrossProject.buildMethodMap();
@@ -65,124 +95,167 @@ public class Parser {
 
     private void checkExcodeGrammar() {
         try {
-            System.out.println("Checking grammar");
-            long mx = 0, cnt = 0, sumExcodeSize = 0, sumBigExcodeSize = 0;
-            File fout = new File(Config.parsingResult);
-            FileOutputStream fos = new FileOutputStream(fout);
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-            BufferedWriter bw2 = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(Config.parsingResultFast)));
-            for (FileInfo fileInfo : systemTableCrossProject.fileList) {
-                StringBuilder builder = new StringBuilder();
-                for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
-                    builder.append(node.toString());
-                }
-                Instant start = Instant.now();
-                parseExcodeSequence(builder.toString(), fileInfo, bw);
-                Instant end = Instant.now();
-                Duration timeElapsed = Duration.between(start, end);
-                sumExcodeSize += builder.toString().length();
-                if (timeElapsed.toMillis() > Config.maxParsingTimeInMillis) {
-                    mx = Math.max(mx, timeElapsed.toMillis());
-                    ++cnt;
-                    sumBigExcodeSize += builder.toString().length();
-                    bw.write(fileInfo.filePath); bw.newLine();
-                    bw.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw.newLine();
-                    bw.write("Excode size: " + builder.toString().length()); bw.newLine();
-                } else {
-                    bw2.write(fileInfo.filePath); bw2.newLine();
-                    bw2.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw2.newLine();
-                    bw2.write("Excode size: " + builder.toString().length()); bw2.newLine();
-                }
+            for (Map.Entry<SystemTableCrossProject, String> entry : systemTableCrossProjectMap.entrySet()) {
+                checkExcodeGrammar(entry.getKey(), entry.getValue());
             }
-            bw.newLine();
-            bw.write("Slowest file" + mx); bw.newLine();
-            bw.write("Num of slow files: " + cnt); bw.newLine();
-            bw.write("Sum of big files: " + sumBigExcodeSize); bw.newLine();
-            bw.write("Sum excode size total: " + sumExcodeSize); bw.newLine();
-            bw.close();
-            bw2.close();
         }
         catch (IOException e){
             e.printStackTrace();
         }
     }
 
+    private void checkExcodeGrammar(SystemTableCrossProject systemTableCrossProject, String projectName) throws IOException {
+        System.out.println("Checking grammar");
+        long mx = 0, cnt = 0, sumExcodeSize = 0, sumBigExcodeSize = 0;
+        File fout = new File(Config.parsingResult);
+        FileOutputStream fos = new FileOutputStream(fout);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        BufferedWriter bw2 = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(Config.parsingResultFast)));
+        for (FileInfo fileInfo : systemTableCrossProject.fileList) {
+            StringBuilder builder = new StringBuilder();
+            for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
+                builder.append(node.toString());
+            }
+            Instant start = Instant.now();
+            parseExcodeSequence(builder.toString(), fileInfo, bw);
+            Instant end = Instant.now();
+            Duration timeElapsed = Duration.between(start, end);
+            sumExcodeSize += builder.toString().length();
+            if (timeElapsed.toMillis() > Config.maxParsingTimeInMillis) {
+                mx = Math.max(mx, timeElapsed.toMillis());
+                ++cnt;
+                sumBigExcodeSize += builder.toString().length();
+                bw.write(fileInfo.filePath); bw.newLine();
+                bw.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw.newLine();
+                bw.write("Excode size: " + builder.toString().length()); bw.newLine();
+            } else {
+                bw2.write(fileInfo.filePath); bw2.newLine();
+                bw2.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw2.newLine();
+                bw2.write("Excode size: " + builder.toString().length()); bw2.newLine();
+            }
+        }
+        bw.newLine();
+        bw.write("Slowest file" + mx); bw.newLine();
+        bw.write("Num of slow files: " + cnt); bw.newLine();
+        bw.write("Sum of big files: " + sumBigExcodeSize); bw.newLine();
+        bw.write("Sum excode size total: " + sumExcodeSize); bw.newLine();
+        bw.close();
+        bw2.close();
+    }
+
     private void createExcodeFiles() {
         try {
-            FileWriter testFilePaths = new FileWriter(new File("../testFilePaths.txt"));
-            for (FileInfo fileInfo : systemTableCrossProject.fileList) {
-                StringBuilder builder = new StringBuilder();
-                for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
-//                    System.out.print(node.toString());
-                    String space = " ";
-//                    if (node.toString().contains("STSTM{")) {
-//                        builder.append("\n");
-//                        space = "";
-//                    }
-                    builder.append(node.toString().replace(" ", "").replace("\r\n", space));
-                }
-
-                String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
-                String excodeFilePath;
-                String javaFileTokenPath;
-
-                if (toTest()) {
-                    testFilePaths.write(fileInfo.file.getAbsolutePath() + "\n");
-                    javaFileTokenPath = "javaFileTokens/test/" +
-                            fileInfo.file.getName().replace(".java", ".txt");
-                    excodeFilePath = Config.testingPath +
-                            filePath[filePath.length - 1].replace(".java", ".txt");
-                } else if (toValidate()){
-                    javaFileTokenPath = "javaFileTokens/validate/" +
-                            fileInfo.file.getName().replace(".java", ".txt");
-                    excodeFilePath = Config.validatingPath +
-                            filePath[filePath.length - 1].replace(".java", ".txt");
-                } else {
-                    javaFileTokenPath = "javaFileTokens/train/" +
-                            fileInfo.file.getName().replace(".java", ".txt");
-                    excodeFilePath = Config.trainingPath +
-                            filePath[filePath.length - 1].replace(".java", ".txt");
-                }
-
-                File fout = new File(excodeFilePath);
-                FileOutputStream fos = new FileOutputStream(fout);
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                bw.write(builder.toString());
-                bw.close();
-
-                FileWriter writer = new FileWriter(javaFileTokenPath);
-                String fileContent = JavaTokenizer.removePackagesAndImports(fileInfo.file.getAbsolutePath());
-                ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
-                for (String token : tokens) {
-                    writer.write(token + "\n");
-                }
-                writer.close();
+            for (Map.Entry<SystemTableCrossProject, String> entry : systemTableCrossProjectMap.entrySet()) {
+                createExcodeFiles(entry.getKey(), entry.getValue());
             }
-            testFilePaths.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void createExcodeJSONData() {
-        try {
-            FileWriter writer = new FileWriter(Config.excodeJSONPath);
-//            writer.append("[");
-            for (FileInfo fileInfo : systemTableCrossProject.fileList) {
-                StringBuilder builder = new StringBuilder();
-                for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
-                    builder.append(node.toString().replaceAll("\\r", " ").replaceAll("\\n",""));
-                }
-                writer.append("{\"input\": \"");
-                writer.append(builder.toString());
-                writer.append("\"}\n");
+    private void createExcodeFiles(SystemTableCrossProject systemTableCrossProject, String projectName) throws IOException {
+        String javaProjectTestingPath = createDirectory(Config.javaTestingPath, projectName);
+        String javaProjectTrainingPath = createDirectory(Config.javaTrainingPath, projectName);
+        String javaProjectValidatingPath = createDirectory(Config.javaValidatingPath, projectName);
+        String excodeProjectTestingPath = createDirectory(Config.excodeTestingPath, projectName);
+        String excodeProjectTrainingPath = createDirectory(Config.excodeTrainingPath, projectName);
+        String excodeProjectValidatingPath = createDirectory(Config.excodeValidatingPath, projectName);
+        FileWriter testFilePaths = new FileWriter(new File("../testFilePaths.txt"));
+
+        int testLOCThresh = (int) (LOC.get(projectName) * 0.1);
+        int validateLOCThresh = (int) (LOC.get(projectName) * 0.9 * 0.15);
+        int trainLOCThresh = LOC.get(projectName) - testLOCThresh - validateLOCThresh;
+        int currentTestLOC = 0;
+        int currentValidateLOC = 0;
+        int currentTrainLOC = 0;    
+
+        for (FileInfo fileInfo : systemTableCrossProject.fileList) {
+            StringBuilder builder = new StringBuilder();
+            for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
+//                    System.out.print(node.toString());
+                String space = " ";
+//                    if (node.toString().contains("STSTM{")) {
+//                        builder.append("\n");
+//                        space = "";
+//                    }
+                builder.append(node.toString().replace(" ", "").replace("\r\n", space));
             }
-//            writer.append("]");
+
+            String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
+            String excodeFilePath;
+            String javaFileTokenPath;
+
+            while (true) {
+                if (toTest() && currentTestLOC <= testLOCThresh) {
+                    testFilePaths.write(fileInfo.file.getAbsolutePath() + "\n");
+                    javaFileTokenPath = javaProjectTestingPath +
+                            fileInfo.file.getName().replace(".java", ".txt");
+                    excodeFilePath = excodeProjectTestingPath +
+                            filePath[filePath.length - 1].replace(".java", ".txt");
+                    currentTestLOC += CountLOC.count(fileInfo.file);
+                    break;
+                } else if (toValidate() && currentValidateLOC <= validateLOCThresh){
+                    javaFileTokenPath = javaProjectValidatingPath +
+                            fileInfo.file.getName().replace(".java", ".txt");
+                    excodeFilePath = excodeProjectValidatingPath +
+                            filePath[filePath.length - 1].replace(".java", ".txt");
+                    currentValidateLOC += CountLOC.count((fileInfo.file));
+                    break;
+                } else if (currentTrainLOC <= trainLOCThresh){
+                    javaFileTokenPath = javaProjectTrainingPath +
+                            fileInfo.file.getName().replace(".java", ".txt");
+                    excodeFilePath = excodeProjectTrainingPath +
+                            filePath[filePath.length - 1].replace(".java", ".txt");
+                    currentTrainLOC += CountLOC.count((fileInfo.file));
+                    break;
+                }
+            }
+
+
+            File fout = new File(excodeFilePath);
+            FileOutputStream fos = new FileOutputStream(fout);
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+            bw.write(builder.toString());
+            bw.close();
+
+            FileWriter writer = new FileWriter(javaFileTokenPath);
+            String fileContent = JavaTokenizer.removePackagesAndImports(fileInfo.file.getAbsolutePath());
+            ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
+            for (String token : tokens) {
+                writer.write(token + "\n");
+            }
             writer.close();
-        } catch (IOException ignored) {
         }
+        testFilePaths.close();
     }
+
+    private String createDirectory(String root, String subDir) {
+        File projectDirectory = new File(root + subDir + "/");
+        if (!projectDirectory.exists()) {
+            projectDirectory.mkdir();
+        }
+        return projectDirectory.getPath() + "/";
+    }
+
+//    private void createExcodeJSONData() {
+//        try {
+//            FileWriter writer = new FileWriter(Config.excodeJSONPath);
+////            writer.append("[");
+//            for (FileInfo fileInfo : systemTableCrossProject.fileList) {
+//                StringBuilder builder = new StringBuilder();
+//                for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
+//                    builder.append(node.toString().replaceAll("\\r", " ").replaceAll("\\n",""));
+//                }
+//                writer.append("{\"input\": \"");
+//                writer.append(builder.toString());
+//                writer.append("\"}\n");
+//            }
+////            writer.append("]");
+//            writer.close();
+//        } catch (IOException ignored) {
+//        }
+//    }
 
     private boolean toTest() {
         return Math.random() < 0.1;
@@ -378,8 +451,8 @@ public class Parser {
         }
     }
 
-    public SystemTableCrossProject getSystemTableCrossProject() {
-        return this.systemTableCrossProject;
+    public HashMap<SystemTableCrossProject, String> getSystemTableCrossProjectMap() {
+        return this.systemTableCrossProjectMap;
     }
 
     public static void main(String[] args) {

@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JavaTokenizer extends Tokenizer{
+public class JavaTokenizer{
     public static void main(String[] args) throws IOException {
         List<File> javaFileList = DirProcessor.walkJavaFile("D://zzzz");
         for (File file : javaFileList) {
@@ -21,6 +21,9 @@ public class JavaTokenizer extends Tokenizer{
             System.out.println(tokens);
             writer.close();
         }
+
+
+
 //        String testLexical = "categoryDetail = event.getTarget().getName();else {categoryString = categoryObject.getClass().getName();}}Log log = getLog(";
 //        ArrayList<String> tokens = JavaTokenizer.tokenize(testLexical);
 //        System.out.println(tokens);

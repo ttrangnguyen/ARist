@@ -3,7 +3,6 @@ if __name__ == '__main__':
     import os
     import numpy as np
     import pandas as pd
-    from model.tokenizer import Tokenizer
     from keras.utils import to_categorical
     from keras.models import Sequential
     from keras.layers import LSTM, Dense, Dropout, Embedding
@@ -13,6 +12,7 @@ if __name__ == '__main__':
     from keras.callbacks import ModelCheckpoint
     from model.data_generator import DataGenerator
     import sklearn
+    from pickle import dump, load
 
     def read_file(filepath):
         with open(filepath) as f:
@@ -22,20 +22,7 @@ if __name__ == '__main__':
 
     train_len = 20 + 1
     text_sequences = []
-    count = 1
-    token_path = '../../../../../data_dict/java/java_words_n_symbols.txt'
-    dict_path = '../../../../../data_dict/java/names.txt'
-
-    tokenizer = Tokenizer(oov_token="<unk>")
-    names = read_file(dict_path).split("\n")
-    tokens = read_file(token_path).lower().split("\n")
-    vocab = tokens + names + list(map(str, list(range(0, 10))))
-    tokenizer.fit_on_texts([vocab])
-    f = open('../../../../../data_dict/java/java_names.txt', "w")
-    for key in tokenizer.word_index:
-        f.write(key)
-        f.write('\n')
-    f.close()
+    tokenizer = load(open('java_tokenizer', 'rb'))
     vocabulary_size = len(tokenizer.word_index)
 
     def load_data(excode_csv_path, idx, batch_size):
@@ -48,31 +35,20 @@ if __name__ == '__main__':
         return np.array(x), to_categorical(y, num_classes=vocabulary_size + 1)
 
 
-    def batch_generator(excode_csv_path, batch_size, steps):
-        idx = 1
-        while True:
-            yield load_data(excode_csv_path, idx - 1, batch_size)
-            if idx < steps:
-                idx += 1
-            else:
-                idx = 1
-
-
     def count_lines_csv(file_path):
         input_file = open(file_path, "r+")
         reader_file = csv.reader(input_file)
         return len(list(reader_file))
 
 
-    train_csv_path = 'excode_train.csv'
-    validate_csv_path = 'excode_validate.csv'
+    project = 'ant'
+    train_csv_path = '../../../../../../data_csv/java/' + project + '/java_train_' + project + '.csv'
+    validate_csv_path = '../../../../../../data_csv/java/' + project + '/java_validate_' + project + '.csv'
     batch_size = 512
     train_data_size = count_lines_csv(train_csv_path)
     validate_data_size = count_lines_csv(validate_csv_path)
     steps_per_epoch = np.ceil(train_data_size / batch_size)
     validation_steps = np.ceil(validate_data_size / batch_size)
-    # training_batch_generator = batch_generator(train_csv_path, batch_size, steps_per_epoch)
-    # validation_batch_generator = batch_generator(validate_csv_path, batch_size, validation_steps)
     training_batch_generator = DataGenerator(train_csv_path, train_data_size, batch_size, vocabulary_size)
     validation_batch_generator = DataGenerator(validate_csv_path, validate_data_size, batch_size, vocabulary_size)
 
@@ -105,38 +81,3 @@ if __name__ == '__main__':
                         use_multiprocessing=True,
                         callbacks=[checkpoint],
                         shuffle=True)
-
-    # def prepare_sentence(seq, prefix_len):
-    #     # Pads seq and slides windows
-    #     x = []
-    #     y = []
-    #     for i in range(prefix_len + 1, len(seq)):
-    #         x_padded = pad_sequences([seq[:i]],
-    #                                  maxlen=train_len - 1,
-    #                                  padding='pre')[0]  # Pads before each sequence
-    #         x.append(x_padded)
-    #         y.append(seq[i])
-    #     return x, y
-    #
-    #
-    # # Compute probability of occurence of a sentence
-    # vocab = dict(tokenizer.word_index)
-    # prefix_len = 3
-    # sentence = ["ststm{for}", " ", "open_part", " ", "type", "(", "integer", ")", " ", "var", "(", "integer", ")"]
-    # tok = tokenizer.texts_to_sequences([sentence])[0]
-    # print(tok)
-    # x_test, y_test = prepare_sentence(tok, prefix_len)
-    # x_test = np.array(x_test)
-    # y_test = np.array(y_test) - 1  # The word <PAD> does not have a class
-    # p_pred = model.predict(x_test)
-    # vocab_inv = {v: k for k, v in vocab.items()}
-    # log_p_sentence = 0
-    #
-    # for i, prob in enumerate(p_pred):
-    #     word = vocab_inv[y_test[i] + 1]  # Index 0 from vocab is reserved to <PAD>
-    #     history = ''.join([vocab_inv[w] for w in x_test[i, :] if w != 0])
-    #     prob_word = prob[y_test[i]]
-    #     log_p_sentence += np.log(prob_word)
-    #     print('P(w={}|h={})={}'.format(word, history, prob_word))
-    #
-    # print('Prob. sentence: {}'.format(np.exp(log_p_sentence)))

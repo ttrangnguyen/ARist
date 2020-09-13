@@ -18,7 +18,7 @@ public class ProjectTest {
     public static void main(String args[]) throws IOException {
         Timer timer = new Timer();
 
-        Config.loadConfig(Config.STORAGE_DIR + "/json/demo.json");
+        Config.loadConfig(Config.STORAGE_DIR + "/json/ant.json");
         System.out.println("Starting parse...");
 
         //gen and parse project
@@ -68,8 +68,6 @@ public class ProjectTest {
 
         //end parse
         System.out.println("Parse done!");
-
-
     }
 
     public static void printMap(MultiMap data, String title) {
