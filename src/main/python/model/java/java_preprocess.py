@@ -1,8 +1,9 @@
 import os
-from model.tokenizer import Tokenizer
 from name_stat.name_tokenizer import tokenize
 from keras.preprocessing.sequence import pad_sequences
+from pickle import load
 import csv
+from pathlib import Path
 
 
 def read_file(filepath):
@@ -37,7 +38,7 @@ def java_tokenize(lines, tokenizer, train_len, last_only=False):
     return sequences
 
 
-def java_tokenize_one_sentence(lexes, tokenizer):
+def java_tokenize_one_sentence(lexes, tokenizer, to_sequence=True):
     text_sequences = []
     for lex in lexes:
         all_tokens = []
@@ -49,21 +50,20 @@ def java_tokenize_one_sentence(lexes, tokenizer):
         else:
             all_tokens += [stripped]
         text_sequences.append(all_tokens)
-    sequences = tokenizer.texts_to_sequences(text_sequences)
-    return sequences
+    if to_sequence:
+        sequences = tokenizer.texts_to_sequences(text_sequences)
+        return sequences
+    else:
+        return text_sequences
 
 
-def create_java_tokenizer(token_path, dict_path):
-    tokenizer = Tokenizer(oov_token="<unk>")
-    names = read_file(dict_path).split("\n")
-    tokens = read_file(token_path).lower().split("\n")
-    vocab = tokens + names + list(map(str, list(range(0, 10))))
-    tokenizer.fit_on_texts([vocab])
+def create_java_tokenizer():
+    tokenizer = load(open('java_tokenizer', 'rb'))
     return tokenizer
 
 
-def preprocess(train_path, token_path, dict_path, csv_path, train_len):
-    tokenizer = create_java_tokenizer(token_path, dict_path)
+def preprocess(train_path, csv_path, train_len):
+    tokenizer = create_java_tokenizer()
 
     with open(csv_path, 'w', newline='') as excode_csv:
         writer = csv.writer(excode_csv)
@@ -79,10 +79,16 @@ def preprocess(train_path, token_path, dict_path, csv_path, train_len):
             writer.writerows(prepare_sequence(sequences, train_len))
 
 
+def listdirs(folder):
+    return [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]
+
+
 # data_types = ['train', 'validate', 'test']
 # for data_type in data_types:
-#     preprocess(train_path='../../../../../javaFileTokens/' + data_type + '/',
-#                token_path='../../../../../data_dict/java/java_words_n_symbols.txt',
-#                dict_path='../../../../../data_dict/java/names.txt',
-#                csv_path='../../../../../../data_csv/java/java_' + data_type + '.csv',
-#                train_len=20 + 1)
+#     projects = listdirs("../../../../../javaFileTokens/" + data_type)
+#     for project in projects:
+#         Path('../../../../../../data_csv/java/' + project).mkdir(parents=True, exist_ok=True)
+#         preprocess(train_path='../../../../../javaFileTokens/' + data_type + '/' + project + '/',
+#                    csv_path='../../../../../../data_csv/java/' + project + '/java_' +
+#                             data_type + "_" + project + '.csv',
+#                    train_len=20 + 1)
