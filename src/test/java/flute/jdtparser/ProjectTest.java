@@ -43,11 +43,11 @@ public class ProjectTest {
             System.out.print("File parse time: ");
             System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 
-            nextParams = fileParser.getNextParams();
+            nextParams = fileParser.genNextParams();
             System.out.print("Next param gen time: ");
             System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 
-            firstParams = fileParser.getFirstParams();
+            firstParams = fileParser.genFirstParams();
             System.out.print("First param gen time: ");
             System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
         } catch (Exception e) {
