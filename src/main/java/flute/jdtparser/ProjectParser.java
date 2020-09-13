@@ -77,6 +77,10 @@ public class ProjectParser {
     }
 
     public CompilationUnit createCU(File file) {
+        return createCU(FileProcessor.read(file), file.getName());
+    }
+
+    public CompilationUnit createCU(String fileName, String fileData) {
         ASTParser parser = ASTParser.newParser(jdtLevel); //choose source code analyzing strategy
 
         parser.setResolveBindings(true); // turn on binding strategy
@@ -90,8 +94,8 @@ public class ProjectParser {
         parser.setCompilerOptions(options);
         parser.setEnvironment(classPaths, sourcePaths, encodeSources, true);
 
-        parser.setUnitName(file.getName());
-        parser.setSource(FileProcessor.read(file).toCharArray());
+        parser.setUnitName(fileName);
+        parser.setSource(fileData.toCharArray());
         CompilationUnit cu = (CompilationUnit) parser.createAST(new NullProgressMonitor());
         return cu;
     }
