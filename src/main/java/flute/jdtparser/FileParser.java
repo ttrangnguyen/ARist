@@ -46,21 +46,53 @@ public class FileParser {
         cu = projectParser.createCU(curFile);
     }
 
+
+    /**
+     * Create parser with position by file content and length
+     *
+     * @param projectParser
+     * @param fileName
+     * @param fileContent
+     * @param curPosition
+     */
+    public FileParser(ProjectParser projectParser, String fileName, String fileContent, int curPosition) {
+        this.projectParser = projectParser;
+        this.curFile = null;
+        this.curPosition = curPosition;
+        cu = projectParser.createCU(fileName, fileContent);
+    }
+
     /**
      * Create parser with position by line, height
      *
      * @param projectParser
      * @param curFile
      * @param curLine
-     * @param curPosition
+     * @param curColumn
      */
-    public FileParser(ProjectParser projectParser, File curFile, int curLine, int curPosition) {
+    public FileParser(ProjectParser projectParser, File curFile, int curLine, int curColumn) {
         this.projectParser = projectParser;
         this.curFile = curFile;
         cu = projectParser.createCU(curFile);
-        this.curPosition = this.getPosition(curLine, curPosition);
+        this.curPosition = this.getPosition(curLine, curColumn);
     }
 
+
+    /**
+     * Create parser with position by file content and line, height
+     *
+     * @param projectParser
+     * @param fileName
+     * @param fileContent
+     * @param curLine
+     * @param curColumn
+     */
+    public FileParser(ProjectParser projectParser, String fileName, String fileContent, int curLine, int curColumn) {
+        this.projectParser = projectParser;
+        this.curFile = null;
+        cu = projectParser.createCU(fileName, fileContent);
+        this.curPosition = this.getPosition(curLine, curColumn);
+    }
 
     /**
      * If the result is empty, type checking is passed
