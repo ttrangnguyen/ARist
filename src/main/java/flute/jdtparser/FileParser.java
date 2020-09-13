@@ -12,6 +12,7 @@ import flute.data.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -277,8 +278,7 @@ public class FileParser {
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
         if (methodBinding.getParameterTypes().length > position
-                && ((varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
-                || compareWithGenericType(varType, methodBinding.getParameterTypes()[position])))
+                && ((varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])))
         ) {
             return ParserConstant.TRUE_VALUE;
         }
@@ -290,23 +290,46 @@ public class FileParser {
                 return ParserConstant.VARARGS_TRUE_VALUE;
             }
         }
-        return ParserConstant.FALSE_VALUE;
+
+        return compareWithGenericType(varType, methodBinding, position);
     }
 
-    public static boolean compareWithGenericType(ITypeBinding varType, ITypeBinding paramType) {
+    public static int compareWithGenericType(ITypeBinding varType, IMethodBinding methodBinding, int position) {
+        ITypeBinding paramType = methodBinding.isVarargs() ? methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1]
+                : methodBinding.getParameterTypes()[position];
         ITypeBinding elementType = paramType.isArray() ? paramType.getElementType() : paramType;
-        if (varType.getDimensions() != paramType.getDimensions()) return false;
-        if (elementType.isTypeVariable() && paramType.isCastCompatible(varType)) {
-            return true;
-        } else if (varType.isPrimitive() || (varType.isArray() && varType.getElementType().isPrimitive())) {
-            //check type is primitive
-            if (TypeConstraintKey.WRAP_TYPES.contains(elementType.getSuperclass().getKey())) {
-                Object q = paramType.getDimensions();
-                Object l = varType.getDimensions();
-                return true;
+        //break when is not generic type in method
+        if (!elementType.isTypeVariable()) return ParserConstant.FALSE_VALUE;
+        //can append primitive when type param is declared in method
+        //boolean isMethodDeclare = Arrays.asList(methodBinding.getParameterTypes()).contains(elementType);
+        if (!methodBinding.isVarargs() && position < methodBinding.getParameterTypes().length - 1) {
+            if (varType.getDimensions() != paramType.getDimensions())
+                return ParserConstant.FALSE_VALUE;
+            if (paramType.isCastCompatible(varType)) {
+                return ParserConstant.TRUE_VALUE;
+            } else if (varType.isPrimitive() || (varType.isArray() && varType.getElementType().isPrimitive())) {
+                //check type is primitive
+                if (TypeConstraintKey.WRAP_TYPES.contains(elementType.getSuperclass().getKey())) {
+                    return ParserConstant.TRUE_VALUE;
+                }
+            }
+        } else {
+            //can apply array to varargs type
+            if (paramType.getDimensions() - varType.getDimensions() > 1) return ParserConstant.FALSE_VALUE;
+            if (varType.isPrimitive() || (varType.isArray() && varType.getElementType().isPrimitive())) {
+                //check type is primitive
+                if (paramType.getDimensions() > 1) return ParserConstant.FALSE_VALUE;
+//                || (!isMethodDeclare && )
+                if (TypeConstraintKey.WRAP_TYPES.contains(elementType.getSuperclass().getKey())) {
+                    return ParserConstant.VARARGS_TRUE_VALUE;
+                }
+            } else if (elementType.isCastCompatible(varType) || (varType.isArray() && elementType.isCastCompatible(varType.getElementType()))) {
+                return ParserConstant.VARARGS_TRUE_VALUE;
             }
         }
-        return false;
+
+
+        return ParserConstant.FALSE_VALUE;
     }
 
     public int getPosition(int line, int column) {
