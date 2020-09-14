@@ -33,7 +33,6 @@ public class CommonUtils {
     }
 
     public static boolean checkVisibleMember(int modifier, String fromPackage, String checkPackage, boolean isExtended) {
-
         if (Modifier.isPublic(modifier)) return true;
         if (Modifier.isPrivate(modifier)) return false;
 

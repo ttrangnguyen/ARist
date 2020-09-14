@@ -241,7 +241,7 @@ public class FileParser {
         for (IMethodBinding methodBinding : methodBindings) {
             if (methodName.equals(methodBinding.getName())) {
                 //Add filter for parent expression
-                if (parentValue(methodInvocation) == null
+                if ((methodInvocation) == null
                         || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation))) {
                     if (checkInvoMember(preArgs, methodBinding)) {
                         listMember.add(methodBinding);
@@ -360,7 +360,6 @@ public class FileParser {
             }
         }
 
-
         return ParserConstant.FALSE_VALUE;
     }
 
@@ -395,17 +394,17 @@ public class FileParser {
 
                 ClassParser classParser;
                 boolean isStaticExpr = false;
-                if (methodInvocation.getExpression() == null) {
+                if (methodInvocationParent.getExpression() == null) {
                     classParser = new ClassParser(curClass);
                     isStaticExpr = isStaticScope(methodInvocation);
                 } else {
-                    Expression expr = methodInvocation.getExpression();
+                    Expression expr = methodInvocationParent.getExpression();
                     classParser = new ClassParser(expr.resolveTypeBinding());
                     isStaticExpr = expr.toString().equals(expr.resolveTypeBinding().getName());
                 }
 
                 classParser.getMethodsFrom(curClass, isStaticExpr).forEach(methodMember -> {
-                    if (methodMember.getName().equals(methodInvocation.getName().getIdentifier())) {
+                    if (methodMember.getName().equals(methodInvocationParent.getName().getIdentifier())) {
 
                         if (parentTypes == null ||
                                 compareWithMultiType(methodMember.getReturnType(), parentTypes)) {
@@ -419,7 +418,10 @@ public class FileParser {
                             }
 
                             if (checkInvoMember(methodInvocationParent.arguments(), methodMember, positionParam)) {
-                                typeResults.add(methodMember.getReturnType());
+                                if (methodMember.isVarargs() && methodMember.getParameterTypes().length - 1 == positionParam) {
+                                    typeResults.add(methodMember.getParameterTypes()[positionParam].getComponentType());
+                                }
+                                typeResults.add(methodMember.getParameterTypes()[positionParam]);
                             }
                         }
                     }
