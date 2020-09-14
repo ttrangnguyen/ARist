@@ -4,6 +4,7 @@ from keras.preprocessing.sequence import pad_sequences
 import csv
 from pickle import load
 from pathlib import Path
+from pickle import load
 
 
 def read_file(filepath):
@@ -39,26 +40,29 @@ def create_java_tokenizer():
     return tokenizer
 
 
-def excode_tokenize(text, tokenizer, train_len, tokens, last_only=False):
+def excode_tokenize(text, tokenizer, train_len, tokens, method_only=True):
     data = text.strip().split(" ")
     text_sequences = []
-    i = 0
-    while i < len(data):
-        if data[i][:7] == "METHOD{":
-            all_tokens = modify(data[i], tokens)
-            start_pos = len(all_tokens)
-            i += 1
-            while i < len(data) and data[i] != "ENDMETHOD":
-                all_tokens += modify(data[i], tokens)
+    if method_only:
+        i = 0
+        while i < len(data):
+            if data[i][:7] == "METHOD{":
+                all_tokens = modify(data[i], tokens)
+                start_pos = len(all_tokens)
                 i += 1
-            if not last_only:
+                while i < len(data) and data[i] != "ENDMETHOD":
+                    all_tokens += modify(data[i], tokens)
+                    i += 1
                 for j in range(start_pos, len(all_tokens)):
                     seq = all_tokens[max(j - train_len, 0):j]
                     text_sequences.append(seq)
-            else:
-                seq = all_tokens[max(len(all_tokens) - train_len, 0):len(all_tokens)]
-                text_sequences = [seq]
-        i += 1
+            i += 1
+    else:
+        all_tokens = []
+        for d in data:
+            all_tokens += modify(d, tokens)
+        seq = all_tokens[max(len(all_tokens) - train_len, 0):len(all_tokens)]
+        text_sequences = [seq]
     sequences = tokenizer.texts_to_sequences(text_sequences)
     return sequences
 

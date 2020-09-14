@@ -51,7 +51,7 @@ while True:
                                          tokenizer=excode_tokenizer,
                                          train_len=train_len,
                                          tokens=excode_tokens,
-                                         last_only=True)[0]
+                                         method_only=False)[0]
         excode_suggestions = excode_tokenize_candidates(data['next_excode'],
                                                         tokenizer=excode_tokenizer,
                                                         tokens=excode_tokens)
