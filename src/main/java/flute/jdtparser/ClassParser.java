@@ -60,7 +60,7 @@ public class ClassParser {
             return true;
         }
 
-        if (method.getName() == method.getName()) return true;
+        if (coMethod.getName().equals(method.getName())) return true;
 
         return false;
     }
@@ -119,7 +119,8 @@ public class ClassParser {
     }
 
     public boolean canSeenFrom(int modifier, ITypeBinding iTypeBinding) {
-        if (iTypeBinding == orgType) {
+        if (iTypeBinding == orgType ||
+                Arrays.asList(iTypeBinding.getDeclaredTypes()).contains(orgType)) {
             return true;
         } else {
             boolean extended = iTypeBinding.isSubTypeCompatible(orgType);
