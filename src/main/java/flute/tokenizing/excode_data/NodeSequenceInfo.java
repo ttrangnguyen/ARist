@@ -923,6 +923,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
 	}
 
+	public static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL;
+	}
+
 	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
 		//TODO
 		if (nodeSequenceList.isEmpty()) return "LIT(null)";

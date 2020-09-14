@@ -127,8 +127,16 @@ public class ArgRecTestGenerator {
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
                                     test.setNext_lex(nextLexList);
-                                    Gson gson = new Gson();
-                                    if (gson.toJson(test).length() <= 8000) tests.add(test);
+                                    boolean hasListeral = false;
+                                    for (NodeSequenceInfo argExcode: argExcodes)
+                                        if (NodeSequenceInfo.isLiteral(argExcode)) {
+                                            hasListeral = true;
+                                            break;
+                                        }
+                                    if (!hasListeral) {
+                                        Gson gson = new Gson();
+                                        if (gson.toJson(test).length() <= 8000) tests.add(test);
+                                    }
                                 } catch (IOException e) {
                                     //e.printStackTrace();
                                 }
@@ -165,6 +173,7 @@ public class ArgRecTestGenerator {
                         }
                         test.setLex_context(tokenizedContextMethodCall);
                         test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
+                        boolean hasListeral = false;
                         if (methodCall.getArguments().isEmpty()) {
                             test.setExpected_excode(excodes.get(i).toStringSimple());
                             test.setExpected_lex(")");
@@ -173,11 +182,18 @@ public class ArgRecTestGenerator {
                             for (int t = contextIdx + 1; t < i; ++t) argExcodes.add(excodes.get(t));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                             test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
+                            for (NodeSequenceInfo argExcode: argExcodes)
+                                if (NodeSequenceInfo.isLiteral(argExcode)) {
+                                    hasListeral = true;
+                                    break;
+                                }
                         }
                         test.setNext_excode(nextExcodeList);
                         test.setNext_lex(nextLexList);
-                        Gson gson = new Gson();
-                        if (gson.toJson(test).length() <= 8000) tests.add(test);
+                        if (!hasListeral) {
+                            Gson gson = new Gson();
+                            if (gson.toJson(test).length() <= 8000) tests.add(test);
+                        }
                     } catch (IOException e) {
                         //e.printStackTrace();
                     }
@@ -209,20 +225,20 @@ public class ArgRecTestGenerator {
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
         //List<ArgRecTest> tests = generator.generate(Config.REPO_DIR + "sampleproj/src/Main.java");
-        //List<ArgRecTest> tests = generator.generateAll(10000);
+        List<ArgRecTest> tests = generator.generateAll(1000);
         Gson gson = new Gson();
 
 //        for (ArgRecTest test: tests) {
 //            Logger.write(gson.toJson(test), "tests.txt");
 //        }
 
-        Scanner sc = new Scanner(new File(Config.LOG_DIR + "tests.txt"));
-        List<ArgRecTest> tests = new ArrayList<>();
-        while (sc.hasNextLine()) {
-            String line = sc.nextLine();
-            tests.add(gson.fromJson(line, ArgRecTest.class));
-        }
-        sc.close();
+//        Scanner sc = new Scanner(new File(Config.LOG_DIR + "tests.txt"));
+//        List<ArgRecTest> tests = new ArrayList<>();
+//        while (sc.hasNextLine()) {
+//            String line = sc.nextLine();
+//            tests.add(gson.fromJson(line, ArgRecTest.class));
+//        }
+//        sc.close();
 
         System.out.println(tests.size());
         Collections.shuffle(tests);
