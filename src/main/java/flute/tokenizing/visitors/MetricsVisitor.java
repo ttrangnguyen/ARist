@@ -1900,11 +1900,11 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     // Eg: 0x01
     @Override
     public void visit(IntegerLiteralExpr n, Object arg) {
-        // 0x01 ---> LIT(int)
-        String literalType = "int";
+        // 0x01 ---> LIT(num)
+        String literalType = "num";
         
         // 0 ---> LIT(zero)
-        if (n.getValue().equals("0")) literalType = "zero";
+        //if (n.getValue().equals("0")) literalType = "zero";
         
         NodeInfo nodeInfo = NodeVisitProcessing.addNewLiteralNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
@@ -1916,11 +1916,11 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     // Eg: 0B10101010L
     @Override
     public void visit(LongLiteralExpr n, Object arg) {
-        // 0B10101010L ---> LIT(long)
-        String literalType = "long";
+        // 0B10101010L ---> LIT(num)
+        String literalType = "num";
         
         // 0L ---> LIT(zero)
-        if (n.getValue().equals("0L")) literalType = "zero";
+        //if (n.getValue().equals("0L")) literalType = "zero";
         
         NodeInfo nodeInfo = NodeVisitProcessing.addNewLiteralNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
@@ -1933,10 +1933,10 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     @Override
     public void visit(DoubleLiteralExpr n, Object arg) {
         // 0x4.5p1f ---> LIT(double)
-        String literalType = "double";
+        String literalType = "num";
         
         // 0f ---> LIT(zero)
-        if (n.getValue().equals("0f")) literalType = "zero";
+        //if (n.getValue().equals("0f")) literalType = "zero";
         
         NodeInfo nodeInfo = NodeVisitProcessing.addNewLiteralNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
@@ -1948,8 +1948,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     // Eg: '\177'
     @Override
     public void visit(CharLiteralExpr n, Object arg) {
-        // '\177' ---> LIT(char)
-        String literalType = "char";
+        // '\177' ---> LIT(num)
+        String literalType = "num";
         NodeInfo nodeInfo = NodeVisitProcessing.addNewLiteralNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, n);
         OldNodeSequenceVisitingProcessing.addLiteralNode(nodeInfo, literalType, nodeSequenceStack, curMethodInfo,
