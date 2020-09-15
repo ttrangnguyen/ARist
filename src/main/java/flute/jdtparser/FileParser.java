@@ -443,6 +443,7 @@ public class FileParser {
     }
 
     public static boolean checkInvoMember(List args, IMethodBinding iMethodBinding, int ignorPos) {
+        if (!iMethodBinding.isVarargs() && args.size() > iMethodBinding.getParameterTypes().length) return false;
         int index = 0;
         for (Object argument :
                 args) {
@@ -464,6 +465,7 @@ public class FileParser {
     }
 
     public static boolean checkInvoMember(List args, IMethodBinding iMethodBinding) {
+        if (!iMethodBinding.isVarargs() && args.size() > iMethodBinding.getParameterTypes().length) return false;
         int index = 0;
         for (Object argument :
                 args) {
