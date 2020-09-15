@@ -241,7 +241,7 @@ public class FileParser {
         for (IMethodBinding methodBinding : methodBindings) {
             if (methodName.equals(methodBinding.getName())) {
                 //Add filter for parent expression
-                if ((methodInvocation) == null
+                if (parentValue(methodInvocation) == null
                         || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation))) {
                     if (checkInvoMember(preArgs, methodBinding)) {
                         listMember.add(methodBinding);
