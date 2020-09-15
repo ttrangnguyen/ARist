@@ -28,10 +28,28 @@ import java.util.*;
 public class ArgRecTestGenerator {
     private JavaExcodeTokenizer tokenizer;
     private ProjectParser projectParser;
+    private int lengthLimit = -1;
 
     public ArgRecTestGenerator(String projectPath, ProjectParser projectParser) {
         tokenizer = new JavaExcodeTokenizer(projectPath);
         this.projectParser = projectParser;
+    }
+
+    public void setLengthLimit(int lengthLimit) {
+        this.lengthLimit = lengthLimit;
+    }
+
+    private <T> List<T> truncateList(List<T> list, boolean fromBegin) {
+        if (lengthLimit < 0 || list.size() <= lengthLimit) return list;
+        if (fromBegin) {
+            return list.subList(list.size() - lengthLimit, list.size());
+        } else {
+            return list.subList(0, lengthLimit);
+        }
+    }
+
+    private <T> List<T> truncateList(List<T> list) {
+        return truncateList(list, true);
     }
 
     public List<ArgRecTest> generate(String javaFilePath) {
@@ -71,18 +89,17 @@ public class ArgRecTestGenerator {
                 contextMethodCall += methodName + '(';
 
                 File javaFile = new File(javaFilePath);
-                Node node = excodes.get(0).oriNode;
+                Node node = methodDeclaration;
                 while (!(node instanceof CompilationUnit)) node = node.getParentNode().get();
-                FileParser fileParser = new FileParser(projectParser, javaFile,
+                FileParser fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
                         methodCall.getBegin().get().line, methodCall.getBegin().get().column);
                 int curPos = fileParser.getCurPosition();
                 curPos += methodName.length() + 1;
                 try {
                     fileParser.setPosition(curPos);
                 } catch (Exception e) {
-                    System.out.println("File path: " + javaFilePath);
-                    System.out.println("Position: " + methodCall.getBegin().get());
-                    e.printStackTrace();
+                    // TODO: Handle enums
+//                    e.printStackTrace();
 
                     stack.remove(stack.size() - 1);
                     continue;
@@ -101,8 +118,13 @@ public class ArgRecTestGenerator {
                             try {
                                 params = fileParser.genParamsAt(j);
                             } catch (ArrayIndexOutOfBoundsException e) {
-                            } catch (Exception e) {
-                                //e.printStackTrace();
+                                System.out.println(methodCall);
+                                System.out.println(methodCall.getBegin().get());
+                                e.printStackTrace();
+                            } catch (IndexOutOfBoundsException e) {
+                                System.out.println(methodCall);
+                                System.out.println(methodCall.getBegin().get());
+                                e.printStackTrace();
                             }
                             if (params != null && !params.getValue().keySet().isEmpty()) {
                                 List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
@@ -116,13 +138,18 @@ public class ArgRecTestGenerator {
                                 for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
                                 try {
-                                    ArgRecTest test = new ArgRecTest();
                                     List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall);
                                     while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
                                         tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
                                     }
+                                    tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
+
+                                    List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
+                                    excodeContext = truncateList(excodeContext);
+
+                                    ArgRecTest test = new ArgRecTest();
                                     test.setLex_context(tokenizedContextMethodCall);
-                                    test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
+                                    test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                                     test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
@@ -134,11 +161,10 @@ public class ArgRecTestGenerator {
                                             break;
                                         }
                                     if (!hasListeral) {
-                                        Gson gson = new Gson();
-                                        if (gson.toJson(test).length() <= 8000) tests.add(test);
+                                        tests.add(test);
                                     }
                                 } catch (IOException e) {
-                                    //e.printStackTrace();
+                                    e.printStackTrace();
                                 }
                             }
 
@@ -154,8 +180,13 @@ public class ArgRecTestGenerator {
                 try {
                     params = fileParser.genParamsAt(methodCall.getArguments().size() - 1);
                 } catch (ArrayIndexOutOfBoundsException e) {
-                } catch (Exception e) {
-                    //e.printStackTrace();
+                    System.out.println(methodCall);
+                    System.out.println(methodCall.getBegin().get());
+                    e.printStackTrace();
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println(methodCall);
+                    System.out.println(methodCall.getBegin().get());
+                    e.printStackTrace();
                 }
                 if (params != null && !params.getValue().keySet().isEmpty()) {
                     List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
@@ -166,13 +197,18 @@ public class ArgRecTestGenerator {
                     ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                     try {
-                        ArgRecTest test = new ArgRecTest();
                         List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall);
                         while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
                             tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
                         }
+                        tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
+
+                        List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
+                        excodeContext = truncateList(excodeContext);
+
+                        ArgRecTest test = new ArgRecTest();
                         test.setLex_context(tokenizedContextMethodCall);
-                        test.setExcode_context(NodeSequenceInfo.convertListToString(context.getContextFromMethodDeclaration()));
+                        test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                         boolean hasListeral = false;
                         if (methodCall.getArguments().isEmpty()) {
                             test.setExpected_excode(excodes.get(i).toStringSimple());
@@ -191,11 +227,10 @@ public class ArgRecTestGenerator {
                         test.setNext_excode(nextExcodeList);
                         test.setNext_lex(nextLexList);
                         if (!hasListeral) {
-                            Gson gson = new Gson();
-                            if (gson.toJson(test).length() <= 8000) tests.add(test);
+                            tests.add(test);
                         }
                     } catch (IOException e) {
-                        //e.printStackTrace();
+                        e.printStackTrace();
                     }
                 }
 
@@ -224,6 +259,7 @@ public class ArgRecTestGenerator {
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
+        generator.setLengthLimit(20);
         //List<ArgRecTest> tests = generator.generate(Config.REPO_DIR + "sampleproj/src/Main.java");
         List<ArgRecTest> tests = generator.generateAll(1000);
         Gson gson = new Gson();
@@ -241,7 +277,7 @@ public class ArgRecTestGenerator {
 //        sc.close();
 
         System.out.println(tests.size());
-        Collections.shuffle(tests);
+        //Collections.shuffle(tests);
         int testCount = 0;
         int correctTop1PredictionCount = 0;
         int correctTopKPredictionCount = 0;
