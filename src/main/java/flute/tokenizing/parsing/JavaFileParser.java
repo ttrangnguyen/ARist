@@ -105,6 +105,7 @@ public class JavaFileParser {
         try {
             cu = StaticJavaParser.parse(is);
             cu = StaticJavaParser.parse(cu.toString());
+			cu = StaticJavaParser.parse(cu.toString());
 			//JavaParser parser = new JavaParser();
 			//cu = parser.parse(ParseStart.COMPILATION_UNIT, provider(content)).getResult().get();
         } catch (Error e) {
