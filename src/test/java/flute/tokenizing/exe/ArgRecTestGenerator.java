@@ -83,8 +83,10 @@ public class ArgRecTestGenerator {
                 String contextMethodCall = methodDeclarationContent.substring(0, StringUtils.indexOf(methodDeclarationContent, StringUtils.getFirstLine(methodCallContent)));
 
                 String methodName = methodCall.getNameAsString();
+                String methodScope = "";
                 if (methodCall.getScope().isPresent()) {
-                    methodName = methodCall.getScope().get() + "." + methodName;
+                    methodScope = methodCall.getScope().get() + ".";
+                    methodName = methodScope + methodName;
                 }
                 contextMethodCall += methodName + '(';
 
@@ -94,7 +96,7 @@ public class ArgRecTestGenerator {
                 FileParser fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
                         methodCall.getBegin().get().line, methodCall.getBegin().get().column);
                 int curPos = fileParser.getCurPosition();
-                curPos += methodName.length() + 1;
+                curPos += methodScope.length();
                 try {
                     fileParser.setPosition(curPos);
                 } catch (Exception e) {
