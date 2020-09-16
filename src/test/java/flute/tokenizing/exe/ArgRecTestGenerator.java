@@ -52,6 +52,38 @@ public class ArgRecTestGenerator {
         return truncateList(list, true);
     }
 
+    public boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
+        for (NodeSequenceInfo excode: nodeSequenceList) {
+            //if (NodeSequenceInfo.isLiteral(excode)) return false;
+            if (NodeSequenceInfo.isMethodAccess(excode)) return false;
+            if (NodeSequenceInfo.isCast(excode)) return false;
+            if (NodeSequenceInfo.isConstructorCall(excode)) return false;
+            if (NodeSequenceInfo.isAssign(excode)) return false;
+            if (NodeSequenceInfo.isOperator(excode)) return false;
+            if (NodeSequenceInfo.isUnaryOperator(excode)) return false;
+            if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
+            if (NodeSequenceInfo.isOpenPart(excode)) return false;
+        }
+        return true;
+    }
+
+    public void cleanTest(ArgRecTest test) {
+        switch (test.getExpected_excode()) {
+            case "LIT(wildcard)":
+                test.setExpected_lex("?");
+                break;
+            case "LIT(null)":
+                test.setExpected_lex("null");
+                break;
+            case "LIT(num)":
+                test.setExpected_lex("0");
+                break;
+            case "LIT(String)":
+                test.setExpected_lex("\"\"");
+                break;
+        }
+    }
+
     public List<ArgRecTest> generate(String javaFilePath) {
         System.out.println("File path: " + javaFilePath);
         List<ArgRecTest> tests = new ArrayList<>();
@@ -156,13 +188,8 @@ public class ArgRecTestGenerator {
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
                                     test.setNext_lex(nextLexList);
-                                    boolean hasListeral = false;
-                                    for (NodeSequenceInfo argExcode: argExcodes)
-                                        if (NodeSequenceInfo.isLiteral(argExcode)) {
-                                            hasListeral = true;
-                                            break;
-                                        }
-                                    if (!hasListeral) {
+                                    if (isClean(argExcodes)) {
+                                        cleanTest(test);
                                         tests.add(test);
                                     }
                                 } catch (IOException e) {
@@ -181,7 +208,8 @@ public class ArgRecTestGenerator {
                 MultiMap params = null;
                 try {
                     params = fileParser.genParamsAt(methodCall.getArguments().size() - 1);
-                    if (!fileParser.getLastMethodCallGen().replace(" ", "").equals(methodCallContent.replace(" ", ""))) {
+                    String parsedMethodCall = fileParser.getLastMethodCallGen().replaceAll("[ \r\n]", "");
+                    if (!parsedMethodCall.equals(methodCallContent.replaceAll("[ \r\n]", ""))) {
                         throw new Exception(fileParser.getLastMethodCallGen() + " was parsed instead of " + methodCallContent
                                 + " at " + methodCall.getBegin().get());
                     }
@@ -217,7 +245,7 @@ public class ArgRecTestGenerator {
                         ArgRecTest test = new ArgRecTest();
                         test.setLex_context(tokenizedContextMethodCall);
                         test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-                        boolean hasListeral = false;
+                        boolean isClean = true;
                         if (methodCall.getArguments().isEmpty()) {
                             test.setExpected_excode(excodes.get(i).toStringSimple());
                             test.setExpected_lex(")");
@@ -226,15 +254,12 @@ public class ArgRecTestGenerator {
                             for (int t = contextIdx + 1; t < i; ++t) argExcodes.add(excodes.get(t));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                             test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
-                            for (NodeSequenceInfo argExcode: argExcodes)
-                                if (NodeSequenceInfo.isLiteral(argExcode)) {
-                                    hasListeral = true;
-                                    break;
-                                }
+                            if (!isClean(argExcodes)) isClean = false;
                         }
                         test.setNext_excode(nextExcodeList);
                         test.setNext_lex(nextLexList);
-                        if (!hasListeral) {
+                        if (isClean) {
+                            cleanTest(test);
                             tests.add(test);
                         }
                     } catch (IOException e) {
@@ -272,9 +297,10 @@ public class ArgRecTestGenerator {
         List<ArgRecTest> tests = generator.generateAll(1000);
         Gson gson = new Gson();
 
-//        for (ArgRecTest test: tests) {
-//            Logger.write(gson.toJson(test), "tests.txt");
-//        }
+        for (ArgRecTest test: tests) {
+            //System.out.println(gson.toJson(test));
+            //Logger.write(gson.toJson(test), "tests.txt");
+        }
 
 //        Scanner sc = new Scanner(new File(Config.LOG_DIR + "tests.txt"));
 //        List<ArgRecTest> tests = new ArrayList<>();
@@ -284,7 +310,7 @@ public class ArgRecTestGenerator {
 //        }
 //        sc.close();
 
-//        System.out.println(tests.size());
+        System.out.println(tests.size());
 //        //Collections.shuffle(tests);
 //        int testCount = 0;
 //        int correctTop1PredictionCount = 0;

@@ -1836,7 +1836,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // tool --->
         doVisitExpression(n.getExpression(), arg);
         
-        // && ---> OP(AND)
+        // instanceof ---> OP(INSTANCEOF)
         String operatorType = "INSTANCEOF";
         OldNodeSequenceVisitingProcessing.addOperatorNode(operatorType, nodeSequenceStack, curMethodInfo, curTypeInfo,
                 nodeSequenceList);
@@ -2547,7 +2547,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                 .oriNode = n;
         // Start arguments
     }
-    
+
+    //TODO: make its tokens different from method call's
     // Eg: getNames()[15*15]
     @Override
     public void visit(ArrayAccessExpr n, Object arg) {

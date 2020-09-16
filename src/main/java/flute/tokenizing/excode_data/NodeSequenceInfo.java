@@ -896,6 +896,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
+	public static boolean isConditionalExpr(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONDITIONAL_EXPR;
+	}
+
 	public static NodeSequenceInfo getUnknown() {
 		NodeSequenceInfo node = new NodeSequenceInfo();
 		node.nodeType = NodeSequenceConstant.UNKNOWN;
@@ -915,6 +919,14 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHODACCESS;
 	}
 
+	public static boolean isConstructorCall(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTORCALL;
+	}
+
+	public static boolean isCast(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CAST;
+	}
+
 	public static boolean isOPBLK(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPBK;
 	}
@@ -923,8 +935,20 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
 	}
 
+	public static boolean isOperator(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPERATOR;
+	}
+
+	public static boolean isUnaryOperator(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.UOPERATOR;
+	}
+
 	public static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL;
+	}
+
+	public static boolean isAssign(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ASSIGN;
 	}
 
 	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
