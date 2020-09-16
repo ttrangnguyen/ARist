@@ -1,0 +1,1148 @@
+List of examined projects:
+	03lafaye_1datapoint
+	1-yukihiro_viprammo_client
+	19flr_buildcoin-jenkins
+	7cardcha_AntiCaps
+	aaronanderson_ODE-X
+	aaronwalker_JBoss-Properties-File-Deployer
+	aaronweiss74_Team-1923-Rebound-Rumble
+	AbstractedSheep_Shuttle-Tracker
+	ACM-Game-Jam-2012_STZ
+	Acrobot_ChestShop-3
+	acsmith_napplet
+	adafruit_Adafruit-ST7735-Library
+	adafruit_Custom-Magstripe-Swiper
+	ADempiere-ERP-CRM-SCM_contribution_eevolution_warehouse_management
+	adinn_churn
+	adphillips_pentaho-j2ee-plugin
+	AEminium_AeminiumRuntime
+	agarza6_derivAlfresco
+	AgentME_DCPU-16-Assembler
+	agesmundo_HadoopPerceptron
+	agoragames_java-leaderboard
+	agorava_agorava-twitter
+	airlift_airlift
+	aismail_mrts
+	akesling_pantryraid
+	akwei_halo-query
+	albuquerquev_springjms_wmq
+	alclabs_AlarmCleanup
+	alclabs_Setpoint
+	alexaverbuch_akka_chat_java
+	alexaverbuch_order
+	alexis779_fan
+	alexruiz_fest-assert-2.x
+	alibaba_dubbo
+	amanessinger_azzyzt_jee_tools
+	amangel_TestClickerPlugins
+	amaranth_ModMode
+	amininger_abolt
+	AnderWeb_Sample-Projects
+	AndlyticsProject_andlytics
+	andreaHaeusler_Wotonio
+	andreastt_inbox-attack-robot
+	andreyo_template2
+	Android-CMD-Group_Radar-Server-Using-Spring
+	android_platform_frameworks_support
+	android_platform_packages_apps_browser
+	android_platform_packages_apps_googlesearch
+	android_platform_packages_apps_launcher
+	android_platform_packages_providers_telephonyprovider
+	Andromadus_android_packages_apps_FM
+	andystewart79_netty-the-elephant
+	angryziber_simple-java
+	anovapublic_cubodroid
+	ant4eclipse_ant4eclipse
+	apache_commons-fileupload
+	apache_commons-lang
+	apache_directmemory
+	apache_hama
+	apache_jmeter
+	apache_maven
+	apache_mina
+	apache_openjpa
+	apache_qpid
+	apache_shindig
+	apache_tomcat-maven-plugin
+	aparra_fixture-factory
+	apauley_HollingBerries
+	apptentive_apptentive-android
+	aradzie_persistent
+	arawn_ksug-2012-spring-31-summary
+	arboriginal_Insurance
+	Arctic-Fox_Survey-Portlet
+	ardehaha_Peony
+	Ardesco_Ebselen
+	arduino_Arduino
+	argoyle_tapestry-breadcrumbs
+	arktekk_spring-exercises
+	armintz_Project-Management-System
+	Arnauld_jbehave-eclipse-plugin
+	arnodenhond_GraphView
+	arnostv_archery
+	arquillian_arquillian-rusheye
+	artgo_guice-slf4j
+	artzub_code_swarm-gource-my-conf
+	ashishc1990_dbsiProject2
+	atduskgreg_Making-Things-See-Examples
+	axman_smartsprites-maven-plugin
+	AxonFramework_Axon-trader
+	ballroom_ballroom
+	banane_haswants
+	bani_SMS-Denuncia
+	banq_jdonframework
+	barchart_barchart-feed-ddf
+	barmstrong_bitcoin-android
+	bart9h_AngryPipes
+	BasLeijdekkers_TabSwitch
+	Batmat_vmstat-analyzer
+	bbejeck_spring_servlet3
+	bcdev_beam-meris-icol
+	Beautyfree_cow
+	bekkopen_NoCommons
+	bencall_RPlay
+	bendisposto_prob
+	bernhardpflug_User-interface-tester
+	BestOK_stuManaSys
+	betterphp_NoFloatingTrees
+	BetterShop_BetterShop
+	bfeng_wc
+	bguerout_jongo
+	biegleux_ActionBarCompat
+	bina1204_adot4j4a
+	bioclipse_bioclipse.seneca
+	biojava_biojava-legacy
+	bitethebet_bitethebet
+	bkiers_Liqp
+	blackskad_Resto-menu
+	bluemagicsource_magic-config
+	BlueStalker_ScrollableViewGroup
+	bmc_javautil
+	bobthekingofegypt_BobClockD3
+	boersmamarcel_RSA
+	bootswithdefer_boots-plugins
+	borismus_jQuery-Mobile-Hacker-News
+	borist_EventSnap
+	box-ops_rocksteady
+	box_box-android-sdk
+	bpavone_KIDA_TAP
+	bradseefeld_gwt-ui
+	BrightcoveOS_Java-Commons
+	brunodecarvalho_http-client
+	brutall_brut.j.dir
+	bryanduxbury_sync_vs_lock
+	bucchi_OAuth2.0ProviderForJava
+	bverbeken_litmus
+	bwaldvogel_liblinear-java
+	caelum_tubaina
+	caiusb_RacefixRefactoring
+	callmeal_Flickr4Java
+	CarloMicieli_spring-social-mongo
+	cassandra-project_platform
+	cassiel_net.loadbang.clojure
+	cb372_jersey-jetty-guice-archetype
+	cb372_metrics-sigar
+	cbeams_spring-3.1-profiles-xml
+	ccemeraldeyes_AndroidLunch
+	cegekaplaycc_cegekaplaycc
+	cens_ohmagePhone
+	CeON_CoAnSys
+	cereda_jtelegraph
+	ceylon_ceylon-ide-eclipse
+	ceylon_ceylon-module-resolver
+	cfeclipse_cfeclipse
+	chherbst_EmailValidator
+	chinmayisk_bachchao
+	Chnoch_Bachelor-Thesis
+	Chrisknyfe_WaterSensor
+	chrisoei_Interactive-Brokers
+	christophd_citrus
+	cjh0102_brainproject
+	cloudera_sqoop
+	cloudfoundry_uaa
+	cmaher_SGAS
+	CmdrDats_BuildingPlanner
+	codeanticode_chatbots-library
+	codebutler_android-websockets
+	codecentric_spa
+	codename-B_BananaBackup
+	CoderDojo_ComputerClubHouse-SmsTalkerApp
+	Codisimus_ChunkOwn
+	codjo_codjo-gui-toolkit
+	codjo_codjo-test
+	codjo_codjo-util
+	colorfulgrayscale_rofl
+	commonsguy_cwac-merge
+	contactsuite_contactsuite
+	cosmin_IClojure
+	CPSC310W2012_Team-02
+	CraftFire_Bifrost
+	craigwblake_redline
+	crazyputje_Transformer
+	creadri_LazyRoad
+	creadri_MineUtil
+	CrEv_Taist
+	cs-au-dk_dk.brics.automaton
+	cschoell_Junit-DynamicSuite
+	CunningLogic_BurritoRoot
+	CyanogenMod_android_external_jdiff
+	CyanogenMod_android_packages_apps_AccountsAndSyncSettings
+	CyanogenMod_android_packages_apps_CMPartsHelper
+	CyanogenMod_android_packages_apps_SpareParts
+	CyanogenMod_android_packages_wallpapers_LivePicker
+	CyanogenMod_android_packages_wallpapers_NoiseField
+	czarneckid_delicious-java
+	dadoonet_spring-elasticsearch
+	dain_snappy
+	damagefilter_Cuboids2
+	damonsong_AA
+	danigiri_ftpserver-maven-plugin
+	daoway_AtomikosDistributedScalability
+	darkdiplomat_dExchange
+	dasanjos_java-WebServer
+	dashorst_cucumber-wicket
+	davidandrzej_LogicLDA
+	davidburkhart_Unused-methods-eclipse-plugin
+	davidcampos_gimli
+	davidillsley_scratch
+	davidrea_Deacon
+	davidsawyer_Snake
+	daxplore_spssreader
+	dbbondy_Traffic-Simulation
+	dcrec1_haml4j
+	ddewaele_AndroidOauth2GoogleApiJavaClient
+	ddnbrowser_Diva.NetBrowser
+	ddossot_mule-erlang-transport
+	demetriusf_umake
+	DemmyDemon_Tables
+	dested_Mapbook
+	devst_devst_awaji_sheep
+	dima767_inspektr
+	dinchak_pages-2
+	Ditmar_awesomgame
+	diva_digital-voices
+	dlindner_vorlesung-se2-dhbw
+	dodola_FanPullToRefresh
+	dougm_hudson-s3
+	dpredovic_showcase-ee
+	drakeqiu_AddressBook
+	drewww_socket.io-benchmarking
+	dshanley_prtree
+	dtmilano_TemperatureConverterTests
+	dtrott_maven-protoc-plugin
+	duns_maven-nar-plugin
+	dynacron-group_mybatis-sample
+	eaglesakura_library
+	echurchill_CityWorld
+	eclipsesource_tabris
+	eclipse_eclipse.platform.debug
+	eclipse_egit
+	eclipse_virgo.snaps
+	eclipse_xtext
+	eczarny_ada
+	edmund-wagner_junrar
+	egagnon_sablecc
+	egonw_rrdf
+	egrim_java-bloomier-filter
+	ehelms_Emma
+	eisental_BasicCircuits
+	ekelly_Husky-Hunters-Android
+	ekevin_radio404player-for-android
+	eladkehat_Couch-RQS
+	elasticinbox_elasticinbox
+	Elbandi_Nagroid
+	elbuo8_ShuttleBeep
+	eleybourn_Book-Catalogue
+	emanuelegentili_Progetto-Corso
+	ementalo_TeleConfirmLite
+	Emergya_StandardBreadCrumb
+	EmilHernvall_SassyBarista
+	emiln_JHouseFireExplorer
+	EmiteGWT_emite
+	Engelier_XcraftGate
+	Enough-Software_j2mepolish
+	entando_entando-core-engine
+	epall_rpiplanner
+	erezmazor_projectx
+	ericblue_MindStream
+	EricHennigan_ever-k
+	erikwt_PullToRefresh-ListView
+	erlide_erlide_xtext
+	ertdfgcvb_TheAbyss
+	erwan_playclipse
+	essentials_Essentials
+	EsupPortail_esup-lecture
+	eugenp_REST
+	evanchsa_eik
+	evernote_evernote-sdk-java
+	everyharu_SimpleAlram
+	exanpe_tapestry-tldgen
+	exanpe_ultimate-breakfast
+	exoplatform_aio-portal
+	exoplatform_kernel
+	Exultant_bottleO
+	FallenMoonNetwork_CanaryRecode
+	FasterXML_jackson-datatype-guava
+	FBergeron_javasol
+	featurist_coypu-jvm
+	feildmaster_ControlORBle
+	felipelalli_machine-gun
+	felixb_callmeter
+	FellowTraveler_Moneychanger
+	ff8711_HelloWorld
+	fireball1725_PropertyGroup
+	flow666_CoachAssist_Test
+	Flow86_Additional-Buildcraft-Objects-Mod
+	flurdy_WebAppTemplate
+	francisrangel_rest-mock
+	francofabio_vraptor-jackson-serializer
+	fred-sabatier_pdc-project
+	fredley_StegDroid
+	freenet_plugin-WoT-staging
+	freshplanet_ANE-In-App-Purchase
+	freynaud_grid-plugin-tutorial
+	friso_graphs
+	frocha_MSR-2012-Android-stars
+	fsamir_arduino-build-light
+	fsschmitt_movieadvisorapp
+	fufler_alfresco-persistence-layer
+	FuseByExample_HelloCamel
+	FuzzyWuzzie_MCNSACapes
+	fynnh_Bermuda
+	GallifreyanCode_data-hive-system
+	gambitproject_gte
+	gamecodeparty_cardgame
+	Ganglion_varaha
+	gareth-lloyd_visualizing-events
+	garysieling_solr-git
+	gboissinot_gradleplugins
+	gckjdev_GroupBuy_Web_UI
+	gckjdev_Place_Android
+	gdubelko_Eventee
+	gemserk_jutils-jinput
+	GeoAlarm429_GeoAlarm
+	giago_referraltester
+	globaleaks_GLDroid
+	glyn_bundlerepo
+	gmatney_PokerHandEvaluator
+	gojimi_android_device_adam
+	got5_tapestry5-portlet
+	graniteds_graniteds_builder
+	graphstream_gs-geography
+	gregbayer_boilerpipe
+	griddynamics_banshun
+	grisu_grisu
+	gtosoft_Sleuth
+	guilhermegregio_vraptor-gson-serializer
+	guillaumebort_calimoucho
+	gvsumasl_jacc
+	hachmeister_munin-jmx-monitor-plugin
+	hajoeichler_JenkinsJobConfigGenerator
+	hakobera_node-vs-sastruts-vs-playframework-rest-api-bench
+	hannonhill_Cascade-Web-Services-Examples
+	harmattan_redak
+	hartsock_FunctionalThinking
+	hawesg_cs56hs
+	Hawox_AutoPlant
+	haxzamatic_Subsonic-Android
+	hdiv_hdiv
+	hdrky_git2historage
+	headius_clojr
+	headsupdev_java-support
+	hibernate_hibernate-metamodelgen
+	hlenke_EclipseMatrix
+	HomerBond005_GroupBasedPVP
+	honnet_cyclophone
+	hpcc-systems_EclipsePlugin
+	hprange_woinject
+	hqSparx_AuthMe-Reloaded-Charge-fix
+	hrk_androidTileMapEditor
+	huahin_huahin-manager
+	hudson3-plugins_birt-charts-plugin
+	hudson3-plugins_dry-plugin
+	hugozhu_fed4j
+	huobao36_xueqiu
+	huyphan_HDFS-over-Webdav
+	Hybris95_MultiChannel
+	i386_feedle
+	igm_CloudDev-CIT
+	igorcrevar_AndroidImageViewZoom
+	ikeike443_HudsonPluginForPlay
+	iLanguage_AndroidBilingualAphasiaTest
+	inaiat_jqplot4java
+	infinispan_infinispan-arquillian-container
+	infinispan_infinispan-quickstart
+	InformationIntegrationGroup_Web-Karma-Public
+	innoq_helloworld_play
+	iron-io_iron_worker_java
+	Isabaellchen_ChatRooms
+	isseium_ihatovgram
+	iyulaev_tacotime
+	Jadedwolf_TakeaNumber
+	jafl_java_actor
+	jagdishc_SmartCrawler
+	Jahia_templates-set
+	JakeWharton_Android-DirectionalViewPager
+	JakeWharton_HanselAndGretel
+	JakeWharton_SnakeWallpaper
+	jamescarr_spring-amqp-extras
+	jamesward_S3-Blobs-module-for-Play
+	jamesward_zentasks
+	JanKoehnlein_Generic-Graph-View
+	jankotek_JDBM3
+	janstey_rider-auto-osgi
+	jaroslav-kuchar_Social-Network-Analysis
+	Jasig_BookmarksPortlet
+	Jasig_sakai-connector-portlet
+	Jasig_UmobileAndroidPlugin
+	jasondelponte_Android-Laptimer
+	jayway_jax-rs-hateoas
+	jayway_JsonPath
+	jayway_maven-android-plugin
+	jboss-switchyard_console
+	jbossas_jboss-classfilewriter
+	jboss_jboss-ejb-api_spec
+	jbrisbin_rabbitmq-dsl
+	jeberma_example
+	jeconfig_jeconfig
+	jedld_GiNote
+	jeluard_maven-plantuml-plugin
+	jenkinsci_android-emulator-plugin
+	jenkinsci_build-timeout-plugin
+	jenkinsci_cas1-plugin
+	jenkinsci_ci-game-plugin
+	jenkinsci_cli-extras-plugin
+	jenkinsci_createjobadvanced-plugin
+	jenkinsci_cvs-plugin
+	jenkinsci_eggplant-plugin
+	jenkinsci_envfile-plugin
+	jenkinsci_growl-plugin
+	jenkinsci_harvest-plugin
+	jenkinsci_jboss-plugin
+	jenkinsci_list-command-plugin
+	jenkinsci_locked-files-report-plugin
+	jenkinsci_maven-hudson-dev-plugin
+	jenkinsci_maven-repo-cleaner-plugin
+	jenkinsci_mercurial-plugin
+	jenkinsci_nsiqcollector-plugin
+	jenkinsci_pmd-plugin
+	jenkinsci_redmine-plugin
+	jenkinsci_slave-squatter-plugin
+	jenkinsci_statusmonitor-plugin
+	jenkinsci_viewVC-plugin
+	jenkinsci_winstone
+	jenshimmelreich_agiledox
+	jeremyg484_spring-html5
+	JervenBolleman_owlim-shim
+	jesperfj_force-rest-api
+	JesusFreke_Penroser
+	JetBrains_ideavim
+	jetty-project_jetty-autobahn-websocket-client
+	jglobus_JGlobus
+	jgraph_jgraphx
+	jillesvangurp_jsonj
+	Jimtrim_FellesprosjektGruppe20
+	jingwei_jsonstore
+	jingwei_krati
+	jjoe64_GraphView-Demos
+	jlbelmonte_svn-connector
+	jmhsieh_aho-corasick
+	jmschultz_Eclipse-Robolectric-Example
+	jmutter_Enterprise-Application-Samples
+	jnorthrup_RelaxFactory
+	joaovieira_PTSense
+	johnlaing_blpwrapper
+	johnlindquist_angularjs-plugin
+	johnperry_Util
+	johntrimble_osgi-validation-service
+	jolira_wicket-stateless
+	jondwillis_ElectricSleep
+	joscha_play-authenticate
+	JoshDreamland_JoshEdit
+	joshepw_Proyecto
+	josisusan_MetadataRDF
+	jpmens_sonospauseIR
+	jponge_lzma-java
+	jprante_elasticsearch-index-termlist
+	jtalks-org_poulpe
+	jtolds_dualnback
+	JuergenGall_Henshin-Editor
+	julienba_play-riak
+	junal_Android-SharedPreferences
+	junjun-huang_marketing
+	jusalex_TwoDirectionsViewSwitcher
+	juzu_juzu
+	jwood_standup-timer
+	K3V1N32_ButtonsPlus
+	Kaikz_PackaPunch
+	kakaochatfriend_KakaoChatFriendAPI
+	kaleucaminha_ChuckTetris
+	kamranzafar_jddl
+	kanban_kanban-app
+	kapild_hadoop-examples
+	karim113_Mercworks-App
+	karussell_ElasticSearchExample
+	katjas_PDFrenderer
+	kayahr_scilter
+	kec6227_Fuzzer
+	kenglxn_gradle-android-template
+	kenji0717_A3CarSim
+	kennas_DojoServerFaces
+	Kenshin_cordova-toast
+	kevinjqiu_ratechecker
+	Kieraan_Stickii
+	killme2008_gecko
+	kindlymouse_Arduino
+	klauswuestefeld_byke
+	knime-mpicbg_rgg
+	knoxcorner_WorldSaver
+	kookoolib_KooKoo-Java
+	Koponya_AuctionMaster
+	kozo2_kgmlreader
+	krazykylep_Open-Android-Game
+	krinsdeath_killsuite
+	ktoonsez_AOKP-I777
+	ktoso_janbanery
+	KubaNeumann_jsfdemo
+	kwacktoffeln_Hangman
+	laaglu_lib-gwt-file
+	leandrocruz_Xingu
+	lesensei_Plopoid
+	LiAndWu_GeekClock
+	lightbox_lightbox-android-webservices
+	ligi_DUBwise
+	lilspikey_arduino_sketches
+	limone_MailJimp
+	linearcurve_whiteboard
+	LinuxMercedes_AcmSodaAndroid
+	liquibase_liquibase-hibernate
+	literalice_grails-xwiki-rendering
+	lmparra_Prototipo
+	loiane_sencha-gxt3-rpc-grid
+	loopj_android-smart-image-view
+	lorensiuswlt_AndroidTwitter
+	Lothy_MoparClassic
+	lovelysystems_elasticsearch-ls-plugins
+	luojiesi_android-vpn-settings
+	lusis_zmq-appender
+	lvotypko_delete-log-plugin
+	lvotypko_search-all-results-plugin
+	lwes_lwes-contrib-hive-serde
+	lwes_lwes-journaller-java
+	lytsing_SectionedAdapter
+	lyyjohn45_CP_2
+	m2ym_rsense
+	magnus-larsson_mule-module-google-c2dm
+	maherg_openske
+	majakk_ecofriends
+	majakk_mobileactdresses
+	makerbot_MouthBrain
+	malavv_UchihaIncident
+	maleinfach_technisat
+	MaliciousMonkey_Hermes
+	maniempire_SOCIORESPO
+	marcelemaschka_Paradigmas
+	marceloverdijk_lesscss-maven-plugin
+	marciomarinho_springmvc-freemarker
+	marcusn_LiquibaseEjb
+	marcuspocus_jpagen
+	marcuspocus_play-camel
+	marczych_AndroidSectionHeaders
+	MarkyVasconcelos_TDGame
+	martijnblankestijn_javaee6-demo
+	martinez-zea_objetos_en_red
+	masterkrang_android-eventapp
+	masterthought_cucumber-jvm-example
+	matejdro_Jail
+	mattak_CameraUploader
+	mattkeating_OnlineStaff
+	matzew_modern-ee-app20
+	maxharp3r_gae-spring-guestbook-demo
+	maxwell4001_Buddy-Check
+	mbarbieri_play-gravatar
+	mbknor_faster-groovy-templates
+	mbreese_couchdb4j
+	mbukowicz_Learning-Apache-Commons
+	mcaserta_spring-crypto-utils
+	mconf_bbb-java
+	mcornejo_TimeZoneFixer
+	mediashelf_fedora-client
+	megadix_orientdb-spring
+	megamattron_SlideScreenPlugins
+	megatherion_Unrolled-linked-list
+	mguillermin_play2-ebean-testing
+	mhgrove_cp-common-utils
+	mhidaka_JCBeam
+	michael-horn_Tern-StickerBook
+	MichaelKohler_HelperTools
+	michaellin_Project1
+	michaelmosmann_embedmongo.flapdoodle.de
+	mikewatt_jenkins-snsnotify-plugin
+	MilkBowl_Vault
+	MinCha_corepository
+	Minecarts_FamilyJewels
+	MinerCrafter_ArmorSurvey
+	Minestar_MineStarLibrary
+	mintdigital_olly
+	mirolyubov_Web
+	mitchtech_android_ioio_blinds_control
+	mithunr_DistCpV2-0.20.203
+	mitmel_Locast-Android
+	mixxit_iplock
+	mkedo_unisender
+	mkpascal_CrazyFoodCraft
+	mlaccetti_JavaPNS
+	mmoMinecraftDev_mmoAuction
+	mmx900_ManalithIRC
+	Mobiperf_Speedometer
+	modwizcode_ColoredCom
+	mokemokechicken_Android_NFC_FelicaEdit
+	Monddrache_AP2
+	motech_MOTECH-Mobile
+	mpatric_mp3agic
+	mrdon_maven-itblast-plugin
+	mrknmc_RageProjectiles
+	mrolafsson_cachalot
+	ms969_ChenSun
+	msukmanowsky_OmnitureTextLoader
+	mtinkerhess_sbolt
+	mtotschnig_MyExpenses
+	mulesoft_facebook-connector
+	mulesoft_yammer-connector
+	Multitallented_HeroCastes
+	Multitallented_HeroStronghold
+	Munken_3DPlotter
+	mushroomhostage_RealisticChat
+	mushroomhostage_SilkSpawners
+	myGrid_t2-server-jar
+	n0ha_yui-compressor-ant-task
+	nabeelmukhtar_stackoverflow-java-sdk
+	nan21_nan21.dnet.modules
+	narrowtux_PistonChest
+	natebuwalda_Cassandra-Client
+	nathanmarz_elephantdb
+	necioveras_fizzBuzz
+	nectify_hornet-connector-java
+	nehru_J2EE-Application
+	neo4j_cypher-dsl
+	neo4j_javascript-plugin
+	neo4j_neoclipse
+	NerdNu_NerdSpawn
+	NessComputing_velocity-guice
+	Netflix_CassJMeter
+	Netflix_Priam
+	Netflix_servo
+	nhydock_FF1-Battle-System
+	niccholaspage_nSpleef
+	nicholas22_jpropel-light
+	nicksieger_refactoring-to-rails
+	nicoulaj_jcrfs
+	Nightgunner5_BananaMaze
+	nikhilbhardwaj_Recursion-Class
+	nikkiii_rs2litev2
+	nilsga_maven-jetty-pluto-embedded
+	ninetwozero_BF3-Battlelog
+	njbartlett_osgiutils
+	nloko_SyncMyPix
+	nodren_minecraft-bukkit-vanish
+	nostra13_Android-Simple-Social-Sharing
+	novoj_iBatisWorkShop
+	nRike_Simple-Notification
+	NUBIC_psc-mirror
+	nuxeo_nuxeo-services
+	objectledge_maven-extensions
+	ocpsoft_prettyfaces-forge-plugin
+	octo-technology_java-sql-dsl
+	OdiumxXx_SimpleChatChannels
+	okjsp_okjsp-site
+	olabini_ioke
+	oliamb_maven-xcodebuild-plugin
+	OneBusAway_onebusaway-application-modules
+	OneBusAway_onebusaway-guice-jetty-exporter
+	OneBusAway_onebusaway-quickstart
+	OneHP_murmuration
+	onioman_BowlingKata
+	OpenConext_OpenConext-shared
+	OpenConext_OpenConext-test
+	opengeo_GeoGit
+	openintents_convertcsv
+	openintents_notepad
+	OpenJunction_JunctionSlideshow
+	openknowledge_openknowledge-cdi-extensions
+	openmicroscopy_bioformats
+	openstack-atlas_atlas-lb
+	oryonatan_OOP1
+	OSBI_saiku
+	osulibraries_dspace-stats-elasticsearch
+	pablopareja_BioinfoUtil
+	pambrose_HBql
+	Pandemoneus_DeathPenalty
+	paramsethi_linkedInDemo
+	pararthshah_android_interface_firebird_api_group2_cs308_2012
+	pascalleclercq_xdocreport-demo
+	passy_absshadow-sample
+	patrickangeles_cdh-maven-archetype
+	paulcwatts_onebusaway-android
+	pavelsher_juxy
+	pejot_linked-data-visualization-tools
+	pentaho_big-data-plugin
+	peoplesbeer_HelmetApp
+	perfume-dev_example-processing
+	peter-lawrey_Java-Thread-Affinity
+	peteratt_WordCountMR
+	pfleidi_yaxim
+	phonelab_phonelabservices
+	pickerweng_CameraRecorder
+	pierreh_zmachine
+	pierre_collector
+	pingdynasty_BlipBox
+	PinkyJie_PinkyBlocker
+	pipakin_Android-Bluetooth-Reprap
+	Pitel_GJAddr
+	Pkamis_sacmsolver
+	PneumatiCraft_CommandHandler
+	pololu_MinIMU-9-Arduino-AHRS
+	polyclef_BluetoothChatMulti
+	poncelet_Poncelet_Vervey_CasseurdeCailloux
+	PouzinSociety_tinos
+	powertac_accounting
+	powertac_household-customer
+	Praqma_config-rotator-plugin
+	PrecipiceGames_Replenish
+	pressgang_maven-jdocbook-plugin
+	prog694_joebot
+	ProjectCCNx_ccnx
+	proofpoint_event-collector
+	proofpoint_platform
+	propra12-orga_gruppe41
+	pse-team2_eonum-client
+	ptressel_ArduinoComm
+	pulse00_Doctrine-Eclipse-Plugin
+	pvillega_GSOC--Dspace-testing
+	pyricau_express-board-android
+	qa_auction
+	Qi4j_qi4j-sdk
+	qiemem_SandpilesApp
+	qrtt1_jplurk-oauth
+	quadriat_XACML-Policy-Analysis-Tool
+	quietbamboo_MobiPerfUmich
+	ragnraok_android-image-filter
+	rajithd_vigraha
+	rajivrnair_PassTheBuck
+	ralfebert_imageassert
+	ralfstx_rap-carousel
+	razer1_GioLightUpd
+	rbodkin_avro-mr-sample
+	rcostu_Callejero
+	reavels_openrtb-mobile-sandbox
+	Regaddi_ap-memory
+	Reham_Translate
+	Reil_rTriggers
+	Rekamux_Accountoid
+	remeniuk_java-lenses
+	renan1010_AndroidEssentials
+	reprap_firmware
+	resthub_resthub-identity
+	RichardWarburton_jspark
+	rintaun_mahjong
+	riotfamily_riot
+	rjnichols_visural-common
+	RJ_irccat
+	rkapsi_patricia-trie
+	rlazoti_vraptor-authentication
+	rlegendi_griddler-solver
+	rmboyle_mus
+	rmuller_infomas-asl
+	rnewson_couchdb-lucene
+	rnjn_twistDemo
+	RobertSzkutak_AndroidExamples
+	robocup-atan_atan
+	rodolfoliviero_github-android
+	rodrigomanhaes_itchy
+	rogcg_pixel
+	rolle001_translator-wofost
+	rombert_gwt-dispatch-sample
+	ropera_SimpleJavaProject
+	Rotten194_BaseClassesBeGone
+	rrelmy_BatteryLevel
+	RSG_Carnivore
+	rsnape_CASCADE
+	rstoyanchev_spring-mvc-jquery-tiles
+	rtreffer_smack
+	rtyley_android-screenshot-lib
+	RubingHan_UJapid
+	ruboto_startup_timer
+	RusticiSoftware_SCORMCloud_JavaLibrary
+	rvadali_fb-raid-refactoring
+	RvonMassow_xDoc
+	ryankane_Java3DTest
+	ryanramage_couch-audio-recorder
+	safreiberg_ExplodingFlowers
+	samirahmed_Iris-Voice-Automation
+	SamV522_dBUB
+	santiagozky_harmony
+	sanvibyfish_tarotmeaning
+	sassy_AndroidTetris
+	sawano_scala-spring-mvc
+	sawano_spring-examples-json-xml-ws
+	sazzer_spring-cli
+	scalastuff_esbt
+	scela_al.gov.asp.smc.osgi.vaadin.siemens
+	Scmadar_TeamKaiSuperHappyPlace
+	scooter_scooter
+	scottbw_Xcri4j
+	sdpgroup7_code
+	seam_cron
+	seanbromage_No-Pain-No-Game
+	sebastianbenz_xrepl
+	sergeche_wtp-sugar
+	serman_lacosaradiactiva
+	serso_android-calculatorpp
+	serso_android-common
+	Serubin_HatMe
+	sfnelson_suicide-kings
+	sgothel_jinput
+	shahb_bdd_par
+	shakalaca_UniversalAndroot
+	shazz_CurveRipper
+	shellac_java-rdfa
+	shiffman_Most-Pixels-Ever
+	SHiLLySiT_LoreTime
+	Silverpeas_Silverpeas-Settings
+	sinjax_jmatio
+	sipul_trollsvsgoats
+	sirthias_parboiled
+	sk89q_commandbook
+	skeeto_Minicraft
+	slimkickerandroid_SlimKicker
+	slowpoison_reboundme
+	smanek_students
+	smartaleq_DwarfCraft
+	smarthall_ArduinoCMS2000DataLogger
+	SOLA-FAO_messaging
+	solrpl_solrjt
+	SonarCommunity_sonar-scm-activity
+	SonarSource_sonar
+	SonarSource_sonar-eclipse
+	sonatype_sonatype-aether
+	soneyworld_AndroidLab
+	sonologic_SpaceState
+	sorenmacbeth_storm-redis-pubsub
+	southfreo_QuotaForAndroid
+	sozialhelden_wheelmap-android
+	spartango_HiCGraph
+	SpatialInteractive_java-websocket-client
+	spencerkohan_SectionListAdapter
+	spinscale_elasticsearch-suggest-plugin
+	spookypeanut_Wake-Me-At
+	spotify_flume-syslog-source2
+	spreiter301_Core
+	SpringSource_spring-data-book
+	SpringSource_spring-data-jpa
+	SpringSource_spring-data-keyvalue-examples
+	SpringSource_spring-flex
+	SpringSource_spring-integration-samples
+	SpringSource_spring-mobile
+	SpringSource_spring-social-gowalla
+	SpringSource_spring-social-twitter
+	springtestdbunit_spring-test-dbunit
+	spring_SpringLS
+	sqlcipher_android-database-sqlcipher
+	square_fundraiser
+	staccatocommons_staccatissimo
+	stampy88_flume-amqp-plugin
+	StanBertrand_bank
+	starschema_slm4j
+	stefanhoth_geeklist-sdk-java
+	steffstefferson_ch.frickler.fl-gz-g
+	Steren_play-sitemap
+	stivlo_security-tutorial
+	stoicflame_enunciate
+	stokito_gag
+	Stopa_Proge-projekt-vol-2
+	stormizin_FoAWorks
+	stumbleupon_opentsdb
+	stupidsing_suite
+	StylingAndroid_BackupRestore
+	StylingAndroid_LayoutTypes
+	StylingAndroid_VerticalText
+	SuelenGC_TDC2012-Shapes
+	suguru_mongo-java-async-driver
+	sujandhakal_carhire
+	superdry_SuperdryColorPickerLib
+	SuperSpyTX_SecretWord
+	svanacker_cen-info
+	svn2github_javassist
+	svzdvd_net.refractions.udig.catalog.neo4j
+	SWIMProjectUCB_SWIM
+	swirepe_minimap-magnifier
+	tailorcai_tungsten-queue-applier
+	talios_coffee-maven-plugin
+	tamsler_android-flash-cards
+	tangfl_jbinlog
+	tanujmathur_twu-refactoring
+	taoneill_war
+	Tar3k_smorg-frontendapi15
+	tarchan_DesktopKit
+	tavendo_AutobahnAndroid
+	TaxiCop_TaxiCop
+	tbiehn_Android-Adapter-Image-Loader
+	tdunning_Chapter-16
+	tdunning_knn
+	TeamAwesome_forum
+	teamgummy_packages_apps_AppWidgetPicker
+	teamgummy_packages_apps_GummyPapers
+	teamgummy_packages_wallpapers_GummyBeam
+	technophobia_substeps-runner
+	tehapo_Clara
+	tehbeard_BeardStat
+	tellapart_TellApart-Hadoop-Utils
+	tellurium_QrReader
+	thiagohersan_FofoquemeAndroid
+	thillerson_Tile-Puzzle-Android
+	thingsfx_ThingsFX
+	ThomasWedler_SQ-GUI-Prototype
+	threerings_flashbang-playn
+	thymeleaf_thymeleaf-tools
+	thymeleaf_thymeleafexamples-thvsjsp
+	tiborsomodi_classtemplater
+	ticktock_qsandra
+	tigerking_ipcamera-for-android-
+	Timberjaw_Crafty
+	timurstrekalov_saga
+	tkobayas_example-projects
+	tmills_PaperManager
+	tolitius_making-sense-dependency-injection-test-execution-listener
+	tomp2p_TomP2P
+	tomsik68_HelpPlus
+	tonyg_presence-exchange
+	tonylukasavage_com.savagelook.android
+	toshikurauchi_USPMobileServer
+	touchlab_Android-Database-Locking-Collisions-Example
+	tpais_TakeThePill
+	transparency-international-rhok-5_bribealert-mobile-new
+	Traumflug_Visolate
+	treasure-data_td-logger-java
+	TrevisanTecnologia_fake-smptserver-dojo
+	Trinea_qq-t-java-sdk
+	tristantarrant_doorkeeper
+	tritonrc_flume-redis-sink
+	tumbarumba_AntScriptLibrary
+	turicas_tomada-bluetooth
+	TutenStain_Hedgehog-Photo
+	Tux2_SpoutLWC
+	Tweener_rhymestore-android
+	twu27_biblioteca-solutions
+	twuni_android-c2dm-example
+	uciad_UCIAD-Parderer
+	ulrikdamm_Java-Attack
+	UQ-CMM-Mirage_CMM-data-grabber
+	urails_ta_queue_android
+	ushahidi_Ushahidi_FrontlineSMS
+	uw_aad
+	valotrading_silvertip
+	vanevery_Pro-Android-Media
+	vazexqi_JVMFuturesExploration
+	vbehar_jenkins-rundeck-plugin
+	vbfischer_spring-social-dropbox
+	velazcod_Tinfoil-Facebook
+	vesjane_neuron
+	Vijfhoek_accessed
+	vikaskanani_Android-Custom-Gallery-And-Instant-Upload
+	vincentpasquier_StarWarsLife
+	viperwarp_MCServerTracker
+	vishalSahu_Paxos
+	vistarmedia_client-api
+	vmware-serengeti_serengeti-ws
+	vvakame_LVLPractice
+	vy_play-chat
+	vznet_mongo-jackson-mapper
+	waarp_WaarpCommon
+	wakama2_jkonoha
+	Walnoot_RTSGame
+	wbaumann_Smart-Receipts
+	we3whoreign_WISP
+	weisserd_LDAP-Sync
+	Weltraumschaf_cacert-frontendtests
+	williandroid_exercicioDeHeranca_2
+	WING-NUS_Kairos
+	woorea_openstack-ui
+	woutervegter_DevTutorial5
+	wpivotto_OPCHub
+	wwsean08_ClearInv
+	x3chaos_x3
+	Xanindorf_AAAH-SNAYKUU
+	xCP23x_RestockIt
+	xdruid_xdruid
+	xebia-france_oobank-kata
+	Xotan_OAuth2Android
+	xwiki-contrib_sandbox
+	xXLupoXx_NoSpawn
+	xxv_24hAnalogWidget
+	y42sora_soraAOJ
+	yagitoshiro_CropImage
+	yasserg_crawler4j
+	yetanotherx_WorldEditCUI
+	yiminliu_tcbu
+	yodojo_RelogioDecario
+	YusukeKokubo_SkillMaps
+	ywwg_EmergencyDanceParty
+	yybirdcf_ecust
+	yyuu_jetty-nosql-memcached
+	zaki50_StickyShortcut
+	zapodot_constretto-play
+	zcox_javaee6-books
+	ZerothAngel_ToHPluginUtils
+	zeroturnaround_jenkins-liverebel-plugin
+	zhouxixin_SSCGIT
+	zidarsk8_galaxyCar
+	zonyitoo_SYSU_EDAILY
+	zydeco_PickBoat
+	zznate_cassandra-stress
+
+Statistics on Num of Java files:
+	count:                 1000
+	mean:            122.407000
+	std:             400.313422
+	mode:              2.000000
+	min:               0.000000
+	25%:               6.000000
+	50%:              20.000000
+	75%:              76.000000
+	max:            7005.000000
+
+	         0   Java files:      31 -  3.10%
+	         1   Java files:      38 -  3.80%
+	           2 Java files:      53 -  5.30%
+	           3 Java files:      43 -  4.30%
+	           4 Java files:      46 -  4.60%
+	           5 Java files:      32 -  3.20%
+	           6 Java files:      24 -  2.40%
+	           7 Java files:      32 -  3.20%
+	           8 Java files:      26 -  2.60%
+	           9 Java files:      22 -  2.20%
+	          10 Java files:      23 -  2.30%
+	  11 to   20 Java files:     141 - 14.10%
+	  21 to   30 Java files:      73 -  7.30%
+	  31 to   40 Java files:      63 -  6.30%
+	  41 to   50 Java files:      38 -  3.80%
+	  51 to   60 Java files:      27 -  2.70%
+	  61 to   70 Java files:      23 -  2.30%
+	  71 to   80 Java files:      30 -  3.00%
+	  81 to   90 Java files:      21 -  2.10%
+	  91 to  100 Java files:      20 -  2.00%
+	 101 to  200 Java files:      73 -  7.30%
+	 201 to  300 Java files:      28 -  2.80%
+	 301 to  400 Java files:      22 -  2.20%
+	 401 to  500 Java files:      11 -  1.10%
+	 501 to  600 Java files:      16 -  1.60%
+	 601 to  700 Java files:       5 -  0.50%
+	 701 to  800 Java files:       7 -  0.70%
+	 801 to  900 Java files:       6 -  0.60%
+	 901 to 1000 Java files:       1 -  0.10%
+	1001 to 2000 Java files:      15 -  1.50%
+	2001 to 3000 Java files:       7 -  0.70%
+	3001 to 4000 Java files:       0 -  0.00%
+	4001 to 5000 Java files:       2 -  0.20%
+	5001 to 6000 Java files:       0 -  0.00%
+	6001 to 7000 Java files:       0 -  0.00%
+	7001 to 8000 Java files:       1 -  0.10%
+
+Num of inner method calls: 361709
+Num of java method calls: 792179
+Num of lib method calls: 3736927
+
+Top 10 most called Java APIs:
+	java.lang.StringBuilder.append(java.lang.String)
+	java.lang.String.equals(java.lang.Object)
+	java.io.PrintStream.println(java.lang.String)
+	java.lang.String.length()
+	java.lang.StringBuffer.append(java.lang.String)
+	java.util.Map.put(K, V)
+	java.lang.Object.getClass()
+	java.util.List.add(E)
+	java.util.Map.get(java.lang.Object)
+	java.util.List.size()
+
+Top 10 most called external libs' APIs:
+
+Rating of inner methods being called: 7.40%
+
+Rating of caller & callee being in the same package: 31.29%
+
+Statistics on Num of arguments:
+	count:              4890349
+	mean:              0.930192
+	std:               1.088186
+	mode:              1.000000
+	min:               0.000000
+	25%:               0.000000
+	50%:               1.000000
+	75%:               1.000000
+	max:             400.000000
+
+	         0 arguments: 1842187 - 37.67%
+	         1 arguments: 2049325 - 41.91%
+	         2 arguments:  719890 - 14.72%
+	         3 arguments:  166459 -  3.40%
+	         4 arguments:   62665 -  1.28%
+	         5 arguments:   26729 -  0.55%
+	         6 arguments:   11014 -  0.23%
+	         7 arguments:    5636 -  0.12%
+	         8 arguments:    2434 -  0.05%
+	         9 arguments:    1310 -  0.03%
+	        10 arguments:     700 -  0.01%
+	 11 to  20 arguments:    1831 -  0.04%
+	 21 to  30 arguments:      90 -  0.00%
+	 31 to  40 arguments:      28 -  0.00%
+	 41 to  50 arguments:      15 -  0.00%
+	 51 to  60 arguments:      11 -  0.00%
+	 61 to  70 arguments:       8 -  0.00%
+	 71 to  80 arguments:       7 -  0.00%
+	 81 to  90 arguments:       3 -  0.00%
+	 91 to 100 arguments:       1 -  0.00%
+	101 to 200 arguments:       3 -  0.00%
+	201 to 300 arguments:       2 -  0.00%
+	301 to 400 arguments:       1 -  0.00%
+	401 to 500 arguments:       0 -  0.00%
+
+Statistics on Expression types of params:
+	NAME:                  37.59%
+	METHOD_INVOC:          17.13%
+	FIELD_ACCESS:           6.68%
+	ARRAY_ACCESS:           0.92%
+	CAST:                   0.67%
+	STRING_LIT:            15.49%
+	NUM_LIT:                6.86%
+	CHAR_LIT:               0.42%
+	TYPE_LIT:               2.08%
+	BOOL_LIT:               2.31%
+	NULL_LIT:               1.34%
+	OBJ_CREATION:           2.40%
+	ARR_CREATION:           0.44%
+	THIS:                   0.60%
+	SUPER:                  0.00%
+	COMPOUND:               4.48%
+	LAMBDA:                 0.42%
+	OTHERS:                 0.18%
+
+Statistics on origin of arguments:
+	REFLECT_FIELD:          0.02%
+	FIELD:                 10.32%
+	PARAM:                 17.66%
+	LOCAL_VAR:             26.77%
+	LIT:                   26.13%
+	ENUM_CONST:             0.01%
+	CLASS:                  2.16%
+	NULL:                   1.40%
+	OBJ_CREATION:           2.51%
+	ARR_CREATION:           0.45%
+	THIS:                   0.62%
+	SUPER:                  0.00%
+	OTHERS:                11.95%
+
+Rate of casting argument: 0.010506570398572158
+Rate of casting in assignment: 0.0436839893686954
+Rate of casting in variable declaration: 0.0629446976523329
+Rate of casting in return statement: 0.03205229501043088
+Rate of casting mismatched type: 0.010842997077904178
