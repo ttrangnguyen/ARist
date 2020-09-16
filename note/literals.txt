@@ -1,0 +1,5 @@
+LIT(wildcard) -> ?
+LIT(null) -> null
+LIT(num) -> 0
+LIT(String) -> ""
+LIT(boolean) -> [true, false]
