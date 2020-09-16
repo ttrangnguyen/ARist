@@ -281,19 +281,21 @@ public class FileParser {
                     typeNeedCheck = methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getElementType();
                 }
 
-                if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
-                    nextVariable.add("0");
-                    nextVariableMap.put("LIT(num)", "0");
-                }
+                if (typeNeedCheck != null) {
+                    if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
+                        nextVariable.add("0");
+                        nextVariableMap.put("LIT(num)", "0");
+                    }
 
-                if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())) {
-                    nextVariable.add("\"\"");
-                    nextVariableMap.put("LIT(String)", "\"\"");
-                }
+                    if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())) {
+                        nextVariable.add("\"\"");
+                        nextVariableMap.put("LIT(String)", "\"\"");
+                    }
 
-                if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
-                    nextVariable.add("[true, false]");
-                    nextVariableMap.put("LIT(boolean)", "[true, false]");
+                    if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
+                        nextVariable.add("[true, false]");
+                        nextVariableMap.put("LIT(boolean)", "[true, false]");
+                    }
                 }
 
                 visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
