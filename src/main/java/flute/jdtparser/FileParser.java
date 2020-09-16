@@ -201,6 +201,12 @@ public class FileParser {
         return genNextParams(position);
     }
 
+    private String lastMethodCallGen = "";
+
+    public String getLastMethodCallGen() {
+        return lastMethodCallGen;
+    }
+
     private MultiMap genNextParams(int position) {
         final ASTNode[] astNode = {null};
 
@@ -217,6 +223,7 @@ public class FileParser {
 
         MethodInvocation methodInvocation = (MethodInvocation) astNode[0];
         String methodName = methodInvocation.getName().getIdentifier();
+        lastMethodCallGen = methodInvocation.toString();
 
         boolean isStaticExpr = false;
         ITypeBinding classBinding;
