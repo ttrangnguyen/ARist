@@ -1,0 +1,19 @@
+byte -> B
+short -> S
+char -> C
+int -> I
+long -> J
+float -> F
+double -> D
+boolean -> Z
+
+Byte -> Ljava/lang/Byte;
+Short -> Ljava/lang/Short;
+Character -> Ljava/lang/Character;
+Integer -> Ljava/lang/Integer;
+Long -> Ljava/lang/Long;
+Float -> Ljava/lang/Float;
+Double -> Ljava/lang/Double;
+Boolean -> Ljava/lang/Boolean;
+
+String -> Ljava/lang/String;

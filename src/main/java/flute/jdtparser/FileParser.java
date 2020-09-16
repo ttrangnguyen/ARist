@@ -259,6 +259,7 @@ public class FileParser {
                 ? methodArgLength - 1 : methodArgLength;
 
         int finalMethodArgLength = methodArgLength;
+
         listMember.forEach(methodBinding ->
         {
             ITypeBinding[] params = methodBinding.getParameterTypes();
@@ -266,6 +267,28 @@ public class FileParser {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
+                ITypeBinding typeNeedCheck = null;
+                if (finalMethodArgLength < methodBinding.getParameterTypes().length - 1) {
+                    typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
+                } else if (methodBinding.isVarargs()) {
+                    typeNeedCheck = methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getElementType();
+                }
+
+                if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
+                    nextVariable.add("0");
+                    nextVariableMap.put("LIT(num)", "0");
+                }
+
+                if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())) {
+                    nextVariable.add("\"\"");
+                    nextVariableMap.put("LIT(String)", "\"\"");
+                }
+
+                if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
+                    nextVariable.add("[true, false]");
+                    nextVariableMap.put("LIT(boolean)", "[true, false]");
+                }
+
                 visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
