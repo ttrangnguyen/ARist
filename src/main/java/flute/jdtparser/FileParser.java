@@ -12,7 +12,6 @@ import flute.data.*;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -342,7 +341,7 @@ public class FileParser {
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
         if (methodBinding.getParameterTypes().length > position
-                && ((varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])))
+                && varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
         ) {
             return ParserConstant.TRUE_VALUE;
         }
@@ -416,7 +415,7 @@ public class FileParser {
                 return null;
             }
         } else if (parentNode instanceof IfStatement) {
-            return new ITypeBinding[]{new IBooleanType()};
+            return new ITypeBinding[]{new BooleanPrimitiveType()};
         } else if (parentNode instanceof MethodInvocation) {
             MethodInvocation methodInvocationParent = (MethodInvocation) parentNode;
             //if method call is a param of method call
@@ -467,7 +466,7 @@ public class FileParser {
     private boolean compareWithMultiType(ITypeBinding iTypeBinding, ITypeBinding[] iTypeBindings) {
         for (int i = 0; i < iTypeBindings.length; i++) {
             if (iTypeBinding.isAssignmentCompatible(iTypeBindings[i])
-                    || (iTypeBindings[i] instanceof IGenericType && ((IGenericType) iTypeBindings[i]).canBeAssignmentBy(iTypeBinding))) {
+                    || (iTypeBindings[i] instanceof GenericType && ((GenericType) iTypeBindings[i]).canBeAssignmentBy(iTypeBinding))) {
                 return true;
             }
         }

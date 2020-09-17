@@ -5,7 +5,12 @@ import java.util.List;
 
 public class TypeConstraintKey {
     final public static List<String> NUM_TYPES = Arrays.asList(new String[]{"Ljava/lang/Byte;", "Ljava/lang/Char;", "Ljava/lang/Short;", "Ljava/lang/Integer;",
-            "Ljava/lang/Long;", "Ljava/lang/Float;", "Ljava/lang/Double;", "B", "S", "C", "I", "J", "F", "D",});
+            "Ljava/lang/Long;", "Ljava/lang/Float;", "Ljava/lang/Double;", "B", "S", "C", "I", "J", "F", "D"});
+
+    final public static List<String> NUM_PRIMITIVE_TYPES = Arrays.asList(new String[]{"B", "S", "C", "I", "J", "F", "D"});
+
+    final public static List<String> NUM_WRAP_TYPES = Arrays.asList(new String[]{"Ljava/lang/Byte;", "Ljava/lang/Char;", "Ljava/lang/Short;", "Ljava/lang/Integer;",
+            "Ljava/lang/Long;", "Ljava/lang/Float;", "Ljava/lang/Double;"});
 
     final public static List<String> BOOL_TYPES = Arrays.asList(new String[]{"Ljava/lang/Boolean;", "Z"});
 
