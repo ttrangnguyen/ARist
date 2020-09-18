@@ -159,6 +159,10 @@ public class ArgRecTestGenerator {
                                 System.out.println(methodCall);
                                 System.out.println(methodCall.getBegin().get());
                                 e.printStackTrace();
+                            } catch (NullPointerException e) {
+                                System.out.println(methodCall);
+                                System.out.println(methodCall.getBegin().get());
+                                e.printStackTrace();
                             }
                             if (params != null && !params.getValue().keySet().isEmpty()) {
                                 List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
@@ -294,7 +298,7 @@ public class ArgRecTestGenerator {
         ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
         generator.setLengthLimit(20);
         //List<ArgRecTest> tests = generator.generate(Config.REPO_DIR + "sampleproj/src/Main.java");
-        List<ArgRecTest> tests = generator.generateAll(1000);
+        List<ArgRecTest> tests = generator.generateAll(10000);
         Gson gson = new Gson();
 
         for (ArgRecTest test: tests) {
