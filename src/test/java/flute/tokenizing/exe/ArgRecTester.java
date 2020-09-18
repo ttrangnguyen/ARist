@@ -55,7 +55,7 @@ public class ArgRecTester {
             if (adequateGeneratedExcode && adequateGeneratedLex) {
                 ++adequateGeneratedArgCount;
             } else {
-                Logger.write(gson.toJson(test), "inadequate_generated_arg_tests.txt");
+                //Logger.write(gson.toJson(test), "inadequate_generated_arg_tests.txt");
             }
         }
         System.out.println(String.format("Adequate generated excodes: %.2f%%", 100.0 * adequateGeneratedExcodeCount / tests.size()));
@@ -121,7 +121,9 @@ public class ArgRecTester {
         Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
-            tests.addAll(generator.generate(Config.REPO_DIR + "git/" + line));
+            List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + line);
+            for (ArgRecTest test: oneFileTests) test.setFilePath(line);
+            tests.addAll(oneFileTests);
         }
         sc.close();
         return tests;

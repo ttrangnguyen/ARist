@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArgRecTest {
+    private String filePath;
+
     private List<String> lex_context;
     private String excode_context;
 
@@ -12,6 +14,14 @@ public class ArgRecTest {
 
     private String expected_excode;
     private String expected_lex;
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
 
     public List<String> getLex_context() {
         return lex_context;
