@@ -689,7 +689,7 @@ public class FileParser {
     /**
      * @param astNode
      * @return Get parent block nearest ASTNode, that have type MethodDeclaration, Initializer,
-     * TypeDeclaration, Block, LambdaExpression, ForStatement, ForStatement
+     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement
      */
     public static ASTNode getParentBlock(ASTNode astNode) {
         if (astNode == null) return null;
@@ -703,7 +703,7 @@ public class FileParser {
             return parentNode;
         } else if (parentNode instanceof LambdaExpression) {
             return parentNode;
-        } else if (parentNode instanceof ForStatement || parentNode instanceof ForStatement) {
+        } else if (parentNode instanceof ForStatement || parentNode instanceof EnhancedForStatement) {
             return parentNode;
         } else return getParentBlock(parentNode);
     }
