@@ -5,11 +5,6 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.google.gson.Gson;
-import flute.communicate.SocketClient;
-import flute.communicate.schema.PredictResponse;
-import flute.communicate.schema.Response;
-import flute.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
@@ -19,7 +14,6 @@ import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.utils.StringUtils;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.JavaTokenizer;
-import flute.utils.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -289,67 +283,5 @@ public class ArgRecTestGenerator {
 
     public List<ArgRecTest> generateAll() {
         return generateAll(-1);
-    }
-
-    public static void main(String[] args) throws IOException {
-        Config.loadConfig(Config.STORAGE_DIR + "/json/ant.json");
-        ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
-                Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
-        ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
-        generator.setLengthLimit(20);
-        //List<ArgRecTest> tests = generator.generate(Config.REPO_DIR + "sampleproj/src/Main.java");
-        List<ArgRecTest> tests = generator.generateAll(10000);
-        Gson gson = new Gson();
-
-        for (ArgRecTest test: tests) {
-            //System.out.println(gson.toJson(test));
-            //Logger.write(gson.toJson(test), "tests.txt");
-        }
-
-//        Scanner sc = new Scanner(new File(Config.LOG_DIR + "tests.txt"));
-//        List<ArgRecTest> tests = new ArrayList<>();
-//        while (sc.hasNextLine()) {
-//            String line = sc.nextLine();
-//            tests.add(gson.fromJson(line, ArgRecTest.class));
-//        }
-//        sc.close();
-
-        System.out.println(tests.size());
-//        //Collections.shuffle(tests);
-//        int testCount = 0;
-//        int correctTop1PredictionCount = 0;
-//        int correctTopKPredictionCount = 0;
-//        try {
-//            SocketClient socketClient = new SocketClient(18007);
-//            for (ArgRecTest test: tests) {
-//                System.out.println("==========================");
-//                System.out.println(gson.toJson(test));
-//                Response response = socketClient.write(gson.toJson(test));
-//                if (response instanceof PredictResponse) {
-//                    PredictResponse predictResponse = (PredictResponse) response;
-//                    System.out.println("==========================");
-//                    System.out.println("Result:");
-//                    List<String> results = predictResponse.getData();
-//                    results.forEach(item -> {
-//                        System.out.println(item);
-//                    });
-//                    System.out.println("==========================");
-//                    System.out.println("Runtime: " + predictResponse.getRuntime() + "s");
-//
-//                    ++testCount;
-//                    if (results.get(0).equals(test.getExpected_lex())) ++correctTop1PredictionCount;
-//                    for (String item: results) {
-//                        if (item.equals(test.getExpected_lex())) ++correctTopKPredictionCount;
-//                    }
-//                }
-//            }
-//            socketClient.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        System.out.println("==========================");
-//        System.out.println("Number of tests: " + testCount);
-//        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
-//        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
     }
 }

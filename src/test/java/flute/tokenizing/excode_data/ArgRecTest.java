@@ -1,8 +1,11 @@
 package flute.tokenizing.excode_data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ArgRecTest {
+    private String filePath;
+
     private List<String> lex_context;
     private String excode_context;
 
@@ -11,6 +14,14 @@ public class ArgRecTest {
 
     private String expected_excode;
     private String expected_lex;
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
 
     public List<String> getLex_context() {
         return lex_context;
@@ -38,6 +49,14 @@ public class ArgRecTest {
 
     public List<List<String>> getNext_lex() {
         return next_lex;
+    }
+
+    public List<String> getNext_lexList() {
+        List<String> list = new ArrayList<>();
+        for (List<String> nl: next_lex) {
+            list.addAll(nl);
+        }
+        return list;
     }
 
     public void setNext_lex(List<List<String>> next_lex) {
