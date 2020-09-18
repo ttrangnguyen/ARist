@@ -14,7 +14,11 @@ this
 void
 TYPE
 VAR
-LIT
+LIT(wildcard)
+LIT(null)
+LIT(num)
+LIT(String)
+LIT(boolean)
 String
 M_ACCESS
 F_ACCESS

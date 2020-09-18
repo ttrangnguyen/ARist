@@ -85,10 +85,10 @@ def listdirs(folder):
 
 # data_types = ['train', 'validate', 'test']
 # for data_type in data_types:
-#     projects = listdirs("../../../../../javaFileTokens/" + data_type)
+#     projects = listdirs("../../../../../../data_classform/java/" + data_type)
 #     for project in projects:
 #         Path('../../../../../../data_csv/java/' + project).mkdir(parents=True, exist_ok=True)
-#         preprocess(train_path='../../../../../javaFileTokens/' + data_type + '/' + project + '/',
+#         preprocess(train_path='../../../../../../data_classform/java/' + data_type + '/' + project + '/',
 #                    csv_path='../../../../../../data_csv/java/' + project + '/java_' +
 #                             data_type + "_" + project + '.csv',
 #                    train_len=20 + 1)
