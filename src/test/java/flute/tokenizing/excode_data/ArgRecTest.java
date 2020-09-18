@@ -1,5 +1,6 @@
 package flute.tokenizing.excode_data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ArgRecTest {
@@ -38,6 +39,14 @@ public class ArgRecTest {
 
     public List<List<String>> getNext_lex() {
         return next_lex;
+    }
+
+    public List<String> getNext_lexList() {
+        List<String> list = new ArrayList<>();
+        for (List<String> nl: next_lex) {
+            list.addAll(nl);
+        }
+        return list;
     }
 
     public void setNext_lex(List<List<String>> next_lex) {
