@@ -321,8 +321,8 @@ public class FileParser {
                             if (compareFieldValue != ParserConstant.FALSE_VALUE) {
                                 String nextVar = variable.getName() + "." + varField.getName();
                                 if (!nextVariable.contains(nextVar)) {
-                                    String exCode = "VAR(" + variable.getTypeBinding().getName() + ") "
-                                            + "F_ACCESS(" + varMemberType.getName() + "," + varField.getName() + ")";
+                                    String exCode = "VAR(" + variableClass.getName() + ") "
+                                            + "F_ACCESS(" + variableClass.getName() + "," + varField.getName() + ")";
                                     nextVariable.add(nextVar);
                                     nextVariableMap.put(exCode, nextVar);
                                 }
