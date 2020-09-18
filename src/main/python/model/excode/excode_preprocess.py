@@ -108,10 +108,10 @@ def listdirs(folder):
 
 # data_types = ['train', 'validate', 'test']
 # for data_type in data_types:
-#     projects = listdirs("../../../../../excodeFiles/" + data_type)
+#     projects = listdirs("../../../../../../data_classform/excode/" + data_type)
 #     for project in projects:
 #         Path('../../../../../../data_csv/excode/' + project).mkdir(parents=True, exist_ok=True)
-#         preprocess(train_path='../../../../../excodeFiles/' + data_type + '/' + project + '/',
+#         preprocess(train_path='../../../../../../data_classform/excode/' + data_type + '/' + project + '/',
 #                    token_path='../../../../../data_dict/excode/excode_tokens_n_symbols.txt',
 #                    csv_path='../../../../../../data_csv/excode/' + project + '/excode_' +
 #                             data_type + "_" + project + '.csv',
