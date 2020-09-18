@@ -135,12 +135,12 @@ public class ClassParser {
         } else {
             boolean extended = elementType.isSubTypeCompatible(orgType);
 
-            String fromPackage = elementType.getPackage().getName();
-            String toPackage = "-1";
-            if (orgType.getPackage() != null) {
-                toPackage = orgType.getPackage().getName();
-            }
+            String fromPackage = iTypeBinding.getPackage().getName();
 
+            String toPackage = "-1";
+            if (elementType.getPackage() != null) {
+                toPackage = elementType.getPackage().getName();
+            }
 
             if (CommonUtils.checkVisibleMember(classModifier, fromPackage, toPackage, extended)) {
                 if (CommonUtils.checkVisibleMember(modifier, fromPackage, toPackage, extended)) {
