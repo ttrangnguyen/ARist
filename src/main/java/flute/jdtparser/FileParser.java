@@ -264,10 +264,10 @@ public class FileParser {
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
                 ITypeBinding typeNeedCheck = null;
-                if (finalMethodArgLength < methodBinding.getParameterTypes().length - 1) {
-                    typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
-                } else if (methodBinding.isVarargs()) {
+                if (methodBinding.isVarargs() && finalMethodArgLength >= methodBinding.getParameterTypes().length - 1) {
                     typeNeedCheck = methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getElementType();
+                } else if (finalMethodArgLength <= methodBinding.getParameterTypes().length - 1) {
+                    typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
                 }
 
                 if (typeNeedCheck != null) {
