@@ -188,7 +188,8 @@ public class Parser {
 
             while (true) {
                 if (toTest() && currentTestLOC <= testLOCThresh) {
-                    testFilePaths.write(fileInfo.file.getAbsolutePath() + "\n");
+                    String absolutePath = fileInfo.file.getAbsolutePath();
+                    testFilePaths.write(absolutePath.substring(absolutePath.indexOf(projectName)) + "\n");
                     javaFileTokenPath = javaProjectTestingPath +
                             fileInfo.file.getName().replace(".java", ".txt");
                     excodeFilePath = excodeProjectTestingPath +

@@ -17,5 +17,5 @@ public class Config {
     public static final String javaTrainingPath = "../data_classform/java/train/";
     public static final String javaTestingPath = "../data_classform/java/test/";
     public static final String javaValidatingPath = "../data_classform/java/validate/";
-    public static final String testFilePath = "testFilePath/";
+    public static final String testFilePath = "../testFilePath/";
 }
