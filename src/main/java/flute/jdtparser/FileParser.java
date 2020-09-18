@@ -207,21 +207,11 @@ public class FileParser {
         return lastMethodCallGen;
     }
 
+
     private MultiMap genNextParams(int position) {
-        final ASTNode[] astNode = {null};
+        MethodInvocationModel methodInvocation = getCurMethodInvocation();
+        if (methodInvocation == null) return null;
 
-        cu.accept(new ASTVisitor() {
-            public void preVisit(ASTNode node) {
-                if (node instanceof MethodInvocation && node.getStartPosition() <= curPosition
-                        && curPosition <= (node.getStartPosition() + node.getLength())) {
-                    astNode[0] = node;
-                }
-            }
-        });
-
-        if (astNode[0] == null) return null;
-
-        MethodInvocation methodInvocation = (MethodInvocation) astNode[0];
         String methodName = methodInvocation.getName().getIdentifier();
         lastMethodCallGen = methodInvocation.toString();
 
@@ -230,11 +220,10 @@ public class FileParser {
 
         if (methodInvocation.getExpression() == null) {
             classBinding = curClass;
-            isStaticExpr = isStaticScope(methodInvocation);
+            isStaticExpr = isStaticScope(methodInvocation.getOrgASTNode());
         } else {
-            Expression expr = methodInvocation.getExpression();
-            classBinding = expr.resolveTypeBinding();
-            isStaticExpr = curClass.getName().equals(expr.toString());
+            classBinding = methodInvocation.getExpressionType();
+            isStaticExpr = methodInvocation.isStaticExpression();
         }
 
         List preArgs = position >= 0 ? methodInvocation.arguments().subList(0, position) : methodInvocation.arguments();
@@ -248,8 +237,8 @@ public class FileParser {
         for (IMethodBinding methodBinding : methodBindings) {
             if (methodName.equals(methodBinding.getName())) {
                 //Add filter for parent expression
-                if (parentValue(methodInvocation) == null
-                        || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation))) {
+                if (parentValue(methodInvocation.getOrgASTNode()) == null
+                        || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation.getOrgASTNode()))) {
                     if (checkInvoMember(preArgs, methodBinding)) {
                         listMember.add(methodBinding);
                     }
@@ -340,6 +329,27 @@ public class FileParser {
         return nextVariableMap;
     }
 
+    public MethodInvocationModel getCurMethodInvocation() {
+        final ASTNode[] astNode = {null};
+
+        cu.accept(new ASTVisitor() {
+            public void preVisit(ASTNode node) {
+                if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
+                        && node.getStartPosition() <= curPosition
+                        && curPosition <= (node.getStartPosition() + node.getLength())) {
+                    astNode[0] = node;
+                }
+            }
+        });
+
+        if (astNode[0] == null) return null;
+        if (astNode[0] instanceof MethodInvocation)
+            return new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
+        if (astNode[0] instanceof SuperMethodInvocation)
+            return new MethodInvocationModel(curClass, (SuperMethodInvocation) astNode[0]);
+        return null;
+    }
+
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
         if (methodBinding.getParameterTypes().length > position
                 && varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
@@ -399,7 +409,7 @@ public class FileParser {
         return cu.getPosition(line, column);
     }
 
-    public ITypeBinding[] parentValue(MethodInvocation methodInvocation) {
+    public ITypeBinding[] parentValue(ASTNode methodInvocation) {
         ASTNode parentNode = methodInvocation.getParent();
         if (parentNode instanceof Assignment) {
             Assignment assignment = (Assignment) parentNode;
