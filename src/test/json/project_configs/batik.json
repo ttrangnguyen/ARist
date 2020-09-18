@@ -1,0 +1,34 @@
+{
+  "name": "batik",
+  "project-dir": "../../Research/java-data/batik/sources/",
+  "source-paths": [
+    "../../Research/java-data/batik/sources/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [
+    "../../Research/java-data/batik/lib/js.jar",
+    "../../Research/java-data/batik/lib/xerces_2_5_0.jar",
+    "../../Research/java-data/batik/lib/pdf-transcoder.jar",
+    "../../Research/java-data/batik/lib/xalan-2.6.0.jar",
+    "../../Research/java-data/batik/lib/build/crimson-1.1.3.jar",
+    "../../Research/java-data/batik/lib/build/ant-1.6.5.jar",
+    "../../Research/java-data/batik/lib/build/ant-launcher-1.6.5.jar",
+    "../../Research/java-data/batik/lib/xml-apis-ext.jar",
+    "../../Research/java-data/batik/lib/xml-apis.jar",
+    "../../Research/java-data/lib/batik/jython-standalone-2.7.2rc1.jar"
+  ],
+  "jdt-level": 8,
+  "java-version": "1.8",
+  "ignore-files": [
+    "../../Research/java-data/batik/sources/org/apache/batik/ext/awt/image/codec/tiff/TIFFEncodeParam.java",
+    "../../Research/java-data/batik/sources/org/apache/batik/ext/awt/image/codec/tiff/TIFFImageEncoder.java",
+    "../../Research/java-data/batik/sources/org/apache/batik/ext/awt/image/codec/tiff/TIFFImage.java",
+    "../../Research/java-data/batik/sources/org/apache/batik/script/jpython/JPythonInterpreterFactory.java",
+    "../../Research/java-data/batik/sources/org/apache/batik/script/jacl/JaclInterpreter.java",
+    "../../Research/java-data/batik/sources/org/apache/batik/script/jacl/JaclInterpreterFactory.java"
+  ],
+  "test-file-path": "../../Research/java-data/batik/sources/org/apache/batik/apps/rasterizer/SVGConverter.java",
+  "test-position": 1662
+}

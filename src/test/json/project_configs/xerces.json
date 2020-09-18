@@ -1,0 +1,19 @@
+{
+  "name": "xerces",
+  "project-dir": "../../Research/java-data/xerces/src/",
+  "source-paths": [
+    "../../Research/java-data/xerces/src/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [
+    "../../Research/java-data/xerces/tools/resolver.jar",
+    "../../Research/java-data/xerces/tools/xml-apis.jar"
+  ],
+  "jdt-level": 8,
+  "java-version": "1.8",
+  "ignore-files": [],
+  "test-file-path": "../../Research/java-data/xerces/src/org/apache/xerces/dom/CDATASectionImpl.java",
+  "test-position": 1662
+}
