@@ -36,6 +36,8 @@ public class CommonUtils {
         if (Modifier.isPublic(modifier)) return true;
         if (Modifier.isPrivate(modifier)) return false;
 
+        if (modifier == 0) return true;
+
         if (Modifier.isProtected(modifier)) {
             if (fromPackage.equals(checkPackage) || isExtended) return true;
         } else {
