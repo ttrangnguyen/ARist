@@ -155,13 +155,13 @@ public class Parser {
     }
 
     private void createExcodeFiles(SystemTableCrossProject systemTableCrossProject, String projectName) throws IOException {
-        String javaProjectTestingPath = createDirectory(Config.javaTestingPath, projectName);
         String javaProjectTrainingPath = createDirectory(Config.javaTrainingPath, projectName);
+        String javaProjectTestingPath = createDirectory(Config.javaTestingPath, projectName);
         String javaProjectValidatingPath = createDirectory(Config.javaValidatingPath, projectName);
-        String excodeProjectTestingPath = createDirectory(Config.excodeTestingPath, projectName);
         String excodeProjectTrainingPath = createDirectory(Config.excodeTrainingPath, projectName);
+        String excodeProjectTestingPath = createDirectory(Config.excodeTestingPath, projectName);
         String excodeProjectValidatingPath = createDirectory(Config.excodeValidatingPath, projectName);
-        FileWriter testFilePaths = new FileWriter(new File("../testFilePaths.txt"));
+        FileWriter testFilePaths = new FileWriter(new File(Config.testFilePath + projectName + ".txt"));
 
         int testLOCThresh = (int) (LOC.get(projectName) * 0.1);
         int validateLOCThresh = (int) (LOC.get(projectName) * 0.9 * 0.15);
