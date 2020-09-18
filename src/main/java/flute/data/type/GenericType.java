@@ -3,7 +3,7 @@ package flute.data.type;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.dom.*;
 
-public class IGenericType implements ITypeBinding {
+public class GenericType implements ITypeBinding {
     public boolean canBeAssignmentBy(ITypeBinding iTypeBinding) {
         return false;
     }

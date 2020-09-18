@@ -1,0 +1,23 @@
+{
+  "name": "xalan",
+  "project-dir": "../../Research/java-data/xalan/src/",
+  "source-paths": [
+    "../../Research/java-data/xalan/src/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [
+    "../../Research/java-data/xalan/lib/BCEL.jar",
+    "../../Research/java-data/xalan/lib/regexp.jar",
+    "../../Research/java-data/xalan/lib/runtime.jar",
+    "../../Research/java-data/xalan/lib/xercesImpl.jar",
+    "../../Research/java-data/lib/xalan/java-cup-11b-runtime.jar",
+    "../../Research/java-data/lib/xalan/java-cup-11b.jar"
+  ],
+  "jdt-level": 13,
+  "java-version": "13",
+  "ignore-files": [],
+  "test-file-path": "../../Research/java-data/xalan/src/org/apache/xalan/lib/ExsltBase.java",
+  "test-position": 1662
+}

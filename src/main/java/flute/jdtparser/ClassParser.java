@@ -1,5 +1,7 @@
 package flute.jdtparser;
 
+import flute.data.type.CustomVariableBinding;
+import flute.data.type.IntPrimitiveType;
 import flute.utils.parsing.CommonUtils;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -71,6 +73,11 @@ public class ClassParser {
         methods = new ArrayList<>(Arrays.asList(orgType.getDeclaredMethods()));
         fields = new ArrayList<>(Arrays.asList(orgType.getDeclaredFields()));
 
+        if (orgType.isArray()) {
+            //25 -> public static final
+            fields.add(new CustomVariableBinding(25, "length", new IntPrimitiveType(), orgType));
+        }
+
         parseSuperMember(orgType.getSuperclass());
     }
 
@@ -119,19 +126,23 @@ public class ClassParser {
     }
 
     public boolean canSeenFrom(int modifier, ITypeBinding iTypeBinding) {
+        ITypeBinding elementType = orgType.isArray() ? orgType.getElementType() : orgType;
+        int classModifier = elementType.getModifiers();
+
         if (iTypeBinding == orgType ||
-                Arrays.asList(iTypeBinding.getDeclaredTypes()).contains(orgType)) {
+                Arrays.asList(elementType.getDeclaredTypes()).contains(orgType)) {
             return true;
         } else {
-            boolean extended = iTypeBinding.isSubTypeCompatible(orgType);
+            boolean extended = elementType.isSubTypeCompatible(orgType);
 
-            String fromPackage = iTypeBinding.getPackage().getName();
+            String fromPackage = elementType.getPackage().getName();
             String toPackage = "-1";
             if (orgType.getPackage() != null) {
                 toPackage = orgType.getPackage().getName();
             }
 
-            if (CommonUtils.checkVisibleMember(orgType.getModifiers(), fromPackage, toPackage, extended)) {
+
+            if (CommonUtils.checkVisibleMember(classModifier, fromPackage, toPackage, extended)) {
                 if (CommonUtils.checkVisibleMember(modifier, fromPackage, toPackage, extended)) {
                     return true;
                 }
