@@ -1,0 +1,63 @@
+package flute.data;
+
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MethodInvocationModel {
+    private Expression expression = null;
+    private ITypeBinding expressionType = null;
+    private ASTNode orgASTNode = null;
+    List arguments = new ArrayList();
+    ITypeBinding curClass;
+    SimpleName methodName;
+
+    public MethodInvocationModel(ITypeBinding curClass, MethodInvocation methodInvocation) {
+        this.curClass = curClass;
+        orgASTNode = methodInvocation;
+        expression = methodInvocation.getExpression();
+        expressionType = methodInvocation.getExpression().resolveTypeBinding();
+        arguments = methodInvocation.arguments();
+        methodName = methodInvocation.getName();
+    }
+
+    public MethodInvocationModel(ITypeBinding curClass, SuperMethodInvocation superMethodInvocation) {
+        this.curClass = curClass;
+        orgASTNode = superMethodInvocation;
+        expression = superMethodInvocation;
+        expressionType = curClass.getSuperclass();
+        arguments = superMethodInvocation.arguments();
+        methodName = superMethodInvocation.getName();
+    }
+
+    public boolean isStaticExpression() {
+        if (orgASTNode instanceof SuperMethodInvocation) return false;
+        return curClass.getName().equals(expression.toString());
+    }
+
+    public List arguments() {
+        return arguments;
+    }
+
+    public SimpleName getName() {
+        return methodName;
+    }
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public ITypeBinding getExpressionType() {
+        return expressionType;
+    }
+
+    public ASTNode getOrgASTNode() {
+        return orgASTNode;
+    }
+
+    @Override
+    public String toString() {
+        return orgASTNode.toString();
+    }
+}
