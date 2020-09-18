@@ -486,6 +486,15 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return builder.toString();
 	}
 
+	private String toStringVarSimple() {
+		StringBuilder builder = new StringBuilder();
+		String type = getAttachedType();
+		if (type == null) type = "<unk>";
+
+		builder.append(alignToken + "VAR(" + type + ")");
+		return builder.toString();
+	}
+
 	private String toStringOperator() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(alignToken + "OP(" + getAttachedType() + ")");
@@ -506,6 +515,14 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public String toStringSimple() {
 		String tmp = this.toString();
+		tmp = tmp.replaceAll("\r\n", "");
+		tmp = tmp.replaceAll("\t", "");
+		tmp = tmp.trim();
+		return tmp;
+	}
+
+	public String toStringSimplest() {
+		String tmp = (nodeType != NodeSequenceConstant.VAR)? this.toString() : this.toStringVarSimple();
 		tmp = tmp.replaceAll("\r\n", "");
 		tmp = tmp.replaceAll("\t", "");
 		tmp = tmp.trim();
@@ -879,6 +896,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
+	public static boolean isConditionalExpr(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONDITIONAL_EXPR;
+	}
+
 	public static NodeSequenceInfo getUnknown() {
 		NodeSequenceInfo node = new NodeSequenceInfo();
 		node.nodeType = NodeSequenceConstant.UNKNOWN;
@@ -898,6 +919,14 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHODACCESS;
 	}
 
+	public static boolean isConstructorCall(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTORCALL;
+	}
+
+	public static boolean isCast(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CAST;
+	}
+
 	public static boolean isOPBLK(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPBK;
 	}
@@ -906,13 +935,29 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
 	}
 
+	public static boolean isOperator(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPERATOR;
+	}
+
+	public static boolean isUnaryOperator(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.UOPERATOR;
+	}
+
+	public static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL;
+	}
+
+	public static boolean isAssign(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ASSIGN;
+	}
+
 	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
 		//TODO
 		if (nodeSequenceList.isEmpty()) return "LIT(null)";
 		StringBuilder sb = new StringBuilder();
 		for (NodeSequenceInfo nodeSequenceInfo: nodeSequenceList) {
 			sb.append(' ');
-			sb.append(nodeSequenceInfo.toStringSimple());
+			sb.append(nodeSequenceInfo.toStringSimplest());
 		}
 		sb.deleteCharAt(0);
 		return sb.toString();

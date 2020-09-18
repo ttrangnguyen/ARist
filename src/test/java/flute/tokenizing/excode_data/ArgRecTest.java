@@ -6,11 +6,11 @@ public class ArgRecTest {
     private List<String> lex_context;
     private String excode_context;
 
-    private List<String> next_lex;
     private List<String> next_excode;
+    private List<List<String>> next_lex;
 
-    private String expected_lex;
     private String expected_excode;
+    private String expected_lex;
 
     public List<String> getLex_context() {
         return lex_context;
@@ -28,14 +28,6 @@ public class ArgRecTest {
         this.excode_context = excode_context;
     }
 
-    public List<String> getNext_lex() {
-        return next_lex;
-    }
-
-    public void setNext_lex(List<String> next_lex) {
-        this.next_lex = next_lex;
-    }
-
     public List<String> getNext_excode() {
         return next_excode;
     }
@@ -44,12 +36,12 @@ public class ArgRecTest {
         this.next_excode = next_excode;
     }
 
-    public String getExpected_lex() {
-        return expected_lex;
+    public List<List<String>> getNext_lex() {
+        return next_lex;
     }
 
-    public void setExpected_lex(String expected_lex) {
-        this.expected_lex = expected_lex;
+    public void setNext_lex(List<List<String>> next_lex) {
+        this.next_lex = next_lex;
     }
 
     public String getExpected_excode() {
@@ -58,5 +50,13 @@ public class ArgRecTest {
 
     public void setExpected_excode(String expected_excode) {
         this.expected_excode = expected_excode;
+    }
+
+    public String getExpected_lex() {
+        return expected_lex;
+    }
+
+    public void setExpected_lex(String expected_lex) {
+        this.expected_lex = expected_lex;
     }
 }

@@ -51,7 +51,7 @@ while True:
                                          tokenizer=excode_tokenizer,
                                          train_len=train_len,
                                          tokens=excode_tokens,
-                                         last_only=True)[0]
+                                         method_only=False)[0]
         excode_suggestions = excode_tokenize_candidates(data['next_excode'],
                                                         tokenizer=excode_tokenizer,
                                                         tokens=excode_tokens)
@@ -171,7 +171,7 @@ while True:
             result.append(lexemes[sorted_scores[i][2]])
         runtime = perf_counter() - startTime
         print("Total n-gram runtime: ", runtime)
+        conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
 
-    conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
     conn.close()
     print('Client disconnected')

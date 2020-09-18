@@ -348,6 +348,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // class X ---> CLASS{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
                 nodeSequenceList).setPosition(n.getBegin(), null);
+        nodeSequenceInfo.oriNode = n;
         
         // {...} --->
         visitClassBody(n.getMembers(), arg);
@@ -430,6 +431,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // enum X ---> ENUM{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addEnumNode(nodeSequenceStack, typeInfo,
                 nodeSequenceList).setPosition(n.getBegin(), null);
+        nodeSequenceInfo.oriNode = n;
         
         // { ---> OPBLK
         OldNodeSequenceVisitingProcessing.addOPBLKNode(nodeSequenceList);
@@ -516,6 +518,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // @interface X ---> CLASS{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
                 nodeSequenceList).setPosition(n.getBegin(), null);
+        nodeSequenceInfo.oriNode = n;
         
         // {...} --->
         visitClassBody(n.getMembers(), arg);
@@ -1833,7 +1836,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // tool --->
         doVisitExpression(n.getExpression(), arg);
         
-        // && ---> OP(AND)
+        // instanceof ---> OP(INSTANCEOF)
         String operatorType = "INSTANCEOF";
         OldNodeSequenceVisitingProcessing.addOperatorNode(operatorType, nodeSequenceStack, curMethodInfo, curTypeInfo,
                 nodeSequenceList);
@@ -2194,6 +2197,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             // ---> CLASS{START}
             NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack,
                     typeInfo, nodeSequenceList);
+            nodeSequenceInfo.oriNode = n;
             
             // {...} --->
             visitClassBody(n.getAnonymousClassBody().get(), arg);
@@ -2543,7 +2547,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
                 .oriNode = n;
         // Start arguments
     }
-    
+
+    //TODO: make its tokens different from method call's
     // Eg: getNames()[15*15]
     @Override
     public void visit(ArrayAccessExpr n, Object arg) {
@@ -2601,6 +2606,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // A ---> CLASS{START}
         NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
                 nodeSequenceList);
+        nodeSequenceInfo.oriNode = n;
         
         if (n.getArguments().isNonEmpty()) {
             // ( ---> OPEN_PART
