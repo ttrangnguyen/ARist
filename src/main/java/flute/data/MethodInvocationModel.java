@@ -17,7 +17,7 @@ public class MethodInvocationModel {
         this.curClass = curClass;
         orgASTNode = methodInvocation;
         expression = methodInvocation.getExpression();
-        expressionType = methodInvocation.getExpression().resolveTypeBinding();
+        expressionType = methodInvocation.getExpression() == null ? null : methodInvocation.getExpression().resolveTypeBinding();
         arguments = methodInvocation.arguments();
         methodName = methodInvocation.getName();
     }
