@@ -282,8 +282,11 @@ public class FileParser {
                     }
 
                     if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
-                        nextVariable.add("[true, false]");
-                        nextVariableMap.put("LIT(boolean)", "[true, false]");
+                        nextVariable.add("true");
+                        nextVariableMap.put("LIT(boolean)", "true");
+
+                        nextVariable.add("false");
+                        nextVariableMap.put("LIT(boolean)", "false");
                     }
                 }
 

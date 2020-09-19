@@ -22,7 +22,9 @@ public class MultiMap {
             keyValue.add(value);
             multiMap.put(key, keyValue);
         } else {
-            keyValue.add(value);
+            if (!keyValue.contains(value)) {
+                keyValue.add(value);
+            }
         }
     }
 
