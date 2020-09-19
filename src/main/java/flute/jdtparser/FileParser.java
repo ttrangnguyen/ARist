@@ -21,6 +21,7 @@ public class FileParser {
     private int curPosition;
 
     private ITypeBinding curClass;
+    private ClassParser curClassParser;
 
     private CompilationUnit cu;
 
@@ -155,6 +156,7 @@ public class FileParser {
 
             if (clazz != curClass) {
                 curClass = clazz;
+                curClassParser = new ClassParser(curClass);
                 visibleClass = projectParser.getListAccess(clazz);
             }
 
@@ -584,7 +586,8 @@ public class FileParser {
 //            block = initializer.getBody();
             isStatic = true;
         } else if (astNode instanceof TypeDeclaration) {
-            FieldDeclaration[] fields = ((TypeDeclaration) astNode).getFields();
+            TypeDeclaration typeDeclaration = (TypeDeclaration) astNode;
+            FieldDeclaration[] fields = typeDeclaration.getFields();
 
             for (FieldDeclaration field : fields) {
                 int position = field.getStartPosition();
@@ -599,7 +602,15 @@ public class FileParser {
                         addVariableToList(position, variableBinding, isStatic, true);
                     }
                 });
+
+                //super field as variable
+                Object q = ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding());
+                ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
+                    boolean isStatic = Modifier.isStatic(variable.getModifiers());
+                    addVariableToList(-1, variable, isStatic, true);
+                });
             }
+
         } else if (astNode instanceof LambdaExpression) {
             LambdaExpression lambdaExpression = (LambdaExpression) astNode;
             List params = lambdaExpression.parameters();
