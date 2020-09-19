@@ -627,7 +627,7 @@ public class FileParser {
         } else if (astNode instanceof CatchClause) {
             CatchClause catchClause = (CatchClause) astNode;
             IVariableBinding variableBinding = catchClause.getException().resolveBinding();
-            addVariableToList(catchClause.getStartPosition(), variableBinding, isStatic, true);
+            addVariableToList(catchClause.getException().getStartPosition(), variableBinding, isStatic, true);
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
             List inits = forStatement.initializers();
