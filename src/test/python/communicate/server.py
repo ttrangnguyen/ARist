@@ -39,7 +39,7 @@ top_k = 5
 while True:
     conn, addr = serv.accept()
     while True:
-        data = conn.recv(10240)
+        data = conn.recv(102400)
         if not data:
             break
 
@@ -119,7 +119,7 @@ while True:
         excode_context_textform = excode_tokenizer.sequences_to_texts([excode_context])[0].split()
         length = len(excode_context_textform)
         if length > n_gram:
-            excode_context_textform = excode_context_textform[length-n_gram:length]
+            excode_context_textform = excode_context_textform[length - n_gram:length]
 
         excode_suggestions_textforms = excode_tokenizer.sequences_to_texts(excode_suggestions)
         for excode_suggestions_textform in excode_suggestions_textforms:
@@ -146,7 +146,7 @@ while True:
         java_context_textform = java_tokenizer.sequences_to_texts([java_context])[0].split()
         length = len(java_context_textform)
         if length > n_gram:
-            java_context_textform = java_context_textform[length-n_gram:length]
+            java_context_textform = java_context_textform[length - n_gram:length]
         scores = []
         java_suggestion_scores = []
         best_java_score = -1e9

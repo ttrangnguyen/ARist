@@ -11,8 +11,8 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 public class SocketClient {
-    BufferedWriter os = null;
     BufferedReader is = null;
+    DataOutputStream os = null;
     Socket socketOfClient = null;
 
     Gson gson = new Gson();
@@ -21,7 +21,8 @@ public class SocketClient {
         try {
             socketOfClient = new Socket("localhost", PORT);
 
-            os = new BufferedWriter(new OutputStreamWriter(socketOfClient.getOutputStream()));
+            //os = new BufferedWriter(new OutputStreamWriter(socketOfClient.getOutputStream()));
+            os = new DataOutputStream(socketOfClient.getOutputStream());
             is = new BufferedReader(new InputStreamReader(socketOfClient.getInputStream()));
 
         } catch (UnknownHostException e) {
@@ -32,8 +33,8 @@ public class SocketClient {
     }
 
     public Response write(String request) throws IOException {
-        os.write(request.replaceAll("\\r|\\n", ""));
-        os.newLine();
+        os.write(request.replaceAll("\\r|\\n", "").getBytes("UTF-8"));
+        //os.newLine();
         os.flush();
 
         String responseLine = is.readLine();
