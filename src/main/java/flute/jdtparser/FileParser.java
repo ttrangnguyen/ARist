@@ -292,7 +292,8 @@ public class FileParser {
                     }
                 }
 
-                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
+                visibleVariables.stream().forEach(variable -> {
+//                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
@@ -623,6 +624,10 @@ public class FileParser {
                     addVariableToList(position, variableBinding, isStatic, true);
                 }
             });
+        } else if (astNode instanceof CatchClause) {
+            CatchClause catchClause = (CatchClause) astNode;
+            IVariableBinding variableBinding = catchClause.getException().resolveBinding();
+            addVariableToList(catchClause.getStartPosition(), variableBinding, isStatic, true);
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
             List inits = forStatement.initializers();
@@ -714,7 +719,7 @@ public class FileParser {
     /**
      * @param astNode
      * @return Get parent block nearest ASTNode, that have type MethodDeclaration, Initializer,
-     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement
+     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement, CatchClause
      */
     public static ASTNode getParentBlock(ASTNode astNode) {
         if (astNode == null) return null;
@@ -727,6 +732,8 @@ public class FileParser {
         } else if (parentNode instanceof TypeDeclaration) {
             return parentNode;
         } else if (parentNode instanceof LambdaExpression) {
+            return parentNode;
+        } else if (parentNode instanceof CatchClause) {
             return parentNode;
         } else if (parentNode instanceof ForStatement || parentNode instanceof EnhancedForStatement) {
             return parentNode;
