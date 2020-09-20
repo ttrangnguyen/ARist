@@ -278,7 +278,9 @@ public class FileParser {
                         nextVariableMap.put("LIT(num)", "0");
                     }
 
-                    if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())) {
+                    if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                            || (methodBinding.getName().equals("equals")
+                            && methodInvocation.getExpression() != null && methodInvocation.getExpressionType().getKey().equals(TypeConstraintKey.STRING_TYPE))) {
                         nextVariable.add("\"\"");
                         nextVariableMap.put("LIT(String)", "\"\"");
                     }
