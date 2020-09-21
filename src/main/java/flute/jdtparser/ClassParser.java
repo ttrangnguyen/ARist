@@ -17,23 +17,23 @@ public class ClassParser {
     private List<IMethodBinding> methods;
     private List<IVariableBinding> fields;
 
-    private void parseSuperMember(ITypeBinding superClass) {
+    private void parseSuperMethod(ITypeBinding superClass) {
         if (superClass == null) return;
 
         IMethodBinding[] superMethods = superClass.getDeclaredMethods();
-        IVariableBinding[] superFields = superClass.getDeclaredFields();
-        for (int i = 0; i < superFields.length; i++) {
-            boolean find = false;
-            if (Modifier.isPrivate(superFields[i].getModifiers()) && Modifier.isDefault(superFields[i].getModifiers()))
-                continue;
-            for (int j = 0; j < fields.size(); j++) {
-                if (superFields[i].getName() == fields.get(j).getName()) {
-                    find = true;
-                    break;
-                }
-            }
-            if (!find) fields.add(superFields[i]);
-        }
+//        IVariableBinding[] superFields = superClass.getDeclaredFields();
+//        for (int i = 0; i < superFields.length; i++) {
+//            boolean find = false;
+//            if (Modifier.isPrivate(superFields[i].getModifiers()) && Modifier.isDefault(superFields[i].getModifiers()))
+//                continue;
+//            for (int j = 0; j < fields.size(); j++) {
+//                if (superFields[i].getName() == fields.get(j).getName()) {
+//                    find = true;
+//                    break;
+//                }
+//            }
+//            if (!find) fields.add(superFields[i]);
+//        }
 
         for (int i = 0; i < superMethods.length; i++) {
             boolean find = false;
@@ -48,7 +48,7 @@ public class ClassParser {
             if (!find) methods.add(superMethods[i]);
         }
 
-        parseSuperMember(superClass.getSuperclass());
+        parseSuperMethod(superClass.getSuperclass());
     }
 
     boolean compareMethod(IMethodBinding method, IMethodBinding coMethod) {
@@ -78,7 +78,8 @@ public class ClassParser {
             fields.add(new CustomVariableBinding(25, "length", new IntPrimitiveType(), orgType));
         }
 
-        parseSuperMember(orgType.getSuperclass());
+        ParserUtils.addVariableToList(ParserUtils.getAllSuperFields(orgType), fields);
+        parseSuperMethod(orgType.getSuperclass());
     }
 
     public ITypeBinding getOrgType() {

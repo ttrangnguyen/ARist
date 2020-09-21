@@ -21,6 +21,7 @@ public class FileParser {
     private int curPosition;
 
     private ITypeBinding curClass;
+    private ClassParser curClassParser;
 
     private CompilationUnit cu;
 
@@ -155,6 +156,7 @@ public class FileParser {
 
             if (clazz != curClass) {
                 curClass = clazz;
+                curClassParser = new ClassParser(curClass);
                 visibleClass = projectParser.getListAccess(clazz);
             }
 
@@ -276,7 +278,9 @@ public class FileParser {
                         nextVariableMap.put("LIT(num)", "0");
                     }
 
-                    if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())) {
+                    if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                            || (methodBinding.getName().equals("equals")
+                            && methodInvocation.getExpression() != null && methodInvocation.getExpressionType().getKey().equals(TypeConstraintKey.STRING_TYPE))) {
                         nextVariable.add("\"\"");
                         nextVariableMap.put("LIT(String)", "\"\"");
                     }
@@ -290,7 +294,8 @@ public class FileParser {
                     }
                 }
 
-                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
+                visibleVariables.stream().forEach(variable -> {
+//                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
@@ -584,7 +589,8 @@ public class FileParser {
 //            block = initializer.getBody();
             isStatic = true;
         } else if (astNode instanceof TypeDeclaration) {
-            FieldDeclaration[] fields = ((TypeDeclaration) astNode).getFields();
+            TypeDeclaration typeDeclaration = (TypeDeclaration) astNode;
+            FieldDeclaration[] fields = typeDeclaration.getFields();
 
             for (FieldDeclaration field : fields) {
                 int position = field.getStartPosition();
@@ -599,7 +605,15 @@ public class FileParser {
                         addVariableToList(position, variableBinding, isStatic, true);
                     }
                 });
+
+                //super field as variable
+                Object q = ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding());
+                ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
+                    boolean isStatic = Modifier.isStatic(variable.getModifiers());
+                    addVariableToList(-1, variable, isStatic, true);
+                });
             }
+
         } else if (astNode instanceof LambdaExpression) {
             LambdaExpression lambdaExpression = (LambdaExpression) astNode;
             List params = lambdaExpression.parameters();
@@ -612,6 +626,10 @@ public class FileParser {
                     addVariableToList(position, variableBinding, isStatic, true);
                 }
             });
+        } else if (astNode instanceof CatchClause) {
+            CatchClause catchClause = (CatchClause) astNode;
+            IVariableBinding variableBinding = catchClause.getException().resolveBinding();
+            addVariableToList(catchClause.getException().getStartPosition(), variableBinding, isStatic, true);
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
             List inits = forStatement.initializers();
@@ -703,7 +721,7 @@ public class FileParser {
     /**
      * @param astNode
      * @return Get parent block nearest ASTNode, that have type MethodDeclaration, Initializer,
-     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement
+     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement, CatchClause
      */
     public static ASTNode getParentBlock(ASTNode astNode) {
         if (astNode == null) return null;
@@ -716,6 +734,8 @@ public class FileParser {
         } else if (parentNode instanceof TypeDeclaration) {
             return parentNode;
         } else if (parentNode instanceof LambdaExpression) {
+            return parentNode;
+        } else if (parentNode instanceof CatchClause) {
             return parentNode;
         } else if (parentNode instanceof ForStatement || parentNode instanceof EnhancedForStatement) {
             return parentNode;
