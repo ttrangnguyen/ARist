@@ -11,9 +11,7 @@ import flute.utils.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class ArgRecTester {
     public static ArgRecTestGenerator generator;
@@ -21,31 +19,35 @@ public class ArgRecTester {
 
     public static void main(String[] args) throws IOException {
         String projectName = "ant";
-        Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
-        ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
-                Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
-        generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
-        generator.setLengthLimit(20);
-
         List<ArgRecTest> tests;
         if (projectName.equals("")) {
             tests = readTestsFromFile(Config.LOG_DIR + "tests.txt");
-        } else if (projectName.equals("demo")) {
-            tests = generateTestsFromDemoProject();
         } else {
-            tests = generateTestsFromGitProject(projectName);
+            Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+            ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
+                    Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+            generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
+            generator.setLengthLimit(20);
+
+            if (projectName.equals("demo")) {
+                tests = generateTestsFromDemoProject();
+            } else {
+                tests = generateTestsFromGitProject(projectName);
+            }
+            //tests = generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
+
+            //saveTests(tests);
         }
-        //tests = generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
 
         //logTests(tests);
-        //saveTests(tests);
 
         System.out.println("Generated " + tests.size() + " tests.");
 
         int adequateGeneratedExcodeCount = 0;
         int adequateGeneratedLexCount = 0;
         int adequateGeneratedArgCount = 0;
-        for (ArgRecTest test : tests) {
+        Map<Integer, Boolean> testMap = new HashMap<>();
+        for (ArgRecTest test: tests) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
             if (test.getNext_excode().contains(test.getExpected_excode())) adequateGeneratedExcode = true;
@@ -54,6 +56,7 @@ public class ArgRecTester {
             if (adequateGeneratedLex) ++adequateGeneratedLexCount;
             if (adequateGeneratedExcode && adequateGeneratedLex) {
                 ++adequateGeneratedArgCount;
+                testMap.put(test.getId(), true);
             } else {
                 //Logger.write(gson.toJson(test), "inadequate_generated_arg_tests.txt");
             }
@@ -63,31 +66,47 @@ public class ArgRecTester {
         System.out.println(String.format("Adequate generated arguments: %.2f%%", 100.0 * adequateGeneratedArgCount / tests.size()));
 
 
-//        //Collections.shuffle(tests);
+        //Collections.shuffle(tests);
         int testCount = 0;
         int correctTop1PredictionCount = 0;
         int correctTopKPredictionCount = 0;
+        adequateGeneratedArgCount = 0;
+        int modelCorrectTop1PredictionCount = 0;
+        int modelCorrectTopKPredictionCount = 0;
         try {
             SocketClient socketClient = new SocketClient(18007);
-            for (ArgRecTest test : tests) {
-                System.out.println("==========================");
-                System.out.println(gson.toJson(test));
+            for (ArgRecTest test: tests) {
                 Response response = socketClient.write(gson.toJson(test));
                 if (response instanceof PredictResponse) {
                     PredictResponse predictResponse = (PredictResponse) response;
+                    List<String> results = predictResponse.getData();
+
+//                    System.out.println("==========================");
+//                    System.out.println(gson.toJson(test));
+//                    System.out.println("==========================");
+//                    System.out.println("Result:");
+//                    results.forEach(item -> {
+//                        System.out.println(item);
+//                    });
                     System.out.println("==========================");
-                    System.out.println("Result:");
-                    List<String> results = predictResponse.getData().ngram.getResult();
-                    results.forEach(item -> {
-                        System.out.println(item);
-                    });
-                    System.out.println("==========================");
-                    System.out.println("Runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+                    System.out.println("Runtime: " + predictResponse.getRuntime() + "s");
 
                     ++testCount;
-                    if (results.get(0).equals(test.getExpected_lex())) ++correctTop1PredictionCount;
-                    for (String item : results) {
-                        if (item.equals(test.getExpected_lex())) ++correctTopKPredictionCount;
+                    if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
+                    if (results.get(0).equals(test.getExpected_lex())) {
+                        ++correctTop1PredictionCount;
+                        if (testMap.getOrDefault(test.getId(), false)) {
+                            ++modelCorrectTop1PredictionCount;
+                        }
+                    }
+                    for (String item: results) {
+                        if (item.equals(test.getExpected_lex())) {
+                            ++correctTopKPredictionCount;
+                            if (testMap.getOrDefault(test.getId(), false)) {
+                                ++modelCorrectTopKPredictionCount;
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -97,8 +116,10 @@ public class ArgRecTester {
         }
         System.out.println("==========================");
         System.out.println("Number of tests: " + testCount);
-        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
-        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
+        System.out.println(String.format("Model's top-1 accuracy: %.2f%%", 100.0 * modelCorrectTop1PredictionCount / adequateGeneratedArgCount));
+        System.out.println(String.format("Model's top-K accuracy: %.2f%%", 100.0 * modelCorrectTopKPredictionCount / adequateGeneratedArgCount));
+        System.out.println(String.format("Overall top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
+        System.out.println(String.format("Overall top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
     }
 
     public static List<ArgRecTest> readTestsFromFile(String filePath) throws IOException {
@@ -122,7 +143,7 @@ public class ArgRecTester {
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
             List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + line);
-            for (ArgRecTest test : oneFileTests) test.setFilePath(line);
+            for (ArgRecTest test: oneFileTests) test.setFilePath(line);
             tests.addAll(oneFileTests);
         }
         sc.close();
@@ -134,13 +155,13 @@ public class ArgRecTester {
     }
 
     public static void logTests(List<ArgRecTest> tests) {
-        for (ArgRecTest test : tests) {
+        for (ArgRecTest test: tests) {
             System.out.println(gson.toJson(test));
         }
     }
 
     public static void saveTests(List<ArgRecTest> tests) {
-        for (ArgRecTest test : tests) {
+        for (ArgRecTest test: tests) {
             Logger.write(gson.toJson(test), "tests.txt");
         }
     }

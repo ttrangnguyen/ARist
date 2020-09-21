@@ -36,6 +36,9 @@ local.properties
 # OS X
 .DS_Store
 
+# Python
+__pycache__
+
 # misc
 storage
 .idea/libraries
