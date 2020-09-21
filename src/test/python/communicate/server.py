@@ -22,6 +22,20 @@ def read_file(filepath):
     return str_text
 
 
+def recvall(sock):
+    BUFF_SIZE = 1024
+    fragments = []
+    while True:
+        chunk = sock.recv(BUFF_SIZE)
+
+        fragments.append(chunk)
+
+        if (not chunk) or chunk[-1] == 255:
+            break
+    arr = b''.join(fragments)
+    return arr[:-1]
+
+
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
@@ -68,32 +82,32 @@ def write_result(project, ngram_excode_correct, ngram_lex_correct, rnn_excode_co
             writer = csv.writer(project_result)
             index = ['project']
             for i in range(top_k):
-                index.append("ngram excode top{}".format(i+1))
+                index.append("ngram excode top{}".format(i + 1))
             for i in range(top_k):
-                index.append("ngram lex top{}".format(i+1))
+                index.append("ngram lex top{}".format(i + 1))
             for i in range(top_k):
-                index.append("RNN excode top{}".format(i+1))
+                index.append("RNN excode top{}".format(i + 1))
             for i in range(top_k):
-                index.append("RNN lex top{}".format(i+1))
+                index.append("RNN lex top{}".format(i + 1))
             writer.writerow(index)
     with open('../../../../storage/result/' + project + '.csv', mode='a', newline='') as project_result:
         writer = csv.writer(project_result)
         proj_result = [project]
         for i in range(top_k):
-            proj_result.append(round(ngram_excode_correct[i]/total_guesses, 2))
+            proj_result.append(round(ngram_excode_correct[i] / total_guesses, 2))
         for i in range(top_k):
-            proj_result.append(round(ngram_lex_correct[i]/total_guesses, 2))
+            proj_result.append(round(ngram_lex_correct[i] / total_guesses, 2))
         for i in range(top_k):
-            proj_result.append(round(rnn_excode_correct[i]/total_guesses, 2))
+            proj_result.append(round(rnn_excode_correct[i] / total_guesses, 2))
         for i in range(top_k):
-            proj_result.append(round(rnn_lex_correct[i]/total_guesses, 2))
+            proj_result.append(round(rnn_lex_correct[i] / total_guesses, 2))
         writer.writerow(proj_result)
 
 
 while True:
     conn, addr = serv.accept()
     while True:
-        data = conn.recv(10240)
+        data = recvall(conn)
         if not data:
             break
         startTime = perf_counter()
@@ -177,7 +191,7 @@ while True:
         excode_context_textform = excode_tokenizer.sequences_to_texts([excode_context])[0].split()
         length = len(excode_context_textform)
         if length > ngram:
-            excode_context_textform = excode_context_textform[length-ngram:length]
+            excode_context_textform = excode_context_textform[length - ngram:length]
 
         excode_suggestions_textforms = excode_tokenizer.sequences_to_texts(excode_suggestions)
         for excode_suggestions_textform in excode_suggestions_textforms:
@@ -206,7 +220,7 @@ while True:
         java_context_textform = java_tokenizer.sequences_to_texts([java_context])[0].split()
         length = len(java_context_textform)
         if length > ngram:
-            java_context_textform = java_context_textform[length-ngram:length]
+            java_context_textform = java_context_textform[length - ngram:length]
         scores = []
         java_suggestion_scores = []
         best_java_score = -1e9
