@@ -14,30 +14,15 @@ import java.io.IOException;
 import java.util.*;
 
 public class ArgRecTester {
+    private static int CONTEXT_LENGTH_LIMIT = 20;
+
     public static ArgRecTestGenerator generator;
     public static Gson gson = new Gson();
 
     public static void main(String[] args) throws IOException {
         String projectName = "ant";
-        List<ArgRecTest> tests;
-        if (projectName.equals("")) {
-            tests = readTestsFromFile(Config.LOG_DIR + "tests.txt");
-        } else {
-            Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
-            ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
-                    Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
-            generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
-            generator.setLengthLimit(20);
-
-            if (projectName.equals("demo")) {
-                tests = generateTestsFromDemoProject();
-            } else {
-                tests = generateTestsFromGitProject(projectName);
-            }
-            //tests = generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
-
-            //saveTests(tests);
-        }
+        List<ArgRecTest> tests = getTests(projectName, false, false);
+        //List<ArgRecTest> tests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
 
         //logTests(tests);
 
@@ -58,7 +43,7 @@ public class ArgRecTester {
                 ++adequateGeneratedArgCount;
                 testMap.put(test.getId(), true);
             } else {
-                //Logger.write(gson.toJson(test), "inadequate_generated_arg_tests.txt");
+                //Logger.write(gson.toJson(test), projectName + "_inadequate_generated_arg_tests.txt");
             }
         }
         System.out.println(String.format("Adequate generated excodes: %.2f%%", 100.0 * adequateGeneratedExcodeCount / tests.size()));
@@ -68,18 +53,23 @@ public class ArgRecTester {
 
         //Collections.shuffle(tests);
         int testCount = 0;
-        int correctTop1PredictionCount = 0;
-        int correctTopKPredictionCount = 0;
+        int nGramOverallCorrectTop1PredictionCount = 0;
+        int nGramOverallCorrectTopKPredictionCount = 0;
+        int RNNOverallCorrectTop1PredictionCount = 0;
+        int RNNOverallCorrectTopKPredictionCount = 0;
         adequateGeneratedArgCount = 0;
-        int modelCorrectTop1PredictionCount = 0;
-        int modelCorrectTopKPredictionCount = 0;
+        int nGramCorrectTop1PredictionCount = 0;
+        int nGramCorrectTopKPredictionCount = 0;
+        int RNNCorrectTop1PredictionCount = 0;
+        int RNNCorrectTopKPredictionCount = 0;
         try {
             SocketClient socketClient = new SocketClient(18007);
             for (ArgRecTest test: tests) {
                 Response response = socketClient.write(gson.toJson(test));
                 if (response instanceof PredictResponse) {
                     PredictResponse predictResponse = (PredictResponse) response;
-                    List<String> results = predictResponse.getData();
+                    List<String> nGramResults = predictResponse.getData().ngram.getResult();
+                    List<String> RNNResults = predictResponse.getData().rnn.getResult();
 
 //                    System.out.println("==========================");
 //                    System.out.println(gson.toJson(test));
@@ -88,22 +78,40 @@ public class ArgRecTester {
 //                    results.forEach(item -> {
 //                        System.out.println(item);
 //                    });
-                    System.out.println("==========================");
-                    System.out.println("Runtime: " + predictResponse.getRuntime() + "s");
+//                    System.out.println("==========================");
+//                    System.out.println("Runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+                    System.out.println(String.format("Progress: %.2f%%", 100.0 * testCount / tests.size()));
 
                     ++testCount;
                     if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
-                    if (results.get(0).equals(test.getExpected_lex())) {
-                        ++correctTop1PredictionCount;
+
+                    if (nGramResults.get(0).equals(test.getExpected_lex())) {
+                        ++nGramOverallCorrectTop1PredictionCount;
                         if (testMap.getOrDefault(test.getId(), false)) {
-                            ++modelCorrectTop1PredictionCount;
+                            ++nGramCorrectTop1PredictionCount;
                         }
                     }
-                    for (String item: results) {
+                    for (String item: nGramResults) {
                         if (item.equals(test.getExpected_lex())) {
-                            ++correctTopKPredictionCount;
+                            ++nGramOverallCorrectTopKPredictionCount;
                             if (testMap.getOrDefault(test.getId(), false)) {
-                                ++modelCorrectTopKPredictionCount;
+                                ++nGramCorrectTopKPredictionCount;
+                            }
+                            break;
+                        }
+                    }
+
+                    if (RNNResults.get(0).equals(test.getExpected_lex())) {
+                        ++RNNOverallCorrectTop1PredictionCount;
+                        if (testMap.getOrDefault(test.getId(), false)) {
+                            ++RNNCorrectTop1PredictionCount;
+                        }
+                    }
+                    for (String item: RNNResults) {
+                        if (item.equals(test.getExpected_lex())) {
+                            ++RNNOverallCorrectTopKPredictionCount;
+                            if (testMap.getOrDefault(test.getId(), false)) {
+                                ++RNNCorrectTopKPredictionCount;
                             }
                             break;
                         }
@@ -116,10 +124,44 @@ public class ArgRecTester {
         }
         System.out.println("==========================");
         System.out.println("Number of tests: " + testCount);
-        System.out.println(String.format("Model's top-1 accuracy: %.2f%%", 100.0 * modelCorrectTop1PredictionCount / adequateGeneratedArgCount));
-        System.out.println(String.format("Model's top-K accuracy: %.2f%%", 100.0 * modelCorrectTopKPredictionCount / adequateGeneratedArgCount));
-        System.out.println(String.format("Overall top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
-        System.out.println(String.format("Overall top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
+        System.out.println(String.format("NGram's top-1 accuracy: %.2f%%", 100.0 * nGramCorrectTop1PredictionCount / adequateGeneratedArgCount));
+        System.out.println(String.format("NGram's top-K accuracy: %.2f%%", 100.0 * nGramCorrectTopKPredictionCount / adequateGeneratedArgCount));
+        System.out.println(String.format("RNN's top-1 accuracy: %.2f%%", 100.0 * RNNCorrectTop1PredictionCount / adequateGeneratedArgCount));
+        System.out.println(String.format("RNN's top-K accuracy: %.2f%%", 100.0 * RNNCorrectTopKPredictionCount / adequateGeneratedArgCount));
+        System.out.println(String.format("Overall top-1 accuracy: %.2f%%", 100.0 *
+                Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / testCount));
+        System.out.println(String.format("Overall top-K accuracy: %.2f%%", 100.0 *
+                Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / testCount));
+    }
+
+    public static void setupGenerator(String projectName) throws IOException {
+        Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
+                Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+        generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
+        generator.setLengthLimit(CONTEXT_LENGTH_LIMIT);
+    }
+
+    public static List<ArgRecTest> getTests(String projectName, boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
+        List<ArgRecTest> tests;
+        if (fromSavefile) {
+            tests = readTestsFromFile(Config.LOG_DIR + projectName + "_tests.txt");
+        } else {
+            setupGenerator(projectName);
+
+            if (projectName.equals("demo")) {
+                tests = generateTestsFromDemoProject();
+            } else {
+                tests = generateTestsFromGitProject(projectName);
+            }
+
+            if (doSaveTestsAfterGen) saveTests(projectName, tests);
+        }
+        return tests;
+    }
+
+    public static List<ArgRecTest> getTests(String projectName, boolean fromSavefile) throws IOException {
+        return getTests(projectName, fromSavefile, false);
     }
 
     public static List<ArgRecTest> readTestsFromFile(String filePath) throws IOException {
@@ -150,7 +192,8 @@ public class ArgRecTester {
         return tests;
     }
 
-    public static List<ArgRecTest> generateTestsFromFile(String filePath) {
+    public static List<ArgRecTest> generateTestsFromFile(String projectName, String filePath) throws IOException {
+        setupGenerator(projectName);
         return generator.generate(filePath);
     }
 
@@ -160,9 +203,9 @@ public class ArgRecTester {
         }
     }
 
-    public static void saveTests(List<ArgRecTest> tests) {
+    public static void saveTests(String projectName, List<ArgRecTest> tests) {
         for (ArgRecTest test: tests) {
-            Logger.write(gson.toJson(test), "tests.txt");
+            Logger.write(gson.toJson(test), projectName + "_tests.txt");
         }
     }
 }
