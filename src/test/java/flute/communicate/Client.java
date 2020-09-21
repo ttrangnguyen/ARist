@@ -93,11 +93,11 @@ public class Client {
                 PredictResponse predictResponse = (PredictResponse) response;
                 System.out.println("==========================");
                 System.out.println("Result:");
-                predictResponse.getData().forEach(item -> {
+                predictResponse.getData().ngram.getResult().forEach(item -> {
                     System.out.println(item);
                 });
                 System.out.println("==========================");
-                System.out.println("Runtime: " + predictResponse.getRuntime() + "s");
+                System.out.println("Runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
             }
             socketClient.close();
         } catch (Exception e) {

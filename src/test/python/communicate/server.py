@@ -247,11 +247,16 @@ while True:
             result_ngram.append(candidate)
         runtime_ngram = perf_counter() - startTime
         logger.debug("Total n-gram runtime: " + str(runtime_ngram))
-        conn.send(('{type:"predict"'
-                   + ',result_rnn:' + json.dumps(result_rnn)
-                   + ',result_ngram:' + json.dumps(result_ngram)
-                   + ',runtime_rnn:' + str(runtime_rnn)
-                   + ',runtime_ngram:' + str(runtime_ngram) + '}\n').encode())
+        
+        conn.send(('{type:"predict", data:{'
+                   + 'ngram:{'
+                   + 'result:' + json.dumps(result_ngram)
+                   + ',runtime:' + str(runtime_ngram)
+                   + '},'
+                   + 'rnn:{'
+                   + 'result:' + json.dumps(result_rnn)
+                   + ',runtime:' + str(runtime_rnn) + '}}}\n').encode())
+
     conn.close()
     logger.debug('Client disconnected')
 
