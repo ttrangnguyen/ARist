@@ -35,6 +35,7 @@ public class SocketClient {
     public Response write(String request) throws IOException {
         os.write(request.replaceAll("\\r|\\n", "").getBytes("UTF-8"));
         //os.newLine();
+        os.write(-1);
         os.flush();
 
         String responseLine = is.readLine();
