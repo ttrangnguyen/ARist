@@ -18,6 +18,20 @@ def read_file(filepath):
     return str_text
 
 
+def recvall(sock):
+    BUFF_SIZE = 1024
+    fragments = []
+    while True:
+        chunk = sock.recv(BUFF_SIZE)
+
+        fragments.append(chunk)
+
+        if (not chunk) or chunk[-1] == 255:
+            break
+    arr = b''.join(fragments)
+    return arr[:-1]
+
+
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
@@ -39,7 +53,7 @@ top_k = 5
 while True:
     conn, addr = serv.accept()
     while True:
-        data = conn.recv(102400)
+        data = recvall(conn)
         if not data:
             break
 
