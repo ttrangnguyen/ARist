@@ -45,7 +45,7 @@ public class ArgRecTester {
         int adequateGeneratedExcodeCount = 0;
         int adequateGeneratedLexCount = 0;
         int adequateGeneratedArgCount = 0;
-        for (ArgRecTest test: tests) {
+        for (ArgRecTest test : tests) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
             if (test.getNext_excode().contains(test.getExpected_excode())) adequateGeneratedExcode = true;
@@ -64,41 +64,41 @@ public class ArgRecTester {
 
 
 //        //Collections.shuffle(tests);
-//        int testCount = 0;
-//        int correctTop1PredictionCount = 0;
-//        int correctTopKPredictionCount = 0;
-//        try {
-//            SocketClient socketClient = new SocketClient(18007);
-//            for (ArgRecTest test: tests) {
-//                System.out.println("==========================");
-//                System.out.println(gson.toJson(test));
-//                Response response = socketClient.write(gson.toJson(test));
-//                if (response instanceof PredictResponse) {
-//                    PredictResponse predictResponse = (PredictResponse) response;
-//                    System.out.println("==========================");
-//                    System.out.println("Result:");
-//                    List<String> results = predictResponse.getData();
-//                    results.forEach(item -> {
-//                        System.out.println(item);
-//                    });
-//                    System.out.println("==========================");
-//                    System.out.println("Runtime: " + predictResponse.getRuntime() + "s");
-//
-//                    ++testCount;
-//                    if (results.get(0).equals(test.getExpected_lex())) ++correctTop1PredictionCount;
-//                    for (String item: results) {
-//                        if (item.equals(test.getExpected_lex())) ++correctTopKPredictionCount;
-//                    }
-//                }
-//            }
-//            socketClient.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        System.out.println("==========================");
-//        System.out.println("Number of tests: " + testCount);
-//        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
-//        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
+        int testCount = 0;
+        int correctTop1PredictionCount = 0;
+        int correctTopKPredictionCount = 0;
+        try {
+            SocketClient socketClient = new SocketClient(18007);
+            for (ArgRecTest test : tests) {
+                System.out.println("==========================");
+                System.out.println(gson.toJson(test));
+                Response response = socketClient.write(gson.toJson(test));
+                if (response instanceof PredictResponse) {
+                    PredictResponse predictResponse = (PredictResponse) response;
+                    System.out.println("==========================");
+                    System.out.println("Result:");
+                    List<String> results = predictResponse.getData().ngram.getResult();
+                    results.forEach(item -> {
+                        System.out.println(item);
+                    });
+                    System.out.println("==========================");
+                    System.out.println("Runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+
+                    ++testCount;
+                    if (results.get(0).equals(test.getExpected_lex())) ++correctTop1PredictionCount;
+                    for (String item : results) {
+                        if (item.equals(test.getExpected_lex())) ++correctTopKPredictionCount;
+                    }
+                }
+            }
+            socketClient.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("==========================");
+        System.out.println("Number of tests: " + testCount);
+        System.out.println(String.format("Top-1 accuracy: %.2f%%", 100.0 * correctTop1PredictionCount / testCount));
+        System.out.println(String.format("Top-K accuracy: %.2f%%", 100.0 * correctTopKPredictionCount / testCount));
     }
 
     public static List<ArgRecTest> readTestsFromFile(String filePath) throws IOException {
@@ -122,7 +122,7 @@ public class ArgRecTester {
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
             List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + line);
-            for (ArgRecTest test: oneFileTests) test.setFilePath(line);
+            for (ArgRecTest test : oneFileTests) test.setFilePath(line);
             tests.addAll(oneFileTests);
         }
         sc.close();
@@ -134,13 +134,13 @@ public class ArgRecTester {
     }
 
     public static void logTests(List<ArgRecTest> tests) {
-        for (ArgRecTest test: tests) {
+        for (ArgRecTest test : tests) {
             System.out.println(gson.toJson(test));
         }
     }
 
     public static void saveTests(List<ArgRecTest> tests) {
-        for (ArgRecTest test: tests) {
+        for (ArgRecTest test : tests) {
             Logger.write(gson.toJson(test), "tests.txt");
         }
     }
