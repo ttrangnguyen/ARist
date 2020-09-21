@@ -4,7 +4,7 @@ public class IntPrimitiveType extends NumPrimitiveType {
     protected static final String KEY = "I";
 
     @Override
-    protected String getInnerKey() {
+    public String getKey() {
         return KEY;
     }
 }

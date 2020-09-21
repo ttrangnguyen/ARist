@@ -11,7 +11,7 @@ public class NumPrimitiveType extends GenericType {
 
     @Override
     public boolean isAssignmentCompatible(ITypeBinding iTypeBinding) {
-        int intPos = TypeConstraintKey.NUM_WRAP_TYPES.indexOf(getInnerKey());
+        int intPos = TypeConstraintKey.NUM_WRAP_TYPES.indexOf(getKey());
         int typePos = TypeConstraintKey.NUM_WRAP_TYPES.indexOf(iTypeBinding.getKey());
         typePos = typePos >= 0 ? typePos : TypeConstraintKey.NUM_PRIMITIVE_TYPES.indexOf(iTypeBinding.getKey());
         if (typePos >= intPos && typePos >= 0) return true;
@@ -20,6 +20,6 @@ public class NumPrimitiveType extends GenericType {
 
     @Override
     public String getKey() {
-        return getInnerKey();
+        return KEY;
     }
 }
