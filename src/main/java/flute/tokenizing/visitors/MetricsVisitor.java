@@ -574,7 +574,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // Logger.logDebug("ClassOrInterfaceDeclaration: " + n.getName() + "\t" +
         // n.getParentNode().getClass() + "\t" + fileInfo.filePath);
         
-        String type = n.toString();
+        String type = n.getNameAsString();
         
         // For varargs
         if ((arg instanceof Set) && ((Set<?>)arg).contains("varargs")) type += "...";
@@ -2095,7 +2095,9 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         //Node parentNode = n.getParentNode();
 
-        String methodName = n.getTypeAsString();
+        //TODO: Consider this
+        //String methodName = n.getTypeAsString();
+        String methodName = n.getType().getName().asString();
         // HashMap.Entry
         if (methodName.lastIndexOf('>') == methodName.length() - 1)
             for (int i = methodName.length() - 1, balance = 0; i >= 0; --i) {
@@ -2115,8 +2117,10 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // varName = ((AssignExpr) parentNode).getTarget().toString();
         // }
 
+        //TODO: Consider this
         if (varName == "") {
-            varName = n.getTypeAsString();
+            //varName = n.getTypeAsString();
+            varName = n.getType().getName().asString();
         }
         // Logger.log("ObjectCreationExpr: " + n +" \t " + n.getType() + "\t " +
         // n.getType().getName()
@@ -2149,7 +2153,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             curTypeInfo.methodInvocList.add(methodInvocInfo);
         }
 
-        // new HashMap.Entry<String, Long> ---> C_CALL(HashMap.Entry<String, Long>,HashMap.Entry)
+        // new HashMap.Entry<String, Long> ---> C_CALL(Entry<String, Long>,Entry)
         NodeInfo nodeInfo = NodeVisitProcessing.addNewInvocNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, methodInvocInfo, n);
 
@@ -2933,7 +2937,11 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         //Logger.log("VariableDeclaration: " + n.getName().asString().intern() + "\tType: " +
         //        varType.toString().intern() + "\tparent: " + parentNode.getClass() );
         //Logger.log("parent: " + parentNode);
-        addVariableToScope(parentNode, varType.asString().intern() + (n.isVarArgs()? "[]": ""), 
+        String varTypeName = varType.asString().intern();
+        if (varTypeName.indexOf('.') >= 0) {
+            varTypeName = varTypeName.substring(varTypeName.lastIndexOf('.') + 1);
+        }
+        addVariableToScope(parentNode, varTypeName + (n.isVarArgs()? "[]": ""),
                     n.getName().asString().intern());
     }
 
@@ -2979,7 +2987,11 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
 		// Logger.logDebug("VariableDeclaration: " + n.getId().getName() + "\tType: " +
 		// varType + "\tparent: " + parentNode.getClass() );
-		addVariableToScope(parentNode, varType.asString().intern(), n.getName().asString().intern());
+        String varTypeName = varType.asString().intern();
+		if (varTypeName.indexOf('.') >= 0) {
+		    varTypeName = varTypeName.substring(varTypeName.lastIndexOf('.') + 1);
+        }
+		addVariableToScope(parentNode, varTypeName, n.getName().asString().intern());
 	}
 	
 	/**
