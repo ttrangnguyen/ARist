@@ -9,7 +9,11 @@ import time
 from pickle import load
 import dill
 from model.ngram_predictor import score_ngram
+from os import path
+import csv
 from nltk.lm import MLE
+import logging
+import sys
 
 
 def read_file(filepath):
@@ -33,18 +37,67 @@ excode_tokenizer = load(open('../../../../src/main/python/model/excode/excode_to
 java_tokenizer = load(open('../../../../src/main/python/model/java/java_tokenizer', 'rb'))
 excode_tokens = read_file('../../../../data_dict/excode/excode_tokens_n_symbols.txt').lower().split("\n")
 train_len = 20 + 1
-n_gram = 2 + 1
+ngram = 2 + 1
 top_k = 5
+
+total_guesses = 0
+ngram_excode_correct = [0] * top_k
+ngram_lex_correct = [0] * top_k
+rnn_excode_correct = [0] * top_k
+rnn_lex_correct = [0] * top_k
+
+logger = logging.getLogger()
+# logger.disabled = True
+logger.setLevel(logging.DEBUG)
+
+# output_file_handler = logging.FileHandler("output.log")
+# logger.addHandler(output_file_handler)
+stdout_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stdout_handler)
+
+
+def write_result(project, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct):
+    for i in range(1, top_k):
+        ngram_excode_correct[i] += ngram_excode_correct[i - 1]
+        ngram_lex_correct[i] += ngram_lex_correct[i - 1]
+        rnn_excode_correct[i] += rnn_excode_correct[i - 1]
+        rnn_lex_correct[i] += rnn_lex_correct[i - 1]
+
+    if not path.exists('../../../../storage/result/' + project + '.csv'):
+        with open('../../../../storage/result/' + project + '.csv', mode='w', newline='') as project_result:
+            writer = csv.writer(project_result)
+            index = ['project']
+            for i in range(top_k):
+                index.append("ngram excode top{}".format(i+1))
+            for i in range(top_k):
+                index.append("ngram lex top{}".format(i+1))
+            for i in range(top_k):
+                index.append("RNN excode top{}".format(i+1))
+            for i in range(top_k):
+                index.append("RNN lex top{}".format(i+1))
+            writer.writerow(index)
+    with open('../../../../storage/result/' + project + '.csv', mode='a', newline='') as project_result:
+        writer = csv.writer(project_result)
+        proj_result = [project]
+        for i in range(top_k):
+            proj_result.append(round(ngram_excode_correct[i]/total_guesses, 2))
+        for i in range(top_k):
+            proj_result.append(round(ngram_lex_correct[i]/total_guesses, 2))
+        for i in range(top_k):
+            proj_result.append(round(rnn_excode_correct[i]/total_guesses, 2))
+        for i in range(top_k):
+            proj_result.append(round(rnn_lex_correct[i]/total_guesses, 2))
+        writer.writerow(proj_result)
+
 
 while True:
     conn, addr = serv.accept()
     while True:
-        data = conn.recv(102400)
+        data = conn.recv(10240)
         if not data:
             break
-
         startTime = perf_counter()
-
+        total_guesses += 1
         data = data.decode("utf-8")
         data = json.loads(data)
         excode_context = excode_tokenize(data['excode_context'],
@@ -66,16 +119,18 @@ while True:
                             tokenizer=excode_tokenizer, train_len=train_len, start_pos=len(excode_context))
             excode_suggestion_scores.append((excode_suggestion, score, i))
             i += 1
-            print("--- %s seconds ---" % (time.time() - start_time))
+            logger.debug("--- %s seconds ---" % (time.time() - start_time))
 
         sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])
-        print(sorted_scores)
-        print('-----------------------------\n-----------------------------\n-----------------------------')
-        print("Best excode suggestion(s):")
+        logger.debug(sorted_scores)
+        logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
+        logger.debug("Best excode suggestion(s):")
 
         lexemes = []
         for i in range(min(top_k, len(sorted_scores))):
-            print(data['next_lex'][sorted_scores[i][2]])
+            logger.debug(data['next_lex'][sorted_scores[i][2]])
+            if data['expected_excode'] == data['next_excode'][sorted_scores[i][2]]:
+                rnn_excode_correct[i] += 1
             lexemes = lexemes + data['next_lex'][sorted_scores[i][2]]
         java_suggestions = java_tokenize_one_sentence(lexemes,
                                                       tokenizer=java_tokenizer)
@@ -95,18 +150,21 @@ while True:
                             tokenizer=java_tokenizer, train_len=train_len, start_pos=len(java_context))
             java_suggestion_scores.append((java_suggestion, score, i))
             i += 1
-            print("--- %s seconds ---" % (time.time() - start_time))
+            logger.debug("--- %s seconds ---" % (time.time() - start_time))
         sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])
-        print(sorted_scores)
-        print('-----------------------------\n-----------------------------\n-----------------------------')
-        print("Best java suggestion(s):")
+        logger.debug(sorted_scores)
+        logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
+        logger.debug("Best java suggestion(s):")
 
         result = []
         for i in range(min(top_k, len(sorted_scores))):
-            print(lexemes[sorted_scores[i][2]])
-            result.append(lexemes[sorted_scores[i][2]])
+            candidate = lexemes[sorted_scores[i][2]]
+            logger.debug(candidate)
+            if candidate == data['expected_lex']:
+                rnn_lex_correct[i] += 1
+            result.append(candidate)
         runtime = perf_counter() - startTime
-        print("Total rnn runtime: ", runtime)
+        logger.debug("Total rnn runtime: " + str(runtime))
 
         # n-gram
         startTime = perf_counter()
@@ -118,35 +176,37 @@ while True:
 
         excode_context_textform = excode_tokenizer.sequences_to_texts([excode_context])[0].split()
         length = len(excode_context_textform)
-        if length > n_gram:
-            excode_context_textform = excode_context_textform[length - n_gram:length]
+        if length > ngram:
+            excode_context_textform = excode_context_textform[length-ngram:length]
 
         excode_suggestions_textforms = excode_tokenizer.sequences_to_texts(excode_suggestions)
         for excode_suggestions_textform in excode_suggestions_textforms:
             start_time = time.time()
             score = score_ngram(model=excode_model_ngram,
                                 sentence=excode_context_textform + excode_suggestions_textform.split(),
-                                n=n_gram,
+                                n=ngram,
                                 start_pos=len(excode_context_textform))
             excode_suggestion_scores.append((excode_suggestions_textform, score, i))
             i += 1
-            print("--- %s seconds ---" % (time.time() - start_time))
+            logger.debug("--- %s seconds ---" % (time.time() - start_time))
 
         sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])
-        print(sorted_scores)
-        print('-----------------------------\n-----------------------------\n-----------------------------')
-        print("Best excode suggestion(s):")
+        logger.debug(sorted_scores)
+        logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
+        logger.debug("Best excode suggestion(s):")
         lexemes = []
         for i in range(min(top_k, len(sorted_scores))):
-            print(data['next_lex'][sorted_scores[i][2]])
+            logger.debug(data['next_lex'][sorted_scores[i][2]])
+            if data['expected_excode'] == data['next_excode'][sorted_scores[i][2]]:
+                ngram_excode_correct[i] += 1
             lexemes = lexemes + data['next_lex'][sorted_scores[i][2]]
         java_suggestions_textforms = java_tokenize_one_sentence(lexemes,
                                                                 tokenizer=java_tokenizer,
                                                                 to_sequence=False)
         java_context_textform = java_tokenizer.sequences_to_texts([java_context])[0].split()
         length = len(java_context_textform)
-        if length > n_gram:
-            java_context_textform = java_context_textform[length - n_gram:length]
+        if length > ngram:
+            java_context_textform = java_context_textform[length-ngram:length]
         scores = []
         java_suggestion_scores = []
         best_java_score = -1e9
@@ -155,23 +215,26 @@ while True:
             start_time = time.time()
             score = score_ngram(model=java_model_ngram,
                                 sentence=java_context_textform + java_suggestions_textform,
-                                n=n_gram,
+                                n=ngram,
                                 start_pos=len(java_context_textform))
             java_suggestion_scores.append((java_suggestions_textform, score, i))
             i += 1
-            print("--- %s seconds ---" % (time.time() - start_time))
+            logger.debug("--- %s seconds ---" % (time.time() - start_time))
         sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])
-        print(sorted_scores)
-        print('-----------------------------\n-----------------------------\n-----------------------------')
-        print("Best java suggestion(s):")
-
+        logger.debug(sorted_scores)
+        logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
+        logger.debug("Best java suggestion(s):")
         result = []
         for i in range(min(top_k, len(sorted_scores))):
-            print(lexemes[sorted_scores[i][2]])
-            result.append(lexemes[sorted_scores[i][2]])
+            candidate = lexemes[sorted_scores[i][2]]
+            logger.debug(candidate)
+            if candidate == data['expected_lex']:
+                ngram_lex_correct[i] += 1
+            result.append(candidate)
         runtime = perf_counter() - startTime
-        print("Total n-gram runtime: ", runtime)
+        logger.debug("Total n-gram runtime: " + str(runtime))
         conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
-
     conn.close()
-    print('Client disconnected')
+    logger.debug('Client disconnected')
+
+    write_result(project, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct)
