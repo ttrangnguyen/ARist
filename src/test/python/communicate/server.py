@@ -170,15 +170,15 @@ while True:
         logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         logger.debug("Best java suggestion(s):")
 
-        result = []
+        result_rnn = []
         for i in range(min(top_k, len(sorted_scores))):
             candidate = lexemes[sorted_scores[i][2]]
             logger.debug(candidate)
             if candidate == data['expected_lex']:
                 rnn_lex_correct[i] += 1
-            result.append(candidate)
-        runtime = perf_counter() - startTime
-        logger.debug("Total rnn runtime: " + str(runtime))
+            result_rnn.append(candidate)
+        runtime_rnn = perf_counter() - startTime
+        logger.debug("Total rnn runtime: " + str(runtime_rnn))
 
         # n-gram
         startTime = perf_counter()
@@ -238,16 +238,20 @@ while True:
         logger.debug(sorted_scores)
         logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         logger.debug("Best java suggestion(s):")
-        result = []
+        result_ngram = []
         for i in range(min(top_k, len(sorted_scores))):
             candidate = lexemes[sorted_scores[i][2]]
             logger.debug(candidate)
             if candidate == data['expected_lex']:
                 ngram_lex_correct[i] += 1
-            result.append(candidate)
-        runtime = perf_counter() - startTime
-        logger.debug("Total n-gram runtime: " + str(runtime))
-        conn.send(('{type:"predict",data:' + json.dumps(result) + ',runtime:' + str(runtime) + '}\n').encode())
+            result_ngram.append(candidate)
+        runtime_ngram = perf_counter() - startTime
+        logger.debug("Total n-gram runtime: " + str(runtime_ngram))
+        conn.send(('{type:"predict"'
+                   + ',result_rnn:' + json.dumps(result_rnn)
+                   + ',result_ngram:' + json.dumps(result_ngram)
+                   + ',runtime_rnn:' + str(runtime_rnn)
+                   + ',runtime_ngram:' + str(runtime_ngram) + '}\n').encode())
     conn.close()
     logger.debug('Client disconnected')
 
