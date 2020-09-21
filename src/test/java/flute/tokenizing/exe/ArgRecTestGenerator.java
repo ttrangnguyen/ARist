@@ -24,6 +24,8 @@ public class ArgRecTestGenerator {
     private ProjectParser projectParser;
     private int lengthLimit = -1;
 
+    public List<ArgRecTest> discardedTests = new ArrayList<>();
+
     public ArgRecTestGenerator(String projectPath, ProjectParser projectParser) {
         tokenizer = new JavaExcodeTokenizer(projectPath);
         this.projectParser = projectParser;
@@ -158,7 +160,7 @@ public class ArgRecTestGenerator {
                                 System.out.println(methodCall.getBegin().get());
                                 e.printStackTrace();
                             }
-                            if (params != null && !params.getValue().keySet().isEmpty()) {
+                            if (params != null) {
                                 List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                                 List<List<String>> nextLexList = new ArrayList<>();
                                 for (String nextExcode: nextExcodeList) {
@@ -189,6 +191,8 @@ public class ArgRecTestGenerator {
                                     if (isClean(argExcodes)) {
                                         cleanTest(test);
                                         tests.add(test);
+                                    } else {
+                                        discardedTests.add(test);
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -259,6 +263,8 @@ public class ArgRecTestGenerator {
                         if (isClean) {
                             cleanTest(test);
                             tests.add(test);
+                        } else {
+                            discardedTests.add(test);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

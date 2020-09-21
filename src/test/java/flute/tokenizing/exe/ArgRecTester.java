@@ -85,7 +85,7 @@ public class ArgRecTester {
                     ++testCount;
                     if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
 
-                    if (nGramResults.get(0).equals(test.getExpected_lex())) {
+                    if (!nGramResults.isEmpty() && nGramResults.get(0).equals(test.getExpected_lex())) {
                         ++nGramOverallCorrectTop1PredictionCount;
                         if (testMap.getOrDefault(test.getId(), false)) {
                             ++nGramCorrectTop1PredictionCount;
@@ -101,7 +101,7 @@ public class ArgRecTester {
                         }
                     }
 
-                    if (RNNResults.get(0).equals(test.getExpected_lex())) {
+                    if (!RNNResults.isEmpty() && RNNResults.get(0).equals(test.getExpected_lex())) {
                         ++RNNOverallCorrectTop1PredictionCount;
                         if (testMap.getOrDefault(test.getId(), false)) {
                             ++RNNCorrectTop1PredictionCount;
@@ -132,6 +132,10 @@ public class ArgRecTester {
                 Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / testCount));
         System.out.println(String.format("Overall top-K accuracy: %.2f%%", 100.0 *
                 Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / testCount));
+        System.out.println(String.format("Actual top-1 accuracy: %.2f%%", 100.0 *
+                Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / (testCount + generator.discardedTests.size())));
+        System.out.println(String.format("Actual top-K accuracy: %.2f%%", 100.0 *
+                Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / (testCount + generator.discardedTests.size())));
     }
 
     public static void setupGenerator(String projectName) throws IOException {
