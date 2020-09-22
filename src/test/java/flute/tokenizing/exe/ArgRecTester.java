@@ -48,7 +48,7 @@ public class ArgRecTester {
         }
         System.out.println(String.format("Adequate generated excodes: %.2f%%", 100.0 * adequateGeneratedExcodeCount / tests.size()));
         System.out.println(String.format("Adequate generated lexicals: %.2f%%", 100.0 * adequateGeneratedLexCount / tests.size()));
-        System.out.println(String.format("Adequate generated arguments: %.2f%%", 100.0 * adequateGeneratedArgCount / tests.size()));
+        System.out.println(String.format("Adequate generated candidates: %.2f%%", 100.0 * adequateGeneratedArgCount / tests.size()));
 
 
         //Collections.shuffle(tests);

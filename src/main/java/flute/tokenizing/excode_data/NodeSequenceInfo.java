@@ -923,6 +923,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTORCALL;
 	}
 
+	public static boolean isFieldAccess(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.FIELDACCESS;
+	}
+
 	public static boolean isCast(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CAST;
 	}
