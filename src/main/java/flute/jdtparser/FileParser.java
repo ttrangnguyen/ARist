@@ -294,8 +294,8 @@ public class FileParser {
                     }
                 }
 
-                visibleVariables.stream().forEach(variable -> {
-//                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
+                //visibleVariables.stream().forEach(variable -> {
+                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
@@ -663,14 +663,16 @@ public class FileParser {
             Lists.reverse(listStatement).forEach(stmt -> {
                 if (stmt instanceof VariableDeclarationStatement) {
                     VariableDeclarationStatement declareStmt = (VariableDeclarationStatement) stmt;
-                    int position = declareStmt.getStartPosition();
                     declareStmt.fragments().forEach(fragment -> {
                         if (fragment instanceof VariableDeclarationFragment) {
                             VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
+                            int position = variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength();
                             IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
                             addVariableToList(position, variableBinding, isStatic,
-                                    initVariables.get(variableBinding.getName()) != null
-                                            || (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition));
+                                    DFGParser.checkVariable(variableDeclarationFragment, getScope(curPosition), curPosition)
+                                    //initVariables.get(variableBinding.getName()) != null
+                                    //|| (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition)
+                            );
                         }
                     });
                 }
