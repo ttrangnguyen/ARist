@@ -92,7 +92,7 @@ public class ArgRecTestGenerator {
                     if (Character.isUpperCase(scope.charAt(0))) {
                         try {
                             ResolvedFieldDeclaration resolve = fieldAccess.resolve().asField();
-                            if (resolve.isStatic()) {
+                            if (resolve.isStatic() || resolve.declaringType().isInterface()) {
                                 //System.out.println("Detected: " + excode.oriNode);
                                 return false;
                             }
@@ -108,6 +108,9 @@ public class ArgRecTestGenerator {
                             if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
                                 //System.out.println("Detected: " + excode.oriNode);
                                 return false;
+                            } else {
+                                //System.out.println(fieldAccess);
+                                //ise.printStackTrace();
                             }
                         }
                     } else {
