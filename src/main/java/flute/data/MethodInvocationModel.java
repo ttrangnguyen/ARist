@@ -9,6 +9,7 @@ public class MethodInvocationModel {
     private Expression expression = null;
     private ITypeBinding expressionType = null;
     private ASTNode orgASTNode = null;
+    private IMethodBinding methodBinding = null;
     List arguments = new ArrayList();
     ITypeBinding curClass;
     SimpleName methodName;
@@ -16,6 +17,7 @@ public class MethodInvocationModel {
     public MethodInvocationModel(ITypeBinding curClass, MethodInvocation methodInvocation) {
         this.curClass = curClass;
         orgASTNode = methodInvocation;
+        methodBinding = methodInvocation.resolveMethodBinding();
         expression = methodInvocation.getExpression();
         expressionType = methodInvocation.getExpression() == null ? null : methodInvocation.getExpression().resolveTypeBinding();
         arguments = methodInvocation.arguments();
@@ -25,6 +27,7 @@ public class MethodInvocationModel {
     public MethodInvocationModel(ITypeBinding curClass, SuperMethodInvocation superMethodInvocation) {
         this.curClass = curClass;
         orgASTNode = superMethodInvocation;
+        methodBinding = superMethodInvocation.resolveMethodBinding();
         expression = superMethodInvocation;
         expressionType = curClass.getSuperclass();
         arguments = superMethodInvocation.arguments();
@@ -52,6 +55,11 @@ public class MethodInvocationModel {
     public ITypeBinding getExpressionType() {
         return expressionType;
     }
+
+    public IMethodBinding resolveMethodBinding() {
+        return methodBinding;
+    }
+
 
     public ASTNode getOrgASTNode() {
         return orgASTNode;
