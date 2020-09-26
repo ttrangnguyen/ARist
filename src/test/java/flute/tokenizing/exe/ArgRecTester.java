@@ -35,7 +35,9 @@ public class ArgRecTester {
         for (ArgRecTest test: tests) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
-            if (test.getNext_excode().contains(test.getExpected_excode())) adequateGeneratedExcode = true;
+            //TODO: Handle unknown excode
+            if (test.getNext_excode().contains(test.getExpected_excode())
+                    || test.getExpected_excode().contains("<unk>")) adequateGeneratedExcode = true;
             if (test.getNext_lexList().contains(test.getExpected_lex())) adequateGeneratedLex = true;
             if (adequateGeneratedExcode) ++adequateGeneratedExcodeCount;
             if (adequateGeneratedLex) ++adequateGeneratedLexCount;
@@ -48,7 +50,7 @@ public class ArgRecTester {
         }
         System.out.println(String.format("Adequate generated excodes: %.2f%%", 100.0 * adequateGeneratedExcodeCount / tests.size()));
         System.out.println(String.format("Adequate generated lexicals: %.2f%%", 100.0 * adequateGeneratedLexCount / tests.size()));
-        System.out.println(String.format("Adequate generated arguments: %.2f%%", 100.0 * adequateGeneratedArgCount / tests.size()));
+        System.out.println(String.format("Adequate generated candidates: %.2f%%", 100.0 * adequateGeneratedArgCount / tests.size()));
 
 
         //Collections.shuffle(tests);

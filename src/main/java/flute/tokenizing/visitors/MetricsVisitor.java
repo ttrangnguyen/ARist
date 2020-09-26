@@ -2436,7 +2436,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // person.name ---> F_ACCESS(Person, name)
         // this.name ---> F_ACCESS(null, name)
         OldNodeSequenceVisitingProcessing.addFieldAccessNode(nodeInfo, varName, fieldName, nodeSequenceStack,
-                curMethodInfo, curTypeInfo, nodeSequenceList);
+                curMethodInfo, curTypeInfo, nodeSequenceList).oriNode = n;
     }
     
     // Eg: a.<String>move(x, y);

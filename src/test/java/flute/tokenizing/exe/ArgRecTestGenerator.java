@@ -1,10 +1,12 @@
 package flute.tokenizing.exe;
 
+import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
+import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import flute.data.MultiMap;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
@@ -50,7 +52,8 @@ public class ArgRecTestGenerator {
 
     public boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
         for (NodeSequenceInfo excode: nodeSequenceList) {
-            //if (NodeSequenceInfo.isLiteral(excode)) return false;
+            // TODO: Ignore null literal for now
+            if (NodeSequenceInfo.isLiteral(excode, "null")) return false;
             if (NodeSequenceInfo.isMethodAccess(excode)) return false;
             if (NodeSequenceInfo.isCast(excode)) return false;
             if (NodeSequenceInfo.isConstructorCall(excode)) return false;
@@ -58,7 +61,63 @@ public class ArgRecTestGenerator {
             if (NodeSequenceInfo.isOperator(excode)) return false;
             if (NodeSequenceInfo.isUnaryOperator(excode)) return false;
             if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
+
+            // For EnclosedExpr
             if (NodeSequenceInfo.isOpenPart(excode)) return false;
+
+            // For static field access
+            if (NodeSequenceInfo.isFieldAccess(excode)) {
+                FieldAccessExpr fieldAccess = (FieldAccessExpr) excode.oriNode;
+                boolean isScopeAClass = false;
+                if (fieldAccess.getScope() instanceof NameExpr) {
+                    try {
+                        ((NameExpr) fieldAccess.getScope()).resolve();
+                    }
+                    // Field access from generic type?
+                    catch (IllegalStateException ise) {
+                        isScopeAClass = true;
+                    }
+                    // Field access from a class
+                    catch (UnsolvedSymbolException use) {
+                        isScopeAClass = true;
+                    }
+                } else if (fieldAccess.getScope() instanceof FieldAccessExpr) {
+                    isScopeAClass = true;
+                }
+                if (isScopeAClass) {
+                    String scope = fieldAccess.getScope().toString();
+                    if (scope.indexOf('.') >= 0) {
+                        scope = scope.substring(scope.lastIndexOf('.') + 1);
+                    }
+                    if (Character.isUpperCase(scope.charAt(0))) {
+                        try {
+                            ResolvedFieldDeclaration resolve = fieldAccess.resolve().asField();
+                            if (resolve.isStatic() || resolve.declaringType().isInterface()) {
+                                //System.out.println("Detected: " + excode.oriNode);
+                                return false;
+                            }
+                        }
+                        // Not an actual field
+                        catch (UnsolvedSymbolException use2) {
+                            if (!Character.isUpperCase(fieldAccess.getNameAsString().charAt(0))) {
+                                use2.printStackTrace();
+                            }
+                        }
+                        // Field access from generic type?
+                        catch (IllegalStateException ise) {
+                            if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
+                                //System.out.println("Detected: " + excode.oriNode);
+                                return false;
+                            } else {
+                                //System.out.println(fieldAccess);
+                                //ise.printStackTrace();
+                            }
+                        }
+                    } else {
+                        //use.printStackTrace();
+                    }
+                }
+            }
         }
         return true;
     }
@@ -77,6 +136,9 @@ public class ArgRecTestGenerator {
             case "LIT(String)":
                 test.setExpected_lex("\"\"");
                 break;
+        }
+        if (test.getExpected_lex().contains(".this")) {
+            test.setExpected_lex(test.getExpected_lex().substring(test.getExpected_lex().indexOf("this")));
         }
     }
 
@@ -129,7 +191,7 @@ public class ArgRecTestGenerator {
                     fileParser.setPosition(curPos);
                 } catch (Exception e) {
                     // TODO: Handle enums
-//                    e.printStackTrace();
+                    e.printStackTrace();
 
                     stack.remove(stack.size() - 1);
                     continue;
@@ -160,10 +222,11 @@ public class ArgRecTestGenerator {
                                 System.out.println(methodCall.getBegin().get());
                                 e.printStackTrace();
                             }
-                            if (params != null) {
+
+                            if (params != null && !params.getValue().keySet().isEmpty()) {
                                 List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                                 List<List<String>> nextLexList = new ArrayList<>();
-                                for (String nextExcode: nextExcodeList) {
+                                for (String nextExcode : nextExcodeList) {
                                     nextLexList.add(params.getValue().get(nextExcode));
                                 }
                                 ContextInfo context = new ContextInfo(excodes, contextIdx);
@@ -197,6 +260,8 @@ public class ArgRecTestGenerator {
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
+                            } else {
+                                //System.out.println("No candidate generated: " + methodCall);
                             }
 
                             contextIdx = k;
@@ -212,7 +277,7 @@ public class ArgRecTestGenerator {
                     params = fileParser.genParamsAt(methodCall.getArguments().size() - 1);
                     String parsedMethodCall = fileParser.getLastMethodCallGen().replaceAll("[ \r\n]", "");
                     if (!parsedMethodCall.equals(methodCallContent.replaceAll("[ \r\n]", ""))) {
-                        throw new Exception(fileParser.getLastMethodCallGen() + " was parsed instead of " + methodCallContent
+                        throw new ParseException(fileParser.getLastMethodCallGen() + " was parsed instead of " + methodCallContent
                                 + " at " + methodCall.getBegin().get());
                     }
                 } catch (ArrayIndexOutOfBoundsException e) {
@@ -223,13 +288,14 @@ public class ArgRecTestGenerator {
                     System.out.println(methodCall);
                     System.out.println(methodCall.getBegin().get());
                     e.printStackTrace();
-                } catch (Exception e) {
+                } catch (ParseException e) {
                     e.printStackTrace();
                 }
+
                 if (params != null && !params.getValue().keySet().isEmpty()) {
                     List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                     List<List<String>> nextLexList = new ArrayList<>();
-                    for (String nextExcode: nextExcodeList) {
+                    for (String nextExcode : nextExcodeList) {
                         nextLexList.add(params.getValue().get(nextExcode));
                     }
                     ContextInfo context = new ContextInfo(excodes, contextIdx);
@@ -269,6 +335,8 @@ public class ArgRecTestGenerator {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    //System.out.println("No candidate generated: " + methodCall);
                 }
 
                 stack.remove(stack.size() - 1);
