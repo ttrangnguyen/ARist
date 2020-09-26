@@ -137,6 +137,9 @@ public class ArgRecTestGenerator {
                 test.setExpected_lex("\"\"");
                 break;
         }
+        if (test.getExpected_lex().contains(".this")) {
+            test.setExpected_lex(test.getExpected_lex().substring(test.getExpected_lex().indexOf("this")));
+        }
     }
 
     public List<ArgRecTest> generate(String javaFilePath) {
