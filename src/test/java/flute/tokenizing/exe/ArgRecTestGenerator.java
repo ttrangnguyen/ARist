@@ -68,34 +68,50 @@ public class ArgRecTestGenerator {
             // For static field access
             if (NodeSequenceInfo.isFieldAccess(excode)) {
                 FieldAccessExpr fieldAccess = (FieldAccessExpr) excode.oriNode;
+                boolean isScopeAClass = false;
                 if (fieldAccess.getScope() instanceof NameExpr) {
                     try {
                         ((NameExpr) fieldAccess.getScope()).resolve();
                     }
-                    // Field access from generic type
+                    // Field access from generic type?
                     catch (IllegalStateException ise) {
-                        //System.out.println(excode.oriNode);
+                        isScopeAClass = true;
                     }
                     // Field access from a class
                     catch (UnsolvedSymbolException use) {
-                        String scope = fieldAccess.getScope().toString();
-                        if (scope.indexOf('.') >= 0) {
-                            scope = scope.substring(scope.lastIndexOf('.') + 1);
-                        }
-                        if (Character.isUpperCase(scope.charAt(0))) {
-                            try {
-                                ResolvedFieldDeclaration resolve = fieldAccess.resolve().asField();
-                                if (resolve.isStatic()) return false;
+                        isScopeAClass = true;
+                    }
+                } else if (fieldAccess.getScope() instanceof FieldAccessExpr) {
+                    isScopeAClass = true;
+                }
+                if (isScopeAClass) {
+                    String scope = fieldAccess.getScope().toString();
+                    if (scope.indexOf('.') >= 0) {
+                        scope = scope.substring(scope.lastIndexOf('.') + 1);
+                    }
+                    if (Character.isUpperCase(scope.charAt(0))) {
+                        try {
+                            ResolvedFieldDeclaration resolve = fieldAccess.resolve().asField();
+                            if (resolve.isStatic()) {
+                                //System.out.println("Detected: " + excode.oriNode);
+                                return false;
                             }
-                            // Not an actual field
-                            catch (UnsolvedSymbolException use2) {
-                                if (!Character.isUpperCase(fieldAccess.getNameAsString().charAt(0))) {
-                                    use2.printStackTrace();
-                                }
-                            }
-                        } else {
-                            //use.printStackTrace();
                         }
+                        // Not an actual field
+                        catch (UnsolvedSymbolException use2) {
+                            if (!Character.isUpperCase(fieldAccess.getNameAsString().charAt(0))) {
+                                use2.printStackTrace();
+                            }
+                        }
+                        // Field access from generic type?
+                        catch (IllegalStateException ise) {
+                            if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
+                                //System.out.println("Detected: " + excode.oriNode);
+                                return false;
+                            }
+                        }
+                    } else {
+                        //use.printStackTrace();
                     }
                 }
             }
