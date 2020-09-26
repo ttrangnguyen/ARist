@@ -52,7 +52,8 @@ public class ArgRecTestGenerator {
 
     public boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
         for (NodeSequenceInfo excode: nodeSequenceList) {
-            //if (NodeSequenceInfo.isLiteral(excode)) return false;
+            // TODO: Ignore null literal for now
+            if (NodeSequenceInfo.isLiteral(excode, "null")) return false;
             if (NodeSequenceInfo.isMethodAccess(excode)) return false;
             if (NodeSequenceInfo.isCast(excode)) return false;
             if (NodeSequenceInfo.isConstructorCall(excode)) return false;
@@ -91,9 +92,6 @@ public class ArgRecTestGenerator {
                                 if (!Character.isUpperCase(fieldAccess.getNameAsString().charAt(0))) {
                                     use2.printStackTrace();
                                 }
-                            } catch (Exception e) {
-                                System.out.println("wtf");
-                                e.printStackTrace();
                             }
                         } else {
                             //use.printStackTrace();

@@ -951,13 +951,15 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL;
 	}
 
+	public static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo, String literalType) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL && nodeSequenceInfo.getAttachedType().equals(literalType);
+	}
+
 	public static boolean isAssign(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ASSIGN;
 	}
 
 	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
-		//TODO
-		if (nodeSequenceList.isEmpty()) return "LIT(null)";
 		StringBuilder sb = new StringBuilder();
 		for (NodeSequenceInfo nodeSequenceInfo: nodeSequenceList) {
 			sb.append(' ');
