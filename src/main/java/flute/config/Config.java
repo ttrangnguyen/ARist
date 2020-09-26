@@ -13,6 +13,13 @@ public class Config {
     public static String LOG_DIR = STORAGE_DIR + "logs/";
 
     /***
+     Config for feature
+     ***/
+
+    public static boolean USER_CHOOSE_METHOD = true;
+    public static boolean DFG_VARIABLE = true;
+
+    /***
      Config for crawler
      ***/
 

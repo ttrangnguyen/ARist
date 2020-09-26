@@ -1,16 +1,19 @@
 package flute.jdtparser;
 
 import com.google.common.collect.Lists;
-import flute.data.constraint.ParserConstant;
+
+import flute.config.Config;
+import flute.data.*;
 import flute.data.type.*;
+import flute.data.constraint.ParserConstant;
 import flute.data.typemodel.ClassModel;
 import flute.data.typemodel.Variable;
+
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
-import flute.data.*;
-
 import java.io.File;
+import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -220,32 +223,35 @@ public class FileParser {
         boolean isStaticExpr = false;
         ITypeBinding classBinding;
 
-        if (methodInvocation.getExpression() == null) {
-            classBinding = curClass;
-            isStaticExpr = isStaticScope(methodInvocation.getOrgASTNode());
-        } else {
-            classBinding = methodInvocation.getExpressionType();
-            isStaticExpr = methodInvocation.isStaticExpression();
-        }
-
         List preArgs = position >= 0 ? methodInvocation.arguments().subList(0, position) : methodInvocation.arguments();
-
-        ClassParser classParser = new ClassParser(classBinding);
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
-        List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
+        if (!Config.USER_CHOOSE_METHOD) {
+            if (methodInvocation.getExpression() == null) {
+                classBinding = curClass;
+                isStaticExpr = isStaticScope(methodInvocation.getOrgASTNode());
+            } else {
+                classBinding = methodInvocation.getExpressionType();
+                isStaticExpr = methodInvocation.isStaticExpression();
+            }
+            ClassParser classParser = new ClassParser(classBinding);
 
-        for (IMethodBinding methodBinding : methodBindings) {
-            if (methodName.equals(methodBinding.getName())) {
-                //Add filter for parent expression
-                if (parentValue(methodInvocation.getOrgASTNode()) == null
-                        || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation.getOrgASTNode()))) {
-                    if (checkInvoMember(preArgs, methodBinding)) {
-                        listMember.add(methodBinding);
+            List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
+
+            for (IMethodBinding methodBinding : methodBindings) {
+                if (methodName.equals(methodBinding.getName())) {
+                    //Add filter for parent expression
+                    if (parentValue(methodInvocation.getOrgASTNode()) == null
+                            || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation.getOrgASTNode()))) {
+                        if (checkInvoMember(preArgs, methodBinding)) {
+                            listMember.add(methodBinding);
+                        }
                     }
                 }
             }
+        } else {
+            listMember.add(methodInvocation.resolveMethodBinding());
         }
 
         List<String> nextVariable = new ArrayList<>();
@@ -294,8 +300,10 @@ public class FileParser {
                     }
                 }
 
-                //visibleVariables.stream().forEach(variable -> {
-                visibleVariables.stream().filter(variable -> variable.isInitialized()).forEach(variable -> {
+                Stream<Variable> variables = Config.DFG_VARIABLE ?
+                        visibleVariables.stream().filter(variable -> variable.isInitialized()) : visibleVariables.stream();
+
+                variables.forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
                             && compareValue != ParserConstant.FALSE_VALUE) {
