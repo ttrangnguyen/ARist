@@ -33,7 +33,8 @@ public class MethodInvocationModel {
 
     public boolean isStaticExpression() {
         if (orgASTNode instanceof SuperMethodInvocation) return false;
-        return curClass.getName().equals(expression.toString());
+        return curClass.getName().equals(expression.toString())
+                || curClass.getQualifiedName().equals(expression.toString());
     }
 
     public List arguments() {
