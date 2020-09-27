@@ -26,6 +26,7 @@ public class DFGParser {
         for (Object item : curBlock.statements()) {
             if (item instanceof Statement) {
                 Statement statement = (Statement) item;
+                if (checkConditionStatement(variableName, statement)) return true;
                 if (checkContains(statement, curPos))
                     return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
                 if (isInitialized(variableName, statement, curPos)) return true;
@@ -48,7 +49,7 @@ public class DFGParser {
         } else if (statement instanceof IfStatement) {
             IfStatement ifStatement = (IfStatement) statement;
             if (isInitialized(variableName, ifStatement.getThenStatement(), curPos)
-                    && (ifStatement.getElseStatement() == null && isInitialized(variableName, ifStatement.getElseStatement(), curPos)))
+                    && (ifStatement.getElseStatement() != null && isInitialized(variableName, ifStatement.getElseStatement(), curPos)))
                 return true;
         } else if (statement instanceof DoStatement) {
             return isInitialized(variableName, ((DoStatement) statement).getBody(), curPos);
@@ -78,6 +79,45 @@ public class DFGParser {
         return false;
     }
 
+    public static boolean checkConditionStatement(String variableName, Statement statement) {
+        Expression expression = null;
+        if (statement instanceof IfStatement) {
+            expression = ((IfStatement) statement).getExpression();
+        } else if (statement instanceof WhileStatement) {
+            expression = ((WhileStatement) statement).getExpression();
+        } else {
+            return false;
+        }
+
+        if (expression != null && expression instanceof InfixExpression) {
+            return checkInfixExpression(variableName, (InfixExpression) expression);
+        }
+        return false;
+    }
+
+    public static boolean checkInfixExpression(String variableName, InfixExpression infixExpression) {
+        if (infixExpression.getLeftOperand() instanceof InfixExpression) {
+            if (checkInfixExpression(variableName, (InfixExpression) infixExpression.getLeftOperand())) return true;
+        } else if (infixExpression.getRightOperand() instanceof InfixExpression) {
+            if (checkInfixExpression(variableName, (InfixExpression) infixExpression.getRightOperand())) return true;
+        } else if (infixExpression.getLeftOperand() instanceof ParenthesizedExpression) {
+            if (checkParenthesizedExpression(variableName, (ParenthesizedExpression) infixExpression.getLeftOperand()))
+                return true;
+        } else if (infixExpression.getRightOperand() instanceof ParenthesizedExpression) {
+            if (checkParenthesizedExpression(variableName, (ParenthesizedExpression) infixExpression.getRightOperand()))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static boolean checkParenthesizedExpression(String variableName, ParenthesizedExpression parenthesizedExpression) {
+        if (parenthesizedExpression.getExpression() instanceof Assignment) {
+            Assignment assignment = (Assignment) parenthesizedExpression.getExpression();
+            return assignment.getLeftHandSide().toString().equals(variableName);
+        }
+        return false;
+    }
 
     public static boolean checkContains(ASTNode parent, int pos) {
         if (parent.getStartPosition() <= pos
