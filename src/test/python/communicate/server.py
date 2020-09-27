@@ -41,11 +41,11 @@ serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
 
 project = 'ant'
-excode_model = load_model("../model/excode_model_" + project + ".h5")
-java_model = load_model("../model/java_model_" + project + ".h5")
-with open("../model/excode_model_" + project + "ngram.pkl", 'rb') as fin:
+excode_model_rnn = load_model("../../../../../model/excode_model_" + project + ".h5")
+with open("../../../../../model/excode_model_" + project + "ngram.pkl", 'rb') as fin:
     excode_model_ngram = dill.load(fin)
-with open("../model/java_model_" + project + "ngram.pkl", 'rb') as fin:
+java_model_rnn = load_model("../../../../../model/java_model_" + project + ".h5")
+with open("../../../../../model/java_model_" + project + "ngram.pkl", 'rb') as fin:
     java_model_ngram = dill.load(fin)
 excode_tokenizer = load(open('../../../../src/main/python/model/excode/excode_tokenizer', 'rb'))
 java_tokenizer = load(open('../../../../src/main/python/model/java/java_tokenizer', 'rb'))
@@ -129,7 +129,7 @@ while True:
 
         for excode_suggestion in excode_suggestions:
             start_time = time.time()
-            score = predict(excode_model, excode_context + excode_suggestion,
+            score = predict(excode_model_rnn, excode_context + excode_suggestion,
                             tokenizer=excode_tokenizer, train_len=train_len, start_pos=len(excode_context))
             excode_suggestion_scores.append((excode_suggestion, score, i))
             i += 1
@@ -160,7 +160,7 @@ while True:
 
         for java_suggestion in java_suggestions:
             start_time = time.time()
-            score = predict(java_model, java_context + java_suggestion,
+            score = predict(java_model_rnn, java_context + java_suggestion,
                             tokenizer=java_tokenizer, train_len=train_len, start_pos=len(java_context))
             java_suggestion_scores.append((java_suggestion, score, i))
             i += 1
@@ -247,7 +247,6 @@ while True:
             result_ngram.append(candidate)
         runtime_ngram = perf_counter() - startTime
         logger.debug("Total n-gram runtime: " + str(runtime_ngram))
-        
         conn.send(('{type:"predict", data:{'
                    + 'ngram:{'
                    + 'result:' + json.dumps(result_ngram)
@@ -256,7 +255,6 @@ while True:
                    + 'rnn:{'
                    + 'result:' + json.dumps(result_rnn)
                    + ',runtime:' + str(runtime_rnn) + '}}}\n').encode())
-
     conn.close()
     logger.debug('Client disconnected')
 
