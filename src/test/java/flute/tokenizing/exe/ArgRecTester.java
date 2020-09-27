@@ -19,6 +19,44 @@ public class ArgRecTester {
     public static ArgRecTestGenerator generator;
     public static Gson gson = new Gson();
 
+    public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
+        if (test.getNext_excode().contains(test.getExpected_excode())) return true;
+
+        //TODO: Handle unknown excode
+        if (test.getExpected_excode().contains("<unk>")) return true;
+        return false;
+    }
+
+    public static boolean canAcceptGeneratedLexes(ArgRecTest test) {
+        String expectedLex = test.getExpected_lex();
+        if (expectedLex.contains(".this")) {
+            expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
+        }
+
+        if (test.getNext_lexList().contains(expectedLex)) return true;
+        if (expectedLex.startsWith("this.")) {
+            if (test.getNext_lexList().contains(expectedLex.substring(5))) return true;
+        } else {
+            if (test.getNext_lexList().contains("this." + expectedLex)) return true;
+        }
+        return false;
+    }
+
+    public static boolean canAcceptResult(ArgRecTest test, String result) {
+        String expectedLex = test.getExpected_lex();
+        if (expectedLex.contains(".this")) {
+            expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
+        }
+
+        if (result.equals(expectedLex)) return true;
+        if (expectedLex.startsWith("this.")) {
+            if (result.equals(expectedLex.substring(5))) return true;
+        } else {
+            if (result.equals("this." + expectedLex)) return true;
+        }
+        return false;
+    }
+
     public static void main(String[] args) throws IOException {
         String projectName = "ant";
         List<ArgRecTest> tests = getTests(projectName, false, false);
@@ -35,10 +73,8 @@ public class ArgRecTester {
         for (ArgRecTest test: tests) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
-            //TODO: Handle unknown excode
-            if (test.getNext_excode().contains(test.getExpected_excode())
-                    || test.getExpected_excode().contains("<unk>")) adequateGeneratedExcode = true;
-            if (test.getNext_lexList().contains(test.getExpected_lex())) adequateGeneratedLex = true;
+            if (canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
+            if (canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
             if (adequateGeneratedExcode) ++adequateGeneratedExcodeCount;
             if (adequateGeneratedLex) ++adequateGeneratedLexCount;
             if (adequateGeneratedExcode && adequateGeneratedLex) {
@@ -87,14 +123,14 @@ public class ArgRecTester {
                     ++testCount;
                     if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
 
-                    if (!nGramResults.isEmpty() && nGramResults.get(0).equals(test.getExpected_lex())) {
+                    if (!nGramResults.isEmpty() && canAcceptResult(test, nGramResults.get(0))) {
                         ++nGramOverallCorrectTop1PredictionCount;
                         if (testMap.getOrDefault(test.getId(), false)) {
                             ++nGramCorrectTop1PredictionCount;
                         }
                     }
                     for (String item: nGramResults) {
-                        if (item.equals(test.getExpected_lex())) {
+                        if (canAcceptResult(test, item)) {
                             ++nGramOverallCorrectTopKPredictionCount;
                             if (testMap.getOrDefault(test.getId(), false)) {
                                 ++nGramCorrectTopKPredictionCount;
@@ -103,14 +139,14 @@ public class ArgRecTester {
                         }
                     }
 
-                    if (!RNNResults.isEmpty() && RNNResults.get(0).equals(test.getExpected_lex())) {
+                    if (!RNNResults.isEmpty() && canAcceptResult(test, RNNResults.get(0))) {
                         ++RNNOverallCorrectTop1PredictionCount;
                         if (testMap.getOrDefault(test.getId(), false)) {
                             ++RNNCorrectTop1PredictionCount;
                         }
                     }
                     for (String item: RNNResults) {
-                        if (item.equals(test.getExpected_lex())) {
+                        if (canAcceptResult(test, item)) {
                             ++RNNOverallCorrectTopKPredictionCount;
                             if (testMap.getOrDefault(test.getId(), false)) {
                                 ++RNNCorrectTopKPredictionCount;
