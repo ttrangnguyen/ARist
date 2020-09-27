@@ -82,6 +82,10 @@ public class ArgRecTestGenerator {
                     catch (UnsolvedSymbolException use) {
                         isScopeAClass = true;
                     }
+                    // ???
+                    catch (UnsupportedOperationException uoe) {
+                        isScopeAClass = true;
+                    }
                 } else if (fieldAccess.getScope() instanceof FieldAccessExpr) {
                     isScopeAClass = true;
                 }
@@ -99,23 +103,13 @@ public class ArgRecTestGenerator {
                             }
                         }
                         // Not an actual field
-                        catch (UnsolvedSymbolException use2) {
+                        catch (IllegalStateException | UnsolvedSymbolException | UnsupportedOperationException e) {
                             if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
                                 //System.out.println("Detected: " + excode.oriNode);
                                 return false;
                             } else {
                                 //System.out.println(fieldAccess);
-                                //ise.printStackTrace();
-                            }
-                        }
-                        // Field access from generic type?
-                        catch (IllegalStateException ise) {
-                            if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
-                                //System.out.println("Detected: " + excode.oriNode);
-                                return false;
-                            } else {
-                                //System.out.println(fieldAccess);
-                                //ise.printStackTrace();
+                                //e.printStackTrace();
                             }
                         }
                     } else {

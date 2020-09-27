@@ -124,7 +124,6 @@ public class ArgRecTester {
 //                    });
 //                    System.out.println("==========================");
 //                    System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
-//                    dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
 //
 //                    System.out.println("==========================");
 //                    System.out.println("RNN's results:");
@@ -133,7 +132,6 @@ public class ArgRecTester {
 //                    });
 //                    System.out.println("==========================");
 //                    System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
-//                    dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
 
                     System.out.println(String.format("Progress: %.2f%%", 100.0 * testCount / tests.size()));
 
@@ -171,6 +169,9 @@ public class ArgRecTester {
                             break;
                         }
                     }
+
+                    dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
+                    dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
                 }
             }
             socketClient.close();
