@@ -1,6 +1,7 @@
 package flute.tokenizing.exe;
 
 import com.google.gson.Gson;
+import flute.analysis.structure.DataFrame;
 import flute.communicate.SocketClient;
 import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
@@ -8,6 +9,7 @@ import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.utils.logging.Logger;
+import flute.utils.logging.Timer;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,8 +61,11 @@ public class ArgRecTester {
 
     public static void main(String[] args) throws IOException {
         String projectName = "ant";
+        Timer timer = new Timer();
+        timer.startCounter();
         List<ArgRecTest> tests = getTests(projectName, false, false);
         //List<ArgRecTest> tests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
+        double averageGetTestsTime = timer.getTimeCounter() / 1000f / (tests.size() + generator.discardedTests.size());
 
         //logTests(tests);
 
@@ -100,6 +105,7 @@ public class ArgRecTester {
         int nGramCorrectTopKPredictionCount = 0;
         int RNNCorrectTop1PredictionCount = 0;
         int RNNCorrectTopKPredictionCount = 0;
+        DataFrame dataFrame = new DataFrame();
         try {
             SocketClient socketClient = new SocketClient(18007);
             for (ArgRecTest test: tests) {
@@ -112,12 +118,23 @@ public class ArgRecTester {
 //                    System.out.println("==========================");
 //                    System.out.println(gson.toJson(test));
 //                    System.out.println("==========================");
-//                    System.out.println("Result:");
-//                    results.forEach(item -> {
+//                    System.out.println("NGram's results:");
+//                    nGramResults.forEach(item -> {
 //                        System.out.println(item);
 //                    });
 //                    System.out.println("==========================");
-//                    System.out.println("Runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+//                    System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+//                    dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
+//
+//                    System.out.println("==========================");
+//                    System.out.println("RNN's results:");
+//                    RNNResults.forEach(item -> {
+//                        System.out.println(item);
+//                    });
+//                    System.out.println("==========================");
+//                    System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
+//                    dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
+
                     System.out.println(String.format("Progress: %.2f%%", 100.0 * testCount / tests.size()));
 
                     ++testCount;
@@ -174,6 +191,12 @@ public class ArgRecTester {
                 Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / (testCount + generator.discardedTests.size())));
         System.out.println(String.format("Actual top-K accuracy: %.2f%%", 100.0 *
                 Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / (testCount + generator.discardedTests.size())));
+        System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
+        System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+        System.out.println("Average overall runtime: "
+                + (dataFrame.getVariable("NGram's runtime").getMean()
+                + dataFrame.getVariable("RNN's runtime").getMean()
+                + averageGetTestsTime) + "s");
     }
 
     public static void setupGenerator(String projectName) throws IOException {
