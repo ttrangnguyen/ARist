@@ -61,6 +61,7 @@ public class ArgRecTestGenerator {
             if (NodeSequenceInfo.isOperator(excode)) return false;
             if (NodeSequenceInfo.isUnaryOperator(excode)) return false;
             if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
+            if (NodeSequenceInfo.isClassExpr(excode)) return false;
 
             // For EnclosedExpr
             if (NodeSequenceInfo.isOpenPart(excode)) return false;
@@ -99,8 +100,12 @@ public class ArgRecTestGenerator {
                         }
                         // Not an actual field
                         catch (UnsolvedSymbolException use2) {
-                            if (!Character.isUpperCase(fieldAccess.getNameAsString().charAt(0))) {
-                                use2.printStackTrace();
+                            if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
+                                //System.out.println("Detected: " + excode.oriNode);
+                                return false;
+                            } else {
+                                //System.out.println(fieldAccess);
+                                //ise.printStackTrace();
                             }
                         }
                         // Field access from generic type?
@@ -136,9 +141,6 @@ public class ArgRecTestGenerator {
             case "LIT(String)":
                 test.setExpected_lex("\"\"");
                 break;
-        }
-        if (test.getExpected_lex().contains(".this")) {
-            test.setExpected_lex(test.getExpected_lex().substring(test.getExpected_lex().indexOf("this")));
         }
     }
 
