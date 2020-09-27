@@ -48,7 +48,7 @@ public class DFGParser {
         } else if (statement instanceof IfStatement) {
             IfStatement ifStatement = (IfStatement) statement;
             if (isInitialized(variableName, ifStatement.getThenStatement(), curPos)
-                    && (ifStatement.getElseStatement() == null && isInitialized(variableName, ifStatement.getElseStatement(), curPos)))
+                    && (ifStatement.getElseStatement() != null && isInitialized(variableName, ifStatement.getElseStatement(), curPos)))
                 return true;
         } else if (statement instanceof DoStatement) {
             return isInitialized(variableName, ((DoStatement) statement).getBody(), curPos);
