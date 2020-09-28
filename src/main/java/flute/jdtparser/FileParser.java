@@ -251,7 +251,8 @@ public class FileParser {
                 }
             }
         } else {
-            listMember.add(methodInvocation.resolveMethodBinding());
+            IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
+            if (methodBinding != null) listMember.add(methodBinding);
         }
 
         List<String> nextVariable = new ArrayList<>();
@@ -615,7 +616,6 @@ public class FileParser {
                 });
 
                 //super field as variable
-                Object q = ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding());
                 ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
                     boolean isStatic = Modifier.isStatic(variable.getModifiers());
                     addVariableToList(-1, variable, isStatic, true);
