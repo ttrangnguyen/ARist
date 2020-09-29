@@ -16,8 +16,10 @@ public class Config {
      Config for feature
      ***/
 
-    public static boolean USER_CHOOSE_METHOD = true;
-    public static boolean DFG_VARIABLE = true;
+    public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
+    public final static boolean FEATURE_DFG_VARIABLE = true;
+
+    public final static boolean FEATURE_TYPE_METHOD_CALL = true;
 
     /***
      Config for crawler
