@@ -227,7 +227,7 @@ public class FileParser {
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
-        if (!Config.USER_CHOOSE_METHOD) {
+        if (!Config.FEATURE_USER_CHOOSE_METHOD) {
             if (methodInvocation.getExpression() == null) {
                 classBinding = curClass;
                 isStaticExpr = isStaticScope(methodInvocation.getOrgASTNode());
@@ -301,7 +301,25 @@ public class FileParser {
                     }
                 }
 
-                Stream<Variable> variables = Config.DFG_VARIABLE ?
+
+                if (Config.FEATURE_TYPE_METHOD_CALL) {
+                    for (IMethodBinding innerMethod : curClassParser.getMethods()) {
+                        ITypeBinding varMethodReturnType = innerMethod.getReturnType();
+                        int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                        if (compareFieldValue != ParserConstant.FALSE_VALUE) {
+                            String nextVar = innerMethod.getName() + "(";
+                            String exCode = "M_ACCESS(" + curClass.getName() + "," + innerMethod.getName() + "," + innerMethod.getParameterTypes().length + ") "
+                                    + "OPEN_PART";
+                            nextVariableMap.put(exCode, nextVar);
+
+                            if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+                                nextVariableMap.put("CLOSE_PART", ")");
+                            }
+                        }
+                    }
+                }
+
+                Stream<Variable> variables = Config.FEATURE_DFG_VARIABLE ?
                         visibleVariables.stream().filter(variable -> variable.isInitialized()) : visibleVariables.stream();
 
                 variables.forEach(variable -> {
@@ -321,6 +339,8 @@ public class FileParser {
 
                     if (variableClass != null) {
                         List<IVariableBinding> varFields = new ClassParser(variableClass).getFieldsFrom(curClass);
+
+                        //gen candidate with field
                         for (IVariableBinding varField : varFields) {
                             ITypeBinding varMemberType = varField.getType();
                             int compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
@@ -335,6 +355,28 @@ public class FileParser {
                                 if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
                                     nextVariable.add(")");
                                     nextVariableMap.put("CLOSE_PART", ")");
+                                }
+                            }
+                        }
+                        //gen candidate with method
+                        if (Config.FEATURE_TYPE_METHOD_CALL) {
+                            List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
+                            for (IMethodBinding varMethod : varMethods) {
+                                ITypeBinding varMethodReturnType = varMethod.getReturnType();
+                                int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                                if (compareFieldValue != ParserConstant.FALSE_VALUE) {
+                                    String nextVar = variable.getName() + "." + varMethod.getName() + "(";
+//                                if (!nextVariable.contains(nextVar)) {
+                                    String exCode = "VAR(" + variableClass.getName() + ") "
+                                            + "M_ACCESS(" + variableClass.getName() + "," + varMethod.getName() + "," + varMethod.getParameterTypes().length + ") "
+                                            + "OPEN_PART";
+                                    nextVariable.add(nextVar);
+                                    nextVariableMap.put(exCode, nextVar);
+//                                }
+                                    if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+                                        nextVariable.add(")");
+                                        nextVariableMap.put("CLOSE_PART", ")");
+                                    }
                                 }
                             }
                         }
