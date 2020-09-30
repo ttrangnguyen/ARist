@@ -115,6 +115,8 @@ public class DFGParser {
         if (parenthesizedExpression.getExpression() instanceof Assignment) {
             Assignment assignment = (Assignment) parenthesizedExpression.getExpression();
             return assignment.getLeftHandSide().toString().equals(variableName);
+        } else if (parenthesizedExpression.getExpression() instanceof InfixExpression) {
+            return checkInfixExpression(variableName, (InfixExpression) parenthesizedExpression.getExpression());
         }
         return false;
     }
