@@ -302,7 +302,7 @@ public class FileParser {
                 }
 
 
-                if (Config.FEATURE_TYPE_METHOD_CALL) {
+                if (Config.FEATURE_TYPE_METHOD_INVOC) {
                     for (IMethodBinding innerMethod : curClassParser.getMethods()) {
                         ITypeBinding varMethodReturnType = innerMethod.getReturnType();
                         int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
@@ -359,7 +359,7 @@ public class FileParser {
                             }
                         }
                         //gen candidate with method
-                        if (Config.FEATURE_TYPE_METHOD_CALL) {
+                        if (Config.FEATURE_TYPE_METHOD_INVOC) {
                             List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
                             for (IMethodBinding varMethod : varMethods) {
                                 ITypeBinding varMethodReturnType = varMethod.getReturnType();
