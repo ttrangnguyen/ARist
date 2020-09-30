@@ -21,15 +21,15 @@ public class Config {
 
     //Type feature
 
-    public final static boolean FEATURE_ARRAY_ACCESS = false;
-    public final static boolean FEATURE_CAST = false;
+    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;
+    public final static boolean FEATURE_PARAM_TYPE_CAST = false;
 
-    public final static boolean FEATURE_TYPE_TYPE_LIT = false;
-    public final static boolean FEATURE_NULL_LIT = false;
+    public final static boolean FEATURE_PARAM_TYPE_LIT = false;
+    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false;
 
-    public final static boolean FEATURE_TYPE_METHOD_INVOC = true;
-    public final static boolean FEATURE_TYPE_OBJ_CREATION = true;
-    public final static boolean FEATURE_TYPE_ARR_CREATION = true;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false;
+    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false;
+    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false;
 
     /***
      Config for crawler
