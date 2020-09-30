@@ -19,7 +19,17 @@ public class Config {
     public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
-    public final static boolean FEATURE_TYPE_METHOD_CALL = true;
+    //Type feature
+
+    public final static boolean FEATURE_ARRAY_ACCESS = false;
+    public final static boolean FEATURE_CAST = false;
+
+    public final static boolean FEATURE_TYPE_TYPE_LIT = false;
+    public final static boolean FEATURE_NULL_LIT = false;
+
+    public final static boolean FEATURE_TYPE_METHOD_INVOC = true;
+    public final static boolean FEATURE_TYPE_OBJ_CREATION = true;
+    public final static boolean FEATURE_TYPE_ARR_CREATION = true;
 
     /***
      Config for crawler
