@@ -1,6 +1,9 @@
 package flute.jdtparser;
 
+import com.google.common.collect.Lists;
 import org.eclipse.jdt.core.dom.*;
+
+import java.util.List;
 
 public class DFGParser {
     public static boolean checkVariable(VariableDeclarationFragment variable, ASTNode curNode, int curPos) {
@@ -26,9 +29,42 @@ public class DFGParser {
         for (Object item : curBlock.statements()) {
             if (item instanceof Statement) {
                 Statement statement = (Statement) item;
+                if (statement.getStartPosition() > curPos) return false;
                 if (checkConditionStatement(variableName, statement)) return true;
                 if (checkContains(statement, curPos))
-                    return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
+                    if (statement instanceof SwitchStatement)
+                        return blockLoopSwitchStatement(variableName, (SwitchStatement) statement, useBlock, curPos);
+                    else return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
+                if (isInitialized(variableName, statement, curPos)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean blockLoopSwitchStatement(String variableName, SwitchStatement switchStatement, Block useBlock, int curPos) {
+        if (switchStatement == null) return false;
+        List statements = switchStatement.statements();
+        int i = 0;
+        for (Object item : Lists.reverse(statements)) {
+            if (item instanceof SwitchCase) {
+                SwitchCase switchCaseItem = (SwitchCase) item;
+                if (switchCaseItem.getStartPosition() < curPos) {
+                    statements = statements.subList(statements.size() - i, statements.size());
+                    break;
+                }
+            }
+            i++;
+        }
+
+        for (Object item : statements) {
+            if (item instanceof Statement) {
+                Statement statement = (Statement) item;
+                if (statement.getStartPosition() > curPos) return false;
+                if (checkConditionStatement(variableName, statement)) return true;
+                if (checkContains(statement, curPos))
+                    if (statement instanceof SwitchStatement)
+                        return blockLoopSwitchStatement(variableName, (SwitchStatement) statement, useBlock, curPos);
+                    else return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
                 if (isInitialized(variableName, statement, curPos)) return true;
             }
         }
