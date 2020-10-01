@@ -64,6 +64,18 @@ public class DFGParser {
                 }
             }
             return true;
+        } else if (statement instanceof SwitchStatement) {
+            SwitchStatement switchStatement = (SwitchStatement) statement;
+            boolean findedCase = false;
+            for (Object subStatement : switchStatement.statements()) {
+                if (subStatement instanceof SwitchCase) findedCase = true;
+                else if (subStatement instanceof Statement) {
+                    if (isInitialized(variableName, (Statement) subStatement, curPos) && findedCase) {
+                        findedCase = false;
+                    }
+                }
+            }
+            if (!findedCase) return true;
         } else if (statement instanceof Block) {
             Block block = (Block) statement;
             for (Object item : block.statements()) {
