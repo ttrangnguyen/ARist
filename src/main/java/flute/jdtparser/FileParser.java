@@ -302,7 +302,7 @@ public class FileParser {
                 }
 
 
-                if (Config.FEATURE_TYPE_METHOD_INVOC) {
+                if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
                     for (IMethodBinding innerMethod : curClassParser.getMethods()) {
                         ITypeBinding varMethodReturnType = innerMethod.getReturnType();
                         int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
@@ -359,7 +359,7 @@ public class FileParser {
                             }
                         }
                         //gen candidate with method
-                        if (Config.FEATURE_TYPE_METHOD_INVOC) {
+                        if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
                             List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
                             for (IMethodBinding varMethod : varMethods) {
                                 ITypeBinding varMethodReturnType = varMethod.getReturnType();
@@ -706,6 +706,32 @@ public class FileParser {
             IVariableBinding variableBinding = singleVariableDeclaration.resolveBinding();
 
             addVariableToList(position, variableBinding, isStatic, true);
+        } else if (astNode instanceof SwitchStatement) {
+            SwitchStatement switchStatement = (SwitchStatement) astNode;
+            List listStatement = switchStatement.statements();
+            for (Object stmt : Lists.reverse(listStatement)) {
+                if (stmt instanceof ASTNode) {
+                    ASTNode ASTNodeStatement = (ASTNode) stmt;
+                    if (ASTNodeStatement.getStartPosition() > curPosition) continue;
+                } else continue;
+
+                //stop when top switch case
+                if (stmt instanceof SwitchCase) break;
+
+                if (stmt instanceof VariableDeclarationStatement) {
+                    VariableDeclarationStatement declareStmt = (VariableDeclarationStatement) stmt;
+                    declareStmt.fragments().forEach(fragment -> {
+                        if (fragment instanceof VariableDeclarationFragment) {
+                            VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) fragment;
+                            int position = variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength();
+                            IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
+                            addVariableToList(position, variableBinding, isStatic,
+                                    DFGParser.checkVariable(variableDeclarationFragment, getScope(curPosition), curPosition)
+                            );
+                        }
+                    });
+                }
+            }
         }
 
         if (block != null) {
@@ -726,15 +752,15 @@ public class FileParser {
                         }
                     });
                 }
-                if (stmt instanceof ExpressionStatement) {
-                    if (((ExpressionStatement) stmt).getExpression() instanceof Assignment) {
-                        Assignment assignment = (Assignment) ((ExpressionStatement) stmt).getExpression();
-                        if (assignment.getLeftHandSide() instanceof SimpleName) {
-                            addInitVariable(assignment.getLeftHandSide().toString(), assignment.getStartPosition() + assignment.getLength());
-                        }
-                    }
-
-                }
+//                if (stmt instanceof ExpressionStatement) {
+//                    if (((ExpressionStatement) stmt).getExpression() instanceof Assignment) {
+//                        Assignment assignment = (Assignment) ((ExpressionStatement) stmt).getExpression();
+//                        if (assignment.getLeftHandSide() instanceof SimpleName) {
+//                            addInitVariable(assignment.getLeftHandSide().toString(), assignment.getStartPosition() + assignment.getLength());
+//                        }
+//                    }
+//
+//                }
             });
         }
 
@@ -773,7 +799,7 @@ public class FileParser {
     /**
      * @param astNode
      * @return Get parent block nearest ASTNode, that have type MethodDeclaration, Initializer,
-     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement, CatchClause
+     * TypeDeclaration, Block, LambdaExpression, ForStatement, EnhancedForStatement, SwitchStatement, CatchClause
      */
     public static ASTNode getParentBlock(ASTNode astNode) {
         if (astNode == null) return null;
@@ -790,6 +816,8 @@ public class FileParser {
         } else if (parentNode instanceof CatchClause) {
             return parentNode;
         } else if (parentNode instanceof ForStatement || parentNode instanceof EnhancedForStatement) {
+            return parentNode;
+        } else if (parentNode instanceof SwitchStatement) {
             return parentNode;
         } else return getParentBlock(parentNode);
     }

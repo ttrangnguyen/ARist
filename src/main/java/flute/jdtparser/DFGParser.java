@@ -1,6 +1,9 @@
 package flute.jdtparser;
 
+import com.google.common.collect.Lists;
 import org.eclipse.jdt.core.dom.*;
+
+import java.util.List;
 
 public class DFGParser {
     public static boolean checkVariable(VariableDeclarationFragment variable, ASTNode curNode, int curPos) {
@@ -26,9 +29,42 @@ public class DFGParser {
         for (Object item : curBlock.statements()) {
             if (item instanceof Statement) {
                 Statement statement = (Statement) item;
+                if (statement.getStartPosition() > curPos) return false;
                 if (checkConditionStatement(variableName, statement)) return true;
                 if (checkContains(statement, curPos))
-                    return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
+                    if (statement instanceof SwitchStatement)
+                        return blockLoopSwitchStatement(variableName, (SwitchStatement) statement, useBlock, curPos);
+                    else return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
+                if (isInitialized(variableName, statement, curPos)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean blockLoopSwitchStatement(String variableName, SwitchStatement switchStatement, Block useBlock, int curPos) {
+        if (switchStatement == null) return false;
+        List statements = switchStatement.statements();
+        int i = 0;
+        for (Object item : Lists.reverse(statements)) {
+            if (item instanceof SwitchCase) {
+                SwitchCase switchCaseItem = (SwitchCase) item;
+                if (switchCaseItem.getStartPosition() < curPos) {
+                    statements = statements.subList(statements.size() - i, statements.size());
+                    break;
+                }
+            }
+            i++;
+        }
+
+        for (Object item : statements) {
+            if (item instanceof Statement) {
+                Statement statement = (Statement) item;
+                if (statement.getStartPosition() > curPos) return false;
+                if (checkConditionStatement(variableName, statement)) return true;
+                if (checkContains(statement, curPos))
+                    if (statement instanceof SwitchStatement)
+                        return blockLoopSwitchStatement(variableName, (SwitchStatement) statement, useBlock, curPos);
+                    else return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
                 if (isInitialized(variableName, statement, curPos)) return true;
             }
         }
@@ -64,6 +100,18 @@ public class DFGParser {
                 }
             }
             return true;
+        } else if (statement instanceof SwitchStatement) {
+            SwitchStatement switchStatement = (SwitchStatement) statement;
+            boolean findedCase = false;
+            for (Object subStatement : switchStatement.statements()) {
+                if (subStatement instanceof SwitchCase) findedCase = true;
+                else if (subStatement instanceof Statement) {
+                    if (isInitialized(variableName, (Statement) subStatement, curPos) && findedCase) {
+                        findedCase = false;
+                    }
+                }
+            }
+            if (!findedCase) return true;
         } else if (statement instanceof Block) {
             Block block = (Block) statement;
             for (Object item : block.statements()) {
@@ -85,9 +133,24 @@ public class DFGParser {
             expression = ((IfStatement) statement).getExpression();
         } else if (statement instanceof WhileStatement) {
             expression = ((WhileStatement) statement).getExpression();
+        } else if (statement instanceof ForStatement) {
+            ForStatement forStatement = (ForStatement) statement;
+            for (Object initializer : forStatement.initializers()) {
+                if (initializer instanceof Assignment) {
+                    if (((Assignment) initializer).getLeftHandSide().toString().equals(variableName)) return true;
+                } else if (initializer instanceof InfixExpression) {
+                    if (checkInfixExpression(variableName, (InfixExpression) initializer)) return true;
+                }
+            }
+
+            if (forStatement.getExpression() instanceof InfixExpression) {
+                if (checkInfixExpression(variableName, (InfixExpression) forStatement.getExpression())) return true;
+            }
+            return false;
         } else {
             return false;
         }
+
 
         if (expression != null && expression instanceof InfixExpression) {
             return checkInfixExpression(variableName, (InfixExpression) expression);
@@ -115,6 +178,8 @@ public class DFGParser {
         if (parenthesizedExpression.getExpression() instanceof Assignment) {
             Assignment assignment = (Assignment) parenthesizedExpression.getExpression();
             return assignment.getLeftHandSide().toString().equals(variableName);
+        } else if (parenthesizedExpression.getExpression() instanceof InfixExpression) {
+            return checkInfixExpression(variableName, (InfixExpression) parenthesizedExpression.getExpression());
         }
         return false;
     }

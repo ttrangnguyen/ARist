@@ -126,17 +126,16 @@ public class ClassParser {
         return canSeenFields;
     }
 
-    public boolean canSeenFrom(int modifier, ITypeBinding iTypeBinding) {
+    public boolean canSeenFrom(int modifier, ITypeBinding clientType) {
         ITypeBinding elementType = orgType.isArray() ? orgType.getElementType() : orgType;
         int classModifier = elementType.getModifiers();
 
-        if (iTypeBinding == orgType ||
-                Arrays.asList(elementType.getDeclaredTypes()).contains(orgType)) {
+        if (clientType == orgType || Arrays.asList(clientType.getDeclaredTypes()).contains(elementType)) {
             return true;
         } else {
             boolean extended = elementType.isSubTypeCompatible(orgType);
 
-            String fromPackage = iTypeBinding.getPackage().getName();
+            String fromPackage = clientType.getPackage().getName();
 
             String toPackage = "-1";
             if (elementType.getPackage() != null) {
