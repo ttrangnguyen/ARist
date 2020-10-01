@@ -85,9 +85,24 @@ public class DFGParser {
             expression = ((IfStatement) statement).getExpression();
         } else if (statement instanceof WhileStatement) {
             expression = ((WhileStatement) statement).getExpression();
+        } else if (statement instanceof ForStatement) {
+            ForStatement forStatement = (ForStatement) statement;
+            for (Object initializer : forStatement.initializers()) {
+                if (initializer instanceof Assignment) {
+                    if (((Assignment) initializer).getLeftHandSide().toString().equals(variableName)) return true;
+                } else if (initializer instanceof InfixExpression) {
+                    if (checkInfixExpression(variableName, (InfixExpression) initializer)) return true;
+                }
+            }
+
+            if (forStatement.getExpression() instanceof InfixExpression) {
+                if (checkInfixExpression(variableName, (InfixExpression) forStatement.getExpression())) return true;
+            }
+            return false;
         } else {
             return false;
         }
+
 
         if (expression != null && expression instanceof InfixExpression) {
             return checkInfixExpression(variableName, (InfixExpression) expression);
