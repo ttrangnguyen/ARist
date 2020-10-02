@@ -9,6 +9,8 @@ import flute.data.constraint.ParserConstant;
 import flute.data.typemodel.ClassModel;
 import flute.data.typemodel.Variable;
 
+import flute.jdtparser.utils.ParserCompare;
+import flute.jdtparser.utils.ParserUtils;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
@@ -328,7 +330,7 @@ public class FileParser {
                     for (IMethodBinding innerMethod : curClassParser.getMethods()) {
                         ITypeBinding varMethodReturnType = innerMethod.getReturnType();
                         int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
-                        if (compareFieldValue != ParserConstant.FALSE_VALUE) {
+                        if (ParserCompare.isTrue(compareFieldValue)) {
                             String nextVar = innerMethod.getName() + "(";
                             String exCode = "M_ACCESS(" + curClass.getName() + "," + innerMethod.getName() + "," + innerMethod.getParameterTypes().length + ") "
                                     + "OPEN_PART";
@@ -347,7 +349,7 @@ public class FileParser {
                 variables.forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
                     if (!nextVariable.contains(variable.getName())
-                            && compareValue != ParserConstant.FALSE_VALUE) {
+                            && ParserCompare.isTrue(compareValue)) {
                         nextVariable.add(variable.getName());
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, variable.getName());
@@ -366,7 +368,7 @@ public class FileParser {
                         for (IVariableBinding varField : varFields) {
                             ITypeBinding varMemberType = varField.getType();
                             int compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
-                            if (compareFieldValue != ParserConstant.FALSE_VALUE) {
+                            if (ParserCompare.isTrue(compareFieldValue)) {
                                 String nextVar = variable.getName() + "." + varField.getName();
                                 if (!nextVariable.contains(nextVar)) {
                                     String exCode = "VAR(" + variableClass.getName() + ") "
@@ -374,10 +376,10 @@ public class FileParser {
                                     nextVariable.add(nextVar);
                                     nextVariableMap.put(exCode, nextVar);
                                 }
-                                if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-                                    nextVariable.add(")");
-                                    nextVariableMap.put("CLOSE_PART", ")");
-                                }
+//                                if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+//                                    nextVariable.add(")");
+//                                    nextVariableMap.put("CLOSE_PART", ")");
+//                                }
                             }
                         }
                         //gen candidate with method
@@ -386,7 +388,7 @@ public class FileParser {
                             for (IMethodBinding varMethod : varMethods) {
                                 ITypeBinding varMethodReturnType = varMethod.getReturnType();
                                 int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
-                                if (compareFieldValue != ParserConstant.FALSE_VALUE) {
+                                if (ParserCompare.isTrue(compareFieldValue)) {
                                     String nextVar = variable.getName() + "." + varMethod.getName() + "(";
 //                                if (!nextVariable.contains(nextVar)) {
                                     String exCode = "VAR(" + variableClass.getName() + ") "
@@ -395,10 +397,10 @@ public class FileParser {
                                     nextVariable.add(nextVar);
                                     nextVariableMap.put(exCode, nextVar);
 //                                }
-                                    if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-                                        nextVariable.add(")");
-                                        nextVariableMap.put("CLOSE_PART", ")");
-                                    }
+//                                    if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+//                                        nextVariable.add(")");
+//                                        nextVariableMap.put("CLOSE_PART", ")");
+//                                    }
                                 }
                             }
                         }
