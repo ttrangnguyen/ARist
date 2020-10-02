@@ -268,7 +268,8 @@ public class FileParser {
         listMember.forEach(methodBinding ->
         {
             ITypeBinding[] params = methodBinding.getParameterTypes();
-            if (finalMethodArgLength == params.length && !methodBinding.isVarargs()) {
+            if ((finalMethodArgLength == params.length && !methodBinding.isVarargs())
+                    || (finalMethodArgLength >= params.length - 1 && methodBinding.isVarargs())) {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
@@ -312,9 +313,9 @@ public class FileParser {
                                     + "OPEN_PART";
                             nextVariableMap.put(exCode, nextVar);
 
-                            if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-                                nextVariableMap.put("CLOSE_PART", ")");
-                            }
+//                            if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+//                                nextVariableMap.put("CLOSE_PART", ")");
+//                            }
                         }
                     }
                 }
@@ -329,10 +330,10 @@ public class FileParser {
                         nextVariable.add(variable.getName());
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, variable.getName());
-                        if (compareValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-                            nextVariable.add(")");
-                            nextVariableMap.put("CLOSE_PART", ")");
-                        }
+//                        if (compareValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
+//                            nextVariable.add(")");
+//                            nextVariableMap.put("CLOSE_PART", ")");
+//                        }
                     }
 
                     ITypeBinding variableClass = variable.getTypeBinding();
