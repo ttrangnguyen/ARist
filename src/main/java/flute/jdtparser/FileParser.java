@@ -268,11 +268,14 @@ public class FileParser {
         listMember.forEach(methodBinding ->
         {
             ITypeBinding[] params = methodBinding.getParameterTypes();
-            if ((finalMethodArgLength == params.length && !methodBinding.isVarargs())
-                    || (finalMethodArgLength >= params.length - 1 && methodBinding.isVarargs())) {
+            if (finalMethodArgLength == params.length && !methodBinding.isVarargs()) {
                 nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
+                if (finalMethodArgLength >= params.length - 1 && methodBinding.isVarargs()) {
+                    nextVariable.add(")");
+                    nextVariableMap.put("CLOSE_PART", ")");
+                }
                 ITypeBinding typeNeedCheck = null;
                 if (methodBinding.isVarargs() && finalMethodArgLength >= methodBinding.getParameterTypes().length - 1) {
                     typeNeedCheck = methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getElementType();
@@ -299,6 +302,24 @@ public class FileParser {
 
                         nextVariable.add("false");
                         nextVariableMap.put("LIT(boolean)", "false");
+                    }
+
+                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
+                            && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
+                        String lex = "new " + typeNeedCheck.getName() + "[0]";
+                        String excode = "C_CALL(Array_" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
+                                + "OPEN_PART LIT(num) CLOSE_PART";
+                        nextVariable.add(lex);
+                        nextVariableMap.put(excode, lex);
+                    }
+
+                    if (Config.FEATURE_PARAM_TYPE_OBJ_CREATION
+                            && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()) {
+                        String lex = "new " + typeNeedCheck.getName() + "(";
+                        String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
+                                + "OPEN_PART";
+                        nextVariable.add(lex);
+                        nextVariableMap.put(excode, lex);
                     }
                 }
 
