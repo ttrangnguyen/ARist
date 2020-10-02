@@ -308,15 +308,20 @@ public class FileParser {
 
                     if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
                             && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                        String lex = "new " + typeNeedCheck.getName() + "[0]";
-                        String excode = "C_CALL(Array_" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
+                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
+                        String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
                                 + "OPEN_PART LIT(num) CLOSE_PART";
                         nextVariable.add(lex);
                         nextVariableMap.put(excode, lex);
                     }
 
                     if (Config.FEATURE_PARAM_TYPE_OBJ_CREATION
-                            && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()) {
+                            && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()
+                            && !TypeConstraintKey.NUM_WRAP_TYPES.contains(typeNeedCheck.getKey())
+                            && !TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())
+                            && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                            && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
+                    ) {
                         String lex = "new " + typeNeedCheck.getName() + "(";
                         String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
                                 + "OPEN_PART";
