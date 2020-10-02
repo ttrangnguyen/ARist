@@ -2,6 +2,7 @@ package flute.jdtparser;
 
 import flute.data.type.CustomVariableBinding;
 import flute.data.type.IntPrimitiveType;
+import flute.jdtparser.utils.ParserUtils;
 import flute.utils.parsing.CommonUtils;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;

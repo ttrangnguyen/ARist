@@ -1,4 +1,4 @@
-package flute.jdtparser;
+package flute.jdtparser.utils;
 
 import flute.data.typemodel.Variable;
 import org.eclipse.jdt.core.dom.ITypeBinding;
