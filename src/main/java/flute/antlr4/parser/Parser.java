@@ -222,6 +222,9 @@ public class Parser {
 
             FileWriter writer = new FileWriter(javaFileTokenPath);
             String fileContent = JavaTokenizer.removePackagesAndImports(fileInfo.file.getAbsolutePath());
+            fileContent = fileContent.replaceAll("[a-zA-Z0-9_]*.class", ".class")
+                            .replaceAll("\\[.*?]", "[]");
+
             ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
             for (String token : tokens) {
                 writer.write(token + "\n");

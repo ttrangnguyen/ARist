@@ -41,6 +41,8 @@ serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
 
 project = 'ant'
+USE_RNN = True
+
 excode_model_rnn = load_model("../../../../../model/excode_model_" + project + ".h5")
 with open("../../../../../model/excode_model_" + project + "ngram.pkl", 'rb') as fin:
     excode_model_ngram = dill.load(fin)
@@ -50,7 +52,7 @@ with open("../../../../../model/java_model_" + project + "ngram.pkl", 'rb') as f
 excode_tokenizer = load(open('../../../../src/main/python/model/excode/excode_tokenizer', 'rb'))
 java_tokenizer = load(open('../../../../src/main/python/model/java/java_tokenizer', 'rb'))
 excode_tokens = read_file('../../../../data_dict/excode/excode_tokens_n_symbols.txt').lower().split("\n")
-train_len = 20 + 1
+train_len = 6 + 1
 ngram = 2 + 1
 top_k = 5
 
@@ -122,63 +124,64 @@ while True:
         excode_suggestions = excode_tokenize_candidates(data['next_excode'],
                                                         tokenizer=excode_tokenizer,
                                                         tokens=excode_tokens)
-        scores = []
-        excode_suggestion_scores = []
-        best_excode_score = -1e9
-        i = 0
+        if USE_RNN:
+            scores = []
+            excode_suggestion_scores = []
+            best_excode_score = -1e9
+            i = 0
 
-        for excode_suggestion in excode_suggestions:
-            start_time = time.time()
-            score = predict(excode_model_rnn, excode_context + excode_suggestion,
-                            tokenizer=excode_tokenizer, train_len=train_len, start_pos=len(excode_context))
-            excode_suggestion_scores.append((excode_suggestion, score, i))
-            i += 1
-            logger.debug("--- %s seconds ---" % (time.time() - start_time))
+            for excode_suggestion in excode_suggestions:
+                start_time = time.time()
+                score = predict(excode_model_rnn, excode_context + excode_suggestion,
+                                tokenizer=excode_tokenizer, train_len=train_len, start_pos=len(excode_context))
+                excode_suggestion_scores.append((excode_suggestion, score, i))
+                i += 1
+                logger.debug("--- %s seconds ---" % (time.time() - start_time))
 
-        sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])
-        logger.debug(sorted_scores)
-        logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
-        logger.debug("Best excode suggestion(s):")
+            sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])
+            logger.debug(sorted_scores)
+            logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
+            logger.debug("Best excode suggestion(s):")
 
-        lexemes = []
-        for i in range(min(top_k, len(sorted_scores))):
-            logger.debug(data['next_lex'][sorted_scores[i][2]])
-            if data['expected_excode'] == data['next_excode'][sorted_scores[i][2]]:
-                rnn_excode_correct[i] += 1
-            lexemes = lexemes + data['next_lex'][sorted_scores[i][2]]
-        java_suggestions = java_tokenize_one_sentence(lexemes,
-                                                      tokenizer=java_tokenizer)
-        java_context = java_tokenize(data['lex_context'],
-                                     tokenizer=java_tokenizer,
-                                     train_len=train_len,
-                                     last_only=True)[0]
+            lexemes = []
+            for i in range(min(top_k, len(sorted_scores))):
+                logger.debug(data['next_lex'][sorted_scores[i][2]])
+                if data['expected_excode'] == data['next_excode'][sorted_scores[i][2]]:
+                    rnn_excode_correct[i] += 1
+                lexemes = lexemes + data['next_lex'][sorted_scores[i][2]]
+            java_suggestions = java_tokenize_one_sentence(lexemes,
+                                                          tokenizer=java_tokenizer)
+            java_context = java_tokenize(data['lex_context'],
+                                         tokenizer=java_tokenizer,
+                                         train_len=train_len,
+                                         last_only=True)[0]
 
-        scores = []
-        java_suggestion_scores = []
-        best_java_score = -1e9
-        i = 0
+            scores = []
+            java_suggestion_scores = []
+            best_java_score = -1e9
+            i = 0
 
-        for java_suggestion in java_suggestions:
-            start_time = time.time()
-            score = predict(java_model_rnn, java_context + java_suggestion,
-                            tokenizer=java_tokenizer, train_len=train_len, start_pos=len(java_context))
-            java_suggestion_scores.append((java_suggestion, score, i))
-            i += 1
-            logger.debug("--- %s seconds ---" % (time.time() - start_time))
-        sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])
-        logger.debug(sorted_scores)
-        logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
-        logger.debug("Best java suggestion(s):")
+            for java_suggestion in java_suggestions:
+                start_time = time.time()
+                score = predict(java_model_rnn, java_context + java_suggestion,
+                                tokenizer=java_tokenizer, train_len=train_len, start_pos=len(java_context))
+                java_suggestion_scores.append((java_suggestion, score, i))
+                i += 1
+                logger.debug("--- %s seconds ---" % (time.time() - start_time))
+            sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])
+            logger.debug(sorted_scores)
+            logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
+            logger.debug("Best java suggestion(s):")
 
-        result_rnn = []
-        for i in range(min(top_k, len(sorted_scores))):
-            candidate = lexemes[sorted_scores[i][2]]
-            logger.debug(candidate)
-            if candidate == data['expected_lex']:
-                rnn_lex_correct[i] += 1
-            result_rnn.append(candidate)
-        runtime_rnn = perf_counter() - startTime
-        logger.debug("Total rnn runtime: " + str(runtime_rnn))
+            result_rnn = []
+            for i in range(min(top_k, len(sorted_scores))):
+                candidate = lexemes[sorted_scores[i][2]]
+                logger.debug(candidate)
+                if candidate == data['expected_lex']:
+                    rnn_lex_correct[i] += 1
+                result_rnn.append(candidate)
+            runtime_rnn = perf_counter() - startTime
+            logger.debug("Total rnn runtime: " + str(runtime_rnn))
 
         # n-gram
         startTime = perf_counter()
@@ -247,14 +250,18 @@ while True:
             result_ngram.append(candidate)
         runtime_ngram = perf_counter() - startTime
         logger.debug("Total n-gram runtime: " + str(runtime_ngram))
-        conn.send(('{type:"predict", data:{'
-                   + 'ngram:{'
-                   + 'result:' + json.dumps(result_ngram)
-                   + ',runtime:' + str(runtime_ngram)
-                   + '},'
-                   + 'rnn:{'
-                   + 'result:' + json.dumps(result_rnn)
-                   + ',runtime:' + str(runtime_rnn) + '}}}\n').encode())
+        response = '{type:"predict", data:{' \
+                   + 'ngram:{' \
+                   + 'result:' + json.dumps(result_ngram) \
+                   + ',runtime:' + str(runtime_ngram) \
+                   + '}'
+        if USE_RNN:
+            response += ',' \
+                        + 'rnn:{' \
+                        + 'result:' + json.dumps(result_rnn) \
+                        + ',runtime:' + str(runtime_rnn) \
+                        + '}'
+        conn.send((response + '}}\n').encode())
     conn.close()
     logger.debug('Client disconnected')
 
