@@ -1,27 +1,45 @@
 package flute.utils.file_processing;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.Scanner;
 
 public class CommentRemover {
-    public static void main(String[] args) {
-        String filePath = "D:/zzzz/CommentRemover.java";
-        String removed = CommentRemover.removeComment(filePath);
+    public static void main(String[] args) throws FileNotFoundException {
+        String content = new Scanner(new File("D:/zzzz/CommentRemover.java")).useDelimiter("\\Z").next();
+        String removed = CommentRemover.removeCommentFromFileString(content);
+        System.out.println(removed);
+        System.out.println("----------------------------------------------");
+        File file = new File("D:/zzzz/CommentRemover.java");
+        String removed2 = CommentRemover.removeCommentFromFile(file);
+        System.out.println(removed2);
     }
 
-    public static String removeComment(String filePath) {
-        File file = new File(filePath);
+    public static String removeCommentFromFile(File file) {
         String fileString = readLineByLine(file);
         fileString = fileString.replaceAll(
                 "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", "");
-        System.out.println(fileString);
         return fileString;
     }
 
+    public static String removeCommentFromFileString(String fileString) {
+        String removedCommentfileString = readLineByLine(fileString);
+        removedCommentfileString = removedCommentfileString.replaceAll(
+                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", "");
+        return removedCommentfileString;
+    }
+
+    private static String readLineByLine(String fileString) {
+        StringBuilder removedCommentfileString = new StringBuilder();
+        for (String line: fileString.split("\n")) {
+            String removedCommentLine = replaceComments(line);
+            if (!removedCommentLine.trim().equals(""))
+                removedCommentfileString.append(removedCommentLine).append("\n");
+        }
+        return removedCommentfileString.toString();
+    }
+
     private static String readLineByLine(File file) {
-        String textFile = "";
+        StringBuilder textFile = new StringBuilder();
         FileInputStream fstream;
         try {
             fstream = new FileInputStream(file);
@@ -29,13 +47,15 @@ public class CommentRemover {
                     fstream));
             String strLine;
             while ((strLine = br.readLine()) != null) {
-                textFile = textFile + replaceComments(strLine) + "\n";
+                String removedCommentLine = replaceComments(strLine);
+                if (!removedCommentLine.trim().equals(""))
+                    textFile.append(removedCommentLine).append("\n");
             }
             br.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return textFile;
+        return textFile.toString();
     }
 
     private static String replaceComments(String strLine) {
