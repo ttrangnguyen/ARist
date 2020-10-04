@@ -115,4 +115,4 @@ def listdirs(folder):
 #                    token_path='../../../../../data_dict/excode/excode_tokens_n_symbols.txt',
 #                    csv_path='../../../../../../data_csv/excode/' + project + '/excode_' +
 #                             data_type + "_" + project + '.csv',
-#                    train_len=20 + 1)
+#                    train_len=6 + 1)

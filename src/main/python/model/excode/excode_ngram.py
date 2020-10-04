@@ -16,7 +16,7 @@ for d in data:
     modi += [d.split(' ')]
 
 # Preprocess the tokenized text for 3-grams language modelling
-train_len = 20 + 1
+train_len = 6 + 1
 
 model = MLE(train_len)
 train_data, padded_sents = padded_everygram_pipeline(train_len, modi)
