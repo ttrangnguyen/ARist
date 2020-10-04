@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
+import flute.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
@@ -53,18 +54,21 @@ public class ArgRecTestGenerator {
     public boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
         for (NodeSequenceInfo excode: nodeSequenceList) {
             // TODO: Ignore null literal for now
-            if (NodeSequenceInfo.isLiteral(excode, "null")) return false;
-            if (NodeSequenceInfo.isMethodAccess(excode)) return false;
-            if (NodeSequenceInfo.isCast(excode)) return false;
-            if (NodeSequenceInfo.isConstructorCall(excode)) return false;
-            if (NodeSequenceInfo.isAssign(excode)) return false;
-            if (NodeSequenceInfo.isOperator(excode)) return false;
-            if (NodeSequenceInfo.isUnaryOperator(excode)) return false;
-            if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
-            if (NodeSequenceInfo.isClassExpr(excode)) return false;
+            if (!Config.FEATURE_PARAM_TYPE_NULL_LIT && NodeSequenceInfo.isLiteral(excode, "null")) return false;
+            if (!Config.FEATURE_PARAM_TYPE_METHOD_INVOC && NodeSequenceInfo.isMethodAccess(excode)) return false;
+            if (!Config.FEATURE_PARAM_TYPE_CAST && NodeSequenceInfo.isCast(excode)) return false;
+            if (!Config.FEATURE_PARAM_TYPE_OBJ_CREATION && NodeSequenceInfo.isObjectCreation(excode)) return false;
+            if (!Config.FEATURE_PARAM_TYPE_ARR_CREATION && NodeSequenceInfo.isArrayCreation(excode)) return false;
+            if (!Config.FEATURE_PARAM_TYPE_COMPOUND) {
+                if (NodeSequenceInfo.isAssign(excode)) return false;
+                if (NodeSequenceInfo.isOperator(excode)) return false;
+                if (NodeSequenceInfo.isUnaryOperator(excode)) return false;
+                if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
 
-            // For EnclosedExpr
-            if (NodeSequenceInfo.isOpenPart(excode)) return false;
+                // For EnclosedExpr
+                if (NodeSequenceInfo.isOpenPart(excode)) return false;
+            }
+            if (!Config.FEATURE_PARAM_TYPE_TYPE_LIT && NodeSequenceInfo.isClassExpr(excode)) return false;
 
             // For static field access
             if (NodeSequenceInfo.isFieldAccess(excode)) {
