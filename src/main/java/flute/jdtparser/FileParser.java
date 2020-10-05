@@ -337,7 +337,13 @@ public class FileParser {
                         nextVariableMap.put(excode, lex);
                     }
 
-                    //feature 8
+                    //feature 10
+                    if (Config.FEATURE_PARAM_TYPE_TYPE_LIT && typeNeedCheck.getKey().equals(TypeConstraintKey.CLASS_TYPE)) {
+                        nextVariable.add(".class");
+                        nextVariableMap.put("VAR(Class)", ".class");
+                    }
+
+                    //feature 11
                     if (Config.FEATURE_PARAM_TYPE_NULL_LIT && !typeNeedCheck.isPrimitive()) {
                         nextVariable.add("null");
                         nextVariableMap.put("LIT(null)", "null");
