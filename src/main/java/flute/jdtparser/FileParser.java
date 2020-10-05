@@ -312,15 +312,7 @@ public class FileParser {
                         nextVariableMap.put("LIT(boolean)", "false");
                     }
 
-                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
-                            && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
-                        String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
-                                + "OPEN_PART LIT(num) CLOSE_PART";
-                        nextVariable.add(lex);
-                        nextVariableMap.put(excode, lex);
-                    }
-
+                    //feature 13
                     if (Config.FEATURE_PARAM_TYPE_OBJ_CREATION
                             && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()
                             && !TypeConstraintKey.NUM_WRAP_TYPES.contains(typeNeedCheck.getKey())
@@ -333,6 +325,22 @@ public class FileParser {
                                 + "OPEN_PART";
                         nextVariable.add(lex);
                         nextVariableMap.put(excode, lex);
+                    }
+
+                    //feature 14
+                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
+                            && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
+                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
+                        String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
+                                + "OPEN_PART LIT(num) CLOSE_PART";
+                        nextVariable.add(lex);
+                        nextVariableMap.put(excode, lex);
+                    }
+
+                    //feature 8
+                    if (Config.FEATURE_PARAM_TYPE_NULL_LIT && !typeNeedCheck.isPrimitive()) {
+                        nextVariable.add("null");
+                        nextVariableMap.put("LIT(null)", "null");
                     }
                 }
 
