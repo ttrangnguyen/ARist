@@ -28,6 +28,8 @@ public class FileParser {
     private ITypeBinding curClass;
     private ClassParser curClassParser;
 
+    private MethodInvocationModel curMethodInvocation = null;
+
     private CompilationUnit cu;
 
     private boolean isStatic = false;
@@ -116,6 +118,10 @@ public class FileParser {
             }
         }
         return problemList;
+    }
+
+    public MethodInvocationModel getCurMethodInvocation() {
+        return curMethodInvocation;
     }
 
     public boolean typeCheck(int startPos, int stopPos) {
@@ -216,7 +222,7 @@ public class FileParser {
 
 
     private MultiMap genNextParams(int position) {
-        MethodInvocationModel methodInvocation = getCurMethodInvocation();
+        MethodInvocationModel methodInvocation = parseCurMethodInvocation();
         if (methodInvocation == null) return null;
 
         String methodName = methodInvocation.getName().getIdentifier();
@@ -417,7 +423,7 @@ public class FileParser {
         return nextVariableMap;
     }
 
-    public MethodInvocationModel getCurMethodInvocation() {
+    public MethodInvocationModel parseCurMethodInvocation() {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -430,12 +436,15 @@ public class FileParser {
             }
         });
 
-        if (astNode[0] == null) return null;
-        if (astNode[0] instanceof MethodInvocation)
-            return new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
-        if (astNode[0] instanceof SuperMethodInvocation)
-            return new MethodInvocationModel(curClass, (SuperMethodInvocation) astNode[0]);
-        return null;
+        if (astNode[0] == null) curMethodInvocation = null;
+        if (astNode[0] instanceof MethodInvocation) {
+            curMethodInvocation = new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
+        }
+
+        if (astNode[0] instanceof SuperMethodInvocation) {
+            curMethodInvocation = new MethodInvocationModel(curClass, (SuperMethodInvocation) astNode[0]);
+        }
+        return curMethodInvocation;
     }
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
