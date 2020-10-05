@@ -15,6 +15,11 @@ public class ParserCompare {
         return false;
     }
 
+    public static boolean isArrayType(int value) {
+        if (value == ParserConstant.IS_ARRAY_VALUE) return true;
+        return false;
+    }
+
     public static boolean canBeCast(int value) {
         if (value == ParserConstant.CAN_BE_CAST_VALUE) return true;
         return false;
