@@ -2153,14 +2153,14 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             curTypeInfo.methodInvocList.add(methodInvocInfo);
         }
 
-        // new HashMap.Entry<String, Long> ---> C_CALL(Entry<String, Long>,Entry)
         NodeInfo nodeInfo = NodeVisitProcessing.addNewInvocNode(curMethodInfo, parentNodeStack,
                 previousControlFlowNodeStack, curID, methodInvocInfo, n);
 
         curID++;
         curNode = nodeInfo;
+        // new HashMap.Entry<String, Long> ---> C_CALL(Entry<String, Long>,Entry)
         OldNodeSequenceVisitingProcessing.addConstructorNode(nodeInfo, varName, methodName, nodeSequenceStack,
-                curMethodInfo, curTypeInfo, nodeSequenceList);
+                curMethodInfo, curTypeInfo, nodeSequenceList).oriNode = n;
 
         // super.visit(n, arg);
 
@@ -2268,7 +2268,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         // new int ---> C_CALL(Array_int,int)
         OldNodeSequenceVisitingProcessing.addConstructorNode(nodeInfo, varName, methodName, nodeSequenceStack,
-                curMethodInfo, curTypeInfo, nodeSequenceList);
+                curMethodInfo, curTypeInfo, nodeSequenceList).oriNode = n;
 
         for (ArrayCreationLevel level : n.getLevels()) {
             // [ ---> OPEN_PART

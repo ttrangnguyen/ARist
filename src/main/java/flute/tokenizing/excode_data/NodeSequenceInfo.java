@@ -5,6 +5,8 @@ package flute.tokenizing.excode_data;
 
 import com.github.javaparser.Position;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.ArrayCreationExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
 
 import java.util.List;
 import java.util.Optional;
@@ -921,6 +923,14 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static boolean isConstructorCall(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTORCALL;
+	}
+
+	public static boolean isArrayCreation(NodeSequenceInfo nodeSequenceInfo) {
+		return isConstructorCall(nodeSequenceInfo) && nodeSequenceInfo.oriNode instanceof ArrayCreationExpr;
+	}
+
+	public static boolean isObjectCreation(NodeSequenceInfo nodeSequenceInfo) {
+		return isConstructorCall(nodeSequenceInfo) && nodeSequenceInfo.oriNode instanceof ObjectCreationExpr;
 	}
 
 	public static boolean isFieldAccess(NodeSequenceInfo nodeSequenceInfo) {
