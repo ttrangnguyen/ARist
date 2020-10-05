@@ -28,6 +28,8 @@ public class FileParser {
     private ITypeBinding curClass;
     private ClassParser curClassParser;
 
+    private MethodInvocationModel curMethodInvocation = null;
+
     private CompilationUnit cu;
 
     private boolean isStatic = false;
@@ -116,6 +118,10 @@ public class FileParser {
             }
         }
         return problemList;
+    }
+
+    public MethodInvocationModel getCurMethodInvocation() {
+        return curMethodInvocation;
     }
 
     public boolean typeCheck(int startPos, int stopPos) {
@@ -216,7 +222,7 @@ public class FileParser {
 
 
     private MultiMap genNextParams(int position) {
-        MethodInvocationModel methodInvocation = getCurMethodInvocation();
+        MethodInvocationModel methodInvocation = parseCurMethodInvocation();
         if (methodInvocation == null) return null;
 
         String methodName = methodInvocation.getName().getIdentifier();
@@ -257,8 +263,6 @@ public class FileParser {
             if (methodBinding != null) listMember.add(methodBinding);
         }
 
-        List<String> nextVariable = new ArrayList<>();
-
         MultiMap nextVariableMap = new MultiMap();
 
         int methodArgLength = preArgs.size();
@@ -271,11 +275,9 @@ public class FileParser {
         {
             ITypeBinding[] params = methodBinding.getParameterTypes();
             if (finalMethodArgLength == params.length && !methodBinding.isVarargs()) {
-                nextVariable.add(")");
                 nextVariableMap.put("CLOSE_PART", ")");
             } else {
                 if (finalMethodArgLength >= params.length - 1 && methodBinding.isVarargs()) {
-                    nextVariable.add(")");
                     nextVariableMap.put("CLOSE_PART", ")");
                 }
                 ITypeBinding typeNeedCheck = null;
@@ -287,34 +289,21 @@ public class FileParser {
 
                 if (typeNeedCheck != null) {
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
-                        nextVariable.add("0");
                         nextVariableMap.put("LIT(num)", "0");
                     }
 
                     if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                             || (methodBinding.getName().equals("equals")
                             && methodInvocation.getExpression() != null && methodInvocation.getExpressionType().getKey().equals(TypeConstraintKey.STRING_TYPE))) {
-                        nextVariable.add("\"\"");
                         nextVariableMap.put("LIT(String)", "\"\"");
                     }
 
                     if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
-                        nextVariable.add("true");
                         nextVariableMap.put("LIT(boolean)", "true");
-
-                        nextVariable.add("false");
                         nextVariableMap.put("LIT(boolean)", "false");
                     }
 
-                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
-                            && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
-                        String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
-                                + "OPEN_PART LIT(num) CLOSE_PART";
-                        nextVariable.add(lex);
-                        nextVariableMap.put(excode, lex);
-                    }
-
+                    //feature 13
                     if (Config.FEATURE_PARAM_TYPE_OBJ_CREATION
                             && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()
                             && !TypeConstraintKey.NUM_WRAP_TYPES.contains(typeNeedCheck.getKey())
@@ -325,8 +314,26 @@ public class FileParser {
                         String lex = "new " + typeNeedCheck.getName() + "(";
                         String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
                                 + "OPEN_PART";
-                        nextVariable.add(lex);
                         nextVariableMap.put(excode, lex);
+                    }
+
+                    //feature 14
+                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
+                            && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
+                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
+                        String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
+                                + "OPEN_PART LIT(num) CLOSE_PART";
+                        nextVariableMap.put(excode, lex);
+                    }
+
+                    //feature 10
+                    if (Config.FEATURE_PARAM_TYPE_TYPE_LIT && typeNeedCheck.getKey().equals(TypeConstraintKey.CLASS_TYPE)) {
+                        nextVariableMap.put("VAR(Class)", ".class");
+                    }
+
+                    //feature 11
+                    if (Config.FEATURE_PARAM_TYPE_NULL_LIT && !typeNeedCheck.isPrimitive()) {
+                        nextVariableMap.put("LIT(null)", "null");
                     }
                 }
 
@@ -340,10 +347,6 @@ public class FileParser {
                             String exCode = "M_ACCESS(" + curClass.getName() + "," + innerMethod.getName() + "," + innerMethod.getParameterTypes().length + ") "
                                     + "OPEN_PART";
                             nextVariableMap.put(exCode, nextVar);
-
-//                            if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-//                                nextVariableMap.put("CLOSE_PART", ")");
-//                            }
                         }
                     }
                 }
@@ -353,15 +356,9 @@ public class FileParser {
 
                 variables.forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
-                    if (!nextVariable.contains(variable.getName())
-                            && ParserCompare.isTrue(compareValue)) {
-                        nextVariable.add(variable.getName());
+                    if (ParserCompare.isTrue(compareValue)) {
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, variable.getName());
-//                        if (compareValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-//                            nextVariable.add(")");
-//                            nextVariableMap.put("CLOSE_PART", ")");
-//                        }
                     }
 
                     ITypeBinding variableClass = variable.getTypeBinding();
@@ -375,16 +372,9 @@ public class FileParser {
                             int compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
                             if (ParserCompare.isTrue(compareFieldValue)) {
                                 String nextVar = variable.getName() + "." + varField.getName();
-                                if (!nextVariable.contains(nextVar)) {
-                                    String exCode = "VAR(" + variableClass.getName() + ") "
-                                            + "F_ACCESS(" + variableClass.getName() + "," + varField.getName() + ")";
-                                    nextVariable.add(nextVar);
-                                    nextVariableMap.put(exCode, nextVar);
-                                }
-//                                if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-//                                    nextVariable.add(")");
-//                                    nextVariableMap.put("CLOSE_PART", ")");
-//                                }
+                                String exCode = "VAR(" + variableClass.getName() + ") "
+                                        + "F_ACCESS(" + variableClass.getName() + "," + varField.getName() + ")";
+                                nextVariableMap.put(exCode, nextVar);
                             }
                         }
                         //gen candidate with method
@@ -395,17 +385,10 @@ public class FileParser {
                                 int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
                                 if (ParserCompare.isTrue(compareFieldValue)) {
                                     String nextVar = variable.getName() + "." + varMethod.getName() + "(";
-//                                if (!nextVariable.contains(nextVar)) {
                                     String exCode = "VAR(" + variableClass.getName() + ") "
                                             + "M_ACCESS(" + variableClass.getName() + "," + varMethod.getName() + "," + varMethod.getParameterTypes().length + ") "
                                             + "OPEN_PART";
-                                    nextVariable.add(nextVar);
                                     nextVariableMap.put(exCode, nextVar);
-//                                }
-//                                    if (compareFieldValue == ParserConstant.VARARGS_TRUE_VALUE && !nextVariable.contains(")")) {
-//                                        nextVariable.add(")");
-//                                        nextVariableMap.put("CLOSE_PART", ")");
-//                                    }
                                 }
                             }
                         }
@@ -417,7 +400,7 @@ public class FileParser {
         return nextVariableMap;
     }
 
-    public MethodInvocationModel getCurMethodInvocation() {
+    public MethodInvocationModel parseCurMethodInvocation() {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -430,19 +413,23 @@ public class FileParser {
             }
         });
 
-        if (astNode[0] == null) return null;
-        if (astNode[0] instanceof MethodInvocation)
-            return new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
-        if (astNode[0] instanceof SuperMethodInvocation)
-            return new MethodInvocationModel(curClass, (SuperMethodInvocation) astNode[0]);
-        return null;
+        if (astNode[0] == null) curMethodInvocation = null;
+        if (astNode[0] instanceof MethodInvocation) {
+            curMethodInvocation = new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
+        }
+
+        if (astNode[0] instanceof SuperMethodInvocation) {
+            curMethodInvocation = new MethodInvocationModel(curClass, (SuperMethodInvocation) astNode[0]);
+        }
+        return curMethodInvocation;
     }
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
-        if (methodBinding.getParameterTypes().length > position
-                && varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position])
-        ) {
-            return ParserConstant.TRUE_VALUE;
+        if (methodBinding.getParameterTypes().length > position) {
+            if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
+                return ParserConstant.TRUE_VALUE;
+            if (varType.isCastCompatible(methodBinding.getParameterTypes()[position]))
+                return ParserConstant.CAN_BE_CAST_VALUE;
         }
 
         if (methodBinding.isVarargs()

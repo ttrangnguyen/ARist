@@ -5,4 +5,5 @@ public class ParserConstant {
     public static final int FALSE_VALUE = 0;
     public static final int TRUE_VALUE = 1;
     public static final int CAN_BE_CAST_VALUE = 3;
+    public static final int IS_ARRAY_VALUE = 3;
 }
