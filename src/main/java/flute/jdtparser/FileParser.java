@@ -354,11 +354,20 @@ public class FileParser {
                 Stream<Variable> variables = Config.FEATURE_DFG_VARIABLE ?
                         visibleVariables.stream().filter(variable -> variable.isInitialized()) : visibleVariables.stream();
 
+                ITypeBinding finalTypeNeedCheck = typeNeedCheck;
                 variables.forEach(variable -> {
                     int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
+
+                    //Just add cast and array access for variable
                     if (ParserCompare.isTrue(compareValue)) {
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, variable.getName());
+                    } else if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
+                        String exCode = "CAST(" + finalTypeNeedCheck.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
+                        nextVariableMap.put(exCode, "(" + finalTypeNeedCheck.getName() + ") " + variable.getName());
+                    } else if (ParserCompare.isArrayType(compareValue)) {
+                        String exCode = "VAR(" + variable.getTypeBinding().getName() + ") OPEN_PART CLOSE_PART";
+                        nextVariableMap.put(exCode, variable.getName() + "[]");
                     }
 
                     ITypeBinding variableClass = variable.getTypeBinding();
@@ -428,8 +437,11 @@ public class FileParser {
         if (methodBinding.getParameterTypes().length > position) {
             if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
                 return ParserConstant.TRUE_VALUE;
-            if (varType.isCastCompatible(methodBinding.getParameterTypes()[position]))
+            if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[position]))
                 return ParserConstant.CAN_BE_CAST_VALUE;
+            if (Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS && varType.isArray()
+                    && varType.getComponentType().isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
+                return ParserConstant.IS_ARRAY_VALUE;
         }
 
         if (methodBinding.isVarargs()

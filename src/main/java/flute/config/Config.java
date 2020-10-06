@@ -21,7 +21,7 @@ public class Config {
 
     //Type feature
 
-    //public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;
+    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;
     public final static boolean FEATURE_PARAM_TYPE_CAST = false;
 
     public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false;
