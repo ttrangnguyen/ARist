@@ -91,4 +91,4 @@ def listdirs(folder):
 #         preprocess(train_path='../../../../../../data_classform/java/' + data_type + '/' + project + '/',
 #                    csv_path='../../../../../../data_csv/java/' + project + '/java_' +
 #                             data_type + "_" + project + '.csv',
-#                    train_len=6 + 1)
+#                    train_len = 6 + 1)
