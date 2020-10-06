@@ -40,7 +40,7 @@ serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('0.0.0.0', 18007))
 serv.listen(1)
 
-project = 'ant'
+project = 'all'
 USE_RNN = True
 
 excode_model_rnn = load_model("../../../../../model/excode_model_" + project + ".h5")
@@ -124,6 +124,11 @@ while True:
         excode_suggestions = excode_tokenize_candidates(data['next_excode'],
                                                         tokenizer=excode_tokenizer,
                                                         tokens=excode_tokens)
+
+        java_context = java_tokenize(data['lex_context'],
+                                     tokenizer=java_tokenizer,
+                                     train_len=train_len,
+                                     last_only=True)[0]
         if USE_RNN:
             scores = []
             excode_suggestion_scores = []
@@ -151,10 +156,6 @@ while True:
                 lexemes = lexemes + data['next_lex'][sorted_scores[i][2]]
             java_suggestions = java_tokenize_one_sentence(lexemes,
                                                           tokenizer=java_tokenizer)
-            java_context = java_tokenize(data['lex_context'],
-                                         tokenizer=java_tokenizer,
-                                         train_len=train_len,
-                                         last_only=True)[0]
 
             scores = []
             java_suggestion_scores = []
