@@ -6,6 +6,7 @@ import flute.config.Config;
 import flute.data.*;
 import flute.data.type.*;
 import flute.data.constraint.ParserConstant;
+import flute.data.typemodel.ArgumentModel;
 import flute.data.typemodel.ClassModel;
 import flute.data.typemodel.Variable;
 
@@ -231,7 +232,7 @@ public class FileParser {
         boolean isStaticExpr = false;
         ITypeBinding classBinding;
 
-        List preArgs = position >= 0 ? methodInvocation.arguments().subList(0, position) : methodInvocation.arguments();
+        List<ArgumentModel> preArgs = position >= 0 ? methodInvocation.argumentTypes().subList(0, position) : methodInvocation.argumentTypes();
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
@@ -532,21 +533,23 @@ public class FileParser {
                     isStaticExpr = expr.toString().equals(expr.resolveTypeBinding().getName());
                 }
 
+                MethodInvocationModel methodInvocationParentModel = new MethodInvocationModel(classParser.getOrgType(), methodInvocationParent);
+
                 classParser.getMethodsFrom(curClass, isStaticExpr).forEach(methodMember -> {
-                    if (methodMember.getName().equals(methodInvocationParent.getName().getIdentifier())) {
+                    if (methodMember.getName().equals(methodInvocationParentModel.getName().getIdentifier())) {
 
                         if (parentTypes == null ||
                                 compareWithMultiType(methodMember.getReturnType(), parentTypes)) {
                             int positionParam = -1;
 
-                            for (int i = 0; i < methodInvocationParent.arguments().size(); i++) {
-                                if (methodInvocation == methodInvocationParent.arguments().get(i)) {
+                            for (int i = 0; i < methodInvocationParentModel.arguments().size(); i++) {
+                                if (methodInvocation == methodInvocationParentModel.arguments().get(i)) {
                                     positionParam = i;
                                     break;
                                 }
                             }
 
-                            if (checkInvoMember(methodInvocationParent.arguments(), methodMember, positionParam)) {
+                            if (checkInvoMember(methodInvocationParentModel.argumentTypes(), methodMember, positionParam)) {
                                 if (methodMember.isVarargs() && methodMember.getParameterTypes().length - 1 == positionParam) {
                                     typeResults.add(methodMember.getParameterTypes()[positionParam].getComponentType());
                                 }
@@ -571,45 +574,36 @@ public class FileParser {
         return false;
     }
 
-    public static boolean checkInvoMember(List args, IMethodBinding iMethodBinding, int ignorPos) {
+    public static boolean checkInvoMember(List<ArgumentModel> args, IMethodBinding iMethodBinding, int ignorPos) {
         if (!iMethodBinding.isVarargs() && args.size() > iMethodBinding.getParameterTypes().length) return false;
         int index = 0;
-        for (Object argument :
+        for (ArgumentModel argument :
                 args) {
             if (index == ignorPos) {
                 index++;
                 continue;
             }
-            if (argument instanceof Expression) {
-                Expression argExpr = (Expression) argument;
-//                ITypeBinding[] params = iMethodBinding.getParameterTypes();
-                if (compareParam(argExpr.resolveTypeBinding(), iMethodBinding, index++) == 0) {
-                    return false;
-                }
-            } else {
+
+            if (compareParam(argument.resolveType(), iMethodBinding, index++) == 0) {
                 return false;
             }
         }
         return true;
     }
 
-    public static boolean checkInvoMember(List args, IMethodBinding iMethodBinding) {
+    public static boolean checkInvoMember(List<ArgumentModel> args, IMethodBinding iMethodBinding) {
         if (!iMethodBinding.isVarargs() && args.size() > iMethodBinding.getParameterTypes().length) return false;
         int index = 0;
-        for (Object argument :
+        for (ArgumentModel argument :
                 args) {
-            if (argument instanceof Expression) {
-                Expression argExpr = (Expression) argument;
-                if (argument.toString().equals("$missing$")) {
-                    args.remove(argument);
-                    break;
-                }
+
+            if (argument.toString().equals("$missing$")) {
+                args.remove(argument);
+                break;
+            }
 //                ITypeBinding[] params = iMethodBinding.getParameterTypes();
-                if (argExpr.resolveTypeBinding() == null
-                        || compareParam(argExpr.resolveTypeBinding(), iMethodBinding, index++) == 0) {
-                    return false;
-                }
-            } else {
+            if (argument.resolveType() == null
+                    || compareParam(argument.resolveType(), iMethodBinding, index++) == 0) {
                 return false;
             }
         }
