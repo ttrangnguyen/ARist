@@ -953,6 +953,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.VAR && "Class".equals(nodeSequenceInfo.getAttachedType());
 	}
 
+	public static boolean isVar(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.VAR;
+	}
+
 	public static boolean isOperator(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPERATOR;
 	}

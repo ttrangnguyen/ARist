@@ -6,6 +6,9 @@ package flute.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import flute.utils.logging.Logger;
 
 /**
@@ -87,5 +90,11 @@ public class StringUtils {
 			str = str.substring(0, str.indexOf('\n'));
 		}
 		return str;
+	}
+
+	public static int indexOfRegex(String text, String regex) {
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(text);
+		if (matcher.find()) return matcher.start(); else return -1;
 	}
 }

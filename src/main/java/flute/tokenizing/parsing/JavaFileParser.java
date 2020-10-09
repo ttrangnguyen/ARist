@@ -19,6 +19,8 @@ import flute.tokenizing.excode_data.FileInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.tokenizing.excode_data.TypeInfo;
 import flute.tokenizing.visitors.MetricsVisitor;
+import flute.utils.file_processing.CommentRemover;
+import flute.utils.logging.Logger;
 
 import static com.github.javaparser.Providers.provider;
 
@@ -103,7 +105,8 @@ public class JavaFileParser {
         InputStream is = new ByteArrayInputStream(content.getBytes());
 
         try {
-            cu = StaticJavaParser.parse(is);
+            //cu = StaticJavaParser.parse(is);
+			cu = StaticJavaParser.parse(CommentRemover.removeCommentFromFileString(content));
             cu = StaticJavaParser.parse(cu.toString());
 			cu = StaticJavaParser.parse(cu.toString());
 			cu = StaticJavaParser.parse(cu.toString());
@@ -113,6 +116,7 @@ public class JavaFileParser {
             e.printStackTrace();
         } catch (RuntimeException e) {
 			e.printStackTrace();
+			//Logger.error(CommentRemover.removeCommentFromFileString(content));
 		//} catch (IOException e) {
         //	e.printStackTrace();
         } finally {
