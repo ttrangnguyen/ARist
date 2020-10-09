@@ -352,6 +352,30 @@ public class FileParser {
                     }
                 }
 
+                //static class feature
+                if (Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {
+                    cu.imports().forEach(importItem -> {
+                        if (importItem instanceof ImportDeclaration) {
+                            ImportDeclaration importDeclaration = (ImportDeclaration) importItem;
+                            IBinding importBinding = importDeclaration.resolveBinding();
+                            if (importBinding instanceof ITypeBinding) {
+                                ITypeBinding iTypeBinding = (ITypeBinding) importBinding;
+                                ClassParser classParser = new ClassParser(iTypeBinding);
+                                classParser.getFieldsFrom(curClass, true).forEach(staticField -> {
+                                    ITypeBinding staticMemberType = staticField.getType();
+                                    int compareFieldValue = compareParam(staticMemberType, methodBinding, finalMethodArgLength);
+                                    if (ParserCompare.isTrue(compareFieldValue)) {
+                                        String nextVar = importBinding.getName() + "." + staticField.getName();
+                                        String exCode = "VAR(" + importBinding.getName() + ") "
+                                                + "F_ACCESS(" + importBinding.getName() + "," + staticField.getName() + ")";
+                                        nextVariableMap.put(exCode, nextVar);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
                 Stream<Variable> variables = Config.FEATURE_DFG_VARIABLE ?
                         visibleVariables.stream().filter(variable -> variable.isInitialized()) : visibleVariables.stream();
 
