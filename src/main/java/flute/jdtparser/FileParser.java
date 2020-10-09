@@ -1,7 +1,9 @@
 package flute.jdtparser;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.HashBasedTable;
 
+import com.google.common.collect.Table;
 import flute.config.Config;
 import flute.data.*;
 import flute.data.type.*;
@@ -39,6 +41,8 @@ public class FileParser {
     private HashMap<String, Integer> initVariables = new HashMap<>();
 
     public HashMap<String, ClassModel> visibleClass = new HashMap<>();
+
+    public Table<String, String, IBinding> lexMap = HashBasedTable.create(); //(excode, lex, binding)
 
     /**
      * Create parser with position by length
@@ -344,12 +348,37 @@ public class FileParser {
                         ITypeBinding varMethodReturnType = innerMethod.getReturnType();
                         int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
                         if (ParserCompare.isTrue(compareFieldValue)) {
-                            String nextVar = innerMethod.getName() + "(";
+                            String nextLex = innerMethod.getName() + "(";
                             String exCode = "M_ACCESS(" + curClass.getName() + "," + innerMethod.getName() + "," + innerMethod.getParameterTypes().length + ") "
                                     + "OPEN_PART";
-                            nextVariableMap.put(exCode, nextVar);
+                            nextVariableMap.put(exCode, nextLex);
+                            lexMap.put(exCode, nextLex, innerMethod);
                         }
                     }
+                }
+
+                //static class feature
+                if (Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {
+                    cu.imports().forEach(importItem -> {
+                        if (importItem instanceof ImportDeclaration) {
+                            ImportDeclaration importDeclaration = (ImportDeclaration) importItem;
+                            IBinding importBinding = importDeclaration.resolveBinding();
+                            if (importBinding instanceof ITypeBinding) {
+                                ITypeBinding iTypeBinding = (ITypeBinding) importBinding;
+                                ClassParser classParser = new ClassParser(iTypeBinding);
+                                classParser.getFieldsFrom(curClass, true).forEach(staticField -> {
+                                    ITypeBinding staticMemberType = staticField.getType();
+                                    int compareFieldValue = compareParam(staticMemberType, methodBinding, finalMethodArgLength);
+                                    if (ParserCompare.isTrue(compareFieldValue)) {
+                                        String nextVar = importBinding.getName() + "." + staticField.getName();
+                                        String exCode = "VAR(" + importBinding.getName() + ") "
+                                                + "F_ACCESS(" + importBinding.getName() + "," + staticField.getName() + ")";
+                                        nextVariableMap.put(exCode, nextVar);
+                                    }
+                                });
+                            }
+                        }
+                    });
                 }
 
                 Stream<Variable> variables = Config.FEATURE_DFG_VARIABLE ?
@@ -394,11 +423,12 @@ public class FileParser {
                                 ITypeBinding varMethodReturnType = varMethod.getReturnType();
                                 int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
                                 if (ParserCompare.isTrue(compareFieldValue)) {
-                                    String nextVar = variable.getName() + "." + varMethod.getName() + "(";
+                                    String nextLex = variable.getName() + "." + varMethod.getName() + "(";
                                     String exCode = "VAR(" + variableClass.getName() + ") "
                                             + "M_ACCESS(" + variableClass.getName() + "," + varMethod.getName() + "," + varMethod.getParameterTypes().length + ") "
                                             + "OPEN_PART";
-                                    nextVariableMap.put(exCode, nextVar);
+                                    nextVariableMap.put(exCode, nextLex);
+                                    lexMap.put(exCode, nextLex, varMethod);
                                 }
                             }
                         }
