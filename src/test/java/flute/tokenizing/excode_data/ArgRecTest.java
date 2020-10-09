@@ -5,8 +5,8 @@ import java.util.List;
 
 public class ArgRecTest {
     private static int count = 0;
-    private int id;
-    private String filePath;
+    private transient int id;
+    private transient String filePath;
 
     private List<String> lex_context;
     private String excode_context;
@@ -16,6 +16,8 @@ public class ArgRecTest {
 
     private String expected_excode;
     private String expected_lex;
+
+    private transient List<NodeSequenceInfo> expected_excode_ori;
 
     public ArgRecTest() {
         id = count++;
@@ -87,5 +89,13 @@ public class ArgRecTest {
 
     public void setExpected_lex(String expected_lex) {
         this.expected_lex = expected_lex;
+    }
+
+    public List<NodeSequenceInfo> getExpected_excode_ori() {
+        return expected_excode_ori;
+    }
+
+    public void setExpected_excode_ori(List<NodeSequenceInfo> expected_excode_ori) {
+        this.expected_excode_ori = expected_excode_ori;
     }
 }

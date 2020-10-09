@@ -8,6 +8,8 @@ import flute.communicate.schema.Response;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.ArgRecTest;
+import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.utils.StringUtils;
 import flute.utils.logging.Logger;
 import flute.utils.logging.Timer;
 
@@ -22,10 +24,26 @@ public class ArgRecTester {
     public static Gson gson = new Gson();
 
     public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
-        if (test.getNext_excode().contains(test.getExpected_excode())) return true;
+        String expectedExpcode = test.getExpected_excode();
+        if (test.getNext_excode().contains(expectedExpcode)) return true;
 
         //TODO: Handle unknown excode
-        if (test.getExpected_excode().contains("<unk>")) return true;
+        if (expectedExpcode.contains("<unk>")) return true;
+
+        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
+            if (NodeSequenceInfo.isMethodAccess(excode)) {
+                int tmp = StringUtils.indexOf(expectedExpcode, "M_ACCESS(");
+                tmp = expectedExpcode.indexOf("OPEN_PART", tmp);
+                if (test.getNext_excode().contains(expectedExpcode.substring(0, tmp + 9))) return true;
+                break;
+            }
+            if (NodeSequenceInfo.isObjectCreation(excode)) {
+                int tmp = StringUtils.indexOf(expectedExpcode, "C_CALL(");
+                tmp = expectedExpcode.indexOf("OPEN_PART", tmp);
+                if (test.getNext_excode().contains(expectedExpcode.substring(0, tmp + 9))) return true;
+                break;
+            }
+        }
         return false;
     }
 
@@ -40,6 +58,21 @@ public class ArgRecTester {
             if (test.getNext_lexList().contains(expectedLex.substring(5))) return true;
         } else {
             if (test.getNext_lexList().contains("this." + expectedLex)) return true;
+        }
+
+        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
+            if (NodeSequenceInfo.isMethodAccess(excode)) {
+                String methodName = excode.getAttachedAccess();
+                int tmp = StringUtils.indexOf(expectedLex, methodName + "(");
+                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + methodName.length() + 1))) return true;
+                break;
+            }
+            if (NodeSequenceInfo.isObjectCreation(excode)) {
+                String className = excode.getAttachedAccess();
+                int tmp = StringUtils.indexOf(expectedLex, className + "(");
+                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + className.length() + 1))) return true;
+                break;
+            }
         }
         return false;
     }
@@ -56,6 +89,21 @@ public class ArgRecTester {
         } else {
             if (result.equals("this." + expectedLex)) return true;
         }
+
+        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
+            if (NodeSequenceInfo.isMethodAccess(excode)) {
+                String methodName = excode.getAttachedAccess();
+                int tmp = StringUtils.indexOf(expectedLex, methodName + "(");
+                if (result.equals(expectedLex.substring(0, tmp + methodName.length() + 1))) return true;
+                break;
+            }
+            if (NodeSequenceInfo.isObjectCreation(excode)) {
+                String className = excode.getAttachedAccess();
+                int tmp = StringUtils.indexOf(expectedLex, className + "(");
+                if (result.equals(expectedLex.substring(0, tmp + className.length() + 1))) return true;
+                break;
+            }
+        }
         return false;
     }
 
@@ -65,11 +113,20 @@ public class ArgRecTester {
         timer.startCounter();
         List<ArgRecTest> tests = getTests(projectName, false, false);
         //List<ArgRecTest> tests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
-        double averageGetTestsTime = timer.getTimeCounter() / 1000f / (tests.size() + generator.discardedTests.size());
+        double averageGetTestsTime = timer.getTimeCounter() / 1000f / (tests.size() + (generator == null? 0: generator.discardedTests.size()));
 
         //logTests(tests);
 
         System.out.println("Generated " + tests.size() + " tests.");
+
+        long generatedExcodeCount = 0;
+        long generatedLexCount = 0;
+        for (ArgRecTest test: tests) {
+            generatedExcodeCount += test.getNext_excode().size();
+            generatedLexCount += test.getNext_lexList().size();
+        }
+        System.out.println("Number of generated excode candidates: " + generatedExcodeCount);
+        System.out.println("Number of generated lexical candidates: " + generatedLexCount);
 
         int adequateGeneratedExcodeCount = 0;
         int adequateGeneratedLexCount = 0;
@@ -96,6 +153,8 @@ public class ArgRecTester {
 
         //Collections.shuffle(tests);
         int testCount = 0;
+        boolean isNGramUsed = false;
+        boolean isRNNUsed = false;
         int nGramOverallCorrectTop1PredictionCount = 0;
         int nGramOverallCorrectTopKPredictionCount = 0;
         int RNNOverallCorrectTop1PredictionCount = 0;
@@ -112,66 +171,78 @@ public class ArgRecTester {
                 Response response = socketClient.write(gson.toJson(test));
                 if (response instanceof PredictResponse) {
                     PredictResponse predictResponse = (PredictResponse) response;
-                    List<String> nGramResults = predictResponse.getData().ngram.getResult();
-                    List<String> RNNResults = predictResponse.getData().rnn.getResult();
+                    isNGramUsed = predictResponse.getData().ngram != null;
+                    isRNNUsed = predictResponse.getData().rnn != null;
+                    List<String> nGramResults = null;
+                    if (isNGramUsed) nGramResults = predictResponse.getData().ngram.getResult();
+                    List<String> RNNResults = null;
+                    if (isRNNUsed) RNNResults = predictResponse.getData().rnn.getResult();
 
 //                    System.out.println("==========================");
 //                    System.out.println(gson.toJson(test));
-//                    System.out.println("==========================");
-//                    System.out.println("NGram's results:");
-//                    nGramResults.forEach(item -> {
-//                        System.out.println(item);
-//                    });
-//                    System.out.println("==========================");
-//                    System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+//                    if (isNGramUsed) {
+//                        System.out.println("==========================");
+//                        System.out.println("NGram's results:");
+//                        nGramResults.forEach(item -> {
+//                            System.out.println(item);
+//                        });
+//                        System.out.println("==========================");
+//                        System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+//                    }
 //
-//                    System.out.println("==========================");
-//                    System.out.println("RNN's results:");
-//                    RNNResults.forEach(item -> {
-//                        System.out.println(item);
-//                    });
-//                    System.out.println("==========================");
-//                    System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
+//                    if (isRNNUsed) {
+//                        System.out.println("==========================");
+//                        System.out.println("RNN's results:");
+//                        RNNResults.forEach(item -> {
+//                            System.out.println(item);
+//                        });
+//                        System.out.println("==========================");
+//                        System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
+//                    }
 
                     System.out.println(String.format("Progress: %.2f%%", 100.0 * testCount / tests.size()));
 
                     ++testCount;
                     if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
 
-                    if (!nGramResults.isEmpty() && canAcceptResult(test, nGramResults.get(0))) {
-                        ++nGramOverallCorrectTop1PredictionCount;
-                        if (testMap.getOrDefault(test.getId(), false)) {
-                            ++nGramCorrectTop1PredictionCount;
-                        }
-                    }
-                    for (String item: nGramResults) {
-                        if (canAcceptResult(test, item)) {
-                            ++nGramOverallCorrectTopKPredictionCount;
+                    if (isNGramUsed) {
+                        if (!nGramResults.isEmpty() && canAcceptResult(test, nGramResults.get(0))) {
+                            ++nGramOverallCorrectTop1PredictionCount;
                             if (testMap.getOrDefault(test.getId(), false)) {
-                                ++nGramCorrectTopKPredictionCount;
+                                ++nGramCorrectTop1PredictionCount;
                             }
-                            break;
+                        }
+                        for (String item: nGramResults) {
+                            if (canAcceptResult(test, item)) {
+                                ++nGramOverallCorrectTopKPredictionCount;
+                                if (testMap.getOrDefault(test.getId(), false)) {
+                                    ++nGramCorrectTopKPredictionCount;
+                                }
+                                break;
+                            }
                         }
                     }
 
-                    if (!RNNResults.isEmpty() && canAcceptResult(test, RNNResults.get(0))) {
-                        ++RNNOverallCorrectTop1PredictionCount;
-                        if (testMap.getOrDefault(test.getId(), false)) {
-                            ++RNNCorrectTop1PredictionCount;
-                        }
-                    }
-                    for (String item: RNNResults) {
-                        if (canAcceptResult(test, item)) {
-                            ++RNNOverallCorrectTopKPredictionCount;
+                    if (isRNNUsed) {
+                        if (!RNNResults.isEmpty() && canAcceptResult(test, RNNResults.get(0))) {
+                            ++RNNOverallCorrectTop1PredictionCount;
                             if (testMap.getOrDefault(test.getId(), false)) {
-                                ++RNNCorrectTopKPredictionCount;
+                                ++RNNCorrectTop1PredictionCount;
                             }
-                            break;
+                        }
+                        for (String item: RNNResults) {
+                            if (canAcceptResult(test, item)) {
+                                ++RNNOverallCorrectTopKPredictionCount;
+                                if (testMap.getOrDefault(test.getId(), false)) {
+                                    ++RNNCorrectTopKPredictionCount;
+                                }
+                                break;
+                            }
                         }
                     }
 
-                    dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
-                    dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
+                    if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
+                    if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
                 }
             }
             socketClient.close();
@@ -180,20 +251,25 @@ public class ArgRecTester {
         }
         System.out.println("==========================");
         System.out.println("Number of tests: " + testCount);
-        System.out.println(String.format("NGram's top-1 accuracy: %.2f%%", 100.0 * nGramCorrectTop1PredictionCount / adequateGeneratedArgCount));
-        System.out.println(String.format("NGram's top-K accuracy: %.2f%%", 100.0 * nGramCorrectTopKPredictionCount / adequateGeneratedArgCount));
-        System.out.println(String.format("RNN's top-1 accuracy: %.2f%%", 100.0 * RNNCorrectTop1PredictionCount / adequateGeneratedArgCount));
-        System.out.println(String.format("RNN's top-K accuracy: %.2f%%", 100.0 * RNNCorrectTopKPredictionCount / adequateGeneratedArgCount));
+        if (isNGramUsed) {
+            System.out.println(String.format("NGram's top-1 accuracy: %.2f%%", 100.0 * nGramCorrectTop1PredictionCount / adequateGeneratedArgCount));
+            System.out.println(String.format("NGram's top-K accuracy: %.2f%%", 100.0 * nGramCorrectTopKPredictionCount / adequateGeneratedArgCount));
+        }
+        if (isRNNUsed) {
+            System.out.println(String.format("RNN's top-1 accuracy: %.2f%%", 100.0 * RNNCorrectTop1PredictionCount / adequateGeneratedArgCount));
+            System.out.println(String.format("RNN's top-K accuracy: %.2f%%", 100.0 * RNNCorrectTopKPredictionCount / adequateGeneratedArgCount));
+        }
         System.out.println(String.format("Overall top-1 accuracy: %.2f%%", 100.0 *
                 Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / testCount));
         System.out.println(String.format("Overall top-K accuracy: %.2f%%", 100.0 *
                 Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / testCount));
         System.out.println(String.format("Actual top-1 accuracy: %.2f%%", 100.0 *
-                Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / (testCount + generator.discardedTests.size())));
+                Math.max(nGramOverallCorrectTop1PredictionCount, RNNOverallCorrectTop1PredictionCount) / (testCount + (generator == null? 0: generator.discardedTests.size()))));
         System.out.println(String.format("Actual top-K accuracy: %.2f%%", 100.0 *
-                Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / (testCount + generator.discardedTests.size())));
-        System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
-        System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+                Math.max(nGramOverallCorrectTopKPredictionCount, RNNOverallCorrectTopKPredictionCount) / (testCount + (generator == null? 0: generator.discardedTests.size()))));
+        System.out.println("Average parsing runtime: " + averageGetTestsTime + "s");
+        if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
+        if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
         System.out.println("Average overall runtime: "
                 + (dataFrame.getVariable("NGram's runtime").getMean()
                 + dataFrame.getVariable("RNN's runtime").getMean()

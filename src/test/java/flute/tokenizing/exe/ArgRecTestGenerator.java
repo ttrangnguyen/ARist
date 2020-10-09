@@ -54,11 +54,22 @@ public class ArgRecTestGenerator {
     public boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
         for (NodeSequenceInfo excode: nodeSequenceList) {
             // TODO: Ignore null literal for now
-            if (!Config.FEATURE_PARAM_TYPE_NULL_LIT && NodeSequenceInfo.isLiteral(excode, "null")) return false;
-            if (!Config.FEATURE_PARAM_TYPE_METHOD_INVOC && NodeSequenceInfo.isMethodAccess(excode)) return false;
-            if (!Config.FEATURE_PARAM_TYPE_CAST && NodeSequenceInfo.isCast(excode)) return false;
-            if (!Config.FEATURE_PARAM_TYPE_OBJ_CREATION && NodeSequenceInfo.isObjectCreation(excode)) return false;
-            if (!Config.FEATURE_PARAM_TYPE_ARR_CREATION && NodeSequenceInfo.isArrayCreation(excode)) return false;
+            if (NodeSequenceInfo.isLiteral(excode, "null") && !Config.FEATURE_PARAM_TYPE_NULL_LIT) return false;
+            if (NodeSequenceInfo.isMethodAccess(excode) && !Config.FEATURE_PARAM_TYPE_METHOD_INVOC) return false;
+            if (NodeSequenceInfo.isCast(excode)) {
+                if (!Config.FEATURE_PARAM_TYPE_CAST) return false;
+                // Only accept (Class) object
+                if (!(nodeSequenceList.size() == 2 && NodeSequenceInfo.isVar(nodeSequenceList.get(1)))) return false;
+            }
+            if (NodeSequenceInfo.isObjectCreation(excode)) {
+                if (!Config.FEATURE_PARAM_TYPE_OBJ_CREATION) return false;
+                // Not accept Primitive wrapper classes
+                List primitiveWrapperClasses = Arrays.asList("Byte", "Short", "Integer", "Long", "Float", "Double", "Character", "Boolean");
+                if (primitiveWrapperClasses.contains(excode.getAttachedAccess())) return false;
+            };
+            if (NodeSequenceInfo.isArrayCreation(excode)) {
+                if (!Config.FEATURE_PARAM_TYPE_ARR_CREATION) return false;
+            }
             if (!Config.FEATURE_PARAM_TYPE_COMPOUND) {
                 if (NodeSequenceInfo.isAssign(excode)) return false;
                 if (NodeSequenceInfo.isOperator(excode)) return false;
@@ -66,12 +77,12 @@ public class ArgRecTestGenerator {
                 if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
 
                 // For EnclosedExpr
-                if (NodeSequenceInfo.isOpenPart(excode)) return false;
+                if (excode == nodeSequenceList.get(0) && NodeSequenceInfo.isOpenPart(excode)) return false;
             }
-            if (!Config.FEATURE_PARAM_TYPE_TYPE_LIT && NodeSequenceInfo.isClassExpr(excode)) return false;
+            if (NodeSequenceInfo.isClassExpr(excode) && !Config.FEATURE_PARAM_TYPE_TYPE_LIT) return false;
 
             // For static field access
-            if (NodeSequenceInfo.isFieldAccess(excode)) {
+            if (NodeSequenceInfo.isFieldAccess(excode) && !Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {
                 FieldAccessExpr fieldAccess = (FieldAccessExpr) excode.oriNode;
                 boolean isScopeAClass = false;
                 if (fieldAccess.getScope() instanceof NameExpr) {
@@ -139,6 +150,8 @@ public class ArgRecTestGenerator {
             case "LIT(String)":
                 test.setExpected_lex("\"\"");
                 break;
+            case "VAR(Class)":
+                test.setExpected_lex(".class");
         }
     }
 
@@ -251,6 +264,7 @@ public class ArgRecTestGenerator {
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
                                     test.setNext_lex(nextLexList);
+                                    test.setExpected_excode_ori(argExcodes);
                                     if (isClean(argExcodes)) {
                                         cleanTest(test);
                                         tests.add(test);
@@ -317,11 +331,19 @@ public class ArgRecTestGenerator {
                         if (methodCall.getArguments().isEmpty()) {
                             test.setExpected_excode(excodes.get(i).toStringSimple());
                             test.setExpected_lex(")");
+                            test.setExpected_excode_ori(Collections.singletonList(excodes.get(i)));
                         } else {
                             List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                             for (int t = contextIdx + 1; t < i; ++t) argExcodes.add(excodes.get(t));
-                            test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
+
+                            // Due to Lambda expression
+                            if (argExcodes.isEmpty()) {
+                                isClean = false;
+                            } else {
+                                test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
+                            }
                             test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
+                            test.setExpected_excode_ori(argExcodes);
                             if (!isClean(argExcodes)) isClean = false;
                         }
                         test.setNext_excode(nextExcodeList);
