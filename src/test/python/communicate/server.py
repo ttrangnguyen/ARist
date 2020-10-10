@@ -3,7 +3,7 @@ import json
 from model.java.java_preprocess import java_tokenize, java_tokenize_one_sentence
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
 from keras.models import load_model
-from model.predictor import predict
+from model.predictor import prepare, predict, evaluate
 from time import perf_counter
 import time
 from pickle import load
@@ -52,7 +52,7 @@ with open("../../../../../model/java_model_" + project + "ngram.pkl", 'rb') as f
 excode_tokenizer = load(open('../../../../src/main/python/model/excode/excode_tokenizer', 'rb'))
 java_tokenizer = load(open('../../../../src/main/python/model/java/java_tokenizer', 'rb'))
 excode_tokens = read_file('../../../../data_dict/excode/excode_tokens_n_symbols.txt').lower().split("\n")
-train_len = 6 + 1
+train_len = 20 + 1
 ngram = 2 + 1
 top_k = 5
 
@@ -124,7 +124,6 @@ while True:
         excode_suggestions = excode_tokenize_candidates(data['next_excode'],
                                                         tokenizer=excode_tokenizer,
                                                         tokens=excode_tokens)
-
         java_context = java_tokenize(data['lex_context'],
                                      tokenizer=java_tokenizer,
                                      train_len=train_len,
@@ -133,21 +132,18 @@ while True:
             scores = []
             excode_suggestion_scores = []
             best_excode_score = -1e9
-            i = 0
+            start_time = time.time()
+            x_test_all, y_test_all, sentence_len = prepare(excode_context, excode_suggestions, train_len, len(excode_context))
+            p_pred = predict(excode_model_rnn, x_test_all)
+            log_p_sentence = evaluate(p_pred, y_test_all, sentence_len)
 
-            for excode_suggestion in excode_suggestions:
-                start_time = time.time()
-                score = predict(excode_model_rnn, excode_context + excode_suggestion,
-                                tokenizer=excode_tokenizer, train_len=train_len, start_pos=len(excode_context))
-                excode_suggestion_scores.append((excode_suggestion, score, i))
-                i += 1
-                logger.debug("--- %s seconds ---" % (time.time() - start_time))
-
+            for i, excode_suggestion in enumerate(excode_suggestions):
+                excode_suggestion_scores.append((excode_suggestion, log_p_sentence[i], i))
+            logger.debug("--- %s seconds ---" % (time.time() - start_time))
             sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])
             logger.debug(sorted_scores)
             logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
             logger.debug("Best excode suggestion(s):")
-
             lexemes = []
             for i in range(min(top_k, len(sorted_scores))):
                 logger.debug(data['next_lex'][sorted_scores[i][2]])
@@ -160,15 +156,13 @@ while True:
             scores = []
             java_suggestion_scores = []
             best_java_score = -1e9
-            i = 0
-
-            for java_suggestion in java_suggestions:
-                start_time = time.time()
-                score = predict(java_model_rnn, java_context + java_suggestion,
-                                tokenizer=java_tokenizer, train_len=train_len, start_pos=len(java_context))
-                java_suggestion_scores.append((java_suggestion, score, i))
-                i += 1
-                logger.debug("--- %s seconds ---" % (time.time() - start_time))
+            start_time = time.time()
+            x_test_all, y_test_all, sentence_len = prepare(java_context, java_suggestions, train_len, len(java_context))
+            p_pred = predict(java_model_rnn, x_test_all)
+            log_p_sentence = evaluate(p_pred, y_test_all, sentence_len)
+            for i, java_suggestion in enumerate(java_suggestions):
+                java_suggestion_scores.append((java_suggestion, log_p_sentence[i], i))
+            logger.debug("--- %s seconds ---" % (time.time() - start_time))
             sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])
             logger.debug(sorted_scores)
             logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
