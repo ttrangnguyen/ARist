@@ -21,7 +21,7 @@ if __name__ == '__main__':
         return str_text
 
 
-    train_len = 6 + 1
+    train_len = 20 + 1
     text_sequences = []
     tokenizer = load(open('excode_tokenizer', 'rb'))
     vocabulary_size = len(tokenizer.word_index)

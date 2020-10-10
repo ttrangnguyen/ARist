@@ -6,6 +6,7 @@ import java.util.Scanner;
 public class CommentRemover {
     public static void main(String[] args) throws FileNotFoundException {
         String content = new Scanner(new File("D:/zzzz/CommentRemover.java")).useDelimiter("\\Z").next();
+        System.out.println(content);
         String removed = CommentRemover.removeCommentFromFileString(content);
         System.out.println(removed);
         System.out.println("----------------------------------------------");
@@ -17,14 +18,14 @@ public class CommentRemover {
     public static String removeCommentFromFile(File file) {
         String fileString = readLineByLine(file);
         fileString = fileString.replaceAll(
-                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", "");
+                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", " ");
         return fileString;
     }
 
     public static String removeCommentFromFileString(String fileString) {
         String removedCommentfileString = readLineByLine(fileString);
         removedCommentfileString = removedCommentfileString.replaceAll(
-                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", "");
+                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", " ");
         return removedCommentfileString;
     }
 
@@ -32,8 +33,7 @@ public class CommentRemover {
         StringBuilder removedCommentfileString = new StringBuilder();
         for (String line: fileString.split("\n")) {
             String removedCommentLine = replaceComments(line);
-            if (!removedCommentLine.trim().equals(""))
-                removedCommentfileString.append(removedCommentLine).append("\n");
+            removedCommentfileString.append(removedCommentLine).append("\n");
         }
         return removedCommentfileString.toString();
     }
@@ -59,8 +59,8 @@ public class CommentRemover {
     }
 
     private static String replaceComments(String strLine) {
-        if (strLine.startsWith("//")) {
-            return "";
+        if (strLine.trim().startsWith("//")) {
+            return " ";
         } else if (strLine.contains("//")) {
             if (strLine.contains("\"")) {
                 int lastIndex = strLine.lastIndexOf("\"");
