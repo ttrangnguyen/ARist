@@ -59,18 +59,16 @@ public class CommentRemover {
     }
 
     private static String replaceComments(String strLine) {
-        if (strLine.trim().startsWith("//")) {
-            return " ";
-        } else if (strLine.contains("//")) {
+        if (strLine.contains("//")) {
             if (strLine.contains("\"")) {
                 int lastIndex = strLine.lastIndexOf("\"");
                 int lastIndexComment = strLine.lastIndexOf("//");
                 if (lastIndexComment > lastIndex) { // ( "" // )
-                    strLine = strLine.substring(0, lastIndexComment);
+                    strLine = strLine.substring(0, lastIndexComment) + " ";
                 }
             } else {
                 int index = strLine.lastIndexOf("//");
-                strLine = strLine.substring(0, index);
+                strLine = strLine.substring(0, index) + " ";
             }
         }
         return strLine;
