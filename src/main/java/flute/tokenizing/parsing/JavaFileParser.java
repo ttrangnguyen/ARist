@@ -106,7 +106,7 @@ public class JavaFileParser {
 
         try {
             //cu = StaticJavaParser.parse(is);
-			cu = StaticJavaParser.parse(CommentRemover.removeCommentFromFileString(content));
+			cu = StaticJavaParser.parse(content);
             cu = StaticJavaParser.parse(cu.toString());
 			cu = StaticJavaParser.parse(cu.toString());
 			cu = StaticJavaParser.parse(cu.toString());

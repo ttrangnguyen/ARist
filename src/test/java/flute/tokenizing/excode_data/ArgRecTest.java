@@ -6,7 +6,7 @@ import java.util.List;
 public class ArgRecTest {
     private static int count = 0;
     private transient int id;
-    private transient String filePath;
+    private String filePath;
 
     private List<String> lex_context;
     private String excode_context;

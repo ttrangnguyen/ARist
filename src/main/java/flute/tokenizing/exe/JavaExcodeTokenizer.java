@@ -38,6 +38,7 @@ public class JavaExcodeTokenizer {
         combinedTypeSolver.add(new ReflectionTypeSolver());
         JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
         StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
+        StaticJavaParser.getConfiguration().setAttributeComments(false);
         combinedTypeSolver.add(new JavaParserTypeSolver(project));
     }
 
