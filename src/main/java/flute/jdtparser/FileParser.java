@@ -8,8 +8,10 @@ import flute.config.Config;
 import flute.data.*;
 import flute.data.type.*;
 import flute.data.constraint.ParserConstant;
+import flute.data.exception.*;
 import flute.data.typemodel.ArgumentModel;
 import flute.data.typemodel.ClassModel;
+import flute.data.typemodel.MethodCallTypeArgument;
 import flute.data.typemodel.Variable;
 
 import flute.jdtparser.utils.ParserCompare;
@@ -42,7 +44,7 @@ public class FileParser {
 
     public HashMap<String, ClassModel> visibleClass = new HashMap<>();
 
-    public Table<String, String, IBinding> lexMap = HashBasedTable.create(); //(excode, lex, binding)
+    public Table<String, String, MethodCallTypeArgument> methodCallArgumentMap = HashBasedTable.create(); //(excode, lex, binding)
 
     /**
      * Create parser with position by length
@@ -129,6 +131,10 @@ public class FileParser {
         return curMethodInvocation;
     }
 
+    public String getLastMethodCallGen() {
+        return curMethodInvocation == null ? null : curMethodInvocation.toString();
+    }
+
     public boolean typeCheck(int startPos, int stopPos) {
         cu = projectParser.createCU(curFile);
         TypeChecker typeChecker = new TypeChecker(cu, startPos, stopPos);
@@ -169,16 +175,15 @@ public class FileParser {
     public void parse() throws Exception {
         try {
             ITypeBinding clazz = getClassScope(curPosition);
-
             if (clazz != curClass) {
                 curClass = clazz;
                 curClassParser = new ClassParser(curClass);
-                visibleClass = projectParser.getListAccess(clazz);
+                //visibleClass = projectParser.getListAccess(clazz);
             }
-
-        } catch (NullPointerException err) {
+            parseCurMethodInvocation();
+        } catch (Exception err) {
             visibleClass.clear();
-            throw new Exception("Can not get class scope");
+            throw err;
         }
 
         ASTNode scope = getScope(curPosition);
@@ -215,57 +220,57 @@ public class FileParser {
     /**
      * @return Next params can append the input position of a method invocation with sublist of pre-written parameters.
      */
-    public MultiMap genParamsAt(int position) {
-        return genNextParams(position);
+    public MultiMap genParamsAt(int position, String... keys) {
+        return genNextParams(position, keys);
     }
 
-    private String lastMethodCallGen = "";
+    private MultiMap genNextParams(int position, String... keys) {
+        if (curMethodInvocation == null) return null;
 
-    public String getLastMethodCallGen() {
-        return lastMethodCallGen;
-    }
-
-
-    private MultiMap genNextParams(int position) {
-        MethodInvocationModel methodInvocation = parseCurMethodInvocation();
-        if (methodInvocation == null) return null;
-
-        String methodName = methodInvocation.getName().getIdentifier();
-        lastMethodCallGen = methodInvocation.toString();
+        String methodName = curMethodInvocation.getName().getIdentifier();
 
         boolean isStaticExpr = false;
+        String expressionTypeKey = null;
         ITypeBinding classBinding;
 
-        List<ArgumentModel> preArgs = position >= 0 ? methodInvocation.argumentTypes().subList(0, position) : methodInvocation.argumentTypes();
+        List<ArgumentModel> preArgs = position >= 0 ? curMethodInvocation.argumentTypes().subList(0, position) : curMethodInvocation.argumentTypes();
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
-        if (!Config.FEATURE_USER_CHOOSE_METHOD) {
-            if (methodInvocation.getExpression() == null) {
-                classBinding = curClass;
-                isStaticExpr = isStaticScope(methodInvocation.getOrgASTNode());
-            } else {
-                classBinding = methodInvocation.getExpressionType();
-                isStaticExpr = methodInvocation.isStaticExpression();
-            }
-            ClassParser classParser = new ClassParser(classBinding);
+        if (keys.length == 2) {
+            MethodCallTypeArgument methodCallTypeArgument = methodCallArgumentMap.get(keys[0], keys[1]);
+            expressionTypeKey = methodCallTypeArgument.getExpressionType().getKey();
+            listMember.add(methodCallTypeArgument.getMethodBinding());
 
-            List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
+        } else {
+            expressionTypeKey = curMethodInvocation.getExpressionType() == null ? null : curMethodInvocation.getExpressionType().getKey();
+            if (!Config.FEATURE_USER_CHOOSE_METHOD) {
+                if (curMethodInvocation.getExpression() == null) {
+                    classBinding = curClass;
+                    isStaticExpr = isStaticScope(curMethodInvocation.getOrgASTNode());
+                } else {
+                    classBinding = curMethodInvocation.getExpressionType();
+                    isStaticExpr = curMethodInvocation.isStaticExpression();
+                }
+                ClassParser classParser = new ClassParser(classBinding);
 
-            for (IMethodBinding methodBinding : methodBindings) {
-                if (methodName.equals(methodBinding.getName())) {
-                    //Add filter for parent expression
-                    if (parentValue(methodInvocation.getOrgASTNode()) == null
-                            || compareWithMultiType(methodBinding.getReturnType(), parentValue(methodInvocation.getOrgASTNode()))) {
-                        if (checkInvoMember(preArgs, methodBinding)) {
-                            listMember.add(methodBinding);
+                List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
+
+                for (IMethodBinding methodBinding : methodBindings) {
+                    if (methodName.equals(methodBinding.getName())) {
+                        //Add filter for parent expression
+                        if (parentValue(curMethodInvocation.getOrgASTNode()) == null
+                                || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode()))) {
+                            if (checkInvoMember(preArgs, methodBinding)) {
+                                listMember.add(methodBinding);
+                            }
                         }
                     }
                 }
+            } else {
+                IMethodBinding methodBinding = curMethodInvocation.resolveMethodBinding();
+                if (methodBinding != null) listMember.add(methodBinding);
             }
-        } else {
-            IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
-            if (methodBinding != null) listMember.add(methodBinding);
         }
 
         MultiMap nextVariableMap = new MultiMap();
@@ -276,6 +281,7 @@ public class FileParser {
 
         int finalMethodArgLength = methodArgLength;
 
+        String finalExpressionTypeKey = expressionTypeKey;
         listMember.forEach(methodBinding ->
         {
             ITypeBinding[] params = methodBinding.getParameterTypes();
@@ -299,7 +305,7 @@ public class FileParser {
 
                     if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                             || (methodBinding.getName().equals("equals")
-                            && methodInvocation.getExpression() != null && methodInvocation.getExpressionType().getKey().equals(TypeConstraintKey.STRING_TYPE))) {
+                            && finalExpressionTypeKey != null && finalExpressionTypeKey.equals(TypeConstraintKey.STRING_TYPE))) {
                         nextVariableMap.put("LIT(String)", "\"\"");
                     }
 
@@ -352,7 +358,7 @@ public class FileParser {
                             String exCode = "M_ACCESS(" + curClass.getName() + "," + innerMethod.getName() + "," + innerMethod.getParameterTypes().length + ") "
                                     + "OPEN_PART";
                             nextVariableMap.put(exCode, nextLex);
-                            lexMap.put(exCode, nextLex, innerMethod);
+                            methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(curClass, innerMethod));
                         }
                     }
                 }
@@ -428,7 +434,7 @@ public class FileParser {
                                             + "M_ACCESS(" + variableClass.getName() + "," + varMethod.getName() + "," + varMethod.getParameterTypes().length + ") "
                                             + "OPEN_PART";
                                     nextVariableMap.put(exCode, nextLex);
-                                    lexMap.put(exCode, nextLex, varMethod);
+                                    methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(variableClass, varMethod));
                                 }
                             }
                         }
@@ -437,10 +443,11 @@ public class FileParser {
             }
         });
 
+
         return nextVariableMap;
     }
 
-    public MethodInvocationModel parseCurMethodInvocation() {
+    public void parseCurMethodInvocation() throws MethodInvocationNotFoundException {
         final ASTNode[] astNode = {null};
 
         cu.accept(new ASTVisitor() {
@@ -453,7 +460,10 @@ public class FileParser {
             }
         });
 
-        if (astNode[0] == null) curMethodInvocation = null;
+        if (astNode[0] == null) {
+            curMethodInvocation = null;
+            throw new MethodInvocationNotFoundException("Method invocation not found!");
+        }
         if (astNode[0] instanceof MethodInvocation) {
             curMethodInvocation = new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
         }
@@ -461,7 +471,6 @@ public class FileParser {
         if (astNode[0] instanceof SuperMethodInvocation) {
             curMethodInvocation = new MethodInvocationModel(curClass, (SuperMethodInvocation) astNode[0]);
         }
-        return curMethodInvocation;
     }
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
@@ -879,7 +888,7 @@ public class FileParser {
      * @return Parent class nearest of position.
      * @throws NullPointerException
      */
-    public ITypeBinding getClassScope(int position) throws NullPointerException {
+    public ITypeBinding getClassScope(int position) throws ClassScopeNotFoundException {
         final TypeDeclaration[] result = {null};
         cu.accept(new ASTVisitor() {
             @Override
@@ -890,7 +899,7 @@ public class FileParser {
                 return true;
             }
         });
-        if (result[0] == null) throw new NullPointerException();
+        if (result[0] == null) throw new ClassScopeNotFoundException();
         return result[0].resolveBinding();
     }
 
