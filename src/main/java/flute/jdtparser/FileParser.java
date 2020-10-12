@@ -172,7 +172,7 @@ public class FileParser {
      *
      * @throws Exception
      */
-    public void parse() throws Exception {
+    public void parse() throws MethodInvocationNotFoundException, ClassScopeNotFoundException {
         try {
             ITypeBinding clazz = getClassScope(curPosition);
             if (clazz != curClass) {
@@ -181,7 +181,7 @@ public class FileParser {
                 //visibleClass = projectParser.getListAccess(clazz);
             }
             parseCurMethodInvocation();
-        } catch (Exception err) {
+        } catch (ClassScopeNotFoundException | MethodInvocationNotFoundException err) {
             visibleClass.clear();
             throw err;
         }
@@ -241,7 +241,6 @@ public class FileParser {
             MethodCallTypeArgument methodCallTypeArgument = methodCallArgumentMap.get(keys[0], keys[1]);
             expressionTypeKey = methodCallTypeArgument.getExpressionType().getKey();
             listMember.add(methodCallTypeArgument.getMethodBinding());
-
         } else {
             expressionTypeKey = curMethodInvocation.getExpressionType() == null ? null : curMethodInvocation.getExpressionType().getKey();
             if (!Config.FEATURE_USER_CHOOSE_METHOD) {
@@ -464,6 +463,7 @@ public class FileParser {
             curMethodInvocation = null;
             throw new MethodInvocationNotFoundException("Method invocation not found!");
         }
+
         if (astNode[0] instanceof MethodInvocation) {
             curMethodInvocation = new MethodInvocationModel(curClass, (MethodInvocation) astNode[0]);
         }
