@@ -1,6 +1,7 @@
 package flute.data;
 
 import flute.data.typemodel.ArgumentModel;
+import flute.jdtparser.FileParser;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
@@ -50,8 +51,13 @@ public class MethodInvocationModel {
 
     public boolean isStaticExpression() {
         if (orgASTNode instanceof SuperMethodInvocation) return false;
-        return curClass.getName().equals(expression.toString())
-                || curClass.getQualifiedName().equals(expression.toString());
+        if (expressionType != null) {
+            return expressionType.getName().equals(expression.toString())
+                    || expressionType.getQualifiedName().equals(expression.toString());
+        } else {
+            FileParser.isStaticScope(orgASTNode);
+        }
+        return false;
     }
 
     public List arguments() {

@@ -554,41 +554,49 @@ public class FileParser {
             }
         } else if (parentNode instanceof IfStatement) {
             return new ITypeBinding[]{new BooleanPrimitiveType()};
-        } else if (parentNode instanceof MethodInvocation) {
-            MethodInvocation methodInvocationParent = (MethodInvocation) parentNode;
+        } else if (parentNode instanceof MethodInvocation || parentNode instanceof SuperMethodInvocation) {
+
+            MethodInvocationModel methodInvocationParentModel = null;
+            if (parentNode instanceof MethodInvocation) {
+                methodInvocationParentModel = new MethodInvocationModel(curClass, (MethodInvocation) parentNode);
+            } else if (parentNode instanceof SuperMethodInvocation) {
+                methodInvocationParentModel = new MethodInvocationModel(curClass, (SuperMethodInvocation) parentNode);
+            }
+
             //if method call is a param of method call
-            if (methodInvocationParent.arguments().contains(methodInvocation)) {
-                ITypeBinding[] parentTypes = parentValue(methodInvocationParent);
+            if (methodInvocationParentModel.arguments().contains(methodInvocation)) {
+                ITypeBinding[] parentTypes = parentValue(methodInvocationParentModel.getOrgASTNode());
                 List<ITypeBinding> typeResults = new ArrayList<>();
 
                 ClassParser classParser;
                 boolean isStaticExpr = false;
-                if (methodInvocationParent.getExpression() == null) {
-                    classParser = new ClassParser(curClass);
-                    isStaticExpr = isStaticScope(methodInvocation);
-                } else {
-                    Expression expr = methodInvocationParent.getExpression();
-                    classParser = new ClassParser(expr.resolveTypeBinding());
-                    isStaticExpr = expr.toString().equals(expr.resolveTypeBinding().getName());
-                }
+//                if (methodInvocationParent.getExpression() == null) {
+//                    classParser = new ClassParser(curClass);
+//                    isStaticExpr = isStaticScope(methodInvocation);
+//                } else {
+//                    Expression expr = methodInvocationParent.getExpression();
+//                    classParser = new ClassParser(expr.resolveTypeBinding());
+//                    isStaticExpr = expr.toString().equals(expr.resolveTypeBinding().getName());
+//                }
+                classParser = methodInvocationParentModel.getExpressionType() == null ? curClassParser
+                        : new ClassParser(methodInvocationParentModel.getExpressionType());
 
-                MethodInvocationModel methodInvocationParentModel = new MethodInvocationModel(classParser.getOrgType(), methodInvocationParent);
-
+                MethodInvocationModel finalMethodInvocationParentModel = methodInvocationParentModel;
                 classParser.getMethodsFrom(curClass, isStaticExpr).forEach(methodMember -> {
-                    if (methodMember.getName().equals(methodInvocationParentModel.getName().getIdentifier())) {
+                    if (methodMember.getName().equals(finalMethodInvocationParentModel.getName().getIdentifier())) {
 
                         if (parentTypes == null ||
                                 compareWithMultiType(methodMember.getReturnType(), parentTypes)) {
                             int positionParam = -1;
 
-                            for (int i = 0; i < methodInvocationParentModel.arguments().size(); i++) {
-                                if (methodInvocation == methodInvocationParentModel.arguments().get(i)) {
+                            for (int i = 0; i < finalMethodInvocationParentModel.arguments().size(); i++) {
+                                if (methodInvocation == finalMethodInvocationParentModel.arguments().get(i)) {
                                     positionParam = i;
                                     break;
                                 }
                             }
 
-                            if (checkInvoMember(methodInvocationParentModel.argumentTypes(), methodMember, positionParam)) {
+                            if (checkInvoMember(finalMethodInvocationParentModel.argumentTypes(), methodMember, positionParam)) {
                                 if (methodMember.isVarargs() && methodMember.getParameterTypes().length - 1 == positionParam) {
                                     typeResults.add(methodMember.getParameterTypes()[positionParam].getComponentType());
                                 }
