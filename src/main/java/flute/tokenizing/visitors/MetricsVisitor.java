@@ -2561,14 +2561,14 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // getNames() --->
         doVisitExpression(n.getName(), arg);
         
-        // [ ---> OPEN_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, true);
+        // [ ---> OPEN_BRAK
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.ARRAY_ACCESS, nodeSequenceList, true);
         
         // 15*15 --->
         doVisitExpression(n.getIndex(), arg);
         
-        // ] ---> CLOSE_PART
-        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.NODE_PART, nodeSequenceList, false);
+        // ] ---> CLOSE_BRAK
+        OldNodeSequenceVisitingProcessing.addPartNode(NodeSequenceConstant.ARRAY_ACCESS, nodeSequenceList, false);
     }
     
     // Eg: A(1, 2) {...} """in""" enum X { A(1, 2) {...}, B(3, 4) {...}}
@@ -2682,6 +2682,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     @Override
     public void visit(LambdaExpr n, Object arg) {
         //super.visit(n, arg);
+        OldNodeSequenceVisitingProcessing.addLambdaExprNode(nodeSequenceList).oriNode = n;
     }
     
     // TODO: handle Lambda expressions and this

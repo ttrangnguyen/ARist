@@ -37,6 +37,7 @@ public class NodeSequenceConstant {
 	public static final short ASSIGN = 16;
 	public static final short CAST = 17;
 	public static final short FIELD = 18;
+	public static final short LAMBDA = 19;
 	
 	public static final short IF = 100;
 	public static final short ELSE = 101;
@@ -71,6 +72,6 @@ public class NodeSequenceConstant {
 	public static final short THROW = 304;
 	public static final short CASE_PART = 305;
 	public static final short YIELD = 306;
+	public static final short ARRAY_ACCESS = 307;
 	public static final short CONDITIONAL_EXPR = 400;
-	
 }

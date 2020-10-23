@@ -517,8 +517,14 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addUnknownNode(short sepa, ArrayList<NodeSequenceInfo> nodeSequenceList, char type) {
-		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getSEPA(sepa,  type);
+	public static NodeSequenceInfo addLambdaExprNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getLambdaExpr();
+		nodeSequenceList.add(nodeSequenceInfo);
+		return nodeSequenceInfo;
+	}
+
+	public static NodeSequenceInfo addUnknownNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getUnknown();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
