@@ -785,7 +785,7 @@ public class FileParser {
                 } else continue;
 
                 //stop when top switch case
-                if (stmt instanceof SwitchCase) break;
+                //if (stmt instanceof SwitchCase) break;
 
                 if (stmt instanceof VariableDeclarationStatement) {
                     VariableDeclarationStatement declareStmt = (VariableDeclarationStatement) stmt;

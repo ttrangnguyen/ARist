@@ -593,6 +593,8 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		    tmp = toStringYield();
 		} else if ((nodeType == NodeSequenceConstant.CONDITIONAL_EXPR)) {
 			tmp = toStringConExpr();
+		} else if ((nodeType == NodeSequenceConstant.LAMBDA)) {
+			tmp = toStringLambdaExpr();
 		}
 		return tmp;
 	}
@@ -796,7 +798,16 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		op.nodeType = NodeSequenceConstant.NODE_PART;
 		if (endMt == NodeSequenceConstant.CASE_PART)
 			op.representStr = "CASE_PART";
-		else {
+		else if (endMt == NodeSequenceConstant.ARRAY_ACCESS) {
+			if (isOpen) {
+				op.representStr = "OPEN_BRAK";
+				op.startEnd = NodeSequenceConstant.START;
+			}
+			else {
+				op.representStr = "CLOSE_BRAK";
+				op.startEnd = NodeSequenceConstant.END;
+			}
+		} else {
 			if (isOpen) {
 				op.representStr = "OPEN_PART";
 				op.startEnd = NodeSequenceConstant.START;
@@ -845,6 +856,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	private String toStringConExpr() {
 		return alignToken + "CEXP";
+	}
+
+	private String toStringLambdaExpr() {
+		return alignToken + "LAMBDA";
 	}
 
 	public static NodeSequenceInfo getStartMethod(String type) {
@@ -900,6 +915,13 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static boolean isConditionalExpr(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONDITIONAL_EXPR;
+	}
+
+	public static NodeSequenceInfo getLambdaExpr() {
+		NodeSequenceInfo op = new NodeSequenceInfo();
+		op.nodeType = NodeSequenceConstant.LAMBDA;
+		op.representStr = "LAMBDA";
+		return op;
 	}
 
 	public static NodeSequenceInfo getUnknown() {
