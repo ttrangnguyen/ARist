@@ -96,7 +96,8 @@ public class DFGParser {
             if (!isInitialized(variableName, tryStatement.getBody(), curPos)) return false;
             for (Object catchObject : tryStatement.catchClauses()) {
                 if (catchObject instanceof CatchClause) {
-                    if (!isInitialized(variableName, ((CatchClause) catchObject).getBody(), curPos)) {
+                    if (!isInitialized(variableName, ((CatchClause) catchObject).getBody(), curPos)
+                            && !checkThrowInCatchBlock(((CatchClause) catchObject).getBody())) {
                         return false;
                     }
                 }
@@ -126,6 +127,13 @@ public class DFGParser {
             }
         }
 
+        return false;
+    }
+
+    public static boolean checkThrowInCatchBlock(Block catchBlock) {
+        for (Object statement : catchBlock.statements()) {
+            if (statement instanceof ThrowStatement) return true;
+        }
         return false;
     }
 
