@@ -64,6 +64,8 @@ public class DFGParser {
                 if (checkContains(statement, curPos))
                     if (statement instanceof SwitchStatement)
                         return blockLoopSwitchStatement(variableName, (SwitchStatement) statement, useBlock, curPos);
+                    else if (statement instanceof Block)
+                        return blockLoop(variableName, (Block) statement, useBlock, curPos);
                     else return blockLoop(variableName, getTopDFGBlock(useBlock, statement), useBlock, curPos);
                 if (isInitialized(variableName, statement, curPos)) return true;
             }
