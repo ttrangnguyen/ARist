@@ -27,6 +27,7 @@ def java_tokenize(lines, tokenizer, train_len, last_only=False):
             all_tokens += tokenize(stripped)
         else:
             all_tokens += [stripped]
+    # print(all_tokens)
     if not last_only:
         for j in range(1, len(all_tokens)):
             seq = all_tokens[max(j - train_len, 0):j]
@@ -38,7 +39,7 @@ def java_tokenize(lines, tokenizer, train_len, last_only=False):
     return sequences
 
 
-def java_tokenize_one_sentence(lexes, tokenizer, to_sequence=True):
+def java_tokenize_sentences(lexes, tokenizer, to_sequence=True):
     text_sequences = []
     for lex in lexes:
         all_tokens = []
@@ -83,12 +84,16 @@ def listdirs(folder):
     return [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]
 
 
-# data_types = ['train', 'validate', 'test']
-# for data_type in data_types:
-#     projects = listdirs("../../../../../../data_classform/java/" + data_type)
-#     for project in projects:
-#         Path('../../../../../../data_csv/java/' + project).mkdir(parents=True, exist_ok=True)
-#         preprocess(train_path='../../../../../../data_classform/java/' + data_type + '/' + project + '/',
-#                    csv_path='../../../../../../data_csv/java/' + project + '/java_' +
-#                             data_type + "_" + project + '.csv',
-#                    train_len = 20 + 1)
+if __name__ == "__main__":
+    data_types = ['train', 'validate', 'test']
+    data_parent_folders = ['data_csv_3_gram']
+    train_len = [2 + 1]
+    for data_type in data_types:
+        for i in range(len(data_parent_folders)):
+            projects = listdirs("../../../../../../data_classform/java/" + data_type)
+            for project in projects:
+                Path('../../../../../../' + data_parent_folders[i] + '/java/' + project).mkdir(parents=True, exist_ok=True)
+                preprocess(train_path='../../../../../../data_classform/java/' + data_type + '/' + project + '/',
+                           csv_path='../../../../../../' + data_parent_folders[i] + '/java/' + project + '/java_' +
+                                    data_type + "_" + project + '.csv',
+                           train_len = train_len[i])
