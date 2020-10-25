@@ -795,7 +795,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static NodeSequenceInfo getPartNode(short endMt, boolean isOpen) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
-		op.nodeType = NodeSequenceConstant.NODE_PART;
+		op.nodeType = endMt;
 		if (endMt == NodeSequenceConstant.CASE_PART)
 			op.representStr = "CASE_PART";
 		else if (endMt == NodeSequenceConstant.ARRAY_ACCESS) {
@@ -827,6 +827,16 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static boolean isClosePart(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
+	}
+
+	public static boolean isOpenBrak(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ARRAY_ACCESS
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
+	}
+
+	public static boolean isCloseBrak(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ARRAY_ACCESS
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 

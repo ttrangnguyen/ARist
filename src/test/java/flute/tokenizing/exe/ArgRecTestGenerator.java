@@ -56,6 +56,7 @@ public class ArgRecTestGenerator {
             // TODO: Ignore null literal for now
             if (NodeSequenceInfo.isLiteral(excode, "null") && !Config.FEATURE_PARAM_TYPE_NULL_LIT) return false;
             if (NodeSequenceInfo.isMethodAccess(excode) && !Config.FEATURE_PARAM_TYPE_METHOD_INVOC) return false;
+            if (NodeSequenceInfo.isOpenBrak(excode) && !Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS) return false;
             if (NodeSequenceInfo.isCast(excode)) {
                 if (!Config.FEATURE_PARAM_TYPE_CAST) return false;
                 // Only accept (Class) object
