@@ -19,6 +19,8 @@ public class Config {
     public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
+    public final static boolean FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE = false;
+
     //Type feature
 
     public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;

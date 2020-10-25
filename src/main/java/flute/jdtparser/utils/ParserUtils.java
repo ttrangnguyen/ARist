@@ -1,9 +1,10 @@
 package flute.jdtparser.utils;
 
-import flute.data.typemodel.Variable;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Modifier;
+
+import flute.config.Config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,11 +14,6 @@ import java.util.List;
 public class ParserUtils {
     private static ITypeBinding curType;
     private static ITypeBinding nextType;
-
-    public static List<IVariableBinding> getAllSuperFields(ITypeBinding iTypeBinding) {
-        curType = iTypeBinding;
-        return innerGetAllSuperFields(iTypeBinding);
-    }
 
     private static List<IVariableBinding> innerGetAllSuperFields(ITypeBinding iTypeBinding) {
         ITypeBinding superClass = iTypeBinding.getSuperclass();
@@ -36,10 +32,19 @@ public class ParserUtils {
         return variableBindings;
     }
 
+    public static List<IVariableBinding> getAllSuperFields(ITypeBinding iTypeBinding) {
+        curType = iTypeBinding;
+        return innerGetAllSuperFields(iTypeBinding);
+    }
+
     public static List<IVariableBinding> getAllInterfaceFields(ITypeBinding iTypeBinding) {
         List<IVariableBinding> variableBindings = new ArrayList<>();
         for (ITypeBinding anInterface : iTypeBinding.getInterfaces()) {
             Collections.addAll(variableBindings, anInterface.getDeclaredFields());
+            if (Config.FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE) {
+                addVariableToList(getAllInterfaceFields(anInterface), variableBindings);
+                //variableBindings.addAll(getAllInterfaceFields(anInterface));
+            }
         }
         return variableBindings;
     }
