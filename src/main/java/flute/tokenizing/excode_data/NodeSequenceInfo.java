@@ -197,6 +197,9 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		case NodeSequenceConstant.CLASS:
 			tmp = "CLASS";
 			break;
+		case NodeSequenceConstant.ENUM:
+			tmp = "ENUM";
+			break;
 		case NodeSequenceConstant.METHOD:
 			tmp = "METHOD";
 			break;
@@ -208,6 +211,9 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 			break;
 		case NodeSequenceConstant.METHODACCESS:
 			tmp = "M_ACCESS";
+			break;
+		case NodeSequenceConstant.CONSTRUCTORCALL:
+			tmp = "CONSTRUCTORCALL";
 			break;
 		case NodeSequenceConstant.FIELDACCESS:
 			tmp = "F_ACCESS";
@@ -243,6 +249,9 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		case NodeSequenceConstant.FIELD:
 		    tmp = "FIELD";
 		    break;
+		case NodeSequenceConstant.LAMBDA:
+			tmp = "LAMBDA";
+			break;
 		case NodeSequenceConstant.IF:
 			tmp = "IF";
 			break;
@@ -309,15 +318,36 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		case NodeSequenceConstant.END:
 			tmp = "END";
 			break;
+		case NodeSequenceConstant.NODE_PART:
+			tmp = "NODE_PART";
+			break;
+		case NodeSequenceConstant.OPBK:
+			tmp = "OPBK";
+			break;
+		case NodeSequenceConstant.CLBK:
+			tmp = "CLBK";
+			break;
+		case NodeSequenceConstant.SEPA:
+			tmp = "SEPA";
+			break;
 		case NodeSequenceConstant.RETURN:
             tmp = "RETURN";
             break;
 		case NodeSequenceConstant.THROW:
 			tmp = "THROW";
 			break;
+		case NodeSequenceConstant.CASE_PART:
+			tmp = "CASE_PART";
+			break;
 		case NodeSequenceConstant.YIELD:
             tmp = "YIELD";
             break;
+        case NodeSequenceConstant.ARRAY_ACCESS:
+        	tmp = "ARRAY_ACCESS";
+        	break;
+        case NodeSequenceConstant.CONDITIONAL_EXPR:
+        	tmp = "CONDITIONAL_EXPR";
+        	break;
 		default:
 			break;
 		}
@@ -580,7 +610,9 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
         } else if ((nodeType == NodeSequenceConstant.END)) {
             tmp = toStringENSTM();
         } else if ((nodeType == NodeSequenceConstant.NODE_PART)) {
-            tmp = toStringAGM_MT();
+			tmp = toStringAGM_MT();
+		} else if ((nodeType == NodeSequenceConstant.ARRAY_ACCESS)) {
+			tmp = toStringArrayAccess();
 		} else if ((nodeType == NodeSequenceConstant.OPBK)) {
 			tmp = toStringOPBLK();
 		} else if ((nodeType == NodeSequenceConstant.CLBK)) {
@@ -589,6 +621,8 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 			tmp = toStringSEPA();
 		} else if ((nodeType == NodeSequenceConstant.RETURN)) {
 			tmp = toStringReturn();
+		} else if ((nodeType == NodeSequenceConstant.CASE_PART)) {
+			tmp = toStringCasePart();
 		} else if ((nodeType == NodeSequenceConstant.YIELD)) {
 		    tmp = toStringYield();
 		} else if ((nodeType == NodeSequenceConstant.CONDITIONAL_EXPR)) {
@@ -670,6 +704,8 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		    tmp = toStringField();
 		} else if ((nodeType == NodeSequenceConstant.CONDITIONAL_EXPR)) {
 			tmp = toStringConExpr();
+		} else if ((nodeType == NodeSequenceConstant.LAMBDA)) {
+			tmp = toStringLambdaExpr();
 		}
 		return tmp;
 	}
@@ -795,7 +831,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public static NodeSequenceInfo getPartNode(short endMt, boolean isOpen) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
-		op.nodeType = NodeSequenceConstant.NODE_PART;
+		op.nodeType = endMt;
 		if (endMt == NodeSequenceConstant.CASE_PART)
 			op.representStr = "CASE_PART";
 		else if (endMt == NodeSequenceConstant.ARRAY_ACCESS) {
@@ -830,7 +866,25 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 
+	public static boolean isOpenBrak(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ARRAY_ACCESS
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
+	}
+
+	public static boolean isCloseBrak(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ARRAY_ACCESS
+				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
+	}
+
 	private String toStringAGM_MT() {
+		return alignToken + representStr;
+	}
+
+	private String toStringCasePart() {
+		return alignToken + representStr;
+	}
+
+	private String toStringArrayAccess() {
 		return alignToken + representStr;
 	}
 
