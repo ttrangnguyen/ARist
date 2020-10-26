@@ -11,9 +11,7 @@ import flute.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
-import flute.tokenizing.excode_data.ArgRecTest;
-import flute.tokenizing.excode_data.ContextInfo;
-import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.tokenizing.excode_data.*;
 import flute.utils.StringUtils;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.JavaTokenizer;
@@ -27,7 +25,7 @@ public class ArgRecTestGenerator {
     private ProjectParser projectParser;
     private int lengthLimit = -1;
 
-    public List<ArgRecTest> discardedTests = new ArrayList<>();
+    public List<AllArgRecTest> discardedTests = new ArrayList<>();
 
     public ArgRecTestGenerator(String projectPath, ProjectParser projectParser) {
         tokenizer = new JavaExcodeTokenizer(projectPath);
@@ -156,9 +154,9 @@ public class ArgRecTestGenerator {
         }
     }
 
-    public List<ArgRecTest> generate(String javaFilePath) {
+    public List<AllArgRecTest> generate(String javaFilePath) {
         System.out.println("File path: " + javaFilePath);
-        List<ArgRecTest> tests = new ArrayList<>();
+        List<AllArgRecTest> tests = new ArrayList<>();
         List<NodeSequenceInfo> excodes = tokenizer.tokenize(javaFilePath);
         if (excodes.isEmpty()) return tests;
         List<Integer> stack = new ArrayList<>();
@@ -213,6 +211,9 @@ public class ArgRecTestGenerator {
 
                 //System.out.println("Position: " + methodCall.getBegin().get());
 
+                List<ArgRecTest> allArgTests = new ArrayList<>();
+                boolean[] isCleaned = new boolean[Math.max(methodCall.getArguments().size(), 1)];
+                Arrays.fill(isCleaned, false);
                 int methodCallIdx = stack.get(stack.size() - 1);
                 int k = methodCallIdx + 1;
                 int contextIdx = methodCallIdx + 1;
@@ -268,10 +269,10 @@ public class ArgRecTestGenerator {
                                     test.setExpected_excode_ori(argExcodes);
                                     if (isClean(argExcodes)) {
                                         cleanTest(test);
-                                        tests.add(test);
+                                        isCleaned[j] = true;
                                     } else {
-                                        discardedTests.add(test);
                                     }
+                                    allArgTests.add(test);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -351,15 +352,59 @@ public class ArgRecTestGenerator {
                         test.setNext_lex(nextLexList);
                         if (isClean) {
                             cleanTest(test);
-                            tests.add(test);
+                            isCleaned[Math.max(methodCall.getArguments().size() - 1, 0)] = true;
                         } else {
-                            discardedTests.add(test);
                         }
+                        allArgTests.add(test);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 } else {
                     //System.out.println("No candidate generated: " + methodCall);
+                }
+
+                boolean flag = true;
+                for (int j = 0; j < isCleaned.length; ++j)
+                    if (!isCleaned[j]) flag = false;
+
+                AllArgRecTest test = new AllArgRecTest();
+                if (allArgTests.size() > 0) {
+                    test.setLex_context(allArgTests.get(0).getLex_context());
+                    test.setExcode_context(allArgTests.get(0).getExcode_context());
+                }
+
+                StringBuilder expectedExcode = new StringBuilder();
+                for (int j = 0; j < allArgTests.size(); ++j) {
+                    expectedExcode.append(allArgTests.get(j).getExpected_excode());
+                    if (j < allArgTests.size() - 1) {
+                        expectedExcode.append(' ');
+                        expectedExcode.append(NodeSequenceInfo.getSEPA(NodeSequenceConstant.SEPA, ',').toStringSimplest());
+                        expectedExcode.append(' ');
+                    }
+                }
+                test.setExpected_excode(expectedExcode.toString());
+
+                StringBuilder expectedLex = new StringBuilder();
+                for (int j = 0; j < allArgTests.size(); ++j) {
+                    expectedLex.append(allArgTests.get(j).getExpected_lex());
+                    if (j < allArgTests.size() - 1) expectedLex.append(", ");
+                }
+                test.setExpected_lex(expectedLex.toString());
+
+                List<List<String>> allNextExcodeList = new ArrayList<>();
+                List<List<List<String>>> allNextLexList = new ArrayList<>();
+                for (int j = 0; j < allArgTests.size(); ++j) {
+                    allNextExcodeList.add(allArgTests.get(j).getNext_excode());
+                    allNextLexList.add(allArgTests.get(j).getNext_lex());
+                }
+                test.setNext_excode(allNextExcodeList);
+                test.setNext_lex(allNextLexList);
+                test.setArgRecTestList(allArgTests);
+
+                if (flag) {
+                    tests.add(test);
+                } else {
+                    discardedTests.add(test);
                 }
 
                 stack.remove(stack.size() - 1);
@@ -368,9 +413,9 @@ public class ArgRecTestGenerator {
         return tests;
     }
 
-    public List<ArgRecTest> generateAll(int threshold) {
+    public List<AllArgRecTest> generateAll(int threshold) {
         List<File> javaFiles = DirProcessor.walkJavaFile(tokenizer.getProject().getAbsolutePath());
-        List<ArgRecTest> tests = new ArrayList<>();
+        List<AllArgRecTest> tests = new ArrayList<>();
         for (File file: javaFiles) {
             tests.addAll(generate(file.getAbsolutePath()));
             if (threshold >= 0 && tests.size() >= threshold) break;
@@ -378,7 +423,7 @@ public class ArgRecTestGenerator {
         return tests;
     }
 
-    public List<ArgRecTest> generateAll() {
+    public List<AllArgRecTest> generateAll() {
         return generateAll(-1);
     }
 }
