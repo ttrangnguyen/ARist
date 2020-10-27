@@ -220,11 +220,12 @@ while True:
                                           last_only=True)[0]
             # print(java_comma_id)
             # print("Elex", expected_lex)
-            java_suggestions_all = np.array(data['next_lex'])
+            java_suggestions_all = []
             for i in range(n_param):
-                for j in range(len(java_suggestions_all[i])):
-                    java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
-                                                                         tokenizer=java_tokenizer)
+                java_suggestions_all.append([])
+                for j in range(len(data['next_lex'][i])):
+                    java_suggestions_all[i].append(java_tokenize_sentences(data['next_lex'][i][j],
+                                                                           tokenizer=java_tokenizer))
             # print("Javasug", java_suggestions_all)
             # print("EXX", excode_context)
             java_context = [([], 0, x, []) for x in range(0, len(excode_context))]
