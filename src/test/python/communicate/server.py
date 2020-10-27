@@ -117,7 +117,7 @@ def recreate(result, data):
         for i in range(len(candidate_ids)):
             # print(data['next_lex'][i][candidate_ids[i][0]][candidate_ids[i][1]])
             candidate_text += data['next_lex'][i][candidate_ids[i][0]][candidate_ids[i][1]]
-            if i < len(candidate_ids):
+            if i < len(candidate_ids) - 1:
                 candidate_text += ", "
         origin.append(candidate_text)
     return origin
@@ -351,7 +351,7 @@ while True:
             # print(excode_context_textform[i][0][ngram:])
             if expected_excode_text == excode_context_textform[i][0][ngram:]:
                 ngram_excode_correct[i] += 1
-        java_suggestions_all = np.array(data['next_lex'])
+        java_suggestions_all = np.array(data['next_lex'], dtype=object)
         for i in range(n_param):
             for j in range(len(java_suggestions_all[i])):
                 java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
