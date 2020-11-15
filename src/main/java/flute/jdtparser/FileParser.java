@@ -710,8 +710,12 @@ public class FileParser {
         return cu.getPackage();
     }
 
-    public String getCurPackageName() {
-        return cu.getPackage().getName().toString();
+    public Optional<String> getCurPackageName() {
+        try {
+            return Optional.of(cu.getPackage().getName().toString());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private void getVariableScope(ASTNode astNode) {
