@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -674,6 +675,47 @@ public class FileParser {
             return getMethodScope(astNode.getParent());
         }
         return null;
+    }
+
+    public ASTNode getCurMethodScope() {
+        ASTNode scopeNode = getScope(curPosition);
+        if (scopeNode == null) return null;
+        return getMethodScope(scopeNode);
+    }
+
+    public Optional<String> getCurMethodScopeName() {
+        Optional<String> methodName;
+        ASTNode curMethodScope = getCurMethodScope();
+        if (curMethodScope == null || !(curMethodScope instanceof MethodDeclaration)) {
+            methodName = Optional.empty();
+        } else {
+            methodName = Optional.of(((MethodDeclaration) curMethodScope).getName().toString());
+        }
+        return methodName;
+    }
+
+    public ITypeBinding getCurClassScope() throws ClassScopeNotFoundException {
+        return getClassScope(curPosition);
+    }
+
+    public Optional<String> getCurClassScopeName() {
+        try {
+            return Optional.of(getCurClassScope().getName());
+        } catch (ClassScopeNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
+    public PackageDeclaration getCurPackage() {
+        return cu.getPackage();
+    }
+
+    public Optional<String> getCurPackageName() {
+        try {
+            return Optional.of(cu.getPackage().getName().toString());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private void getVariableScope(ASTNode astNode) {
