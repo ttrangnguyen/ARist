@@ -1,7 +1,9 @@
 package flute.utils.file_processing;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DirProcessor {
@@ -13,6 +15,22 @@ public class DirProcessor {
     public static List<File> walkJavaFile(String path) {
         List<File> listJavaFile = new ArrayList<File>();
         return walkJavaFileRecursive(path, listJavaFile);
+    }
+
+    public static List<File> getAllSubdirs(File file) {
+        List<File> subdirs = Arrays.asList(file.listFiles(new FileFilter() {
+            public boolean accept(File f) {
+                return f.isDirectory();
+            }
+        }));
+        subdirs = new ArrayList<File>(subdirs);
+
+        List<File> deepSubdirs = new ArrayList<File>();
+        for (File subdir : subdirs) {
+            deepSubdirs.addAll(getAllSubdirs(subdir));
+        }
+        subdirs.addAll(deepSubdirs);
+        return subdirs;
     }
 
     private static List<File> walkJavaFileRecursive(String path, List<File> listJavaFile) {

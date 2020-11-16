@@ -4,6 +4,7 @@ import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.FileProcessor;
@@ -102,12 +103,28 @@ public class ProjectParser {
 
     public void parse() {
         List<File> javaFiles = DirProcessor.walkJavaFile(projectDir);
-
+        int problemCount = 0;
+        int bindingProblemCount = 0;
         for (File file : javaFiles) {
             CompilationUnit cu = createCU(file);
             // Now binding is activated. Do something else
-            cu.accept(new TypeVisitor(this));
+
+            for (IProblem problem :
+                    cu.getProblems()) {
+                if (problem.isError()) {
+                    problemCount++;
+                    System.out.println(problem);
+
+                    if (problem.toString().indexOf("Pb(2)") == 0
+                            || problem.toString().indexOf("Pb(50)") == 0) {
+                        bindingProblemCount++;
+                    }
+                }
+            }
+//            cu.accept(new TypeVisitor(this));
         }
+        System.out.println("Size of problem: " + problemCount);
+        System.out.println("Size of binding problem: " + bindingProblemCount);
     }
 
 

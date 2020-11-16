@@ -1,11 +1,15 @@
 package flute.config;
 
 import com.google.gson.Gson;
+import flute.utils.file_processing.DirProcessor;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Config {
     public static String STORAGE_DIR = "storage/";
@@ -68,6 +72,23 @@ public class Config {
 
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
+
+    public static void loadSrcPath(String path) {
+        List<File> fileList = DirProcessor.getAllSubdirs(new File(path));
+
+        List<String> listSource = new ArrayList<>();
+        List<String> encode = new ArrayList<>();
+
+        for (File file : fileList) {
+            if (file.getName().equals("src")) {
+                listSource.add(file.getAbsolutePath());
+                encode.add("utf-8");
+            }
+        }
+
+        SOURCE_PATH = listSource.toArray(new String[0]);
+        ENCODE_SOURCE = encode.toArray(new String[0]);
+    }
 
     public static void loadConfig(String filePath) throws IOException {
         Gson gson = new Gson();
