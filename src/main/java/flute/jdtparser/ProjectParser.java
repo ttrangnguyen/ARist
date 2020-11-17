@@ -113,13 +113,13 @@ public class ProjectParser {
         float oldPercent = -1;
 
         List<File> javaFiles = allJavaFiles.stream().filter(file -> {
-            return file.getAbsolutePath().indexOf("src") != -1;
+            return file.getAbsolutePath().indexOf("src") != -1
+                    && file.getAbsolutePath().indexOf("test") == -1
+                    && file.getAbsolutePath().indexOf("examples") == -1;
         }).collect(Collectors.toList());
 
         for (File file : javaFiles) {
-
             CompilationUnit cu = createCU(file);
-            // Now binding is activated. Do something else
 
             for (IProblem problem :
                     cu.getProblems()) {
