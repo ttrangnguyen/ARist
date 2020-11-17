@@ -74,7 +74,7 @@ public class Config {
     public static int TEST_POSITION = 1662;
 
     public static void loadSrcPath(String path) {
-        List<File> fileList = DirProcessor.getAllSubdirs(new File(path));
+        List<File> fileList = DirProcessor.getAllEntity(new File(path), true);
 
         List<String> listSource = new ArrayList<>();
         List<String> encode = new ArrayList<>();
@@ -88,6 +88,20 @@ public class Config {
 
         SOURCE_PATH = listSource.toArray(new String[0]);
         ENCODE_SOURCE = encode.toArray(new String[0]);
+    }
+
+    public static void loadJarPath(String path) {
+        List<File> fileList = DirProcessor.getAllEntity(new File(path), false);
+
+        List<String> jarFiles = new ArrayList<>();
+
+        for (File file : fileList) {
+            if (com.google.common.io.Files.getFileExtension(file.getName()).equals("jar")) {
+                jarFiles.add(file.getAbsolutePath());
+            }
+        }
+
+        CLASS_PATH = jarFiles.toArray(new String[0]);
     }
 
     public static void loadConfig(String filePath) throws IOException {
