@@ -101,10 +101,15 @@ public class ProjectParser {
         return cu;
     }
 
-    public void parse() {
+    public void bindingTest() {
         List<File> javaFiles = DirProcessor.walkJavaFile(projectDir);
         int problemCount = 0;
         int bindingProblemCount = 0;
+
+        int fileCount = 0;
+        float percent = -1;
+        float oldPercent = -1;
+
         for (File file : javaFiles) {
             CompilationUnit cu = createCU(file);
             // Now binding is activated. Do something else
@@ -121,11 +126,28 @@ public class ProjectParser {
                     }
                 }
             }
-//            cu.accept(new TypeVisitor(this));
+
+            fileCount++;
+            percent = (float) fileCount / javaFiles.size();
+            if (percent - oldPercent > 0.0001) {
+                System.out.printf("[%05.2f", percent * 100);
+                System.out.print("%] - ");
+                System.out.printf("%" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files\n", fileCount);
+                oldPercent = percent;
+            }
         }
+        System.out.println("Size of java file: " + javaFiles.size());
         System.out.println("Size of problem: " + problemCount);
         System.out.println("Size of binding problem: " + bindingProblemCount);
     }
 
+    public void parse() {
+        List<File> javaFiles = DirProcessor.walkJavaFile(projectDir);
 
+        for (File file : javaFiles) {
+            CompilationUnit cu = createCU(file);
+            // Now binding is activated. Do something else
+            cu.accept(new TypeVisitor(this));
+        }
+    }
 }
