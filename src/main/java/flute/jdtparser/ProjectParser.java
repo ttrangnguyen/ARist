@@ -2,6 +2,7 @@ package flute.jdtparser;
 
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
+import flute.utils.ProcessBar;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -12,6 +13,7 @@ import flute.utils.parsing.CommonUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ProjectParser {
     public HashMap<String, ClassModel> classListModel = new HashMap<>();
@@ -102,7 +104,7 @@ public class ProjectParser {
     }
 
     public void bindingTest() {
-        List<File> javaFiles = DirProcessor.walkJavaFile(projectDir);
+        List<File> allJavaFiles = DirProcessor.walkJavaFile(projectDir);
         int problemCount = 0;
         int bindingProblemCount = 0;
 
@@ -110,7 +112,12 @@ public class ProjectParser {
         float percent = -1;
         float oldPercent = -1;
 
+        List<File> javaFiles = allJavaFiles.stream().filter(file -> {
+            return file.getAbsolutePath().indexOf("src") != -1;
+        }).collect(Collectors.toList());
+
         for (File file : javaFiles) {
+
             CompilationUnit cu = createCU(file);
             // Now binding is activated. Do something else
 
@@ -120,8 +127,7 @@ public class ProjectParser {
                     problemCount++;
                     System.out.println(problem);
 
-                    if (problem.toString().indexOf("Pb(2)") == 0
-                            || problem.toString().indexOf("Pb(50)") == 0) {
+                    if (problem.toString().indexOf("cannot be resolved") == 0) {
                         bindingProblemCount++;
                     }
                 }
@@ -130,12 +136,14 @@ public class ProjectParser {
             fileCount++;
             percent = (float) fileCount / javaFiles.size();
             if (percent - oldPercent > 0.0001) {
-                System.out.printf("[%05.2f", percent * 100);
-                System.out.print("%] - ");
-                System.out.printf("%" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files\n", fileCount);
+                System.out.printf("%05.2f", percent * 100);
+                System.out.print("% ");
+                ProcessBar.printProcessBar(percent * 100, 40);
+                System.out.printf(" - %" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files\n", fileCount);
                 oldPercent = percent;
             }
         }
+
         System.out.println("Size of java file: " + javaFiles.size());
         System.out.println("Size of problem: " + problemCount);
         System.out.println("Size of binding problem: " + bindingProblemCount);
