@@ -127,7 +127,7 @@ public class ProjectParser {
                     problemCount++;
                     System.out.println(problem);
 
-                    if (problem.toString().indexOf("cannot be resolved") == 0) {
+                    if (problem.toString().indexOf("cannot be resolved") != -1) {
                         bindingProblemCount++;
                     }
                 }
