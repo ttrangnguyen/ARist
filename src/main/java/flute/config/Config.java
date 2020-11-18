@@ -73,14 +73,14 @@ public class Config {
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
 
-    public static void loadSrcPath(String path) {
+    public static void loadSrcPath(String path, String parentFolderName) {
         List<File> fileList = DirProcessor.getAllEntity(new File(path), true);
 
         List<String> listSource = new ArrayList<>();
         List<String> encode = new ArrayList<>();
 
         for (File file : fileList) {
-            if (file.getName().equals("src")) {
+            if (file.getName().equals(parentFolderName)) {
                 listSource.add(file.getAbsolutePath());
                 encode.add("utf-8");
             }
