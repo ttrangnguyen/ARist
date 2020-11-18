@@ -2,8 +2,10 @@ package flute.config;
 
 import com.google.gson.Gson;
 import flute.utils.file_processing.DirProcessor;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -73,8 +75,10 @@ public class Config {
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
 
-    public static void loadSrcPath(String path, String parentFolderName) {
-        List<File> fileList = DirProcessor.getAllEntity(new File(path), true);
+    public static void loadSrcPath(String path, String parentFolderName) throws FileNotFoundException {
+        File parentFolder = new File(path);
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists!");
+        List<File> fileList = DirProcessor.getAllEntity(parentFolder, true);
 
         List<String> listSource = new ArrayList<>();
         List<String> encode = new ArrayList<>();
@@ -86,13 +90,15 @@ public class Config {
             }
         }
 
-        SOURCE_PATH = listSource.toArray(new String[0]);
-        ENCODE_SOURCE = encode.toArray(new String[0]);
+        SOURCE_PATH = ArrayUtils.addAll(SOURCE_PATH, listSource.toArray(new String[0]));
+        ENCODE_SOURCE = ArrayUtils.addAll(ENCODE_SOURCE, encode.toArray(new String[0]));
     }
 
-    public static void loadJarPath(String path) {
-        List<File> fileList = DirProcessor.getAllEntity(new File(path), false);
+    public static void loadJarPath(String path) throws FileNotFoundException {
+        File parentFolder = new File(path);
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists!");
 
+        List<File> fileList = DirProcessor.getAllEntity(new File(path), false);
         List<String> jarFiles = new ArrayList<>();
 
         for (File file : fileList) {
@@ -101,7 +107,7 @@ public class Config {
             }
         }
 
-        CLASS_PATH = jarFiles.toArray(new String[0]);
+        CLASS_PATH = ArrayUtils.addAll(CLASS_PATH, jarFiles.toArray(new String[0]));
     }
 
     public static void loadConfig(String filePath) throws IOException {

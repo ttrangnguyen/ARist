@@ -117,6 +117,16 @@ public class ProjectParser {
                     && file.getAbsolutePath().indexOf("examples") == -1;
         }).collect(Collectors.toList());
 
+        System.out.println("===============SOURCE PATHS===============");
+        for (String sourcePath : sourcePaths) {
+            System.out.println(sourcePath);
+        }
+        System.out.println("===============CLASS PATHS===============");
+        for (String classPath : classPaths) {
+            System.out.println(classPath);
+        }
+        System.out.println("=========================================");
+
         for (File file : javaFiles) {
             CompilationUnit cu = createCU(file);
 
