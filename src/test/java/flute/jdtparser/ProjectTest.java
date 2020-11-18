@@ -18,12 +18,15 @@ public class ProjectTest {
     public static void main(String args[]) throws IOException {
         Timer timer = new Timer();
 
-        Config.loadConfig(Config.STORAGE_DIR + "/json/ant.json");
+        Config.loadConfig(Config.STORAGE_DIR + "/json/netbeans.json");
         System.out.println("Starting parse...");
 
         //auto load src and .jar file
-        Config.loadSrcPath(Config.PROJECT_DIR);
-        Config.loadJarPath(Config.PROJECT_DIR);
+        Config.loadSrcPath(Config.STORAGE_DIR, "src");
+        Config.loadSrcPath(Config.STORAGE_DIR, "demosrc");
+        Config.loadSrcPath(Config.STORAGE_DIR, "testsrc");
+
+        Config.loadJarPath(Config.STORAGE_DIR);
         System.out.print("Auto load binding time: ");
         System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 

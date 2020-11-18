@@ -114,7 +114,6 @@ public class ProjectParser {
 
         List<File> javaFiles = allJavaFiles.stream().filter(file -> {
             return file.getAbsolutePath().indexOf("src") != -1
-                    && file.getAbsolutePath().indexOf("test") == -1
                     && file.getAbsolutePath().indexOf("examples") == -1;
         }).collect(Collectors.toList());
 
