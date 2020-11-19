@@ -26,6 +26,8 @@ public class ProjectTest {
         //Config.loadSrcPath("../../Research/java-data/netbeans/", "demosrc");
         //Config.loadSrcPath("../../Research/java-data/netbeans/", "testsrc");
         //Config.loadSrcPath("../../Research/java-data/netbeans/", "antsrc");
+        //Config.loadSrcPath("../../Research/java-data/netbeans/", "src_ant");
+        //Config.loadSrcPath("../../Research/java-data/netbeans/", "src/java/main");
         //Config.loadJarPath("../../Research/java-data/netbeans/");
 
         //System.out.print("Auto load binding time: ");

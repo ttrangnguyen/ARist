@@ -107,6 +107,7 @@ public class ProjectParser {
         List<File> allJavaFiles = DirProcessor.walkJavaFile(projectDir);
         int problemCount = 0;
         int bindingProblemCount = 0;
+        int fileBindingErrorCount = 0;
 
         int fileCount = 0;
         float percent = -1;
@@ -114,7 +115,8 @@ public class ProjectParser {
 
         List<File> javaFiles = allJavaFiles.stream().filter(file -> {
             return file.getAbsolutePath().indexOf("src") != -1
-                    && file.getAbsolutePath().indexOf("examples") == -1;
+                    && file.getAbsolutePath().indexOf("examples") == -1
+                    && file.getAbsolutePath().indexOf("test") == -1;
         }).collect(Collectors.toList());
 
         System.out.println("===============SOURCE PATHS===============");
@@ -129,7 +131,7 @@ public class ProjectParser {
 
         for (File file : javaFiles) {
             CompilationUnit cu = createCU(file);
-
+            boolean isBindingErrorFile = false;
             for (IProblem problem :
                     cu.getProblems()) {
                 if (problem.isError()) {
@@ -138,13 +140,19 @@ public class ProjectParser {
 
                     if (problem.toString().indexOf("cannot be resolved") != -1) {
                         bindingProblemCount++;
+                        isBindingErrorFile = true;
                     }
                 }
             }
 
+            if (isBindingErrorFile) {
+                fileBindingErrorCount++;
+                System.out.println("ERROR BINDING FILE: " + file.getAbsolutePath());
+            }
+
             fileCount++;
             percent = (float) fileCount / javaFiles.size();
-            if (percent - oldPercent > 0.0001) {
+            if (percent - oldPercent > 0.001) {
                 System.out.printf("%05.2f", percent * 100);
                 System.out.print("% ");
                 ProcessBar.printProcessBar(percent * 100, 40);
@@ -153,9 +161,10 @@ public class ProjectParser {
             }
         }
 
-        System.out.println("Size of java file: " + javaFiles.size());
-        System.out.println("Size of problem: " + problemCount);
-        System.out.println("Size of binding problem: " + bindingProblemCount);
+        System.out.println("Number of java file: " + javaFiles.size());
+        System.out.println("Number of problem: " + problemCount);
+        System.out.println("Number of binding problem: " + bindingProblemCount);
+        System.out.println("Number of file binding error: " + fileBindingErrorCount);
     }
 
     public void parse() {

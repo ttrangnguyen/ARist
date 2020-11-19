@@ -84,7 +84,7 @@ public class Config {
         List<String> encode = new ArrayList<>();
 
         for (File file : fileList) {
-            if (file.getName().equals(parentFolderName)) {
+            if (file.getAbsolutePath().replace("\\", "/").endsWith(parentFolderName)) {
                 listSource.add(file.getAbsolutePath());
                 encode.add("utf-8");
             }
