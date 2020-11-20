@@ -176,7 +176,7 @@ public class ProjectParser {
         System.out.println("Number of problem: " + problemCount);
         System.out.println("Number of binding problem: " + bindingProblemCount);
         System.out.println("Number of file binding error: " + fileBindingErrorCount);
-        System.out.printf("Binding pass: %.2f%\n", fileBindingErrorCount * 100f / javaFiles.size());
+        System.out.printf("Binding pass: %.2f%%\n", (javaFiles.size() - fileBindingErrorCount) * 100f / javaFiles.size());
     }
 
     public void parse() {
