@@ -14,7 +14,7 @@
     "/testsrc",
     "/antsrc",
     "/src_ant",
-    "/src/java/main"
+    "/src/main/java"
   ],
   "package-source-folders": [],
   "jar-folders": [
