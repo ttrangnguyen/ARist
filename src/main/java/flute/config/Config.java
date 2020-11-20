@@ -77,7 +77,7 @@ public class Config {
 
     public static void loadSrcPath(String path, String parentFolderName) throws FileNotFoundException {
         File parentFolder = new File(path);
-        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists!");
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists! " + path);
         List<File> fileList = DirProcessor.getAllEntity(parentFolder, true);
 
         List<String> listSource = new ArrayList<>();
@@ -94,9 +94,34 @@ public class Config {
         ENCODE_SOURCE = ArrayUtils.addAll(ENCODE_SOURCE, encode.toArray(new String[0]));
     }
 
+    public static void loadSrcPathFromPackage(String path, String packageName) throws FileNotFoundException {
+        File parentFolder = new File(path);
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists! " + path);
+        List<File> fileList = DirProcessor.getAllEntity(parentFolder, true);
+
+        List<String> listSource = new ArrayList<>();
+        List<String> encode = new ArrayList<>();
+
+        for (File file : fileList) {
+            if (!file.getAbsolutePath().contains("src") && file.getAbsolutePath().replace("\\", "/")
+                    .endsWith(packageName.replace(".", "/"))) {
+                File parentFile = file;
+                int parentLength = packageName.split("\\.").length;
+                for (int i = 0; i < parentLength; i++) {
+                    parentFile = parentFile.getParentFile();
+                }
+                listSource.add(parentFile.getAbsolutePath());
+                encode.add("utf-8");
+            }
+        }
+
+        SOURCE_PATH = ArrayUtils.addAll(SOURCE_PATH, listSource.toArray(new String[0]));
+        ENCODE_SOURCE = ArrayUtils.addAll(ENCODE_SOURCE, encode.toArray(new String[0]));
+    }
+
     public static void loadJarPath(String path) throws FileNotFoundException {
         File parentFolder = new File(path);
-        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists!");
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists! " + path);
 
         List<File> fileList = DirProcessor.getAllEntity(new File(path), false);
         List<String> jarFiles = new ArrayList<>();
@@ -123,6 +148,28 @@ public class Config {
         SOURCE_PATH = config.getSourcePaths().toArray(new String[0]);
         ENCODE_SOURCE = config.getEncodeSources().toArray(new String[0]);
         CLASS_PATH = config.getClassPaths().toArray(new String[0]);
+
+        //auto load binding
+        if (config.getSourceFolder() != null) {
+            if (config.getPrefixSourceFolders() != null) {
+                for (String prefix : config.getPrefixSourceFolders()) {
+                    Config.loadSrcPath(config.getSourceFolder(), prefix);
+                }
+            }
+
+            if (config.getPackageSourceFolders() != null) {
+                for (String packageName : config.getPackageSourceFolders()) {
+                    Config.loadSrcPathFromPackage(config.getSourceFolder(), packageName);
+                }
+            }
+        }
+
+        if (config.getJarFolders() != null) {
+            for (String jarFolder : config.getJarFolders()) {
+                Config.loadJarPath(jarFolder);
+            }
+        }
+
         JDT_LEVEL = config.getJdtLevel();
         JAVA_VERSION = config.getJavaVersion();
         IGNORE_FILES = config.getIgnoreFiles().toArray(new String[0]);

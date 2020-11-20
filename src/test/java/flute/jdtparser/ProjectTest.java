@@ -18,20 +18,12 @@ public class ProjectTest {
     public static void main(String args[]) throws IOException {
         Timer timer = new Timer();
 
-        Config.loadConfig(Config.STORAGE_DIR + "/json/netbeans.json");
         System.out.println("Starting parse...");
 
         //auto load src and .jar file
-        //Config.loadSrcPath("../../Research/java-data/netbeans/", "src");
-        //Config.loadSrcPath("../../Research/java-data/netbeans/", "demosrc");
-        //Config.loadSrcPath("../../Research/java-data/netbeans/", "testsrc");
-        //Config.loadSrcPath("../../Research/java-data/netbeans/", "antsrc");
-        //Config.loadSrcPath("../../Research/java-data/netbeans/", "src_ant");
-        //Config.loadSrcPath("../../Research/java-data/netbeans/", "src/java/main");
-        //Config.loadJarPath("../../Research/java-data/netbeans/");
-
-        //System.out.print("Auto load binding time: ");
-        //System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
+        Config.loadConfig(Config.STORAGE_DIR + "/json/netbeans.json");
+        System.out.print("Auto load binding time: ");
+        System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 
         //gen and parse project
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,

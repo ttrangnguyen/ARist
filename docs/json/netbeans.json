@@ -1,0 +1,28 @@
+{
+  "name": "netbeans",
+  "project-dir": "../../Research/java-data/netbeans/ide/",
+  "source-paths": [
+  ],
+  "encode-sources": [
+  ],
+  "class-paths": [
+  ],
+  "source-folder": "../../Research/java-data/netbeans/",
+  "prefix-source-folders": [
+    "/src",
+    "/demosrc",
+    "/testsrc",
+    "/antsrc",
+    "/src_ant",
+    "/src/java/main"
+  ],
+  "package-source-folders": [],
+  "jar-folders": [
+    "../../Research/java-data/netbeans/"
+  ],
+  "jdt-level": 8,
+  "java-version": "8",
+  "ignore-files": [],
+  "test-file-path": "../../Research/java-data/netbeans/ide/editor.lib/src/org/netbeans/lib/editor/view/GapObjectArray.java",
+  "test-position": 4007
+}

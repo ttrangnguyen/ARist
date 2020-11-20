@@ -130,6 +130,11 @@ public class ProjectParser {
         }
         System.out.println("=========================================");
 
+        System.out.println("Number of source paths: " + sourcePaths.length);
+        System.out.println("Number of jar files: " + classPaths.length);
+        System.out.println("===============START BINDING==============");
+
+
         Timer timer = new Timer();
         timer.startCounter();
 
@@ -171,6 +176,7 @@ public class ProjectParser {
         System.out.println("Number of problem: " + problemCount);
         System.out.println("Number of binding problem: " + bindingProblemCount);
         System.out.println("Number of file binding error: " + fileBindingErrorCount);
+        System.out.printf("Binding pass: %.2f\n" + fileBindingErrorCount * 100f / javaFiles.size());
     }
 
     public void parse() {
