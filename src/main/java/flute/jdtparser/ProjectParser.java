@@ -3,6 +3,7 @@ package flute.jdtparser;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.utils.ProcessBar;
+import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -70,7 +71,6 @@ public class ProjectParser {
         return listAccess;
     }
 
-
     public void parseClass(ITypeBinding iTypeBinding) {
         if (iTypeBinding == null) return;
         if (iTypeBinding.isPrimitive()) return;
@@ -114,9 +114,10 @@ public class ProjectParser {
         float oldPercent = -1;
 
         List<File> javaFiles = allJavaFiles.stream().filter(file -> {
-            return file.getAbsolutePath().indexOf("src") != -1
-                    && file.getAbsolutePath().indexOf("examples") == -1
-                    && file.getAbsolutePath().indexOf("test") == -1;
+            return file.getAbsolutePath().contains("src")
+                    && !file.getAbsolutePath().contains("examples")
+                    && !file.getAbsolutePath().contains("test")
+                    && !file.getAbsolutePath().contains("demo");
         }).collect(Collectors.toList());
 
         System.out.println("===============SOURCE PATHS===============");
@@ -128,6 +129,9 @@ public class ProjectParser {
             System.out.println(classPath);
         }
         System.out.println("=========================================");
+
+        Timer timer = new Timer();
+        timer.startCounter();
 
         for (File file : javaFiles) {
             CompilationUnit cu = createCU(file);
@@ -156,7 +160,9 @@ public class ProjectParser {
                 System.out.printf("%05.2f", percent * 100);
                 System.out.print("% ");
                 ProcessBar.printProcessBar(percent * 100, 40);
-                System.out.printf(" - %" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files\n", fileCount);
+                System.out.printf(" - %" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files ", fileCount);
+                long runTime = timer.getCurrentTime().getTime() - timer.getLastTime().getTime();
+                System.out.println("- ETA: " + Timer.formatTime(((long) (runTime / percent) - runTime) / 1000));
                 oldPercent = percent;
             }
         }

@@ -24,4 +24,16 @@ public class Timer {
         lastTime = newDate;
         return delta;
     }
+
+    public static String formatTime(long second) {
+        long hours = second / 3600;
+        long minutes = (second % 3600) / 60;
+        long seconds = second % 60;
+        if (hours > 0) {
+            return String.format("%02dh%02dm%02ds", hours, minutes, seconds);
+        } else {
+            return String.format("%02dm%02ds", minutes, seconds);
+
+        }
+    }
 }
