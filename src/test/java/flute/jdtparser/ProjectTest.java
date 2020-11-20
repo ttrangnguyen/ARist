@@ -18,17 +18,25 @@ public class ProjectTest {
     public static void main(String args[]) throws IOException {
         Timer timer = new Timer();
 
-        Config.loadConfig(Config.STORAGE_DIR + "/json/ant.json");
         System.out.println("Starting parse...");
+
+        //auto load src and .jar file
+        Config.loadConfig(Config.STORAGE_DIR + "/json/netbeans.json");
+        System.out.print("Auto load binding time: ");
+        System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 
         //gen and parse project
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 
         //projectParser.parse();
+        //System.out.print("Project parse time: ");
+        //System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 
-        System.out.print("Project parse time: ");
-        System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
+        //binding test
+        //projectParser.bindingTest();
+        //System.out.print("Binding test time: ");
+        //System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
 
         //parse test file
         File curFile = new File(Config.TEST_FILE_PATH);

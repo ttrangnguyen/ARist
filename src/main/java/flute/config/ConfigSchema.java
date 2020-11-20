@@ -21,6 +21,23 @@ public class ConfigSchema {
     @SerializedName("class-paths")
     @Expose
     private List<String> classPaths = null;
+
+    @SerializedName("source-folder")
+    @Expose
+    private String sourceFolder = null;
+
+    @SerializedName("prefix-source-folders")
+    @Expose
+    private List<String> prefixSourceFolders = null;
+
+    @SerializedName("package-source-folders")
+    @Expose
+    private List<String> packageSourceFolders = null;
+
+    @SerializedName("jar-folders")
+    @Expose
+    private List<String> jarFolders = null;
+
     @SerializedName("jdt-level")
     @Expose
     private Integer jdtLevel;
@@ -117,4 +134,35 @@ public class ConfigSchema {
         this.testPosition = testPosition;
     }
 
+    public String getSourceFolder() {
+        return sourceFolder;
+    }
+
+    public void setSourceFolder(String sourceFolder) {
+        this.sourceFolder = sourceFolder;
+    }
+
+    public List<String> getPrefixSourceFolders() {
+        return prefixSourceFolders;
+    }
+
+    public void setPrefixSourceFolders(List<String> prefixSourceFolders) {
+        this.prefixSourceFolders = prefixSourceFolders;
+    }
+
+    public List<String> getJarFolders() {
+        return jarFolders;
+    }
+
+    public void setJarFolders(List<String> jarFolders) {
+        this.jarFolders = jarFolders;
+    }
+
+    public List<String> getPackageSourceFolders() {
+        return packageSourceFolders;
+    }
+
+    public void setPackageSourceFolders(List<String> packageSourceFolders) {
+        this.packageSourceFolders = packageSourceFolders;
+    }
 }

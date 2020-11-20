@@ -17,20 +17,32 @@ public class DirProcessor {
         return walkJavaFileRecursive(path, listJavaFile);
     }
 
-    public static List<File> getAllSubdirs(File file) {
+    public static List<File> getAllEntity(File file, boolean isFolder) {
         List<File> subdirs = Arrays.asList(file.listFiles(new FileFilter() {
             public boolean accept(File f) {
                 return f.isDirectory();
             }
         }));
-        subdirs = new ArrayList<File>(subdirs);
+
+        List<File> entities;
+        if (!isFolder) {
+            entities = Arrays.asList(file.listFiles(new FileFilter() {
+                public boolean accept(File f) {
+                    return f.isFile();
+                }
+            }));
+        } else {
+            entities = subdirs;
+        }
+
+        entities = new ArrayList<File>(entities);
 
         List<File> deepSubdirs = new ArrayList<File>();
         for (File subdir : subdirs) {
-            deepSubdirs.addAll(getAllSubdirs(subdir));
+            deepSubdirs.addAll(getAllEntity(subdir, isFolder));
         }
-        subdirs.addAll(deepSubdirs);
-        return subdirs;
+        entities.addAll(deepSubdirs);
+        return entities;
     }
 
     private static List<File> walkJavaFileRecursive(String path, List<File> listJavaFile) {

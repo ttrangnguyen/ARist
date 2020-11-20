@@ -2,8 +2,10 @@ package flute.config;
 
 import com.google.gson.Gson;
 import flute.utils.file_processing.DirProcessor;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -73,21 +75,64 @@ public class Config {
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
 
-    public static void loadSrcPath(String path) {
-        List<File> fileList = DirProcessor.getAllSubdirs(new File(path));
+    public static void loadSrcPath(String path, String parentFolderName) throws FileNotFoundException {
+        File parentFolder = new File(path);
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists! " + path);
+        List<File> fileList = DirProcessor.getAllEntity(parentFolder, true);
 
         List<String> listSource = new ArrayList<>();
         List<String> encode = new ArrayList<>();
 
         for (File file : fileList) {
-            if (file.getName().equals("src")) {
+            if (file.getAbsolutePath().replace("\\", "/").endsWith(parentFolderName)) {
                 listSource.add(file.getAbsolutePath());
                 encode.add("utf-8");
             }
         }
 
-        SOURCE_PATH = listSource.toArray(new String[0]);
-        ENCODE_SOURCE = encode.toArray(new String[0]);
+        SOURCE_PATH = ArrayUtils.addAll(SOURCE_PATH, listSource.toArray(new String[0]));
+        ENCODE_SOURCE = ArrayUtils.addAll(ENCODE_SOURCE, encode.toArray(new String[0]));
+    }
+
+    public static void loadSrcPathFromPackage(String path, String packageName) throws FileNotFoundException {
+        File parentFolder = new File(path);
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists! " + path);
+        List<File> fileList = DirProcessor.getAllEntity(parentFolder, true);
+
+        List<String> listSource = new ArrayList<>();
+        List<String> encode = new ArrayList<>();
+
+        for (File file : fileList) {
+            if (!file.getAbsolutePath().contains("src") && file.getAbsolutePath().replace("\\", "/")
+                    .endsWith(packageName.replace(".", "/"))) {
+                File parentFile = file;
+                int parentLength = packageName.split("\\.").length;
+                for (int i = 0; i < parentLength; i++) {
+                    parentFile = parentFile.getParentFile();
+                }
+                listSource.add(parentFile.getAbsolutePath());
+                encode.add("utf-8");
+            }
+        }
+
+        SOURCE_PATH = ArrayUtils.addAll(SOURCE_PATH, listSource.toArray(new String[0]));
+        ENCODE_SOURCE = ArrayUtils.addAll(ENCODE_SOURCE, encode.toArray(new String[0]));
+    }
+
+    public static void loadJarPath(String path) throws FileNotFoundException {
+        File parentFolder = new File(path);
+        if (!parentFolder.exists()) throw new FileNotFoundException("Folder doesn't exists! " + path);
+
+        List<File> fileList = DirProcessor.getAllEntity(new File(path), false);
+        List<String> jarFiles = new ArrayList<>();
+
+        for (File file : fileList) {
+            if (com.google.common.io.Files.getFileExtension(file.getName()).equals("jar")) {
+                jarFiles.add(file.getAbsolutePath());
+            }
+        }
+
+        CLASS_PATH = ArrayUtils.addAll(CLASS_PATH, jarFiles.toArray(new String[0]));
     }
 
     public static void loadConfig(String filePath) throws IOException {
@@ -103,6 +148,28 @@ public class Config {
         SOURCE_PATH = config.getSourcePaths().toArray(new String[0]);
         ENCODE_SOURCE = config.getEncodeSources().toArray(new String[0]);
         CLASS_PATH = config.getClassPaths().toArray(new String[0]);
+
+        //auto load binding
+        if (config.getSourceFolder() != null) {
+            if (config.getPrefixSourceFolders() != null) {
+                for (String prefix : config.getPrefixSourceFolders()) {
+                    Config.loadSrcPath(config.getSourceFolder(), prefix);
+                }
+            }
+
+            if (config.getPackageSourceFolders() != null) {
+                for (String packageName : config.getPackageSourceFolders()) {
+                    Config.loadSrcPathFromPackage(config.getSourceFolder(), packageName);
+                }
+            }
+        }
+
+        if (config.getJarFolders() != null) {
+            for (String jarFolder : config.getJarFolders()) {
+                Config.loadJarPath(jarFolder);
+            }
+        }
+
         JDT_LEVEL = config.getJdtLevel();
         JAVA_VERSION = config.getJavaVersion();
         IGNORE_FILES = config.getIgnoreFiles().toArray(new String[0]);
