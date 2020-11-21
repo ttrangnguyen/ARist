@@ -70,4 +70,4 @@ def tokenize(word):
 
     return np.concatenate(result).tolist()
 
-# print(tokenize("logFactory.FACTORY_PROPERTIES"))
+# print(tokenize("categoryString, categoryString, categoryString"))
