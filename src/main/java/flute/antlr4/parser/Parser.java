@@ -47,20 +47,25 @@ public class Parser {
     private void translateJavaToExcode() {
         File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
         for (File project : projects) {
-            String srcPath = "";
-            if (project.getName().equals("ant")) {
-                srcPath = "/src/main";
-            } else if (project.getName().equals("batik")) {
-                srcPath = "/sources";
-            } else if (project.getName().equals("log4j")) {
-                srcPath = "/src/main/java";
-            } else if (project.getName().equals("lucene")) {
-                srcPath = "/lucene/src/java";
-            } else if (project.getName().equals("xalan")) {
-                srcPath = "/src/";
-            } else if (project.getName().equals("xerces")) {
-                srcPath = "/src/";
+            String srcPath;
+            if (project.getName().equals("eclipse-platform-sources-4.17")) {
+                srcPath = "";
+            } else if (project.getName().equals("netbeans")) {
+                srcPath = "/ide";
             } else continue;
+//            if (project.getName().equals("ant")) {
+//                srcPath = "/src/main";
+//            } else if (project.getName().equals("batik")) {
+//                srcPath = "/sources";
+//            } else if (project.getName().equals("log4j")) {
+//                srcPath = "/src/main/java";
+//            } else if (project.getName().equals("lucene")) {
+//                srcPath = "/lucene/src/java";
+//            } else if (project.getName().equals("xalan")) {
+//                srcPath = "/src/";
+//            } else if (project.getName().equals("xerces")) {
+//                srcPath = "/src/";
+//            } else continue;
             translateJavaToExcode(project.getName(), project.getName() + srcPath);
         }
     }
