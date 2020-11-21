@@ -4,8 +4,8 @@ package flute.antlr4.config;
  * Created by Minology on 11:46 SA
  */
 public class Config {
-    public static final String projectsPath = "data/";
-    public static final String projectsSrcPath = "data/";
+    public static final String projectsPath = "../../Research/java-data/";
+    public static final String projectsSrcPath = "../../Research/java-data/";
     public static final String parsingResult = "parsingResult.txt/";
     public static final String parsingResultFast = "parsingResultFast.txt/";
     public static final int maxParsingTimeInMillis = 100;
