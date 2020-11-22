@@ -169,6 +169,18 @@ public class FileParser {
     }
 
     /**
+     * When change position, the parse process will run again.
+     *
+     * @param line
+     * @param column
+     * @throws Exception
+     */
+    public void setPosition(int line, int column) throws Exception {
+        this.curPosition = getPosition(line, column);
+        parse();
+    }
+
+    /**
      * Run it after generate file parser. It will parse visible variables with the current position.
      *
      * @throws Exception
