@@ -204,7 +204,15 @@ public class ArgRecTestGenerator {
                     fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
                             methodCall.getBegin().get().line, methodCall.getBegin().get().column);
                 } else {
-                    fileParser.setPosition(methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                    try {
+                        fileParser.setPosition(methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                    } catch (Exception e) {
+                        // TODO: Handle enums
+                        e.printStackTrace();
+
+                        stack.remove(stack.size() - 1);
+                        continue;
+                    }
                 }
                 int curPos = fileParser.getCurPosition();
                 curPos += methodScope.length();

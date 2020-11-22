@@ -332,40 +332,83 @@ public class ArgRecTester {
                 + averageGetTestsTime) + "s");
 
         List<String[]> accurracyPerNumArg = new ArrayList<String[]>();
-        accurracyPerNumArg.add(new String[] {
-                "Number of params",
-                "Percentage distribution",
-                "NGram's top-1 accuracy",
-                "NGram's top-K accuracy",
-                "Overall top-1 accuracy",
-                "Overall top-K accuracy",
-                "Actual top-1 accuracy",
-                "Actual top-K accuracy"
-        });
-        for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
+        if (!isRNNUsed) {
+            accurracyPerNumArg.add(new String[]{
+                    "Number of params",
+                    "Percentage distribution",
+                    "NGram's top-1 accuracy",
+                    "NGram's top-K accuracy",
+                    "Overall top-1 accuracy",
+                    "Overall top-K accuracy",
+                    "Actual top-1 accuracy",
+                    "Actual top-K accuracy"
+            });
+            for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
+                accurracyPerNumArg.add(new String[] {
+                        String.format("%d", i),
+                        String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramTop1Arg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramTopKArg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop1Arg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTopKArg%d", i)).getMean()),
+                        "",
+                        ""
+                });
+            }
             accurracyPerNumArg.add(new String[] {
-                    String.format("%d", i),
-                    String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)),
-                    String.format("%f", dataFrame.getVariable(String.format("nGramTop1Arg%d", i)).getMean()),
-                    String.format("%f", dataFrame.getVariable(String.format("nGramTopKArg%d", i)).getMean()),
-                    String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop1Arg%d", i)).getMean()),
-                    String.format("%f", dataFrame.getVariable(String.format("nGramOverallTopKArg%d", i)).getMean()),
-                    "",
-                    ""
+                    "all",
+                    "100",
+                    String.format("%f", dataFrame.getVariable("nGramTop1").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramTopK").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getSum()
+                            / (dataFrame.getVariable("nGramOverallTop1").getCount() + (generator == null? 0: generator.discardedTests.size()))),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getSum()
+                            / (dataFrame.getVariable("nGramOverallTopK").getCount() + (generator == null? 0: generator.discardedTests.size())))
+            });
+        } else {
+            accurracyPerNumArg.add(new String[]{
+                    "Number of params",
+                    "Percentage distribution",
+                    "NGram's top-1 accuracy",
+                    "NGram's top-K accuracy",
+                    "RNN's top-1 accuracy",
+                    "RNN's top-K accuracy",
+                    "Overall top-1 accuracy",
+                    "Overall top-K accuracy",
+                    "Actual top-1 accuracy",
+                    "Actual top-K accuracy"
+            });
+            for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
+                accurracyPerNumArg.add(new String[] {
+                        String.format("%d", i),
+                        String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramTop1Arg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramTopKArg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("RNNTop1Arg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("RNNTopKArg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop1Arg%d", i)).getMean()),
+                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTopKArg%d", i)).getMean()),
+                        "",
+                        ""
+                });
+            }
+            accurracyPerNumArg.add(new String[] {
+                    "all",
+                    "100",
+                    String.format("%f", dataFrame.getVariable("nGramTop1").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramTopK").getMean()),
+                    String.format("%f", dataFrame.getVariable("RNNTop1").getMean()),
+                    String.format("%f", dataFrame.getVariable("RNNTopK").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getMean()),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getSum()
+                            / (dataFrame.getVariable("nGramOverallTop1").getCount() + (generator == null? 0: generator.discardedTests.size()))),
+                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getSum()
+                            / (dataFrame.getVariable("nGramOverallTopK").getCount() + (generator == null? 0: generator.discardedTests.size())))
             });
         }
-        accurracyPerNumArg.add(new String[] {
-                "all",
-                "100",
-                String.format("%f", dataFrame.getVariable("nGramTop1").getMean()),
-                String.format("%f", dataFrame.getVariable("nGramTopK").getMean()),
-                String.format("%f", dataFrame.getVariable("nGramOverallTop1").getMean()),
-                String.format("%f", dataFrame.getVariable("nGramOverallTopK").getMean()),
-                String.format("%f", dataFrame.getVariable("nGramOverallTop1").getSum()
-                        / (dataFrame.getVariable("nGramOverallTop1").getCount() + (generator == null? 0: generator.discardedTests.size()))),
-                String.format("%f", dataFrame.getVariable("nGramOverallTopK").getSum()
-                        / (dataFrame.getVariable("nGramOverallTopK").getCount() + (generator == null? 0: generator.discardedTests.size())))
-        });
         CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accurracyPerNumArg);
     }
 
