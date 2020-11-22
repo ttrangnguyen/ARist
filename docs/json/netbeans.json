@@ -1,13 +1,13 @@
 {
   "name": "netbeans",
-  "project-dir": "../../Research/java-data/netbeans/ide/",
+  "project-dir": "storage/repositories/git/netbeans/ide/",
   "source-paths": [
   ],
   "encode-sources": [
   ],
   "class-paths": [
   ],
-  "source-folder": "../../Research/java-data/netbeans/",
+  "source-folder": "storage/repositories/git/netbeans/",
   "prefix-source-folders": [
     "/src",
     "/demosrc",
@@ -18,7 +18,7 @@
   ],
   "package-source-folders": [],
   "jar-folders": [
-    "../../Research/java-data/netbeans/"
+    "storage/repositories/git/netbeans/"
   ],
   "jdt-level": 8,
   "java-version": "8",

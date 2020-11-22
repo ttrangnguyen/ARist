@@ -100,6 +100,10 @@ public class ArgRecTestGenerator {
                     catch (UnsupportedOperationException uoe) {
                         isScopeAClass = true;
                     }
+                    // ???
+                    catch (RuntimeException re) {
+                        isScopeAClass = true;
+                    }
                 } else if (fieldAccess.getScope() instanceof FieldAccessExpr) {
                     isScopeAClass = true;
                 }
@@ -161,6 +165,7 @@ public class ArgRecTestGenerator {
         if (excodes.isEmpty()) return tests;
         List<Integer> stack = new ArrayList<>();
         MethodDeclaration methodDeclaration = null;
+        FileParser fileParser = null;
 
         for (int i = 0; i < excodes.size(); ++i) {
             NodeSequenceInfo excode = excodes.get(i);
@@ -195,8 +200,12 @@ public class ArgRecTestGenerator {
                 File javaFile = new File(javaFilePath);
                 Node node = methodDeclaration;
                 while (!(node instanceof CompilationUnit)) node = node.getParentNode().get();
-                FileParser fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
-                        methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                if (fileParser == null) {
+                    fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
+                            methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                } else {
+                    fileParser.setPosition(methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                }
                 int curPos = fileParser.getCurPosition();
                 curPos += methodScope.length();
                 try {
@@ -400,6 +409,7 @@ public class ArgRecTestGenerator {
                 test.setNext_excode(allNextExcodeList);
                 test.setNext_lex(allNextLexList);
                 test.setArgRecTestList(allArgTests);
+                test.setNumArg(methodCall.getArguments().size());
 
                 if (flag) {
                     tests.add(test);
