@@ -25,8 +25,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+// eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
+// netbeans stops = [0, 5000, 9759]
 
 public class Parser {
+    public static final int parseBegin = 5001;
+    public static final int parseEnd = 9759;
     public static final int recursionMaxDepth = 1;
     public static final int threshPerDepth = 7;
 
@@ -48,9 +54,10 @@ public class Parser {
         File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
         for (File project : projects) {
             String srcPath;
-            if (project.getName().equals("eclipse-platform-sources-4.17")) {
-                srcPath = "";
-            } else if (project.getName().equals("netbeans")) {
+//            if (project.getName().equals("eclipse-platform-sources-4.17")) {
+//                srcPath = "";
+//            } else continue;
+            if (project.getName().equals("netbeans")) {
                 srcPath = "/ide";
             } else continue;
 //            if (project.getName().equals("ant")) {
@@ -73,14 +80,21 @@ public class Parser {
     private void translateJavaToExcode(String projectName, String projectSrcPath) {
         Logger.initDebug("debugVisitor.txt");
         List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectsPath + projectSrcPath);
-        Logger.log("allSubFiles size: " + allSubFilesTmp.size());
+        Integer numFiles = allSubFilesTmp.size();
+        Integer fileCount = 0;
+        Logger.log("allSubFiles size: " + numFiles);
         MetricsVisitor visitor = new MetricsVisitor();
         SystemTableCrossProject systemTableCrossProject = new SystemTableCrossProject();
         systemTableCrossProjectMap.put(systemTableCrossProject, projectName);
         Integer totalLOC = 0;
         for (File file : allSubFilesTmp) {
+            fileCount++;
+            if (fileCount-1 < parseBegin || fileCount-1 > parseEnd)
+                continue;
+            if (!canTest(file, projectName)) continue;
             Integer linesOfCode = CountLOC.count(file);
             totalLOC += linesOfCode;
+//            System.out.println(file.getAbsolutePath());
             JavaFileParser.visitFile(visitor, file, systemTableCrossProject, "xxx/");
         }
         LOC.put(projectName, totalLOC);
@@ -159,6 +173,16 @@ public class Parser {
         }
     }
 
+    private boolean canTest(File file, String projectName) {
+        if (projectName.equals("netbeans") || projectName.equals("eclipse-platform-sources-4.17")) {
+            return file.getAbsolutePath().contains("src")
+                    && !file.getAbsolutePath().contains("examples")
+                    && !file.getAbsolutePath().contains("test")
+                    && !file.getAbsolutePath().contains("demo");
+        }
+        return true;
+    }
+
     private void createExcodeFiles(SystemTableCrossProject systemTableCrossProject, String projectName) throws IOException {
         String javaProjectTrainingPath = createDirectory(Config.javaTrainingPath, projectName);
         String javaProjectTestingPath = createDirectory(Config.javaTestingPath, projectName);
@@ -166,14 +190,17 @@ public class Parser {
         String excodeProjectTrainingPath = createDirectory(Config.excodeTrainingPath, projectName);
         String excodeProjectTestingPath = createDirectory(Config.excodeTestingPath, projectName);
         String excodeProjectValidatingPath = createDirectory(Config.excodeValidatingPath, projectName);
-        FileWriter testFilePaths = new FileWriter(new File(Config.testFilePath + projectName + ".txt"));
+        FileWriter testFilePaths = new FileWriter(new File(Config.testFilePath + projectName + ".txt"), true);
 
         int testLOCThresh = (int) (LOC.get(projectName) * 0.1);
         int validateLOCThresh = (int) (LOC.get(projectName) * 0.9 * 0.15);
         int trainLOCThresh = LOC.get(projectName) - testLOCThresh - validateLOCThresh;
         int currentTestLOC = 0;
         int currentValidateLOC = 0;
-        int currentTrainLOC = 0;    
+        int currentTrainLOC = 0;
+
+        boolean testCap = false;
+        boolean validateCap = false;
 
         for (FileInfo fileInfo : systemTableCrossProject.fileList) {
             StringBuilder builder = new StringBuilder();
@@ -190,9 +217,8 @@ public class Parser {
             String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
             String excodeFilePath;
             String javaFileTokenPath;
-
             while (true) {
-                if (toTest() && currentTestLOC <= testLOCThresh) {
+                if (canTest(fileInfo.file, projectName) && toTest() && !testCap) {
                     String absolutePath = fileInfo.file.getAbsolutePath();
                     testFilePaths.write(absolutePath.substring(absolutePath.indexOf(projectName)) + "\n");
                     javaFileTokenPath = javaProjectTestingPath +
@@ -200,15 +226,17 @@ public class Parser {
                     excodeFilePath = excodeProjectTestingPath +
                             filePath[filePath.length - 1].replace(".java", ".txt");
                     currentTestLOC += CountLOC.count(fileInfo.file);
+                    if (currentTestLOC > testLOCThresh) testCap = true;
                     break;
-                } else if (toValidate() && currentValidateLOC <= validateLOCThresh){
+                } else if (toValidate() && !validateCap){
                     javaFileTokenPath = javaProjectValidatingPath +
                             fileInfo.file.getName().replace(".java", ".txt");
                     excodeFilePath = excodeProjectValidatingPath +
                             filePath[filePath.length - 1].replace(".java", ".txt");
                     currentValidateLOC += CountLOC.count((fileInfo.file));
+                    if (currentValidateLOC > validateLOCThresh) validateCap = true;
                     break;
-                } else if (currentTrainLOC <= trainLOCThresh){
+                } else if (currentTrainLOC <= trainLOCThresh || (testCap && validateCap)){
                     javaFileTokenPath = javaProjectTrainingPath +
                             fileInfo.file.getName().replace(".java", ".txt");
                     excodeFilePath = excodeProjectTrainingPath +
