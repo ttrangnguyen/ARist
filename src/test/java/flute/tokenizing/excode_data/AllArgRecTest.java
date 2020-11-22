@@ -7,6 +7,7 @@ public class AllArgRecTest {
     private static int count = 0;
     private transient int id;
     private String filePath;
+    private transient int numArg;
 
     private List<String> lex_context;
     private String excode_context;
@@ -33,6 +34,14 @@ public class AllArgRecTest {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public int getNumArg() {
+        return numArg;
+    }
+
+    public void setNumArg(int numArg) {
+        this.numArg = numArg;
     }
 
     public List<String> getLex_context() {

@@ -61,6 +61,10 @@ public class DataFrame {
             return max;
         }
 
+        public double getSum() {
+            return sum;
+        }
+
         public List<Double> getMilestones(double... milestones) {
             if (milestones.length == 0) throw new IllegalArgumentException("At least one argument is required");
             for (double milestone: milestones) {

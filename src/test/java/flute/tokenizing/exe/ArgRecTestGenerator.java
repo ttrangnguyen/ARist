@@ -100,6 +100,10 @@ public class ArgRecTestGenerator {
                     catch (UnsupportedOperationException uoe) {
                         isScopeAClass = true;
                     }
+                    // ???
+                    catch (RuntimeException re) {
+                        isScopeAClass = true;
+                    }
                 } else if (fieldAccess.getScope() instanceof FieldAccessExpr) {
                     isScopeAClass = true;
                 }
@@ -400,6 +404,7 @@ public class ArgRecTestGenerator {
                 test.setNext_excode(allNextExcodeList);
                 test.setNext_lex(allNextLexList);
                 test.setArgRecTestList(allArgTests);
+                test.setNumArg(methodCall.getArguments().size());
 
                 if (flag) {
                     tests.add(test);
