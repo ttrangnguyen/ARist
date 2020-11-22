@@ -165,6 +165,7 @@ public class ArgRecTestGenerator {
         if (excodes.isEmpty()) return tests;
         List<Integer> stack = new ArrayList<>();
         MethodDeclaration methodDeclaration = null;
+        FileParser fileParser = null;
 
         for (int i = 0; i < excodes.size(); ++i) {
             NodeSequenceInfo excode = excodes.get(i);
@@ -199,8 +200,12 @@ public class ArgRecTestGenerator {
                 File javaFile = new File(javaFilePath);
                 Node node = methodDeclaration;
                 while (!(node instanceof CompilationUnit)) node = node.getParentNode().get();
-                FileParser fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
-                        methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                if (fileParser == null) {
+                    fileParser = new FileParser(projectParser, javaFile.getName(), node.toString(),
+                            methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                } else {
+                    fileParser.setPosition(methodCall.getBegin().get().line, methodCall.getBegin().get().column);
+                }
                 int curPos = fileParser.getCurPosition();
                 curPos += methodScope.length();
                 try {
