@@ -57,7 +57,7 @@ excode_tokens = read_file('../../../../data_dict/excode/excode_tokens_n_symbols.
 train_len = 20 + 1
 ngram = 2 + 1
 top_k_excode = 100
-top_k = 5
+top_k = 10
 max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
 total_guesses = 0
