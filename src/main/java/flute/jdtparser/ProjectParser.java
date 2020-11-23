@@ -1,5 +1,6 @@
 package flute.jdtparser;
 
+import flute.config.Config;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.utils.ProcessBar;
@@ -161,7 +162,7 @@ public class ProjectParser {
 
             fileCount++;
             percent = (float) fileCount / javaFiles.size();
-            if (percent - oldPercent > 0.001) {
+            if (percent - oldPercent > Config.PRINT_PROGRESS_DELTA) {
                 System.out.printf("%05.2f", percent * 100);
                 System.out.print("% ");
                 ProcessBar.printProcessBar(percent * 100, 40);

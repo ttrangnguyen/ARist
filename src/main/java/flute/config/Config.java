@@ -18,6 +18,8 @@ public class Config {
 
     public static String LOG_DIR = STORAGE_DIR + "logs/";
 
+    public static float PRINT_PROGRESS_DELTA = 0.001f; //0.1%
+
     /***
      Config for feature
      ***/
