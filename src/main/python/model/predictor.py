@@ -28,7 +28,7 @@ def prepare(context, sentences, train_len, start_pos):
 
 
 def predict(model, x):
-    return model.predict(x, workers=4, use_multiprocessing=True)
+    return model.predict(x, workers=4, use_multiprocessing=True, batch_size=200)
 
 
 def evaluate(p_pred, y_test, sentence_len):
