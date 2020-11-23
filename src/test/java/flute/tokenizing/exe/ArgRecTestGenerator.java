@@ -25,8 +25,6 @@ public class ArgRecTestGenerator {
     private ProjectParser projectParser;
     private int lengthLimit = -1;
 
-    public List<AllArgRecTest> discardedTests = new ArrayList<>();
-
     public ArgRecTestGenerator(String projectPath, ProjectParser projectParser) {
         tokenizer = new JavaExcodeTokenizer(projectPath);
         this.projectParser = projectParser;
@@ -49,7 +47,7 @@ public class ArgRecTestGenerator {
         return truncateList(list, true);
     }
 
-    public boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
+    public static boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
         for (NodeSequenceInfo excode: nodeSequenceList) {
             // TODO: Ignore null literal for now
             if (NodeSequenceInfo.isLiteral(excode, "null") && !Config.FEATURE_PARAM_TYPE_NULL_LIT) return false;
@@ -139,7 +137,7 @@ public class ArgRecTestGenerator {
         return true;
     }
 
-    public void cleanTest(ArgRecTest test) {
+    public static void cleanTest(ArgRecTest test) {
         switch (test.getExpected_excode()) {
             case "LIT(wildcard)":
                 test.setExpected_lex("?");
@@ -158,9 +156,9 @@ public class ArgRecTestGenerator {
         }
     }
 
-    public List<AllArgRecTest> generate(String javaFilePath) {
+    public List<ArgRecTest> generate(String javaFilePath) {
         System.out.println("File path: " + javaFilePath);
-        List<AllArgRecTest> tests = new ArrayList<>();
+        List<ArgRecTest> tests = new ArrayList<>();
         List<NodeSequenceInfo> excodes = tokenizer.tokenize(javaFilePath);
         if (excodes.isEmpty()) return tests;
         List<Integer> stack = new ArrayList<>();
@@ -228,7 +226,7 @@ public class ArgRecTestGenerator {
 
                 //System.out.println("Position: " + methodCall.getBegin().get());
 
-                List<ArgRecTest> allArgTests = new ArrayList<>();
+                List<ArgRecTest> oneArgTests = new ArrayList<>();
                 boolean[] isCleaned = new boolean[Math.max(methodCall.getArguments().size(), 1)];
                 Arrays.fill(isCleaned, false);
                 int methodCallIdx = stack.get(stack.size() - 1);
@@ -289,7 +287,7 @@ public class ArgRecTestGenerator {
                                         isCleaned[j] = true;
                                     } else {
                                     }
-                                    allArgTests.add(test);
+                                    oneArgTests.add(test);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -372,7 +370,7 @@ public class ArgRecTestGenerator {
                             isCleaned[Math.max(methodCall.getArguments().size() - 1, 0)] = true;
                         } else {
                         }
-                        allArgTests.add(test);
+                        oneArgTests.add(test);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -382,18 +380,59 @@ public class ArgRecTestGenerator {
 
                 boolean flag = true;
                 for (int j = 0; j < isCleaned.length; ++j)
-                    if (!isCleaned[j]) flag = false;
+                    if (!isCleaned[j]) {
+                        flag = false;
+                        break;
+                    }
 
+                for (int j = 0; j < oneArgTests.size(); ++j) {
+                    if (j == oneArgTests.size() - 1) {
+                        oneArgTests.get(j).setArgPos(methodCall.getArguments().size());
+                    } else {
+                        oneArgTests.get(j).setArgPos(j + 1);
+                    }
+                    oneArgTests.get(j).setIgnored(!flag);
+                }
+
+                tests.addAll(oneArgTests);
+
+                stack.remove(stack.size() - 1);
+            }
+        }
+        return tests;
+    }
+
+    public List<ArgRecTest> generateAll(int threshold) {
+        List<File> javaFiles = DirProcessor.walkJavaFile(tokenizer.getProject().getAbsolutePath());
+        List<ArgRecTest> tests = new ArrayList<>();
+        for (File file: javaFiles) {
+            tests.addAll(generate(file.getAbsolutePath()));
+            if (threshold >= 0 && tests.size() >= threshold) break;
+        }
+        return tests;
+    }
+
+    public List<ArgRecTest> generateAll() {
+        return generateAll(-1);
+    }
+
+    public static List<AllArgRecTest> getAllArgRecTests(List<ArgRecTest> oneArgRecTests) {
+        List<AllArgRecTest> tests = new ArrayList<>();
+        List<ArgRecTest> pile = new ArrayList<>();
+        for (int i = 0; i < oneArgRecTests.size(); ++i) {
+            ArgRecTest oneArgTest = oneArgRecTests.get(i);
+            pile.add(oneArgTest);
+            if (i == oneArgRecTests.size() - 1 || oneArgRecTests.get(i + 1).getArgPos() <= 1) {
                 AllArgRecTest test = new AllArgRecTest();
-                if (allArgTests.size() > 0) {
-                    test.setLex_context(allArgTests.get(0).getLex_context());
-                    test.setExcode_context(allArgTests.get(0).getExcode_context());
+                if (pile.size() > 0) {
+                    test.setLex_context(pile.get(0).getLex_context());
+                    test.setExcode_context(pile.get(0).getExcode_context());
                 }
 
                 StringBuilder expectedExcode = new StringBuilder();
-                for (int j = 0; j < allArgTests.size(); ++j) {
-                    expectedExcode.append(allArgTests.get(j).getExpected_excode());
-                    if (j < allArgTests.size() - 1) {
+                for (int j = 0; j < pile.size(); ++j) {
+                    expectedExcode.append(pile.get(j).getExpected_excode());
+                    if (j < pile.size() - 1) {
                         expectedExcode.append(' ');
                         expectedExcode.append(NodeSequenceInfo.getSEPA(NodeSequenceConstant.SEPA, ',').toStringSimplest());
                         expectedExcode.append(' ');
@@ -402,46 +441,29 @@ public class ArgRecTestGenerator {
                 test.setExpected_excode(expectedExcode.toString());
 
                 StringBuilder expectedLex = new StringBuilder();
-                for (int j = 0; j < allArgTests.size(); ++j) {
-                    expectedLex.append(allArgTests.get(j).getExpected_lex());
-                    if (j < allArgTests.size() - 1) expectedLex.append(", ");
+                for (int j = 0; j < pile.size(); ++j) {
+                    expectedLex.append(pile.get(j).getExpected_lex());
+                    if (j < pile.size() - 1) expectedLex.append(", ");
                 }
                 test.setExpected_lex(expectedLex.toString());
 
                 List<List<String>> allNextExcodeList = new ArrayList<>();
                 List<List<List<String>>> allNextLexList = new ArrayList<>();
-                for (int j = 0; j < allArgTests.size(); ++j) {
-                    allNextExcodeList.add(allArgTests.get(j).getNext_excode());
-                    allNextLexList.add(allArgTests.get(j).getNext_lex());
+                for (int j = 0; j < pile.size(); ++j) {
+                    allNextExcodeList.add(pile.get(j).getNext_excode());
+                    allNextLexList.add(pile.get(j).getNext_lex());
                 }
                 test.setNext_excode(allNextExcodeList);
                 test.setNext_lex(allNextLexList);
-                test.setArgRecTestList(allArgTests);
-                test.setNumArg(methodCall.getArguments().size());
+                test.setArgRecTestList(pile);
+                test.setNumArg(pile.get(pile.size() - 1).getArgPos());
+                test.setIgnored(pile.get(0).isIgnored());
 
-                if (flag) {
-                    tests.add(test);
-                } else {
-                    discardedTests.add(test);
-                }
+                tests.add(test);
 
-                stack.remove(stack.size() - 1);
+                pile = new ArrayList<>();
             }
         }
         return tests;
-    }
-
-    public List<AllArgRecTest> generateAll(int threshold) {
-        List<File> javaFiles = DirProcessor.walkJavaFile(tokenizer.getProject().getAbsolutePath());
-        List<AllArgRecTest> tests = new ArrayList<>();
-        for (File file: javaFiles) {
-            tests.addAll(generate(file.getAbsolutePath()));
-            if (threshold >= 0 && tests.size() >= threshold) break;
-        }
-        return tests;
-    }
-
-    public List<AllArgRecTest> generateAll() {
-        return generateAll(-1);
     }
 }

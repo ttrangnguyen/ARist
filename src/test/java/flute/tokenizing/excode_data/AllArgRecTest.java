@@ -18,6 +18,8 @@ public class AllArgRecTest {
     private String expected_excode;
     private String expected_lex;
 
+    private boolean ignored = false;
+
     private transient List<ArgRecTest> argRecTestList;
 
     public AllArgRecTest() {
@@ -108,6 +110,14 @@ public class AllArgRecTest {
 
     public void setExpected_lex(String expected_lex) {
         this.expected_lex = expected_lex;
+    }
+
+    public boolean isIgnored() {
+        return ignored;
+    }
+
+    public void setIgnored(boolean ignored) {
+        this.ignored = ignored;
     }
 
     public List<ArgRecTest> getArgRecTestList() {
