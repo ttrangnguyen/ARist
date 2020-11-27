@@ -3,10 +3,10 @@ package flute.data;
 import flute.data.typemodel.ArgumentModel;
 import flute.jdtparser.FileParser;
 import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class MethodInvocationModel {
     private Expression expression = null;
@@ -84,6 +84,15 @@ public class MethodInvocationModel {
         return methodBinding;
     }
 
+    public Optional<String> getClassQualifiedName() {
+        Optional<String> classQualifiedName;
+        try {
+            classQualifiedName = Optional.of(methodBinding.getDeclaringClass().getQualifiedName());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+        return classQualifiedName;
+    }
 
     public ASTNode getOrgASTNode() {
         return orgASTNode;

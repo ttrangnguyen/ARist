@@ -21,6 +21,13 @@ public class Config {
     public static float PRINT_PROGRESS_DELTA = 0.001f; //0.1%
 
     /***
+     For training
+     ***/
+
+    public static boolean IGNORE_JAVADOC = false;
+    public static boolean IGNORE_PARSE_AFTER_SET_POSITION = false;
+
+    /***
      Config for feature
      ***/
 
