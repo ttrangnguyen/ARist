@@ -165,7 +165,7 @@ public class FileParser {
      */
     public void setPosition(int position) throws Exception {
         this.curPosition = position;
-        parse();
+        if (!Config.IGNORE_PARSE_AFTER_SET_POSITION) parse();
     }
 
     /**
@@ -177,7 +177,7 @@ public class FileParser {
      */
     public void setPosition(int line, int column) throws Exception {
         this.curPosition = getPosition(line, column);
-        parse();
+        if (!Config.IGNORE_PARSE_AFTER_SET_POSITION) parse();
     }
 
     /**
@@ -961,7 +961,10 @@ public class FileParser {
                 return true;
             }
         });
-        if (result[0] == null) throw new ClassScopeNotFoundException();
+
+        if (result[0] == null
+                || (Config.IGNORE_JAVADOC && (getScope(position) instanceof Javadoc)))
+            throw new ClassScopeNotFoundException();
         return result[0].resolveBinding();
     }
 
@@ -986,6 +989,9 @@ public class FileParser {
                 }
             }
         });
+        if (Config.IGNORE_JAVADOC && (astNode[0] instanceof Javadoc))
+            return null;
+
         return astNode[0];
     }
 
