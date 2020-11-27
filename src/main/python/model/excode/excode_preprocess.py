@@ -31,22 +31,35 @@ def modify(word, tokens):
         return [word.lower()]
 
 
-def prepare_sequence(sequence, train_len):
-    return pad_sequences(sequence, maxlen=train_len, padding='pre')
+def prepare_sequence(sequence, train_len, *args):
+    padded_sequences = pad_sequences(sequence, maxlen=train_len, padding='pre')
+    rows = []
+    for i in range(len(padded_sequences)):
+        row = list(padded_sequences[i])
+        for j in range(len(args)):
+            row.append(args[j][i])
+        rows.append(row)
+    return rows
 
 
-def create_java_tokenizer():
-    tokenizer = load(open('excode_tokenizer', 'rb'))
-    return tokenizer
+def get_method_name(method_token):
+    return method_token[method_token.find(",")+1:-1]
+
+
+def get_method_name_tokens(method_token):
+    method_name = get_method_name(method_token)
+    return tokenize(method_name)
 
 
 def excode_tokenize(text, tokenizer, train_len, tokens, method_only=True):
     data = text.strip().split(" ")
     text_sequences = []
+    text_method_names = []
     if method_only:
         i = 0
         while i < len(data):
             if data[i][:7] == "METHOD{":
+                method_name_tokens = get_method_name_tokens(data[i])
                 all_tokens = modify(data[i], tokens)
                 start_pos = len(all_tokens)
                 i += 1
@@ -56,15 +69,19 @@ def excode_tokenize(text, tokenizer, train_len, tokens, method_only=True):
                 for j in range(start_pos, len(all_tokens)):
                     seq = all_tokens[max(j - train_len, 0):j]
                     text_sequences.append(seq)
+                    text_method_names.append(method_name_tokens)
             i += 1
+        sequences = tokenizer.texts_to_sequences(text_sequences)
+        method_names_tokens = tokenizer.texts_to_sequences(text_method_names)
+        return sequences, method_names_tokens
     else:
         all_tokens = []
         for d in data:
             all_tokens += modify(d, tokens)
         seq = all_tokens[max(len(all_tokens) - train_len, 0):len(all_tokens)]
         text_sequences = [seq]
-    sequences = tokenizer.texts_to_sequences(text_sequences)
-    return sequences
+        sequences = tokenizer.texts_to_sequences(text_sequences)
+        return sequences
 
 
 def excode_tokenize_candidates(candidates, tokenizer, tokens):
@@ -89,17 +106,26 @@ def preprocess(train_path, token_path, csv_path, train_len):
 
     with open(csv_path, 'w', newline='') as excode_csv:
         writer = csv.writer(excode_csv)
-        index = []
+        index=[]
+        index.append("label")
         for i in range(train_len - 1):
             index.append("input{}".format(i))
-        index.append("output")
+        index.append("class_name")
+        index.append("method_name")
         writer.writerow(index)
         tokens = read_file(token_path).lower().split("\n")
         for f in os.listdir(train_path):
             text = read_file(os.path.join(train_path, f))
             # print(text_sequences)
-            sequences = excode_tokenize(text, tokenizer, train_len, tokens)
-            writer.writerows(prepare_sequence(sequences, train_len))
+            sequences, method_names_tokens = excode_tokenize(text, tokenizer, train_len, tokens)
+            writer.writerows(prepare_sequence(sequences, train_len, method_names_tokens))
+
+    import pandas as pd
+    df = pd.read_csv(csv_path)
+    cols = list(df.columns)
+    cols[:train_len] = ["label"] + cols[:train_len-1]
+    df_reorder = df[cols]
+    df_reorder.to_csv(csv_path, index=False)
 
 
 def listdirs(folder):

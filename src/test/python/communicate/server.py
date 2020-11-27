@@ -142,10 +142,9 @@ def flute(conn, clientId):
         #                                  train_len=train_len,
         #                                  tokens=excode_tokens,
         #                                  method_only=False)[0]
-        # java_context = java_tokenize(data['lex_context'],
-        #                              tokenizer=java_tokenizer,
-        #                              train_len=train_len,
-        #                              last_only=True)[0]
+        # java_context = java_tokenize_take_last(data['lex_context'],
+        #                                       tokenizer=java_tokenizer,
+        #                                       train_len=train_len)[0]
         if USE_RNN:
             excode_origin_context = excode_tokenize(data['excode_context'],
                                                     tokenizer=excode_tokenizer,
@@ -209,18 +208,15 @@ def flute(conn, clientId):
                 # logger.debug(data['next_lex'][sorted_scores[i][2]])
                 if expected_excode == excode_context[i][0][0]:
                     rnn_excode_correct[i] += 1
-            java_origin_context = java_tokenize(data['lex_context'],
-                                                tokenizer=java_tokenizer,
-                                                train_len=train_len,
-                                                last_only=True)[0]
-            expected_lex = java_tokenize([data['expected_lex']],
-                                         tokenizer=java_tokenizer,
-                                         train_len=train_len,
-                                         last_only=True)[0]
-            java_comma_id = java_tokenize([","],
-                                          tokenizer=java_tokenizer,
-                                          train_len=train_len,
-                                          last_only=True)[0]
+            java_origin_context = java_tokenize_take_last(data['lex_context'],
+                                                            tokenizer=java_tokenizer,
+                                                            train_len=train_len)
+            expected_lex = java_tokenize_take_last([data['expected_lex']],
+                                                     tokenizer=java_tokenizer,
+                                                     train_len=train_len)
+            java_comma_id = java_tokenize_take_last([","],
+                                                      tokenizer=java_tokenizer,
+                                                      train_len=train_len)
             # print(java_comma_id)
             # print("Elex", expected_lex)
             java_suggestions_all = []
@@ -308,14 +304,12 @@ def flute(conn, clientId):
                                           tokens=excode_tokens,
                                           method_only=False)[0]
         expected_excode_text = excode_tokenizer.sequences_to_texts([expected_excode])[0].split()
-        java_context = java_tokenize(data['lex_context'],
-                                     tokenizer=java_tokenizer,
-                                     train_len=train_len,
-                                     last_only=True)[0]
-        expected_lex = java_tokenize([data['expected_lex']],
-                                     tokenizer=java_tokenizer,
-                                     train_len=train_len,
-                                     last_only=True)[0]
+        java_context = java_tokenize_take_last(data['lex_context'],
+                                                tokenizer=java_tokenizer,
+                                                train_len=train_len)
+        expected_lex = java_tokenize_take_last([data['expected_lex']],
+                                                tokenizer=java_tokenizer,
+                                                train_len=train_len)
         expected_lex_text = java_tokenizer.sequences_to_texts([expected_lex])[0].split()
         n_param = len(data['next_excode'])
 

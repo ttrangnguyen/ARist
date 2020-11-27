@@ -12,6 +12,21 @@ public class DirProcessor {
         return dir.exists();
     }
 
+    public static void createDirectoryIfNotExists(String dir) {
+        if (!exists(dir)) {
+            File newDir = new File(dir);
+            newDir.mkdirs();
+        }
+    }
+
+    public static String createDirectoryIfNotExists(String root, String subDir) {
+        File projectDirectory = new File(root + subDir + "/");
+        if (!projectDirectory.exists()) {
+            projectDirectory.mkdir();
+        }
+        return projectDirectory.getPath() + "/";
+    }
+
     public static List<File> walkJavaFile(String path) {
         List<File> listJavaFile = new ArrayList<File>();
         return walkJavaFileRecursive(path, listJavaFile);
