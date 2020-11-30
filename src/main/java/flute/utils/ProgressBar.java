@@ -1,21 +1,27 @@
 package flute.utils;
 
-public class ProcessBar {
+public class ProgressBar {
     public static void printProcessBar(float percent, int size) {
+        System.out.print(genProgressBar(percent, size));
+    }
+
+    public static String genProgressBar(float percent, int size) {
         int processedItem = (int) Math.ceil(percent / (100f / size));
-        System.out.print("[");
+        StringBuilder bar = new StringBuilder();
+        bar.append("[");
         for (int i = 0; i < processedItem; i++) {
             if (i == processedItem - 1) {
-                System.out.print(">");
+                bar.append(">");
             } else {
-                System.out.print("=");
+                bar.append("=");
             }
         }
 
         for (int i = 0; i < size - processedItem; i++) {
-            System.out.print("-");
+            bar.append("-");
         }
-        System.out.print("]");
+        bar.append("]");
+        return bar.toString();
     }
 
     public static void main(String[] args) {

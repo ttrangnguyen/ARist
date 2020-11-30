@@ -23,12 +23,16 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeS
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import flute.analysis.config.Config;
 import flute.analysis.structure.*;
+import flute.utils.ProgressBar;
 import flute.utils.file_processing.*;
 import flute.utils.logging.Logger;
+import flute.utils.logging.Timer;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JavaAnalyser {
     enum ExpressionType {
@@ -66,6 +70,8 @@ public class JavaAnalyser {
     public long analyseUsingVariableTime = 0;
     public long analyseCastingTime = 0;
 
+    public List<String> blackListFile = new ArrayList<>();
+
     private String outputDir = null;
 
     public JavaAnalyser(String repoDirectory) {
@@ -73,13 +79,11 @@ public class JavaAnalyser {
     }
 
     public static List<File> getProjects(String directory) {
-        String[] blacklist = {"lib", ".idea", "out"};
         List<File> dir = DirProcessor.walkData(directory);
         List<File> projects = new ArrayList<>();
         loopDir:
-        for (File f: dir) {
-            for (String name: blacklist)
-                if (f.getName().equals(name)) continue loopDir;
+        for (File f : dir) {
+            if (Config.BLACKLIST_FOLDER_SRC.contains(f.getName())) continue loopDir;
             projects.add(f);
         }
         return projects;
@@ -92,10 +96,10 @@ public class JavaAnalyser {
             analyseProject(projects.get(i));
             if (doLogProgress) {
                 if ((i + 1) % ((numOfProjects - 1) / 100 + 1) == 0) {
-                    int percent = (i + 1) * 100 / numOfProjects;
+                    float percent = (i + 1) * 100f / numOfProjects;
                     StringBuilder sb = new StringBuilder();
-                    sb.append(String.format("%3d%%", percent));
-                    for (int j = 0; j < percent; ++j) sb.append("|");
+                    sb.append(String.format("%05.2f%% ", percent));
+                    sb.append(ProgressBar.genProgressBar(percent, Config.PROGRESS_SIZE));
                     sb.append(String.format("\nanalyseMethodCalls: %d s", analyseMethodCallsTime / 1000000000));
                     sb.append(String.format("\nanalyseNumOfArgs: %d s", analyseNumOfArgsTime / 1000000000));
                     sb.append(String.format("\nanalyseExpressionTypeOfParams: %d s", analyseExpressionTypeOfParamsTime / 1000000000));
@@ -109,7 +113,7 @@ public class JavaAnalyser {
         }
 
         Logger.write("List of examined projects:");
-        for (File f: projects) Logger.write('\t' + f.getName());
+        for (File f : projects) Logger.write('\t' + f.getName());
         Logger.write("");
 
         printStatistics();
@@ -126,11 +130,40 @@ public class JavaAnalyser {
         StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
         combinedTypeSolver.add(new JavaParserTypeSolver(project));
 
-        List<File> javaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
+        List<File> rawJavaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
+
+        List<File> javaFiles = rawJavaFiles.stream().filter(javaFile -> {
+            for (String bString : Config.BLACKLIST_NAME_SRC) {
+                if (javaFile.getAbsolutePath().contains(bString)) return false;
+            }
+            for (String bFile : blackListFile) {
+                if (javaFile.getAbsolutePath().endsWith(bFile)) return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
         if (doCountJavaFiles) dataFrame.insert("Num of Java files", javaFiles.size());
 
+        Timer timer = new Timer();
+        timer.startCounter();
+        int fileCount = 0;
+        float percent = 0, oldPercent = 0;
+
         for (File file : javaFiles) {
+            percent = (float) fileCount / javaFiles.size();
+            if (percent - oldPercent > flute.config.Config.PRINT_PROGRESS_DELTA) {
+                System.out.printf("%05.2f", percent * 100);
+                System.out.print("% ");
+                ProgressBar.printProcessBar(percent * 100, flute.config.Config.PROGRESS_SIZE);
+                System.out.printf(" - %" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files of folder [%s] "
+                        , fileCount, project.getName());
+                long runTime = timer.getCurrentTime().getTime() - timer.getLastTime().getTime();
+                System.out.println("- ETA: " + Timer.formatTime(((long) (runTime / percent) - runTime) / 1000));
+                oldPercent = percent;
+            }
+            System.out.println(file.getAbsolutePath());
             analyseFile(file);
+            fileCount++;
+
         }
     }
 
@@ -193,7 +226,7 @@ public class JavaAnalyser {
     }
 
     public static void printStatistics(DataFrame dataFrame, String aspect, String context) {
-        String label = "Num of " + aspect + "s" + (context == null? "": " " + context);
+        String label = "Num of " + aspect + "s" + (context == null ? "" : " " + context);
         Logger.write(dataFrame.describe(label));
         Logger.write("");
         DataFrame.Variable variable = dataFrame.getVariable(label);
@@ -205,8 +238,7 @@ public class JavaAnalyser {
                 Logger.write(String.format("\t%12d%s%7d%s%5.2f%%", i, " " + aspect + "s: ",
                         variable.countValue(i), " - ",
                         variable.getProportionOfValue(i, true)));
-            }
-            else {
+            } else {
                 Logger.write(String.format("\t%4d%s%4d%s%7d%s%5.2f%%", i - step + 1, " to ", i, " " + aspect + "s: ",
                         variable.countRange(i - step + 1, i), " - ",
                         variable.getProportionOfRange(i - step + 1, i, true)));
@@ -246,14 +278,14 @@ public class JavaAnalyser {
                     String calleePackageName = resolve.getPackageName();
                     Node methodCaller = getAscendantTypeMethod(methodCallExpr);
                     if (methodCaller instanceof MethodDeclaration) {
-                        ResolvedMethodDeclaration resolveCaller = ((MethodDeclaration)methodCaller).resolve();
+                        ResolvedMethodDeclaration resolveCaller = ((MethodDeclaration) methodCaller).resolve();
                         try {
                             callerPackageName = resolveCaller.getPackageName();
                         } catch (Exception e) {
                             //System.out.println(methodCaller);
                         }
                     } else if (methodCaller instanceof ConstructorDeclaration) {
-                        ResolvedConstructorDeclaration resolveCaller = ((ConstructorDeclaration)methodCaller).resolve();
+                        ResolvedConstructorDeclaration resolveCaller = ((ConstructorDeclaration) methodCaller).resolve();
                         callerPackageName = resolveCaller.getPackageName();
                     } else {
                         ClassOrInterfaceDeclaration caller = getAscendantTypeClass(methodCallExpr);
@@ -283,13 +315,13 @@ public class JavaAnalyser {
         Logger.write("");
 
         Logger.write("Top 10 most called Java APIs:");
-        for (String api: javaMethodCallCounter.getTop(10)) {
+        for (String api : javaMethodCallCounter.getTop(10)) {
             Logger.write('\t' + api);
         }
         Logger.write("");
 
         Logger.write("Top 10 most called external libs' APIs:");
-        for (String api: libMethodCallCounter.getTop(10)) {
+        for (String api : libMethodCallCounter.getTop(10)) {
             Logger.write('\t' + api);
         }
         Logger.write("");
@@ -424,8 +456,7 @@ public class JavaAnalyser {
                                     //System.out.println(resolve.getClass());
                                     dataFrame.insert("Origin of arg", Origin.OTHERS.ordinal());
                                 }
-                            }
-                            catch (Exception e) {
+                            } catch (Exception e) {
                                 dataFrame.insert("Origin of arg", Origin.OTHERS.ordinal());
                             }
                         }
@@ -456,7 +487,7 @@ public class JavaAnalyser {
                     System.out.println(variableDeclarator.getParentNode().get().getParentNode().get());
                     System.out.println();
                 }
-                for (SimpleName simpleName: scope.findAll(SimpleName.class)) {
+                for (SimpleName simpleName : scope.findAll(SimpleName.class)) {
                     if (simpleName.getIdentifier().equals(variable)) ++count;
                 }
                 dataFrame.insert("Num of variable uses", count - 1);
@@ -488,18 +519,18 @@ public class JavaAnalyser {
             cu.findAll(MethodCallExpr.class).forEach(methodCallExpr -> {
                 methodCallExpr.getArguments().forEach(argument -> {
                     dataFrame.insert("Casting argument",
-                            argument.findFirst(CastExpr.class).isPresent()? 1: 0);
+                            argument.findFirst(CastExpr.class).isPresent() ? 1 : 0);
                 });
             });
 
             cu.findAll(AssignExpr.class).forEach(assignExpr -> {
                 dataFrame.insert("Casting in Assignment",
-                        assignExpr.findFirst(CastExpr.class).isPresent()? 1: 0);
+                        assignExpr.findFirst(CastExpr.class).isPresent() ? 1 : 0);
             });
 
             cu.findAll(VariableDeclarationExpr.class).forEach(variableDeclarationExpr -> {
                 dataFrame.insert("Casting in Variable Declaration",
-                        variableDeclarationExpr.findFirst(CastExpr.class).isPresent()? 1: 0);
+                        variableDeclarationExpr.findFirst(CastExpr.class).isPresent() ? 1 : 0);
 
                 variableDeclarationExpr.getVariables().forEach(variableDeclarator -> {
                     if (variableDeclarator.getInitializer().isPresent() && variableDeclarator.getInitializer().get().isCastExpr()) {
@@ -519,7 +550,7 @@ public class JavaAnalyser {
             cu.findAll(ReturnStmt.class).forEach(returnStmt -> {
                 if (!returnStmt.findFirst(AssignExpr.class).isPresent()) {
                     dataFrame.insert("Casting in Return Statement",
-                            returnStmt.findFirst(CastExpr.class).isPresent()? 1: 0);
+                            returnStmt.findFirst(CastExpr.class).isPresent() ? 1 : 0);
                 }
             });
         } catch (ParseProblemException e) {
@@ -540,8 +571,7 @@ public class JavaAnalyser {
         File f = new File(Config.LOG_DIR + path);
         if (f.isDirectory()) {
             this.outputDir = path;
-        }
-        else throw new IllegalArgumentException("Invalid path: " + f.getAbsolutePath());
+        } else throw new IllegalArgumentException("Invalid path: " + f.getAbsolutePath());
     }
 
     public static void logClassName(CompilationUnit cu, String output) {
@@ -573,17 +603,17 @@ public class JavaAnalyser {
                 try {
                     Expression scope = fieldAccessExpr.getScope();
                     if (scope instanceof NameExpr) {
-                        ResolvedValueDeclaration resolve = ((NameExpr)scope).resolve();
+                        ResolvedValueDeclaration resolve = ((NameExpr) scope).resolve();
                         sb.append(extractResolvedReferenceTypeSimpleName(resolve.getType()) + '\n');
                     } else if (scope instanceof MethodCallExpr) {
-                        ResolvedMethodDeclaration resolve = ((MethodCallExpr)scope).resolve();;
+                        ResolvedMethodDeclaration resolve = ((MethodCallExpr) scope).resolve();
                         sb.append(extractResolvedReferenceTypeSimpleName(resolve.getReturnType()) + '\n');
                     } else if (scope instanceof FieldAccessExpr) {
-                        ResolvedValueDeclaration resolve = ((FieldAccessExpr)scope).resolve();
+                        ResolvedValueDeclaration resolve = ((FieldAccessExpr) scope).resolve();
                         sb.append(extractResolvedReferenceTypeSimpleName(resolve.getType()) + '\n');
                     } else if (scope instanceof ThisExpr) {
-                        if (((ThisExpr)scope).getTypeName().isPresent()) {
-                            sb.append(((ThisExpr)scope).getTypeName().get().getIdentifier() + '\n');
+                        if (((ThisExpr) scope).getTypeName().isPresent()) {
+                            sb.append(((ThisExpr) scope).getTypeName().get().getIdentifier() + '\n');
                         } else {
                             sb.append(getAscendantTypeClass(scope).getNameAsString() + '\n');
                         }
@@ -666,7 +696,7 @@ public class JavaAnalyser {
         while ((n != null) && !(n instanceof ClassOrInterfaceDeclaration)) {
             n = n.getParentNode().orElse(null);
         }
-        return (ClassOrInterfaceDeclaration)n;
+        return (ClassOrInterfaceDeclaration) n;
     }
 
     private static String extractResolvedReferenceTypeSimpleName(ResolvedType resolvedType) {
@@ -689,16 +719,22 @@ public class JavaAnalyser {
     public static void main(String[] args) {
         //git clone some repo
         //GitCloner.bulkCloneRepo(CSVReader.randomSet("repository_state.csv", "\t", Config.NUM_REPO_LIMIT));
+        String projectName = "netbeans";
 
-        JavaAnalyser analyser = new JavaAnalyser(Config.REPO_DIR + "sampleproj/");
-        analyser.doCountJavaFiles = false;
-        analyser.doAnalyseMethodCalls = false;
-        analyser.doAnalyseNumOfArgs = false;
-        analyser.doAnalyseExpressionTypeOfParams = false;
-        analyser.doAnalyseOriginOfArgs = false;
-        analyser.doAnalyseUsingVariable = false;
-        analyser.doAnalyseCasting = false;
-        analyser.doLogClassName = true;
+        JavaAnalyser analyser = new JavaAnalyser(Config.REPO_DIR + "git/netbeans/ide/");
+
+        analyser.blackListFile.addAll(
+                Arrays.asList(FileProcessor.read(new File("docs/blackListFile/" + projectName + ".txt")).split("\n"))
+        );
+
+        analyser.doCountJavaFiles = true;
+        analyser.doAnalyseMethodCalls = true;
+        analyser.doAnalyseNumOfArgs = true;
+        analyser.doAnalyseExpressionTypeOfParams = true;
+        analyser.doAnalyseOriginOfArgs = true;
+        analyser.doAnalyseUsingVariable = true;
+        analyser.doAnalyseCasting = true;
+        analyser.doLogClassName = false;
         analyser.doLogFieldName = false;
         analyser.doLogMethodName = false;
         analyser.setOutputDir("../../src/main/python/name_stat/input/");
