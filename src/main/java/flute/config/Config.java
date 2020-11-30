@@ -32,8 +32,8 @@ public class Config {
 
     public static boolean IGNORE_JAVADOC = false;
     public static boolean IGNORE_PARSE_AFTER_SET_POSITION = false;
-    public static List<String> BLACKLIST_FOLDER_SRC = Arrays.asList(new String[]{"lib", ".idea", "out", "test", "demo", "example", "examples"});
-
+    public static List<String> BLACKLIST_FOLDER_SRC = Arrays.asList(new String[]{"lib", ".idea", "out", "test", "demo", "example", "examples"}); //for filter project folder
+    public static List<String> BLACKLIST_NAME_SRC = Arrays.asList(new String[]{"test", "demo", "example"}); //for filter file path
 
     /***
      * Config for feature

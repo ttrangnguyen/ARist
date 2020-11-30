@@ -26,10 +26,13 @@ import flute.analysis.structure.*;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.*;
 import flute.utils.logging.Logger;
+import flute.utils.logging.Timer;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JavaAnalyser {
     enum ExpressionType {
@@ -67,6 +70,8 @@ public class JavaAnalyser {
     public long analyseUsingVariableTime = 0;
     public long analyseCastingTime = 0;
 
+    public List<String> blackListFile = new ArrayList<>();
+
     private String outputDir = null;
 
     public JavaAnalyser(String repoDirectory) {
@@ -91,9 +96,9 @@ public class JavaAnalyser {
             analyseProject(projects.get(i));
             if (doLogProgress) {
                 if ((i + 1) % ((numOfProjects - 1) / 100 + 1) == 0) {
-                    int percent = (i + 1) * 100 / numOfProjects;
+                    float percent = (i + 1) * 100f / numOfProjects;
                     StringBuilder sb = new StringBuilder();
-                    sb.append(String.format("%3d%% ", percent));
+                    sb.append(String.format("%05.2f%% ", percent));
                     sb.append(ProgressBar.genProgressBar(percent, Config.PROGRESS_SIZE));
                     sb.append(String.format("\nanalyseMethodCalls: %d s", analyseMethodCallsTime / 1000000000));
                     sb.append(String.format("\nanalyseNumOfArgs: %d s", analyseNumOfArgsTime / 1000000000));
@@ -125,11 +130,40 @@ public class JavaAnalyser {
         StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
         combinedTypeSolver.add(new JavaParserTypeSolver(project));
 
-        List<File> javaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
+        List<File> rawJavaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
+
+        List<File> javaFiles = rawJavaFiles.stream().filter(javaFile -> {
+            for (String bString : Config.BLACKLIST_NAME_SRC) {
+                if (javaFile.getAbsolutePath().contains(bString)) return false;
+            }
+            for (String bFile : blackListFile) {
+                if (javaFile.getAbsolutePath().endsWith(bFile)) return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
         if (doCountJavaFiles) dataFrame.insert("Num of Java files", javaFiles.size());
 
+        Timer timer = new Timer();
+        timer.startCounter();
+        int fileCount = 0;
+        float percent = 0, oldPercent = 0;
+
         for (File file : javaFiles) {
+            percent = (float) fileCount / javaFiles.size();
+            if (percent - oldPercent > flute.config.Config.PRINT_PROGRESS_DELTA) {
+                System.out.printf("%05.2f", percent * 100);
+                System.out.print("% ");
+                ProgressBar.printProcessBar(percent * 100, flute.config.Config.PROGRESS_SIZE);
+                System.out.printf(" - %" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files of folder [%s] "
+                        , fileCount, project.getName());
+                long runTime = timer.getCurrentTime().getTime() - timer.getLastTime().getTime();
+                System.out.println("- ETA: " + Timer.formatTime(((long) (runTime / percent) - runTime) / 1000));
+                oldPercent = percent;
+            }
+            System.out.println(file.getAbsolutePath());
             analyseFile(file);
+            fileCount++;
+
         }
     }
 
@@ -573,7 +607,6 @@ public class JavaAnalyser {
                         sb.append(extractResolvedReferenceTypeSimpleName(resolve.getType()) + '\n');
                     } else if (scope instanceof MethodCallExpr) {
                         ResolvedMethodDeclaration resolve = ((MethodCallExpr) scope).resolve();
-                        ;
                         sb.append(extractResolvedReferenceTypeSimpleName(resolve.getReturnType()) + '\n');
                     } else if (scope instanceof FieldAccessExpr) {
                         ResolvedValueDeclaration resolve = ((FieldAccessExpr) scope).resolve();
@@ -686,8 +719,14 @@ public class JavaAnalyser {
     public static void main(String[] args) {
         //git clone some repo
         //GitCloner.bulkCloneRepo(CSVReader.randomSet("repository_state.csv", "\t", Config.NUM_REPO_LIMIT));
+        String projectName = "netbeans";
 
-        JavaAnalyser analyser = new JavaAnalyser(Config.REPO_DIR + "git/netbeans/");
+        JavaAnalyser analyser = new JavaAnalyser(Config.REPO_DIR + "git/netbeans/ide/");
+
+        analyser.blackListFile.addAll(
+                Arrays.asList(FileProcessor.read(new File("docs/blackListFile/" + projectName + ".txt")).split("\n"))
+        );
+
         analyser.doCountJavaFiles = true;
         analyser.doAnalyseMethodCalls = true;
         analyser.doAnalyseNumOfArgs = true;

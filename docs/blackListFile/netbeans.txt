@@ -1,0 +1,3 @@
+/ide/css.lib/src/org/netbeans/modules/css/lib/Css3Parser.java
+/ide/css.lib/src/org/netbeans/modules/css/lib/Css3Lexer.java
+/ide/schema2beans/src/org/netbeans/modules/schema2beansdev/S2bConfig.java

@@ -115,10 +115,13 @@ public class ProjectParser {
         float oldPercent = -1;
 
         List<File> javaFiles = allJavaFiles.stream().filter(file -> {
-            return file.getAbsolutePath().contains("src")
-                    && !file.getAbsolutePath().contains("examples")
-                    && !file.getAbsolutePath().contains("test")
-                    && !file.getAbsolutePath().contains("demo");
+            if (!file.getAbsolutePath().contains("src")) return false;
+
+            for (String blackName : Config.BLACKLIST_NAME_SRC) {
+                if (file.getAbsolutePath().contains(blackName)) return false;
+            }
+
+            return true;
         }).collect(Collectors.toList());
 
         System.out.println("===============SOURCE PATHS===============");
