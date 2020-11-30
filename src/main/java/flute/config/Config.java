@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Config {
@@ -18,25 +19,34 @@ public class Config {
 
     public static String LOG_DIR = STORAGE_DIR + "logs/";
 
+    /***
+     * Logging
+     */
+
     public static float PRINT_PROGRESS_DELTA = 0.001f; //0.1%
+    public static int PROGRESS_SIZE = 40;
 
     /***
-     For training
-     ***/
+     * For training, analyser
+     */
 
     public static boolean IGNORE_JAVADOC = false;
     public static boolean IGNORE_PARSE_AFTER_SET_POSITION = false;
+    public static List<String> BLACKLIST_FOLDER_SRC = Arrays.asList(new String[]{"lib", ".idea", "out", "test", "demo", "example", "examples"});
+
 
     /***
-     Config for feature
-     ***/
+     * Config for feature
+     */
 
     public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
     public final static boolean FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE = false;
 
-    //Type feature
+    /***
+     *  Type feature
+     */
 
     public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;
     public final static boolean FEATURE_PARAM_TYPE_CAST = false;
