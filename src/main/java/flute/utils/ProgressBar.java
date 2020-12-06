@@ -5,18 +5,20 @@ import flute.utils.logging.Timer;
 
 public class ProgressBar {
     private Timer timer;
-    private float progress;
-    private long eta;
+    private float progress = -Float.MAX_VALUE;
+    private long eta = 0;
 
     public ProgressBar() {
         timer = new Timer();
     }
 
     public void setProgress(float progress, boolean print) {
-        if (print && (this.progress - progress) > Config.PRINT_PROGRESS_DELTA) {
+        float PRINT_PROGRESS_DELTA = eta > 3600 // 1 hour
+                ? Config.PRINT_PROGRESS_DELTA / 10 : Config.PRINT_PROGRESS_DELTA;
+        if (print && (progress - this.progress) > PRINT_PROGRESS_DELTA) {
             long runTime = Timer.getCurrentTime().getTime() - timer.getLastTime().getTime();
             eta = (long) ((runTime / progress) - runTime) / 1000;
-            System.out.printf("%5.2f %s - ETA: %s\n",
+            System.out.printf("%05.2f%% %s - ETA: %s\n",
                     progress * 100f, genProgressBar(progress * 100, Config.PROGRESS_SIZE), Timer.formatTime(eta));
         }
         this.progress = progress;
