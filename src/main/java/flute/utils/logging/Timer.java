@@ -5,7 +5,7 @@ import java.util.Date;
 public class Timer {
     private Date lastTime = new Date();
 
-    public Date getCurrentTime() {
+    public static Date getCurrentTime() {
         return new Date();
     }
 

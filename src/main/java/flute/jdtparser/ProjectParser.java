@@ -137,10 +137,8 @@ public class ProjectParser {
         System.out.println("Number of source paths: " + sourcePaths.length);
         System.out.println("Number of jar files: " + classPaths.length);
         System.out.println("===============START BINDING==============");
-
-
-        Timer timer = new Timer();
-        timer.startCounter();
+        
+        ProgressBar progressBar = new ProgressBar();
 
         for (File file : javaFiles) {
             CompilationUnit cu = createCU(file);
@@ -164,16 +162,7 @@ public class ProjectParser {
             }
 
             fileCount++;
-            percent = (float) fileCount / javaFiles.size();
-            if (percent - oldPercent > Config.PRINT_PROGRESS_DELTA) {
-                System.out.printf("%05.2f", percent * 100);
-                System.out.print("% ");
-                ProgressBar.printProcessBar(percent * 100, Config.PROGRESS_SIZE);
-                System.out.printf(" - %" + String.valueOf(javaFiles.size()).length() + "d/" + javaFiles.size() + " files ", fileCount);
-                long runTime = timer.getCurrentTime().getTime() - timer.getLastTime().getTime();
-                System.out.println("- ETA: " + Timer.formatTime(((long) (runTime / percent) - runTime) / 1000));
-                oldPercent = percent;
-            }
+            progressBar.setProgress((float) fileCount / javaFiles.size(), true);
         }
 
         System.out.println("Number of java file: " + javaFiles.size());
