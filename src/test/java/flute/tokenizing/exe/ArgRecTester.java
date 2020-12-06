@@ -139,6 +139,34 @@ public class ArgRecTester {
         return true;
     }
 
+    public static void updateTopKResult(AllArgRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+                                        String modelName, DataFrame dataFrame) {
+
+        boolean isOverallCorrectTopK = false;
+        for (int i = 0; i < Math.min(k, results.size()); ++i) {
+            if (canAcceptResult(test, results.get(i))) {
+                isOverallCorrectTopK = true;
+                break;
+            }
+        }
+
+        if (isOverallCorrectTopK) {
+            dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
+            dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, test.getNumArg()), 1);
+            if (adequateGeneratedCandidate) {
+                dataFrame.insert(String.format("%sTop%d", modelName, k), 1);
+                dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, test.getNumArg()), 1);
+            }
+        } else {
+            dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
+            dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, test.getNumArg()), 0);
+            if (adequateGeneratedCandidate) {
+                dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
+                dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, test.getNumArg()), 0);
+            }
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         String projectName = "log4j";
         Timer timer = new Timer();
@@ -188,6 +216,7 @@ public class ArgRecTester {
 
 
         //Collections.shuffle(tests);
+        int[] tops = {1, 3, 5, 10};
         int testCount = 0;
         boolean isNGramUsed = false;
         boolean isRNNUsed = false;
@@ -234,87 +263,15 @@ public class ArgRecTester {
                     dataFrame.insert("NumArg", test.getNumArg());
 
                     if (isNGramUsed) {
-                        if (!nGramResults.isEmpty() && canAcceptResult(test, nGramResults.get(0))) {
-                            dataFrame.insert(String.format("nGramOverallTop1", test.getNumArg()), 1);
-                            dataFrame.insert(String.format("nGramOverallTop1Arg%d", test.getNumArg()), 1);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("nGramTop1", test.getNumArg()), 1);
-                                dataFrame.insert(String.format("nGramTop1Arg%d", test.getNumArg()), 1);
-                            }
-                        } else {
-                            dataFrame.insert(String.format("nGramOverallTop1", test.getNumArg()), 0);
-                            dataFrame.insert(String.format("nGramOverallTop1Arg%d", test.getNumArg()), 0);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("nGramTop1", test.getNumArg()), 0);
-                                dataFrame.insert(String.format("nGramTop1Arg%d", test.getNumArg()), 0);
-                            }
-                        }
-
-                        boolean isnGramOverallCorrectTopK = false;
-                        for (String item: nGramResults) {
-                            if (canAcceptResult(test, item)) {
-                                isnGramOverallCorrectTopK = true;
-                                break;
-                            }
-                        }
-
-                        if (isnGramOverallCorrectTopK) {
-                            dataFrame.insert(String.format("nGramOverallTopK", test.getNumArg()), 1);
-                            dataFrame.insert(String.format("nGramOverallTopKArg%d", test.getNumArg()), 1);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("nGramTopK", test.getNumArg()), 1);
-                                dataFrame.insert(String.format("nGramTopKArg%d", test.getNumArg()), 1);
-                            }
-                        } else {
-                            dataFrame.insert(String.format("nGramOverallTopK", test.getNumArg()), 0);
-                            dataFrame.insert(String.format("nGramOverallTopKArg%d", test.getNumArg()), 0);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("nGramTopK", test.getNumArg()), 0);
-                                dataFrame.insert(String.format("nGramTopKArg%d", test.getNumArg()), 0);
-                            }
-                        }
+                        for (int k: tops)
+                            updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
+                                    "nGram", dataFrame);
                     }
 
                     if (isRNNUsed) {
-                        if (!RNNResults.isEmpty() && canAcceptResult(test, RNNResults.get(0))) {
-                            dataFrame.insert(String.format("RNNOverallTop1", test.getNumArg()), 1);
-                            dataFrame.insert(String.format("RNNOverallTop1Arg%d", test.getNumArg()), 1);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("RNNTop1", test.getNumArg()), 1);
-                                dataFrame.insert(String.format("RNNTop1Arg%d", test.getNumArg()), 1);
-                            }
-                        } else {
-                            dataFrame.insert(String.format("RNNOverallTop1", test.getNumArg()), 0);
-                            dataFrame.insert(String.format("RNNOverallTop1Arg%d", test.getNumArg()), 0);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("RNNTop1", test.getNumArg()), 0);
-                                dataFrame.insert(String.format("RNNTop1Arg%d", test.getNumArg()), 0);
-                            }
-                        }
-
-                        boolean isRNNOverallCorrectTopK = false;
-                        for (String item: RNNResults) {
-                            if (canAcceptResult(test, item)) {
-                                isRNNOverallCorrectTopK = true;
-                                break;
-                            }
-                        }
-
-                        if (isRNNOverallCorrectTopK) {
-                            dataFrame.insert(String.format("RNNOverallTopK", test.getNumArg()), 1);
-                            dataFrame.insert(String.format("RNNOverallTopKArg%d", test.getNumArg()), 1);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("RNNTopK", test.getNumArg()), 1);
-                                dataFrame.insert(String.format("RNNTopKArg%d", test.getNumArg()), 1);
-                            }
-                        } else {
-                            dataFrame.insert(String.format("RNNOverallTopK", test.getNumArg()), 0);
-                            dataFrame.insert(String.format("RNNOverallTopKArg%d", test.getNumArg()), 0);
-                            if (testMap.getOrDefault(test.getId(), false)) {
-                                dataFrame.insert(String.format("RNNTopK", test.getNumArg()), 0);
-                                dataFrame.insert(String.format("RNNTopKArg%d", test.getNumArg()), 0);
-                            }
-                        }
+                        for (int k: tops)
+                            updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
+                                    "RNN", dataFrame);
                     }
 
                     if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
@@ -336,83 +293,45 @@ public class ArgRecTester {
                 + averageGetTestsTime) + "s");
 
         List<String[]> accurracyPerNumArg = new ArrayList<String[]>();
-        if (!isRNNUsed) {
-            accurracyPerNumArg.add(new String[]{
-                    "Number of params",
-                    "Percentage distribution",
-                    "NGram's top-1 accuracy",
-                    "NGram's top-K accuracy",
-                    "Overall top-1 accuracy",
-                    "Overall top-K accuracy",
-                    "Actual top-1 accuracy",
-                    "Actual top-K accuracy"
-            });
-            for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
-                accurracyPerNumArg.add(new String[] {
-                        String.format("%d", i),
-                        String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramTop1Arg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramTopKArg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop1Arg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTopKArg%d", i)).getMean()),
-                        "",
-                        ""
-                });
-            }
-            accurracyPerNumArg.add(new String[] {
-                    "all",
-                    "100",
-                    String.format("%f", dataFrame.getVariable("nGramTop1").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramTopK").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getSum()
-                            / (dataFrame.getVariable("nGramOverallTop1").getCount() + (generatedTests.size() - tests.size()))),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getSum()
-                            / (dataFrame.getVariable("nGramOverallTopK").getCount() + (generatedTests.size() - tests.size())))
-            });
-        } else {
-            accurracyPerNumArg.add(new String[]{
-                    "Number of params",
-                    "Percentage distribution",
-                    "NGram's top-1 accuracy",
-                    "NGram's top-K accuracy",
-                    "RNN's top-1 accuracy",
-                    "RNN's top-K accuracy",
-                    "Overall top-1 accuracy",
-                    "Overall top-K accuracy",
-                    "Actual top-1 accuracy",
-                    "Actual top-K accuracy"
-            });
-            for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
-                accurracyPerNumArg.add(new String[] {
-                        String.format("%d", i),
-                        String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramTop1Arg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramTopKArg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("RNNTop1Arg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("RNNTopKArg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop1Arg%d", i)).getMean()),
-                        String.format("%f", dataFrame.getVariable(String.format("nGramOverallTopKArg%d", i)).getMean()),
-                        "",
-                        ""
-                });
-            }
-            accurracyPerNumArg.add(new String[] {
-                    "all",
-                    "100",
-                    String.format("%f", dataFrame.getVariable("nGramTop1").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramTopK").getMean()),
-                    String.format("%f", dataFrame.getVariable("RNNTop1").getMean()),
-                    String.format("%f", dataFrame.getVariable("RNNTopK").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getMean()),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTop1").getSum()
-                            / (dataFrame.getVariable("nGramOverallTop1").getCount() + (generatedTests.size() - tests.size()))),
-                    String.format("%f", dataFrame.getVariable("nGramOverallTopK").getSum()
-                            / (dataFrame.getVariable("nGramOverallTopK").getCount() + (generatedTests.size() - tests.size())))
-            });
+        List<String> row = new ArrayList<>();
+        row.add("Number of params");
+        row.add("Percentage distribution");
+        if (isNGramUsed) {
+            for (int k: tops) row.add(String.format("NGram's top-%d accuracy", k));
         }
+        if (isRNNUsed) {
+            for (int k: tops) row.add(String.format("RNN's top-%d accuracy", k));
+        }
+        for (int k: tops) row.add(String.format("Overall top-%d accuracy", k));
+        for (int k: tops) row.add(String.format("Actual top-%d accuracy", k));
+        accurracyPerNumArg.add(row.toArray(new String[row.size()]));
+        for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
+            row = new ArrayList<>();
+            row.add(String.format("%d", i));
+            row.add(String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)));
+            if (isNGramUsed) {
+                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%dArg%d", k, i)).getMean()));
+            }
+            if (isRNNUsed) {
+                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
+            }
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
+            for (int k: tops) row.add("");
+            accurracyPerNumArg.add(row.toArray(new String[row.size()]));
+        }
+        row = new ArrayList<>();
+        row.add("all");
+        row.add("100");
+        if (isNGramUsed) {
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%d", k)).getMean()));
+        }
+        if (isRNNUsed) {
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
+        }
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean()));
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getSum()
+                / (dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getCount() + (generatedTests.size() - tests.size()))));
+        accurracyPerNumArg.add(row.toArray(new String[row.size()]));
         CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accurracyPerNumArg);
     }
 
