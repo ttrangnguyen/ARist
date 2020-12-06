@@ -345,17 +345,17 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             addVariableToScope(n, typeInfo.extendTypeStrList.get(0).intern(), typeInfo.typeName.intern() + ".super");
         }
 
-        // class X ---> CLASS{START}
-        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList).setPosition(n.getBegin(), null);
+        // class X ---> CLASS{START,X}
+        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(typeInfo.typeName.intern(),
+                nodeSequenceStack, typeInfo, nodeSequenceList).setPosition(n.getBegin(), null);
         nodeSequenceInfo.oriNode = n;
         
         // {...} --->
         visitClassBody(n.getMembers(), arg);
         
-        // ---> CLASS{END}
-        OldNodeSequenceVisitingProcessing.addEndClassNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList).setPosition(n.getEnd());
+        // ---> CLASS{END,X}
+        OldNodeSequenceVisitingProcessing.addEndClassNode(typeInfo.typeName.intern(), nodeSequenceInfo.nodeSeqID,
+                nodeSequenceStack, typeInfo, nodeSequenceList).setPosition(n.getEnd());
         
         curMethodInfo = null;
         typeStack.pop();
@@ -428,9 +428,9 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             addVariableToScope(n, typeInfo.typeName.intern(), entry.getName().asString());
         }
 
-        // enum X ---> ENUM{START}
-        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addEnumNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList).setPosition(n.getBegin(), null);
+        // enum X ---> ENUM{START,X}
+        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addEnumNode(typeInfo.typeName.intern(),
+                nodeSequenceStack, typeInfo, nodeSequenceList).setPosition(n.getBegin(), null);
         nodeSequenceInfo.oriNode = n;
         
         // { ---> OPBLK
@@ -465,9 +465,9 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // } ---> CLBLK
         OldNodeSequenceVisitingProcessing.addCLBLKNode(nodeSequenceList).setPosition(n.getEnd());
         
-        // ---> ENUM{END}
-        OldNodeSequenceVisitingProcessing.addEndEnumNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList).setPosition(n.getEnd());
+        // ---> ENUM{END,X}
+        OldNodeSequenceVisitingProcessing.addEndEnumNode(typeInfo.typeName.intern(), nodeSequenceInfo.nodeSeqID,
+                nodeSequenceStack, typeInfo, nodeSequenceList).setPosition(n.getEnd());
         
         curMethodInfo = null;
         typeStack.pop();
@@ -515,17 +515,17 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         typeStack.push(typeInfo);
 
-        // @interface X ---> CLASS{START}
-        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList).setPosition(n.getBegin(), null);
+        // @interface X ---> CLASS{START,X}
+        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(typeInfo.typeName.intern(),
+                nodeSequenceStack, typeInfo, nodeSequenceList).setPosition(n.getBegin(), null);
         nodeSequenceInfo.oriNode = n;
         
         // {...} --->
         visitClassBody(n.getMembers(), arg);
         
-        // ---> CLASS{END}
-        OldNodeSequenceVisitingProcessing.addEndClassNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList).setPosition(n.getEnd());
+        // ---> CLASS{END,X}
+        OldNodeSequenceVisitingProcessing.addEndClassNode(typeInfo.typeName.intern(), nodeSequenceInfo.nodeSeqID,
+                nodeSequenceStack, typeInfo, nodeSequenceList).setPosition(n.getEnd());
         
         curMethodInfo = null;
         typeStack.pop();
@@ -2198,17 +2198,17 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
         // {public String getKey() {return null;}} --->
         if (n.getAnonymousClassBody().isPresent()) {
-            // ---> CLASS{START}
-            NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack,
-                    typeInfo, nodeSequenceList);
+            // ---> CLASS{START,Entry}
+            NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(methodName,
+                    nodeSequenceStack, typeInfo, nodeSequenceList);
             nodeSequenceInfo.oriNode = n;
             
             // {...} --->
             visitClassBody(n.getAnonymousClassBody().get(), arg);
             
-            // ---> CLASS{END}
-            OldNodeSequenceVisitingProcessing.addEndClassNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                    nodeSequenceList);
+            // ---> CLASS{END,Entry}
+            OldNodeSequenceVisitingProcessing.addEndClassNode(methodName, nodeSequenceInfo.nodeSeqID,
+                    nodeSequenceStack, typeInfo, nodeSequenceList);
         } else {
             
         }
@@ -2607,9 +2607,9 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         addVariableToScope(n, typeInfo.typeName.intern(), "this");
         addVariableToScope(n, typeInfo.typeName.intern(), typeInfo.typeName.intern() + ".this");
 
-        // A ---> CLASS{START}
-        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+        // A ---> CLASS{START,A}
+        NodeSequenceInfo nodeSequenceInfo = OldNodeSequenceVisitingProcessing.addClassNode(typeInfo.typeName.intern(),
+                nodeSequenceStack, typeInfo, nodeSequenceList);
         nodeSequenceInfo.oriNode = n;
         
         if (n.getArguments().isNonEmpty()) {
@@ -2628,9 +2628,9 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
             visitClassBody(n.getClassBody(), arg);
         }
         
-        // ---> CLASS{END}
-        OldNodeSequenceVisitingProcessing.addEndClassNode(nodeSequenceInfo.nodeSeqID, nodeSequenceStack, typeInfo,
-                nodeSequenceList);
+        // ---> CLASS{END,A}
+        OldNodeSequenceVisitingProcessing.addEndClassNode(typeInfo.typeName.intern(), nodeSequenceInfo.nodeSeqID,
+                nodeSequenceStack, typeInfo, nodeSequenceList);
         
         curMethodInfo = null;
         typeStack.pop();

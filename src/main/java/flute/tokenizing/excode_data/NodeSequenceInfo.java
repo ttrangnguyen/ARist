@@ -365,7 +365,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		// alignToken.lastIndexOf("\t")));
 		// }
 		// }
-		builder.append(alignToken + "CLASS{" + getStringType(startEnd) + "}");
+		builder.append(alignToken + "CLASS{" + getStringType(startEnd) + "," + getAttachedType() + "}");
 		// builder.append(alignToken + "CLASS ");
 		// if (startEnd == NodeSequenceConstant.START){
 		// alignToken += "\t";
@@ -375,7 +375,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 	
 	private String toStringEnum() {
         StringBuilder builder = new StringBuilder();
-        builder.append(alignToken + "ENUM{" + getStringType(startEnd) + "}");
+        builder.append(alignToken + "ENUM{" + getStringType(startEnd) + "," + getAttachedType() + "}");
         return builder.toString();
     }
 

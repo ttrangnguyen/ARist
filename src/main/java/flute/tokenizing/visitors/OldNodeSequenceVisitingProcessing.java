@@ -93,7 +93,8 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addClassNode(Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
+	public static NodeSequenceInfo addClassNode(String className,
+			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
 		if (nodeSequenceStack.size() > 0) {
@@ -102,7 +103,7 @@ public class OldNodeSequenceVisitingProcessing {
 
 		short nodeType = NodeSequenceConstant.CLASS;
 		short startEnd = NodeSequenceConstant.START;
-		String attachedType = null;
+		String attachedType = className;
 		String attachedVar = null;
 		short controlType = NodeSequenceConstant.UNKNOWN;
 		MethodInfo methodInfo = null;
@@ -117,13 +118,14 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addEndClassNode(long sameControlSeqID, Stack<NodeSequenceInfo> nodeSequenceStack,
-			TypeInfo typeInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public static NodeSequenceInfo addEndClassNode(String className, long sameControlSeqID,
+			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
+			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = nodeSequenceStack.pop();
 
 		short nodeType = NodeSequenceConstant.CLASS;
 		short startEnd = NodeSequenceConstant.END;
-		String attachedType = null;
+		String attachedType = className;
 		String attachedVar = null;
 		short controlType = NodeSequenceConstant.UNKNOWN;
 		MethodInfo methodInfo = null;
@@ -138,7 +140,8 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 	
-	public static NodeSequenceInfo addEnumNode(Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
+	public static NodeSequenceInfo addEnumNode(String className,
+			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
             ArrayList<NodeSequenceInfo> nodeSequenceList) {
         NodeSequenceInfo previousNode = null;
         if (nodeSequenceStack.size() > 0) {
@@ -147,7 +150,7 @@ public class OldNodeSequenceVisitingProcessing {
 
         short nodeType = NodeSequenceConstant.ENUM;
         short startEnd = NodeSequenceConstant.START;
-        String attachedType = null;
+        String attachedType = className;
         String attachedVar = null;
         short controlType = NodeSequenceConstant.UNKNOWN;
         MethodInfo methodInfo = null;
@@ -162,13 +165,14 @@ public class OldNodeSequenceVisitingProcessing {
         return nodeSequenceInfo;
     }
 
-    public static NodeSequenceInfo addEndEnumNode(long sameControlSeqID, Stack<NodeSequenceInfo> nodeSequenceStack,
-            TypeInfo typeInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+    public static NodeSequenceInfo addEndEnumNode(String className, long sameControlSeqID,
+    		Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
+            ArrayList<NodeSequenceInfo> nodeSequenceList) {
         NodeSequenceInfo previousNode = nodeSequenceStack.pop();
 
         short nodeType = NodeSequenceConstant.ENUM;
         short startEnd = NodeSequenceConstant.END;
-        String attachedType = null;
+        String attachedType = className;
         String attachedVar = null;
         short controlType = NodeSequenceConstant.UNKNOWN;
         MethodInfo methodInfo = null;
