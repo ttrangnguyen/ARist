@@ -5,17 +5,18 @@ from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_cand
 from keras.models import load_model
 from model.predictor import prepare, predict, evaluate
 from time import perf_counter
-import time
 from pickle import load
 import numpy as np
 import dill
 from model.ngram_predictor import score_ngram
 from os import path
 import csv
-from nltk.lm import MLE
+from _thread import *
+import threading
 import logging
 import sys
 import copy
+import os, glob
 
 
 def read_file(filepath):
@@ -60,7 +61,6 @@ top_k_excode = 100
 top_k = 10
 max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
-total_guesses = 0
 ngram_excode_correct = [0] * top_k
 ngram_lex_correct = [0] * top_k
 rnn_excode_correct = [0] * top_k
@@ -76,15 +76,17 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stdout_handler)
 
 
-def write_result(project, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct):
+def write_result(project, clientId, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct,
+                 total_guesses):
     for i in range(1, top_k):
         ngram_excode_correct[i] += ngram_excode_correct[i - 1]
         ngram_lex_correct[i] += ngram_lex_correct[i - 1]
         rnn_excode_correct[i] += rnn_excode_correct[i - 1]
         rnn_lex_correct[i] += rnn_lex_correct[i - 1]
 
-    if not path.exists('../../../../storage/result/' + project + '.csv'):
-        with open('../../../../storage/result/' + project + '.csv', mode='w', newline='') as project_result:
+    if not path.exists('../../../../storage/result/' + project + '.' + str(clientId) + '.csv'):
+        with open('../../../../storage/result/' + project + '.' + str(clientId) + '.csv', mode='w',
+                  newline='') as project_result:
             writer = csv.writer(project_result)
             index = ['project']
             for i in range(top_k):
@@ -96,7 +98,8 @@ def write_result(project, ngram_excode_correct, ngram_lex_correct, rnn_excode_co
             for i in range(top_k):
                 index.append("RNN lex top{}".format(i + 1))
             writer.writerow(index)
-    with open('../../../../storage/result/' + project + '.csv', mode='a', newline='') as project_result:
+    with open('../../../../storage/result/' + project + '.' + str(clientId) + '.csv', mode='a',
+              newline='') as project_result:
         writer = csv.writer(project_result)
         proj_result = [project]
         for i in range(top_k):
@@ -123,8 +126,8 @@ def recreate(result, data):
     return origin
 
 
-while True:
-    conn, addr = serv.accept()
+def flute(conn, clientId):
+    total_guesses = 0
     while True:
         data = recvall(conn)
         if not data:
@@ -289,7 +292,7 @@ while True:
             result_rnn = recreate(result_rnn, origin_data)
             print("Result rnn:\n", result_rnn)
 
-    # ----------------------------------------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------------------------------------
         # n-gram
 
         startTime = perf_counter()
@@ -344,7 +347,7 @@ while True:
 
         # print("MI", excode_context_textform)
         # print("SUG", excode_context_textform)
-    # logger.debug(sorted_scores)
+        # logger.debug(sorted_scores)
         # logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         # logger.debug("Best excode suggestion(s):")
         # print(1, expected_excode_text)
@@ -417,4 +420,22 @@ while True:
     conn.close()
     logger.debug('Client disconnected')
 
-    write_result(project, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct)
+    write_result(project, clientId, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct,
+                 total_guesses)
+
+
+def main():
+    clientId = 0
+    for filename in glob.glob('../../../../storage/result/' + project + '.' + "*"):
+        os.remove(filename)
+    print('[SERVER IS STARTED]')
+    while True:
+        conn, addr = serv.accept()
+        print("New client is connected!")
+        print_lock = threading.Lock()
+        start_new_thread(flute, (conn, clientId))
+        clientId = + 1
+
+
+if __name__ == '__main__':
+    main()
