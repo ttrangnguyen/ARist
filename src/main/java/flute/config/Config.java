@@ -23,17 +23,24 @@ public class Config {
      * Logging
      */
 
-    public static float PRINT_PROGRESS_DELTA = 0.001f; //0.1%
-    public static int PROGRESS_SIZE = 40;
+    public final static float PRINT_PROGRESS_DELTA = 0.001f; //0.1%
+    public final static int PROGRESS_SIZE = 40;
 
     /***
      * For training, analyser
      */
 
-    public static boolean IGNORE_JAVADOC = false;
-    public static boolean IGNORE_PARSE_AFTER_SET_POSITION = false;
-    public static List<String> BLACKLIST_FOLDER_SRC = Arrays.asList(new String[]{"lib", ".idea", "out", "test", "demo", "example", "examples"}); //for filter project folder
-    public static List<String> BLACKLIST_NAME_SRC = Arrays.asList(new String[]{"test", "demo", "example"}); //for filter file path
+    public final static boolean IGNORE_JAVADOC = false;
+    public final static boolean IGNORE_PARSE_AFTER_SET_POSITION = false;
+    public final static List<String> BLACKLIST_FOLDER_SRC = Arrays.asList(new String[]{"lib", ".idea", "out", "test", "demo", "example", "examples"}); //for filter project folder
+    public final static List<String> BLACKLIST_NAME_SRC = Arrays.asList(new String[]{"test", "demo", "example"}); //for filter file path
+
+    /***
+     * Multiprocess
+     */
+
+    public final static boolean MULTIPROCESS = true;
+    public final static int NUM_THREAD = 5;
 
     /***
      * Config for feature
