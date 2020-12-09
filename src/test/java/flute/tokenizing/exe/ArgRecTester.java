@@ -35,7 +35,7 @@ public class ArgRecTester {
         //TODO: Handle unknown excode
         if (expectedExpcode.contains("<unk>")) return true;
 
-        for (NodeSequenceInfo excode : test.getExpected_excode_ori()) {
+        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
             if (NodeSequenceInfo.isMethodAccess(excode)) {
                 int tmp = StringUtils.indexOf(expectedExpcode, "M_ACCESS(");
                 tmp = expectedExpcode.indexOf("OPEN_PART", tmp);
@@ -53,7 +53,7 @@ public class ArgRecTester {
     }
 
     public static boolean canAcceptGeneratedExcodes(AllArgRecTest test) {
-        for (ArgRecTest oneArgTest : test.getArgRecTestList())
+        for (ArgRecTest oneArgTest: test.getArgRecTestList())
             if (!canAcceptGeneratedExcodes(oneArgTest)) return false;
         return true;
     }
@@ -71,19 +71,17 @@ public class ArgRecTester {
             if (test.getNext_lexList().contains("this." + expectedLex)) return true;
         }
 
-        for (NodeSequenceInfo excode : test.getExpected_excode_ori()) {
+        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
             if (NodeSequenceInfo.isMethodAccess(excode)) {
                 String methodName = excode.getAttachedAccess();
                 int tmp = StringUtils.indexOf(expectedLex, methodName + "(");
-                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + methodName.length() + 1)))
-                    return true;
+                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + methodName.length() + 1))) return true;
                 break;
             }
             if (NodeSequenceInfo.isObjectCreation(excode)) {
                 String className = excode.getAttachedAccess();
                 int tmp = StringUtils.indexOf(expectedLex, className + "(");
-                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + className.length() + 1)))
-                    return true;
+                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + className.length() + 1))) return true;
                 break;
             }
         }
@@ -91,7 +89,7 @@ public class ArgRecTester {
     }
 
     public static boolean canAcceptGeneratedLexes(AllArgRecTest test) {
-        for (ArgRecTest oneArgTest : test.getArgRecTestList())
+        for (ArgRecTest oneArgTest: test.getArgRecTestList())
             if (!canAcceptGeneratedLexes(oneArgTest)) return false;
         return true;
     }
@@ -109,7 +107,7 @@ public class ArgRecTester {
             if (result.equals("this." + expectedLex)) return true;
         }
 
-        for (NodeSequenceInfo excode : test.getExpected_excode_ori()) {
+        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
             if (NodeSequenceInfo.isMethodAccess(excode)) {
                 String methodName = excode.getAttachedAccess();
                 int tmp = StringUtils.indexOf(expectedLex, methodName + "(");
@@ -128,7 +126,7 @@ public class ArgRecTester {
 
     public static boolean canAcceptResult(AllArgRecTest test, String result) {
         int i = -1;
-        for (ArgRecTest oneArgTest : test.getArgRecTestList()) {
+        for (ArgRecTest oneArgTest: test.getArgRecTestList()) {
             StringBuilder sb = new StringBuilder();
             int bal = 0;
             while (++i < result.length()) {
@@ -173,13 +171,13 @@ public class ArgRecTester {
     }
 
     public static void main(String[] args) throws IOException {
-        String projectName = "netbeans";
+        String projectName = "log4j";
         Timer timer = new Timer();
         timer.startCounter();
         List<AllArgRecTest> generatedTests = getTests(projectName, false, false);
         //List<AllArgRecTest> generatedTests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
         List<AllArgRecTest> tests = new ArrayList<>();
-        for (AllArgRecTest test : generatedTests)
+        for (AllArgRecTest test: generatedTests)
             if (!test.isIgnored()) tests.add(test);
         double averageGetTestsTime = timer.getTimeCounter() / 1000f / generatedTests.size();
 
@@ -190,7 +188,7 @@ public class ArgRecTester {
 
         long generatedExcodeCount = 0;
         long generatedLexCount = 0;
-        for (AllArgRecTest test : tests) {
+        for (AllArgRecTest test: tests) {
             generatedExcodeCount += test.getNext_excodeList().size();
             generatedLexCount += test.getNext_lexList().size();
         }
@@ -201,7 +199,7 @@ public class ArgRecTester {
         int adequateGeneratedLexCount = 0;
         int adequateGeneratedArgCount = 0;
         Map<Integer, Boolean> testMap = new HashMap<>();
-        for (AllArgRecTest test : tests) {
+        for (AllArgRecTest test: tests) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
             if (canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
@@ -228,7 +226,7 @@ public class ArgRecTester {
         DataFrame dataFrame = new DataFrame();
         try {
             SocketClient socketClient = new SocketClient(18007);
-            for (AllArgRecTest test : tests) {
+            for (AllArgRecTest test: tests) {
                 Response response = socketClient.write(gson.toJson(test));
                 if (response instanceof PredictResponse) {
                     PredictResponse predictResponse = (PredictResponse) response;
@@ -268,13 +266,13 @@ public class ArgRecTester {
                     dataFrame.insert("NumArg", test.getNumArg());
 
                     if (isNGramUsed) {
-                        for (int k : tops)
+                        for (int k: tops)
                             updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
                                     "nGram", dataFrame);
                     }
 
                     if (isRNNUsed) {
-                        for (int k : tops)
+                        for (int k: tops)
                             updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
                                     "RNN", dataFrame);
                     }
@@ -290,10 +288,8 @@ public class ArgRecTester {
         System.out.println("==========================");
         System.out.println("Number of tests: " + testCount);
         System.out.println("Average parsing runtime: " + averageGetTestsTime + "s");
-        if (isNGramUsed)
-            System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
-        if (isRNNUsed)
-            System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+        if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
+        if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
         System.out.println("Average overall runtime: "
                 + (dataFrame.getVariable("NGram's runtime").getMean()
                 + dataFrame.getVariable("RNN's runtime").getMean()
@@ -304,47 +300,40 @@ public class ArgRecTester {
         row.add("Number of params");
         row.add("Percentage distribution");
         if (isNGramUsed) {
-            for (int k : tops) row.add(String.format("NGram's top-%d accuracy", k));
+            for (int k: tops) row.add(String.format("NGram's top-%d accuracy", k));
         }
         if (isRNNUsed) {
-            for (int k : tops) row.add(String.format("RNN's top-%d accuracy", k));
+            for (int k: tops) row.add(String.format("RNN's top-%d accuracy", k));
         }
-        for (int k : tops) row.add(String.format("Overall top-%d accuracy", k));
-        for (int k : tops) row.add(String.format("Actual top-%d accuracy", k));
+        for (int k: tops) row.add(String.format("Overall top-%d accuracy", k));
+        for (int k: tops) row.add(String.format("Actual top-%d accuracy", k));
         accurracyPerNumArg.add(row.toArray(new String[row.size()]));
         for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
             row = new ArrayList<>();
             row.add(String.format("%d", i));
             row.add(String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)));
             if (isNGramUsed) {
-                for (int k : tops)
-                    row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%dArg%d", k, i)).getMean()));
+                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%dArg%d", k, i)).getMean()));
             }
             if (isRNNUsed) {
-                for (int k : tops)
-                    row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
+                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
             }
-            for (int k : tops)
-                row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
-            for (int k : tops) row.add("");
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
+            for (int k: tops) row.add("");
             accurracyPerNumArg.add(row.toArray(new String[row.size()]));
         }
         row = new ArrayList<>();
         row.add("all");
         row.add("100");
         if (isNGramUsed) {
-            for (int k : tops)
-                row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%d", k)).getMean()));
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%d", k)).getMean()));
         }
         if (isRNNUsed) {
-            for (int k : tops)
-                row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
         }
-        for (int k : tops)
-            row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean()));
-        for (int k : tops)
-            row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getSum()
-                    / (dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getCount() + (generatedTests.size() - tests.size()))));
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean()));
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getSum()
+                / (dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getCount() + (generatedTests.size() - tests.size()))));
         accurracyPerNumArg.add(row.toArray(new String[row.size()]));
         CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accurracyPerNumArg);
     }
@@ -364,13 +353,11 @@ public class ArgRecTester {
         } else {
             setupGenerator(projectName);
 
-            Timer timer = new Timer();
             if (projectName.equals("demo")) {
                 tests = generateTestsFromDemoProject();
             } else {
                 tests = generateTestsFromGitProject(projectName);
             }
-            System.out.printf("Gen test time: %.2fs\n", timer.getTimeCounter() / 1000.0);
 
             if (doSaveTestsAfterGen) saveTests(projectName, tests);
         }
@@ -443,13 +430,13 @@ public class ArgRecTester {
     }
 
     public static void saveTests(String projectName, List<ArgRecTest> tests) {
-        for (ArgRecTest test : tests) {
+        for (ArgRecTest test: tests) {
             Logger.write(gson.toJson(test), projectName + "_tests.txt");
         }
     }
 
     public static void logTests(List<AllArgRecTest> tests) {
-        for (AllArgRecTest test : tests) {
+        for (AllArgRecTest test: tests) {
             System.out.println(gson.toJson(test));
         }
     }
