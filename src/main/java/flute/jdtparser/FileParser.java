@@ -1006,6 +1006,8 @@ public class FileParser {
     }
 
     public boolean checkInsideMethod(MethodDeclaration methodDeclaration) {
+        if (methodDeclaration.getBody() == null) return false;
+
         int startPos = methodDeclaration.getBody().getStartPosition();
         int endPos = methodDeclaration.getBody().getStartPosition() + methodDeclaration.getBody().getLength();
         if (curPosition > startPos && curPosition < endPos) return true;
