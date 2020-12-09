@@ -176,7 +176,7 @@ public class FileParser {
      * @throws Exception
      */
     public void setPosition(int line, int column) throws Exception {
-        this.curPosition = getPosition(line, column);
+        this.curPosition = getPosition(line, column - 1);
         if (!Config.IGNORE_PARSE_AFTER_SET_POSITION) parse();
     }
 
@@ -1002,6 +1002,13 @@ public class FileParser {
         if (cPosStart <= pos && cPosEnd >= pos) {
             return true;
         }
+        return false;
+    }
+
+    public boolean checkInsideMethod(MethodDeclaration methodDeclaration) {
+        int startPos = methodDeclaration.getBody().getStartPosition();
+        int endPos = methodDeclaration.getBody().getStartPosition() + methodDeclaration.getBody().getLength();
+        if (curPosition > startPos && curPosition < endPos) return true;
         return false;
     }
 
