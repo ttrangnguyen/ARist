@@ -2,10 +2,10 @@ import csv
 import pandas as pd
 
 # proj = ['ant', 'batik', 'log4j', 'lucene', 'xalan', 'xerces']
-proj = ['netbeans', 'eclipse-platform-sources-4.17']
+proj = ['netbeans', 'eclipse']
 typ = ['excode', 'java']
 dt = ['train', 'test', 'validate']
-data_parent_folders = ['data_csv_21_gram', 'data_csv_3_gram', 'data_csv_7_gram']
+data_parent_folders = ['data_csv_6_gram', 'data_csv_3_gram', 'data_csv_7_gram']
 
 for sub_typ in typ:
     for sub_dt in dt:

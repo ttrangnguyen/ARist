@@ -28,14 +28,16 @@ import java.util.*;
 import java.util.regex.Pattern;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
+import org.eclipse.core.internal.resources.Project;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
 // netbeans stops = [0, 5000, 9759]
 
 public class Parser {
-    public static final int parseBegin = 0;
-    public static final int parseEnd = 50;
+    public static int parseBegin = 0;
+    public static int parseEnd = 23000;
+    public static final boolean CREATE_DATA_PATH = false;
     public static final int recursionMaxDepth = 1;
     public static final int threshPerDepth = 7;
 
@@ -43,16 +45,18 @@ public class Parser {
     private final String projectSrcPath;
     private final String javaTrainPath, javaTestPath, javaValidatePath;
     private final String excodeTrainPath, excodeTestPath, excodeValidatePath;
+    private final ProjectParser projectParser;
     private HashSet<String> validateFilesPath;
     private HashSet<String> testFilesPath;
 
     private SystemTableCrossProject systemTableCrossProject;
     private int LOC;
-    private final ProjectParser projectParser;
 
-    public Parser(String projectName, String srcPath) {
+    public Parser(String projectName, String srcPath, int parseBegin, int parseEnd) {
         this.projectName = projectName;
         this.projectSrcPath = projectName + srcPath;
+        Parser.parseBegin = parseBegin;
+        Parser.parseEnd = parseEnd;
         systemTableCrossProject = new SystemTableCrossProject();
         DirProcessor.createDirectoryIfNotExists(Config.excodeTrainDataPath);
         DirProcessor.createDirectoryIfNotExists(Config.excodeValidateDataPath);
@@ -78,6 +82,7 @@ public class Parser {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
                 flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
     }
@@ -122,7 +127,7 @@ public class Parser {
 
     //special method for netbeans and eclipse only
     private boolean canTest(File file, String projectName) {
-        if (projectName.equals("netbeans") || projectName.equals("eclipse-platform-sources-4.17")) {
+        if (projectName.equals("netbeans") || projectName.equals("eclipse")) {
             return file.getAbsolutePath().contains("src")
                     && !file.getAbsolutePath().contains("examples")
                     && !file.getAbsolutePath().contains("test")
@@ -182,7 +187,7 @@ public class Parser {
 
     private void createExcodeFiles() {
         try {
-            createDataFilesPath();
+            if (CREATE_DATA_PATH) createDataFilesPath();
             createDataFiles();
         } catch (Exception e) {
             e.printStackTrace();
@@ -193,7 +198,6 @@ public class Parser {
         File testPath = new File(Config.testFilesPath + projectName + ".txt");
         return testPath.exists();
     }
-
 
 
     private void createDataFilesPath() throws IOException {
@@ -248,7 +252,6 @@ public class Parser {
 
             final String absolutePath = fileInfo.file.getAbsolutePath();
             final String relativePath = absolutePath.substring(absolutePath.indexOf(projectName));
-
             if (testFilesPath.contains(relativePath)) {
                 javaFileTokenPath = javaTestPath +
                         fileInfo.file.getName().replace(".java", ".txt");
@@ -266,9 +269,8 @@ public class Parser {
                         filePath[filePath.length - 1].replace(".java", ".txt");
             }
 
-            createExcodeFile(fileInfo, excodeFilePath);
+//            createExcodeFile(fileInfo, excodeFilePath);
             createJavaFile(absolutePath, javaFileTokenPath);
-            //////////////////// CREATE JAVA TOKEN FILE
         }
     }
 
@@ -287,7 +289,7 @@ public class Parser {
     }
 
     private void createJavaFile(String absolutePath, String javaFileTokenPath) throws IOException {
-        BufferedReader r = new BufferedReader(new FileReader(absolutePath));
+        BufferedReader reader = new BufferedReader(new FileReader(absolutePath));
         String currentMethodName;
         String currentClassName;
         boolean insideMethod = false;
@@ -296,12 +298,15 @@ public class Parser {
         int curLineNum = 0;
         File curFile = new File(absolutePath);
         FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
-        for (String line = r.readLine(); line!=null; line=r.readLine()) {
+        for (String line = reader.readLine(); line!=null; line=reader.readLine()) {
+//            FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
             ++curLineNum;
             if (line.equals("")) continue;
             try {
-                fileParser.setPosition(curLineNum, 0);
+                fileParser.setPosition(curLineNum, 1);
             } catch (Exception e) {
+//                e.printStackTrace();
+//                System.out.println(curLineNum);  // always exception
                 insideMethod = false;
                 continue;
             }
@@ -316,7 +321,7 @@ public class Parser {
             } else {
                 insideClass = false;
             }
-            if (methodScopeName.isPresent()) {
+            if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
                 if (!insideMethod) {
                     insideMethod = true;
                     currentMethodName = methodScopeName.get();
@@ -552,9 +557,43 @@ public class Parser {
     }
 
     public static void main(String[] args) {
-        //File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
-        Parser parser = new Parser("netbeans", "/ide");
+        // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
+        // netbeans stops = [0, 5000, 9759]
+        Parser parser = new Parser("eclipse", "", 0, 23000);
         parser.run();
+        parser = new Parser("eclipse", "", 23001, 28000);
+        parser.run();
+        parser = new Parser("eclipse", "", 28001, 35000);
+        parser.run();
+        parser = new Parser("eclipse", "", 35001, 42000);
+        parser.run();
+        parser = new Parser("eclipse", "", 42001, 46177);
+        parser.run();
+        parser = new Parser("netbeans", "/ide", 0, 5000);
+        parser.run();
+        parser = new Parser("netbeans", "/ide", 5001, 9759);
+        parser.run();
+
+
+        //File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
+//        ProjectParser projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
+//                flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
+//        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\eclipse\\eclipse.pde.ui\\ui\\org.eclipse.pde.core\\src\\org\\eclipse\\pde\\internal\\core\\plugin\\AbbreviatedPluginHandler.java");
+////        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\netbeans\\ide\\html\\src\\org\\netbeans\\modules\\html\\palette\\items\\A.java");
+//        FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+//        try {
+//            fileParser.setPosition(38, 0);
+//        } catch (Exception e) {
+////                e.printStackTrace();
+////                System.out.println(curLineNum);  // always exception
+//        }
+//        Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
+//        if (methodScopeName.isPresent()) {
+//            System.out.println("DMM");
+//        }
+//        Parser parser = new Parser("netbeans", "/ide");
+//        parser.run();
+
         //            if (project.getName().equals("eclipse-platform-sources-4.17")) {
 //                srcPath = "";
         //            if (project.getName().equals("ant")) {

@@ -15,6 +15,7 @@ def read_file(filepath):
 def prepare_sequence(sequence, train_len):
     return pad_sequences(sequence, maxlen=train_len, padding='pre')
 
+
 def prepare_sequence(sequence, train_len, *args):
     padded_sequences = pad_sequences(sequence, maxlen=train_len, padding='pre')
     rows = []
@@ -44,16 +45,16 @@ def java_tokenize_take_last(lines, tokenizer, train_len):
     return sequences[0]
 
 
-def java_tokenize(lines, tokenizer, train_len, last_only=False):
+def java_tokenize(text, tokenizer, train_len, last_only=False):
     text_sequences = []
     text_class_names = []
     text_method_names = []
     all_tokens = []
-
     method_name = ""
     class_name = ""
     inside_method = False
-
+    lines = text.split("\n")
+    print(lines)
     n = len(lines)
     i = 0
     while i<n:
@@ -61,13 +62,19 @@ def java_tokenize(lines, tokenizer, train_len, last_only=False):
             # Class begin
             class_name = lines[i+1]
             i += 2
-            if i >= n: break
-        if lines[i] == '#':
-            if inside_method == False:
-                # Method begin
-                method_name = lines[i+1]
+        elif lines[i] == '#':
+            if not inside_method:
+                # Method begin, look for { (or # if abstract method)
+                i += 1
+                method_name = lines[i]
                 inside_method = True
-                i += 2
+                i += 1
+                # if lines[i+1] != '#':
+                # print(method_name)
+                # while lines[i] != '{' and lines[i] != '#' and i<n:
+                #     i += 1
+                # if lines[i] == '{':
+                # inside_method = True
             else:
                 # Method end
                 for j in range(1, len(all_tokens)):
@@ -78,20 +85,21 @@ def java_tokenize(lines, tokenizer, train_len, last_only=False):
                 all_tokens = []
                 inside_method = False
                 i += 1
-        if inside_method:
-            stripped = line.strip()
-            if stripped == '':
-                continue
-            if 'a' <= stripped[0] <= 'z' or 'A' <= stripped[0] <= 'Z':
-                all_tokens += tokenize(stripped)
-            else:
-                all_tokens += [stripped]
-        i += 1
+        elif inside_method:
+            stripped = lines[i].strip()
+            if stripped != '':
+                if 'a' <= stripped[0] <= 'z' or 'A' <= stripped[0] <= 'Z':
+                    all_tokens += tokenize(stripped)
+                else:
+                    all_tokens += [stripped]
+            i += 1
+        else:
+            i += 1
     # print(all_tokens)
     sequences = tokenizer.texts_to_sequences(text_sequences)
-    class_names_tokens = tokenizer.texts_to_sequences(text_class_names)
     method_names_tokens = tokenizer.texts_to_sequences(text_method_names)
-    return sequences, class_names_tokens, method_names_tokens
+    class_names_tokens = tokenizer.texts_to_sequences(text_class_names)
+    return sequences, method_names_tokens, class_names_tokens
 
 
 def java_tokenize_sentences(lexes, tokenizer, to_sequence=True):
@@ -113,29 +121,36 @@ def java_tokenize_sentences(lexes, tokenizer, to_sequence=True):
         return text_sequences
 
 
-def create_java_tokenizer():
+def load_java_tokenizer():
     tokenizer = load(open('java_tokenizer', 'rb'))
     return tokenizer
 
 
 def preprocess(train_path, csv_path, train_len):
-    tokenizer = create_java_tokenizer()
+    tokenizer = load_java_tokenizer()
 
-    with open(csv_path, 'w', newline='') as excode_csv:
-        writer = csv.writer(excode_csv)
-        index=[]
-        index.append("label")
+    with open(csv_path, 'w', newline='') as java_csv:
+        writer = csv.writer(java_csv)
+        index = []
         for i in range(train_len - 1):
             index.append("input{}".format(i))
-        index.append("class_name")
+        index.append("label")
         index.append("method_name")
+        index.append("class_name")
         writer.writerow(index)
         for f in os.listdir(train_path):
+            print(f)
             text = read_file(os.path.join(train_path, f))
-            lines = text.split("\n")
-            sequences, class_names_tokens, method_names_tokens = java_tokenize(lines, tokenizer, train_len)
-            writer.writerows(prepare_sequence(sequences, train_len, class_names_tokens, method_names_tokens))
+            sequences, method_names_tokens, class_names_tokens = java_tokenize(text, tokenizer, train_len)
+            writer.writerows(prepare_sequence(sequences, train_len, method_names_tokens, class_names_tokens))
+            break
 
+    import pandas as pd
+    df = pd.read_csv(csv_path)
+    cols = list(df.columns)
+    cols[:train_len] = ["label"] + cols[:train_len-1]
+    df_reorder = df[cols]
+    df_reorder.to_csv(csv_path, index=False)
 
 
 def listdirs(folder):
@@ -144,8 +159,8 @@ def listdirs(folder):
 
 if __name__ == "__main__":
     data_types = ['train', 'validate', 'test']
-    data_parent_folders = ['data_csv_21_gram', 'data_csv_3_gram', 'data_csv_7_gram']
-    train_len = [20 + 1, 2 + 1, 6 + 1]
+    data_parent_folders = ['data_csv_6_gram', 'data_csv_7_gram']
+    train_len = [5 + 1, 6 + 1]
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
             projects = listdirs("../../../../../../data_classform/java/" + data_type)

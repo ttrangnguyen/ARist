@@ -11,13 +11,14 @@ def read_file(filepath):
     return str_text
 
 
-names = read_file(dict_path).split("\n")
-tokens = read_file(token_path).lower().split("\n")
-vocab = tokens + names + list(map(str, list(range(0, 10))))
-
-tokenizer = Tokenizer(oov_token='<UNK>')
-tokenizer.fit_on_texts([vocab])
-
-dump(tokenizer, open('excode_tokenizer', 'wb'))
-tokenizer = load(open('excode_tokenizer', 'rb'))
-print(tokenizer.word_index)
+if __name__ == "__main__":
+    # names = read_file(dict_path).split("\n")
+    # tokens = read_file(token_path).lower().split("\n")
+    # vocab = tokens + names + list(map(str, list(range(0, 10))))
+    #
+    # tokenizer = Tokenizer(oov_token='<UNK>')
+    # tokenizer.fit_on_texts([vocab])
+    #
+    # dump(tokenizer, open('excode_tokenizer', 'wb'))
+    tokenizer = load(open('excode_tokenizer', 'rb'))
+    print(tokenizer.word_index)

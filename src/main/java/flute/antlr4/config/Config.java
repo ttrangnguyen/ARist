@@ -5,9 +5,9 @@ package flute.antlr4.config;
  */
 
 public class Config {
-    public static final String dataVersion = "1";
-    public static final String projectsPath = "../../Research/java-data/";
-    public static final String projectsSrcPath = "../../Research/java-data/";
+    public static final String dataVersion = "2";
+    public static final String projectsPath = "storage/repositories/git/";
+    //    public static final String projectsSrcPath = "../../Research/java-data/";
     public static final String parsingResult = "parsingResult.txt/";
     public static final String parsingResultFast = "parsingResultFast.txt/";
     public static final int maxParsingTimeInMillis = 100;
