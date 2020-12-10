@@ -41,7 +41,7 @@ def recvall(sock):
 
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('0.0.0.0', 18007))
-serv.listen(1)
+serv.listen(10)
 
 project = 'all'
 USE_RNN = True
@@ -418,7 +418,7 @@ def flute(conn, clientId):
                         + '}'
         conn.send((response + '}}\n').encode())
     conn.close()
-    logger.debug('Client disconnected')
+    print('Client disconnected')
 
     write_result(project, clientId, ngram_excode_correct, ngram_lex_correct, rnn_excode_correct, rnn_lex_correct,
                  total_guesses)

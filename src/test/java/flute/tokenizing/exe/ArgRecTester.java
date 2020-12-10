@@ -1,5 +1,7 @@
 package flute.tokenizing.exe;
 
+import com.google.common.collect.Lists;
+import com.google.common.math.IntMath;
 import com.google.gson.Gson;
 import flute.analysis.structure.DataFrame;
 import flute.communicate.SocketClient;
@@ -10,6 +12,7 @@ import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.AllArgRecTest;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.utils.ProgressBar;
 import flute.utils.StringUtils;
 import flute.utils.file_writing.CSVWritor;
 import flute.utils.logging.Logger;
@@ -17,6 +20,7 @@ import flute.utils.logging.Timer;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -170,6 +174,63 @@ public class ArgRecTester {
         }
     }
 
+    private static int[] tops = {1, 3, 5, 10};
+    private static int testCount = 0;
+    private static boolean isNGramUsed = false;
+    private static boolean isRNNUsed = false;
+
+    public static void test(Response response, Map<Integer, Boolean> testMap, AllArgRecTest test, DataFrame dataFrame, int testSize, ProgressBar testProgressBar) {
+        PredictResponse predictResponse = (PredictResponse) response;
+        isNGramUsed = predictResponse.getData().ngram != null;
+        isRNNUsed = predictResponse.getData().rnn != null;
+        List<String> nGramResults = null;
+        if (isNGramUsed) nGramResults = predictResponse.getData().ngram.getResult();
+        List<String> RNNResults = null;
+        if (isRNNUsed) RNNResults = predictResponse.getData().rnn.getResult();
+//                    System.out.println("==========================");
+//                    System.out.println(gson.toJson(test));
+//                    if (isNGramUsed) {
+//                        System.out.println("==========================");
+//                        System.out.println("NGram's results:");
+//                        nGramResults.forEach(item -> {
+//                            System.out.println(item);
+//                        });
+//                        System.out.println("==========================");
+//                        System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+//                    }
+//
+//                    if (isRNNUsed) {
+//                        System.out.println("==========================");
+//                        System.out.println("RNN's results:");
+//                        RNNResults.forEach(item -> {
+//                            System.out.println(item);
+//                        });
+//                        System.out.println("==========================");
+//                        System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
+//                    }
+        testProgressBar.setProgress(testCount * 1f / testSize, true);
+        ++testCount;
+        if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
+        dataFrame.insert("NumArg", test.getNumArg());
+
+        if (isNGramUsed) {
+            for (int k : tops)
+                updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
+                        "nGram", dataFrame);
+        }
+
+        if (isRNNUsed) {
+            for (int k : tops)
+                updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
+                        "RNN", dataFrame);
+        }
+
+        if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
+        if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
+    }
+
+    private static int adequateGeneratedArgCount = 0;
+
     public static void main(String[] args) throws IOException {
         String projectName = "log4j";
         Timer timer = new Timer();
@@ -197,7 +258,7 @@ public class ArgRecTester {
 
         int adequateGeneratedExcodeCount = 0;
         int adequateGeneratedLexCount = 0;
-        int adequateGeneratedArgCount = 0;
+
         Map<Integer, Boolean> testMap = new HashMap<>();
         for (AllArgRecTest test: tests) {
             boolean adequateGeneratedExcode = false;
@@ -218,73 +279,65 @@ public class ArgRecTester {
         System.out.println(String.format("Adequate generated candidates: %.2f%%", 100.0 * adequateGeneratedArgCount / tests.size()));
 
 
-        //Collections.shuffle(tests);
-        int[] tops = {1, 3, 5, 10};
-        int testCount = 0;
-        boolean isNGramUsed = false;
-        boolean isRNNUsed = false;
         DataFrame dataFrame = new DataFrame();
-        try {
-            SocketClient socketClient = new SocketClient(18007);
-            for (AllArgRecTest test: tests) {
-                Response response = socketClient.write(gson.toJson(test));
-                if (response instanceof PredictResponse) {
-                    PredictResponse predictResponse = (PredictResponse) response;
-                    isNGramUsed = predictResponse.getData().ngram != null;
-                    isRNNUsed = predictResponse.getData().rnn != null;
-                    List<String> nGramResults = null;
-                    if (isNGramUsed) nGramResults = predictResponse.getData().ngram.getResult();
-                    List<String> RNNResults = null;
-                    if (isRNNUsed) RNNResults = predictResponse.getData().rnn.getResult();
 
-//                    System.out.println("==========================");
-//                    System.out.println(gson.toJson(test));
-//                    if (isNGramUsed) {
-//                        System.out.println("==========================");
-//                        System.out.println("NGram's results:");
-//                        nGramResults.forEach(item -> {
-//                            System.out.println(item);
-//                        });
-//                        System.out.println("==========================");
-//                        System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
-//                    }
-//
-//                    if (isRNNUsed) {
-//                        System.out.println("==========================");
-//                        System.out.println("RNN's results:");
-//                        RNNResults.forEach(item -> {
-//                            System.out.println(item);
-//                        });
-//                        System.out.println("==========================");
-//                        System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
-//                    }
+        List<List<AllArgRecTest>> testBatches = null;
 
-                    System.out.println(String.format("Progress: %.2f%%", 100.0 * testCount / tests.size()));
-
-                    ++testCount;
-                    if (testMap.getOrDefault(test.getId(), false)) ++adequateGeneratedArgCount;
-                    dataFrame.insert("NumArg", test.getNumArg());
-
-                    if (isNGramUsed) {
-                        for (int k: tops)
-                            updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
-                                    "nGram", dataFrame);
-                    }
-
-                    if (isRNNUsed) {
-                        for (int k: tops)
-                            updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
-                                    "RNN", dataFrame);
-                    }
-
-                    if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
-                    if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
-                }
-            }
-            socketClient.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (Config.MULTIPROCESS) {
+            int batchSize = IntMath.divide(tests.size(), Config.NUM_THREAD, RoundingMode.UP);
+            testBatches = Lists.partition(tests, batchSize);
         }
+
+        ProgressBar testProgressBar = new ProgressBar();
+
+        if (Config.MULTIPROCESS) {
+            final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
+            final List<Future<?>> futures = new ArrayList<>();
+
+            List<List<AllArgRecTest>> finalTestBatches = testBatches;
+            for (List<AllArgRecTest> testBatch : finalTestBatches) {
+                Future<?> future = executor.submit(() -> {
+                    try {
+                        SocketClient socketClient = new SocketClient(18007);
+                        for (AllArgRecTest test : testBatch) {
+                            Response response = socketClient.write(gson.toJson(test));
+                            if (response instanceof PredictResponse) {
+                                test(response, testMap, test, dataFrame, tests.size(), testProgressBar);
+                            }
+                        }
+                        socketClient.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                futures.add(future);
+            }
+            boolean isDone = false;
+            while (!isDone) {
+                boolean isProcessing = false;
+                for (Future<?> future : futures) {
+                    if (!future.isDone()) {
+                        isProcessing = true;
+                        break;
+                    }
+                }
+                if (!isProcessing) isDone = true;
+            }
+        } else {
+            try {
+                SocketClient socketClient = new SocketClient(18007);
+                for (AllArgRecTest test : tests) {
+                    Response response = socketClient.write(gson.toJson(test));
+                    if (response instanceof PredictResponse) {
+                        test(response, testMap, test, dataFrame, tests.size(), testProgressBar);
+                    }
+                }
+                socketClient.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         System.out.println("==========================");
         System.out.println("Number of tests: " + testCount);
         System.out.println("Average parsing runtime: " + averageGetTestsTime + "s");
