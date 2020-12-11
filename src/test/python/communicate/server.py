@@ -431,10 +431,10 @@ def main():
     print('[SERVER IS STARTED]')
     while True:
         conn, addr = serv.accept()
-        print("New client is connected!")
+        print("ID[" + str(clientId) + "] New client is connected!")
         print_lock = threading.Lock()
         start_new_thread(flute, (conn, clientId))
-        clientId = + 1
+        clientId += 1
 
 
 if __name__ == '__main__':
