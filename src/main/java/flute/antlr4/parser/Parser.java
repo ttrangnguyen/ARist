@@ -559,19 +559,19 @@ public class Parser {
     public static void main(String[] args) {
         // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
         // netbeans stops = [0, 5000, 9759]
-        Parser parser = new Parser("eclipse", "", 0, 23000);
-        parser.run();
-        parser = new Parser("eclipse", "", 23001, 28000);
-        parser.run();
-        parser = new Parser("eclipse", "", 28001, 35000);
-        parser.run();
-        parser = new Parser("eclipse", "", 35001, 42000);
-        parser.run();
-        parser = new Parser("eclipse", "", 42001, 46177);
-        parser.run();
-        parser = new Parser("netbeans", "/ide", 0, 5000);
-        parser.run();
-        parser = new Parser("netbeans", "/ide", 5001, 9759);
+//        Parser parser = new Parser("eclipse", "", 0, 23000);
+//        parser.run();
+//        parser = new Parser("eclipse", "", 23001, 28000);
+//        parser.run();
+//        Parser parser = new Parser("eclipse", "", 28001, 35000);
+//        parser.run();
+//        parser = new Parser("eclipse", "", 35001, 42000);
+//        parser.run();
+//        Parser parser = new Parser("eclipse", "", 42001, 46177);
+//        parser.run();
+//        Parser parser = new Parser("netbeans", "/ide", 0, 5000);
+//        parser.run();
+        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
         parser.run();
 
 

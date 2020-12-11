@@ -54,19 +54,19 @@ def java_tokenize(text, tokenizer, train_len, last_only=False):
     class_name = ""
     inside_method = False
     lines = text.split("\n")
-    print(lines)
+    # print(lines)
     n = len(lines)
     i = 0
     while i<n:
         if lines[i] == '`':
             # Class begin
-            class_name = lines[i+1]
+            class_name = tokenize(lines[i+1])
             i += 2
         elif lines[i] == '#':
             if not inside_method:
                 # Method begin, look for { (or # if abstract method)
                 i += 1
-                method_name = lines[i]
+                method_name = tokenize(lines[i])
                 inside_method = True
                 i += 1
                 # if lines[i+1] != '#':
@@ -77,11 +77,12 @@ def java_tokenize(text, tokenizer, train_len, last_only=False):
                 # inside_method = True
             else:
                 # Method end
-                for j in range(1, len(all_tokens)):
-                    seq = all_tokens[max(j - train_len, 0):j]
-                    text_sequences.append(seq)
-                    text_method_names.append(method_name)
-                    text_class_names.append(class_name)
+                if class_name != "":    # class_name == "" when enum
+                    for j in range(1, len(all_tokens)):
+                        seq = all_tokens[max(j - train_len, 0):j]
+                        text_sequences.append(seq)
+                        text_method_names.append(method_name)
+                        text_class_names.append(class_name)
                 all_tokens = []
                 inside_method = False
                 i += 1
@@ -139,11 +140,10 @@ def preprocess(train_path, csv_path, train_len):
         index.append("class_name")
         writer.writerow(index)
         for f in os.listdir(train_path):
-            print(f)
+            # print(f)
             text = read_file(os.path.join(train_path, f))
             sequences, method_names_tokens, class_names_tokens = java_tokenize(text, tokenizer, train_len)
             writer.writerows(prepare_sequence(sequences, train_len, method_names_tokens, class_names_tokens))
-            break
 
     import pandas as pd
     df = pd.read_csv(csv_path)
