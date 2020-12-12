@@ -227,8 +227,6 @@ public class ArgRecTestGenerator {
                 //System.out.println("Position: " + methodCall.getBegin().get());
 
                 List<ArgRecTest> oneArgTests = new ArrayList<>();
-                boolean[] isCleaned = new boolean[Math.max(methodCall.getArguments().size(), 1)];
-                Arrays.fill(isCleaned, false);
                 int methodCallIdx = stack.get(stack.size() - 1);
                 int k = methodCallIdx + 1;
                 int contextIdx = methodCallIdx + 1;
@@ -284,8 +282,8 @@ public class ArgRecTestGenerator {
                                     test.setExpected_excode_ori(argExcodes);
                                     if (isClean(argExcodes)) {
                                         cleanTest(test);
-                                        isCleaned[j] = true;
                                     } else {
+                                        test.setIgnored(true);
                                     }
                                     oneArgTests.add(test);
                                 } catch (IOException e) {
@@ -367,8 +365,8 @@ public class ArgRecTestGenerator {
                         test.setNext_lex(nextLexList);
                         if (isClean) {
                             cleanTest(test);
-                            isCleaned[Math.max(methodCall.getArguments().size() - 1, 0)] = true;
                         } else {
+                            test.setIgnored(true);
                         }
                         oneArgTests.add(test);
                     } catch (IOException e) {
@@ -378,20 +376,12 @@ public class ArgRecTestGenerator {
                     //System.out.println("No candidate generated: " + methodCall);
                 }
 
-                boolean flag = true;
-                for (int j = 0; j < isCleaned.length; ++j)
-                    if (!isCleaned[j]) {
-                        flag = false;
-                        break;
-                    }
-
                 for (int j = 0; j < oneArgTests.size(); ++j) {
                     if (j == oneArgTests.size() - 1) {
                         oneArgTests.get(j).setArgPos(methodCall.getArguments().size());
                     } else {
                         oneArgTests.get(j).setArgPos(j + 1);
                     }
-                    oneArgTests.get(j).setIgnored(!flag);
                 }
 
                 tests.addAll(oneArgTests);
@@ -449,15 +439,18 @@ public class ArgRecTestGenerator {
 
                 List<List<String>> allNextExcodeList = new ArrayList<>();
                 List<List<List<String>>> allNextLexList = new ArrayList<>();
+                test.setIgnored(false);
                 for (int j = 0; j < pile.size(); ++j) {
                     allNextExcodeList.add(pile.get(j).getNext_excode());
                     allNextLexList.add(pile.get(j).getNext_lex());
+                    if (pile.get(j).isIgnored()) {
+                        test.setIgnored(true);
+                    }
                 }
                 test.setNext_excode(allNextExcodeList);
                 test.setNext_lex(allNextLexList);
                 test.setArgRecTestList(pile);
                 test.setNumArg(pile.get(pile.size() - 1).getArgPos());
-                test.setIgnored(pile.get(0).isIgnored());
 
                 tests.add(test);
 
