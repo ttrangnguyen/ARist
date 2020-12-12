@@ -133,6 +133,10 @@ public class DataFrame {
         variable.insert(data);
     }
 
+    public void insert(String label, boolean data) {
+        insert(label, data? 1: 0);
+    }
+
     public String describe(String label) {
         Variable variable = getVariable(label);
         List<Double> milestones = variable.getMilestones(0.25, 0.50, 0.75);
