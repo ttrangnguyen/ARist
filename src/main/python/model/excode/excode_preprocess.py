@@ -71,8 +71,11 @@ def excode_tokenize(text, tokenizer, train_len, tokens, method_content_only=True
         i = 0
         while i < len(data):
             if data[i][:7] == "CLASS{S":
-                class_name_tokens = get_class_name_tokens(data[i])
-            if data[i][:7] == "METHOD{":
+                if class_name_tokens is None:
+                    class_name_tokens = get_class_name_tokens(data[i])
+            elif data[i][:7] == "CLASS{E":
+                class_name_tokens = None
+            elif data[i][:7] == "METHOD{":
                 method_name_tokens = get_method_name_tokens(data[i])
                 all_tokens = []
                 while data[i] != "OPBLK" and data[i] != "ENDMETHOD":

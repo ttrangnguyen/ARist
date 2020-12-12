@@ -5,7 +5,7 @@ package flute.antlr4.config;
  */
 
 public class Config {
-    public static final String dataVersion = "2";
+    public static final String dataVersion = "3";
     public static final String projectsPath = "storage/repositories/git/";
     //    public static final String projectsSrcPath = "../../Research/java-data/";
     public static final String parsingResult = "parsingResult.txt/";

@@ -51,42 +51,41 @@ def java_tokenize(text, tokenizer, train_len, last_only=False):
     text_method_names = []
     all_tokens = []
     method_name = ""
-    class_name = ""
-    inside_method = False
+    class_name = None
     lines = text.split("\n")
+    class_level = 0
+    method_level = 0
     # print(lines)
     n = len(lines)
     i = 0
-    while i<n:
+    while i < n:
         if lines[i] == '`':
             # Class begin
-            class_name = tokenize(lines[i+1])
+            class_level += 1
+            if class_level == 1:
+                class_name = tokenize(lines[i + 1])
             i += 2
+        elif lines[i] == '¬':
+            class_level -= 1
+            i += 1
         elif lines[i] == '#':
-            if not inside_method:
-                # Method begin, look for { (or # if abstract method)
-                i += 1
-                method_name = tokenize(lines[i])
-                inside_method = True
-                i += 1
-                # if lines[i+1] != '#':
-                # print(method_name)
-                # while lines[i] != '{' and lines[i] != '#' and i<n:
-                #     i += 1
-                # if lines[i] == '{':
-                # inside_method = True
-            else:
+            method_level += 1
+            if method_level == 1:
+                method_name = tokenize(lines[i + 1])
+            i += 2
+        elif lines[i] == '$':
+            method_level -= 1
+            if method_level == 0:
                 # Method end
-                if class_name != "":    # class_name == "" when enum
+                if class_level > 0:
                     for j in range(1, len(all_tokens)):
                         seq = all_tokens[max(j - train_len, 0):j]
                         text_sequences.append(seq)
                         text_method_names.append(method_name)
                         text_class_names.append(class_name)
                 all_tokens = []
-                inside_method = False
-                i += 1
-        elif inside_method:
+            i += 1
+        elif method_level > 0:
             stripped = lines[i].strip()
             if stripped != '':
                 if 'a' <= stripped[0] <= 'z' or 'A' <= stripped[0] <= 'Z':
@@ -148,7 +147,7 @@ def preprocess(train_path, csv_path, train_len):
     import pandas as pd
     df = pd.read_csv(csv_path)
     cols = list(df.columns)
-    cols[:train_len] = ["label"] + cols[:train_len-1]
+    cols[:train_len] = ["label"] + cols[:train_len - 1]
     df_reorder = df[cols]
     df_reorder.to_csv(csv_path, index=False)
 
@@ -165,8 +164,9 @@ if __name__ == "__main__":
         for i in range(len(data_parent_folders)):
             projects = listdirs("../../../../../../data_classform/java/" + data_type)
             for project in projects:
-                Path('../../../../../../' + data_parent_folders[i] + '/java/' + project).mkdir(parents=True, exist_ok=True)
+                Path('../../../../../../' + data_parent_folders[i] + '/java/' + project).mkdir(parents=True,
+                                                                                               exist_ok=True)
                 preprocess(train_path='../../../../../../data_classform/java/' + data_type + '/' + project + '/',
                            csv_path='../../../../../../' + data_parent_folders[i] + '/java/' + project + '/java_' +
                                     data_type + "_" + project + '.csv',
-                           train_len = train_len[i])
+                           train_len=train_len[i])

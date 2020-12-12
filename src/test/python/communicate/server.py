@@ -2,6 +2,7 @@ import socket
 import json
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
+from name_stat.name_tokenizer import tokenize
 from keras.models import load_model
 from model.predictor import prepare, predict, evaluate
 from time import perf_counter
@@ -17,6 +18,8 @@ import logging
 import sys
 import copy
 import os, glob
+from pathlib import Path
+
 
 
 def read_file(filepath):
@@ -55,7 +58,7 @@ with open("../../../../../model/java_model_" + project + "ngram.pkl", 'rb') as f
 excode_tokenizer = load(open('../../../../src/main/python/model/excode/excode_tokenizer', 'rb'))
 java_tokenizer = load(open('../../../../src/main/python/model/java/java_tokenizer', 'rb'))
 excode_tokens = read_file('../../../../data_dict/excode/excode_tokens_n_symbols.txt').lower().split("\n")
-train_len = 20 + 1
+train_len = 6 + 1
 ngram = 2 + 1
 top_k_excode = 100
 top_k = 10
@@ -84,6 +87,7 @@ def write_result(project, clientId, ngram_excode_correct, ngram_lex_correct, rnn
         rnn_excode_correct[i] += rnn_excode_correct[i - 1]
         rnn_lex_correct[i] += rnn_lex_correct[i - 1]
 
+    Path('../../../../storage/result/').mkdir(parents=True, exist_ok=True)
     if not path.exists('../../../../storage/result/' + project + '.' + str(clientId) + '.csv'):
         with open('../../../../storage/result/' + project + '.' + str(clientId) + '.csv', mode='w',
                   newline='') as project_result:
@@ -146,6 +150,12 @@ def flute(conn, clientId):
         #                                       tokenizer=java_tokenizer,
         #                                       train_len=train_len)[0]
         if USE_RNN:
+            method_name = tokenize(data['method_name'])
+            class_name = tokenize(data['class_name'])
+            method_name_tokens_excode = excode_tokenizer.texts_to_sequences([method_name])[0]
+            class_name_tokens_excode = excode_tokenizer.texts_to_sequences([class_name])[0]
+            method_name_tokens_java = java_tokenizer.texts_to_sequences([method_name])[0]
+            class_name_tokens_java = java_tokenizer.texts_to_sequences([class_name])[0]
             excode_origin_context = excode_tokenize(data['excode_context'],
                                                     tokenizer=excode_tokenizer,
                                                     train_len=train_len,
@@ -183,7 +193,9 @@ def flute(conn, clientId):
                     sentence_len_all += sentence_len
                 x_test_all = np.array(x_test_all)
                 y_test_all = np.array(y_test_all)
-                p_pred = predict(excode_model_rnn, x_test_all)
+                p_pred = predict(excode_model_rnn, x_test_all,
+                                 method_name_tokens=method_name_tokens_excode,
+                                 class_name_tokens=class_name_tokens_excode)
                 log_p_sentence = evaluate(p_pred, y_test_all, sentence_len_all)
                 counter = 0
                 for ex_suggest_id in range(len(excode_context)):
@@ -250,7 +262,9 @@ def flute(conn, clientId):
                 x_test_all = np.array(x_test_all)
                 y_test_all = np.array(y_test_all)
                 # print(x_test_all.shape)
-                p_pred = predict(java_model_rnn, x_test_all)
+                p_pred = predict(java_model_rnn, x_test_all,
+                                 method_name_tokens=method_name_tokens_java,
+                                 class_name_tokens=class_name_tokens_java)
                 log_p_sentence = evaluate(p_pred, y_test_all, sentence_len_all)
                 counter = 0
                 java_suggestion_scores = []
@@ -279,7 +293,7 @@ def flute(conn, clientId):
             result_rnn = []
             for i in range(min(top_k, len(sorted_scores))):
                 candidate = sorted_scores[i][0]
-                logger.debug(candidate)
+                # logger.debug(candidate)
                 if candidate == data['expected_lex']:
                     rnn_lex_correct[i] += 1
                 result_rnn.append(sorted_scores[i][3])
@@ -389,7 +403,7 @@ def flute(conn, clientId):
         result_ngram = []
         for i in range(min(top_k, len(sorted_scores))):
             candidate = sorted_scores[i][0][ngram:]
-            logger.debug(candidate)
+            # logger.debug(candidate)
             if candidate == data['expected_lex']:
                 ngram_lex_correct[i] += 1
             result_ngram.append(sorted_scores[i][1])

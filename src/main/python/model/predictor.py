@@ -27,11 +27,16 @@ def prepare(context, sentences, train_len, start_pos):
     return np.array(x_test_all), np.array(y_test_all), sentence_len
 
 
-def predict(model, x):
-    return model.predict(x, workers=4, use_multiprocessing=True, batch_size=200)
+def predict(model, x, **kwargs):
+    model_input = [x]
+    if "method_name_tokens" in kwargs:
+        model_input.append(np.array([kwargs.get("method_name_tokens")] * len(x)))
+    if "class_name_tokens" in kwargs:
+        model_input.append(np.array([kwargs.get("class_name_tokens")] * len(x)))
+    return model.predict(model_input, workers=4, use_multiprocessing=True, batch_size=200)
 
 
-def evaluate(p_pred, y_test, sentence_len):
+def evaluate(p_pred, y_test, sentence_len, **kwargs):
     log_p_sentence = [0] * len(sentence_len)
     x_test_id = 0
     accumulate_len = 0

@@ -291,13 +291,13 @@ public class Parser {
     private void createJavaFile(String absolutePath, String javaFileTokenPath) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(absolutePath));
         String currentMethodName;
-        String currentClassName;
         boolean insideMethod = false;
         boolean insideClass = false;
         StringBuilder fileContentBuilder = new StringBuilder();
         int curLineNum = 0;
         File curFile = new File(absolutePath);
         FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+        ArrayList<String> classStack = new ArrayList<>();
         for (String line = reader.readLine(); line!=null; line=reader.readLine()) {
 //            FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
             ++curLineNum;
@@ -315,10 +315,20 @@ public class Parser {
             if (classScopeName.isPresent()) {
                 if (!insideClass) {
                     insideClass = true;
-                    currentClassName = classScopeName.get();
-                    fileContentBuilder.append("`").append(currentClassName);
+                    classStack.add(classScopeName.get());
+                    fileContentBuilder.append("`").append(classScopeName.get());
+                } else if (!classScopeName.get().equals(classStack.get(classStack.size() - 1))) {
+                    if (classStack.size() > 1 && classScopeName.get().equals(classStack.get(classStack.size() - 2))) {
+                        classStack.remove(classStack.size() - 1);
+                        fileContentBuilder.append("¬");
+                    } else {
+                        classStack.add(classScopeName.get());
+                        fileContentBuilder.append("`").append(classScopeName.get());
+                    }
                 }
-            } else {
+            } else if (insideClass){
+                fileContentBuilder.append("¬");
+                classStack.remove(0);
                 insideClass = false;
             }
             if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
@@ -329,7 +339,7 @@ public class Parser {
                 }
                 fileContentBuilder.append(line).append("\n");
             } else if (insideMethod){
-                fileContentBuilder.append("#");
+                fileContentBuilder.append("$");
                 insideMethod = false;
             }
         }
@@ -559,10 +569,10 @@ public class Parser {
     public static void main(String[] args) {
         // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
         // netbeans stops = [0, 5000, 9759]
-//        Parser parser = new Parser("eclipse", "", 0, 23000);
-//        parser.run();
-//        parser = new Parser("eclipse", "", 23001, 28000);
-//        parser.run();
+        Parser parser = new Parser("eclipse", "", 0, 23000);
+        parser.run();
+        parser = new Parser("eclipse", "", 23001, 28000);
+        parser.run();
 //        Parser parser = new Parser("eclipse", "", 28001, 35000);
 //        parser.run();
 //        parser = new Parser("eclipse", "", 35001, 42000);
@@ -571,22 +581,25 @@ public class Parser {
 //        parser.run();
 //        Parser parser = new Parser("netbeans", "/ide", 0, 5000);
 //        parser.run();
-        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
-        parser.run();
+//        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
+//        parser.run();
 
 
-        //File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
+//        File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
 //        ProjectParser projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
 //                flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
-//        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\eclipse\\eclipse.pde.ui\\ui\\org.eclipse.pde.core\\src\\org\\eclipse\\pde\\internal\\core\\plugin\\AbbreviatedPluginHandler.java");
+////        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\eclipse\\eclipse.pde.ui\\ui\\org.eclipse.pde.core\\src\\org\\eclipse\\pde\\internal\\core\\plugin\\AbbreviatedPluginHandler.java");
 ////        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\netbeans\\ide\\html\\src\\org\\netbeans\\modules\\html\\palette\\items\\A.java");
+//        File curFile = new File("D:\\Research\\Flute\\src\\main\\java\\flute\\antlr4\\config\\Bruh.java");
 //        FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
 //        try {
-//            fileParser.setPosition(38, 0);
+//            fileParser.setPosition(13, 1);
 //        } catch (Exception e) {
 ////                e.printStackTrace();
 ////                System.out.println(curLineNum);  // always exception
 //        }
+//        Optional<String> classScopeName = fileParser.getCurClassScopeName();
+//        classScopeName.ifPresent(System.out::println);
 //        Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
 //        if (methodScopeName.isPresent()) {
 //            System.out.println("DMM");
