@@ -22,10 +22,10 @@ public class MethodInfo {
 //	ArrayList<String> paramsList = null;
 	String[] paramsList = null;
 	
-	public static ArrayList<MethodInvocInfo> methodInvocTmpList = null;
+	public  static ArrayList<MethodInvocInfo> methodInvocTmpList = null;
 	public MethodInvocInfo[] methodInvocList = null;
 
-	public static ArrayList<NodeInfo> nodeTmpList = null;
+	public  static ArrayList<NodeInfo> nodeTmpList = null;
 	
 	public NodeInfo[] nodeList = null;
 

@@ -11,7 +11,7 @@ import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.tokenizing.excode_data.TypeInfo;
 
 public class GetDirStructureCrossProject {
-	public static void buildSystemPackageList(SystemTableCrossProject systemTable) {
+	public synchronized static void buildSystemPackageList(SystemTableCrossProject systemTable) {
 		ArrayList<TypeInfo> typeList = systemTable.typeList;
 		HashMap<String, PackageInfo> packageMap = systemTable.packageMap;
 		for (TypeInfo typeInfo : typeList) {

@@ -133,10 +133,10 @@ import flute.utils.logging.Logger;
  */
 public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 	private static final boolean CONFIG_RAW = false;
-    public static int ID_SUFFIX = 452961;
+    public  static int ID_SUFFIX = 452961;
 
-	public static Map<String, String> DIC = new HashMap<>();
-	public static Map<String, String> METHOD_FILE = new HashMap<>();
+	public  static Map<String, String> DIC = new HashMap<>();
+	public  static Map<String, String> METHOD_FILE = new HashMap<>();
 
 	private FileInfo fileInfo = null;
 	private TypeInfo curTypeInfo = null;
@@ -162,7 +162,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 
 	public boolean isParam = true;
 
-	public static void resetDIC() {
+	public synchronized static void resetDIC() {
 		DIC = new HashMap<>();
 		// METHOD_FILE = new HashMap<>();
 	}
@@ -3073,7 +3073,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         else return Optional.of(new Position(pos.line + lineCnt, s.length()));
     }
 	
-	public static void main(String[] args) {
+	public synchronized static void main(String[] args) {
         Logger.initDebug("debugVisitor.txt");
         List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.REPO_DIR + "sampleproj/");
         Logger.log("allSubFiles size: " + allSubFilesTmp.size());

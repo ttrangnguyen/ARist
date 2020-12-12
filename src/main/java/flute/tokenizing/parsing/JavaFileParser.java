@@ -40,7 +40,7 @@ public class JavaFileParser {
 	 * @param origDirPath The original directory path.
 	 * @see    MetricsVisitor
 	 */
-	public static void visitFile(MetricsVisitor visitor, File file, SystemTableCrossProject systemTable,
+	public synchronized static void visitFile(MetricsVisitor visitor, File file, SystemTableCrossProject systemTable,
 			String origDirPath) {
 	    
 		FileInfo fileInfo = new FileInfo();
@@ -78,7 +78,7 @@ public class JavaFileParser {
 	 * @throws ParseException
 	 * @see    {@link com.github.javaparser.JavaParser#parse(InputStream)}
 	 */
-	public static CompilationUnit getCU(File file) throws ParseException {
+	public synchronized static CompilationUnit getCU(File file) throws ParseException {
 		// InputStream in = null;
 		CompilationUnit cu = null;
 
@@ -135,7 +135,7 @@ public class JavaFileParser {
 	 * @param fileName The file path.
 	 * @return the file contents excluding Java Annotation lines.
 	 */
-	public static String sonReader(String fileName) {
+	public synchronized static String sonReader(String fileName) {
 		String content = "";
 		try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
 			String line;
@@ -182,7 +182,7 @@ public class JavaFileParser {
 	}
 
 	@SuppressWarnings("unused")
-	public static int findClosingParen(char[] text, int openPos) {
+	public synchronized static int findClosingParen(char[] text, int openPos) {
 		int closePos = openPos;
 		int counter = 1;
 		try {
@@ -201,7 +201,7 @@ public class JavaFileParser {
 	}
 
 	@SuppressWarnings("unused")
-	public static int findClosingParen2(char[] text, int openPos) {
+	public synchronized static int findClosingParen2(char[] text, int openPos) {
 		int closePos = openPos;
 		int counter = 1;
 		while (counter > 0) {

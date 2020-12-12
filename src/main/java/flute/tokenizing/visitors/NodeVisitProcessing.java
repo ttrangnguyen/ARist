@@ -28,11 +28,11 @@ public class NodeVisitProcessing {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public synchronized static void main(String[] args) {
 
 	}
 
-	public static NodeInfo addNewFieldAccessNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static NodeInfo addNewFieldAccessNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID, Node n) {
 
 		long ID = curID;
@@ -116,7 +116,7 @@ public class NodeVisitProcessing {
 		return nodeInfo;
 	}
 
-	public static NodeInfo addNewLiteralNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static NodeInfo addNewLiteralNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID, Node n) {
 
 		long ID = curID;
@@ -200,7 +200,7 @@ public class NodeVisitProcessing {
 		return nodeInfo;
 	}
 
-	public static NodeInfo addNewAssignNode(String assignType, MethodInfo curMethodInfo,
+	public synchronized static NodeInfo addNewAssignNode(String assignType, MethodInfo curMethodInfo,
 			Stack<NodeInfo> parentNodeStack, Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID,
 			Node n) {
 
@@ -283,7 +283,7 @@ public class NodeVisitProcessing {
 	}
 
 	// TODO: should check this
-	public static NodeInfo addTypeNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static NodeInfo addTypeNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID, Node n) {
 
 		long ID = curID;
@@ -362,7 +362,7 @@ public class NodeVisitProcessing {
 	}
 
 	// TODO: should check this
-	public static NodeInfo addVarNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static NodeInfo addVarNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID, Node n) {
 
 		long ID = curID;
@@ -443,7 +443,7 @@ public class NodeVisitProcessing {
 		return nodeInfo;
 	}
 
-	public static NodeInfo addNewControlNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static NodeInfo addNewControlNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID, int ControlType) {
 		long ID = curID;
 		int nodeType = NodeInfo.CONTROL_TYPE;
@@ -490,7 +490,7 @@ public class NodeVisitProcessing {
 		return nodeInfo;
 	}
 
-	public static void removeControlNodeInfo(NodeInfo nodeInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static void removeControlNodeInfo(NodeInfo nodeInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack) {
 
 		parentNodeStack.pop();
@@ -515,7 +515,7 @@ public class NodeVisitProcessing {
 		}
 	}
 
-	public static NodeInfo addNewInvocNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static NodeInfo addNewInvocNode(MethodInfo curMethodInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack, long curID, MethodInvocInfo methodInvoc, Node n) {
 		long ID = curID;
 		int nodeType = NodeInfo.METHODINVOC_TYPE;
@@ -607,7 +607,7 @@ public class NodeVisitProcessing {
 		return nodeInfo;
 	}
 
-	public static void removeInvocNodeInfo(Node n, NodeInfo nodeInfo, Stack<NodeInfo> parentNodeStack,
+	public synchronized static void removeInvocNodeInfo(Node n, NodeInfo nodeInfo, Stack<NodeInfo> parentNodeStack,
 			Stack<ArrayList<NodeInfo>> previousControlFlowNodeStack) {
 
 		// Logger.log("cur MethodExpr: " + n);
@@ -621,7 +621,7 @@ public class NodeVisitProcessing {
 		// }
 	}
 
-	public static boolean isInvocNode(Node n) {
+	public synchronized static boolean isInvocNode(Node n) {
 		boolean isInvoc = false;
 		if (n instanceof MethodCallExpr) {
 			isInvoc = true;
@@ -631,7 +631,7 @@ public class NodeVisitProcessing {
 		return isInvoc;
 	}
 
-	public static boolean isControlNode(Node n) {
+	public synchronized static boolean isControlNode(Node n) {
 		boolean isControl = false;
 		if (n instanceof ConditionalExpr) {
 			isControl = true;

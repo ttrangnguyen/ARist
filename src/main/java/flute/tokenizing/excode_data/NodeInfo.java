@@ -25,7 +25,7 @@ public class NodeInfo {
 	public NodeInfo[] previousDataNodes;
 
 	public static ArrayList<NodeInfo> previousControlNodesTmp = new ArrayList<NodeInfo>();
-//	public static ArrayList<NodeInfo> previousDataNodesTmp = new ArrayList<NodeInfo>();
+//	public synchronized static ArrayList<NodeInfo> previousDataNodesTmp = new ArrayList<NodeInfo>();
 
 	public NodeInfo() {
 	}
@@ -82,7 +82,7 @@ public class NodeInfo {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public synchronized static void main(String[] args) {
 
 	}
 
