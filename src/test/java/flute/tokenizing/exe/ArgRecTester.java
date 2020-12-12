@@ -443,15 +443,12 @@ public class ArgRecTester {
         final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
         final List<Future<?>> futures = new ArrayList<>();
 
+        List<String> fileList = new ArrayList<>();
+
         while (sc.hasNextLine()) {
             String filePath = sc.nextLine();
             if (Config.MULTIPROCESS) {
-                Future<?> future = executor.submit(() -> {
-                    List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
-                    for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
-                    tests.addAll(oneFileTests);
-                });
-                futures.add(future);
+                fileList.add(filePath);
             } else {
                 List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
                 for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
@@ -461,6 +458,23 @@ public class ArgRecTester {
         sc.close();
 
         if (Config.MULTIPROCESS) {
+            int batchSize = IntMath.divide(fileList.size(), Config.NUM_THREAD, RoundingMode.UP);
+            List<List<String>> fileBatches = Lists.partition(fileList, batchSize);
+
+            for (List<String> fileBatch : fileBatches) {
+                Future<?> futureItem = executor.submit(() -> {
+                    for (String filePath : fileBatch) {
+                        ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
+                                Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+                        ArgRecTestGenerator generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
+                        List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
+                        for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
+                        tests.addAll(oneFileTests);
+                    }
+                });
+                futures.add(futureItem);
+            }
+
             boolean isDone = false;
             while (!isDone) {
                 boolean isProcessing = false;
