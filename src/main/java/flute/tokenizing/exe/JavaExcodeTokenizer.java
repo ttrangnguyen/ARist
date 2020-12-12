@@ -107,13 +107,13 @@ public class JavaExcodeTokenizer {
         }
     }
 
-    public static void validateJavaFile(File javaFile) {
+    public synchronized static void validateJavaFile(File javaFile) {
         if (!javaFile.exists()) throw new IllegalArgumentException("File does not exist!");
         if (!(javaFile.isFile() && javaFile.getName().toLowerCase().endsWith(".java"))) throw new IllegalArgumentException("Not a java file!");
         if (javaFile.isHidden()) throw new IllegalArgumentException("File is hidden!");
     }
 
-    public static void main(String[] args) {
+    public synchronized static void main(String[] args) {
         JavaExcodeTokenizer tokenizer = new JavaExcodeTokenizer(Config.REPO_DIR + "sampleproj/");
         tokenizer.tokenizeToFile(Config.REPO_DIR + "sampleproj/src/Main.java", Config.LOG_DIR + "debugTokenizer.txt");
 

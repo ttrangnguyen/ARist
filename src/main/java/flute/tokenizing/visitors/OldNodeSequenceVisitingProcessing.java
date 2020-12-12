@@ -19,20 +19,20 @@ import flute.tokenizing.excode_data.TypeInfo;
 public class OldNodeSequenceVisitingProcessing {
 	public static long curNodeID = 0;
 
-	public static void init() {
+	public synchronized static void init() {
 		curNodeID = 0;
 	}
-	public static NodeSequenceInfo addOPBLKNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addOPBLKNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getOPBLK();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
-	public static NodeSequenceInfo addCLBLKNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addCLBLKNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getCLBLK();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
-	public static NodeSequenceInfo addControlNode(short controlType, Stack<NodeSequenceInfo> nodeSequenceStack,
+	public synchronized static NodeSequenceInfo addControlNode(short controlType, Stack<NodeSequenceInfo> nodeSequenceStack,
 			MethodInfo methodInfo, TypeInfo typeInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
 		if (nodeSequenceStack.size() > 0) {
@@ -52,7 +52,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addElseControlNode(short controlType, Stack<NodeSequenceInfo> nodeSequenceStack,
+	public synchronized static NodeSequenceInfo addElseControlNode(short controlType, Stack<NodeSequenceInfo> nodeSequenceStack,
 			MethodInfo methodInfo, TypeInfo typeInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
 		if (nodeSequenceStack.size() > 0) {
@@ -74,7 +74,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addEndControlNode(short controlType, long sameControlSeqID,
+	public synchronized static NodeSequenceInfo addEndControlNode(short controlType, long sameControlSeqID,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = nodeSequenceStack.pop();
@@ -93,7 +93,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addClassNode(String className,
+	public synchronized static NodeSequenceInfo addClassNode(String className,
 			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -118,7 +118,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addEndClassNode(String className, long sameControlSeqID,
+	public synchronized static NodeSequenceInfo addEndClassNode(String className, long sameControlSeqID,
 			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = nodeSequenceStack.pop();
@@ -140,7 +140,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 	
-	public static NodeSequenceInfo addEnumNode(String className,
+	public synchronized static NodeSequenceInfo addEnumNode(String className,
 			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
             ArrayList<NodeSequenceInfo> nodeSequenceList) {
         NodeSequenceInfo previousNode = null;
@@ -165,7 +165,7 @@ public class OldNodeSequenceVisitingProcessing {
         return nodeSequenceInfo;
     }
 
-    public static NodeSequenceInfo addEndEnumNode(String className, long sameControlSeqID,
+    public synchronized static NodeSequenceInfo addEndEnumNode(String className, long sameControlSeqID,
     		Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo,
             ArrayList<NodeSequenceInfo> nodeSequenceList) {
         NodeSequenceInfo previousNode = nodeSequenceStack.pop();
@@ -187,7 +187,7 @@ public class OldNodeSequenceVisitingProcessing {
         return nodeSequenceInfo;
     }
 
-	public static NodeSequenceInfo addMethodDecNode(short nodeType, Stack<NodeSequenceInfo> nodeSequenceStack,
+	public synchronized static NodeSequenceInfo addMethodDecNode(short nodeType, Stack<NodeSequenceInfo> nodeSequenceStack,
 			TypeInfo typeInfo, MethodInfo methodInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
 		if (nodeSequenceStack.size() > 0) {
@@ -209,7 +209,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addEndMethodDecNode(short nodeType, long sameControlSeqID,
+	public synchronized static NodeSequenceInfo addEndMethodDecNode(short nodeType, long sameControlSeqID,
 			Stack<NodeSequenceInfo> nodeSequenceStack, TypeInfo typeInfo, MethodInfo methodInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = nodeSequenceStack.pop();
@@ -229,7 +229,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addMethodAccessNode(NodeInfo nodeInfo, String varName, String attachedType,
+	public synchronized static NodeSequenceInfo addMethodAccessNode(NodeInfo nodeInfo, String varName, String attachedType,
 			String methodName, Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList, int numOfArgs) {
 		NodeSequenceInfo previousNode = null;
@@ -255,7 +255,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addConstructorNode(NodeInfo nodeInfo, String varName, String methodName,
+	public synchronized static NodeSequenceInfo addConstructorNode(NodeInfo nodeInfo, String varName, String methodName,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -278,7 +278,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addFieldAccessNode(NodeInfo nodeInfo, String varName, String fieldName,
+	public synchronized static NodeSequenceInfo addFieldAccessNode(NodeInfo nodeInfo, String varName, String fieldName,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -301,7 +301,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addAssignmentNode(NodeInfo nodeInfo, String assignType,
+	public synchronized static NodeSequenceInfo addAssignmentNode(NodeInfo nodeInfo, String assignType,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -326,7 +326,7 @@ public class OldNodeSequenceVisitingProcessing {
 
 	}
 
-	public static NodeSequenceInfo addLiteralNode(NodeInfo nodeInfo, String literalType,
+	public synchronized static NodeSequenceInfo addLiteralNode(NodeInfo nodeInfo, String literalType,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList, boolean isParam) {
 		NodeSequenceInfo previousNode = null;
@@ -354,7 +354,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addTypeNode(NodeInfo nodeInfo, String type,
+	public synchronized static NodeSequenceInfo addTypeNode(NodeInfo nodeInfo, String type,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -378,7 +378,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addVarNode(NodeInfo nodeInfo, String varName,
+	public synchronized static NodeSequenceInfo addVarNode(NodeInfo nodeInfo, String varName,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -402,7 +402,7 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addOperatorNode(String operatorType, Stack<NodeSequenceInfo> nodeSequenceStack,
+	public synchronized static NodeSequenceInfo addOperatorNode(String operatorType, Stack<NodeSequenceInfo> nodeSequenceStack,
 			MethodInfo methodInfo, TypeInfo typeInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
 		if (nodeSequenceStack.size() > 0) {
@@ -426,7 +426,7 @@ public class OldNodeSequenceVisitingProcessing {
 
 	}
 
-	public static NodeSequenceInfo addUOperatorNode(String operatorType, Stack<NodeSequenceInfo> nodeSequenceStack,
+	public synchronized static NodeSequenceInfo addUOperatorNode(String operatorType, Stack<NodeSequenceInfo> nodeSequenceStack,
 			MethodInfo methodInfo, TypeInfo typeInfo, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
 		if (nodeSequenceStack.size() > 0) {
@@ -450,7 +450,7 @@ public class OldNodeSequenceVisitingProcessing {
 
 	}
 
-	public static NodeSequenceInfo addOtherNode(short nodeType, String type, 
+	public synchronized static NodeSequenceInfo addOtherNode(short nodeType, String type,
 	        Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo, 
 	        ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo previousNode = null;
@@ -473,61 +473,61 @@ public class OldNodeSequenceVisitingProcessing {
 
 	}
 	
-	public static NodeSequenceInfo addSTStmNode(short stm, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addSTStmNode(short stm, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getSTSTM(stm);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addENStmNode(short stm, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addENStmNode(short stm, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getENSTM(stm);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 	
-	public static NodeSequenceInfo addSTMethodNode(String type, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addSTMethodNode(String type, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getStartMethod(type);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addENMethodNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addENMethodNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getEndMethod();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 	
-	public static NodeSequenceInfo addFieldDecNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addFieldDecNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
         NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getFieldDeclaration();
         nodeSequenceList.add(nodeSequenceInfo);
         return nodeSequenceInfo;
     }
 
-	public static NodeSequenceInfo addPartNode(short endMt, ArrayList<NodeSequenceInfo> nodeSequenceList, boolean isOpen) {
+	public synchronized static NodeSequenceInfo addPartNode(short endMt, ArrayList<NodeSequenceInfo> nodeSequenceList, boolean isOpen) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getPartNode(endMt, isOpen);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addSEPANode(short sepa, ArrayList<NodeSequenceInfo> nodeSequenceList, char type) {
+	public synchronized static NodeSequenceInfo addSEPANode(short sepa, ArrayList<NodeSequenceInfo> nodeSequenceList, char type) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getSEPA(sepa,  type);
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addConditionalExprNode(short conditionalExpr, ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addConditionalExprNode(short conditionalExpr, ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getConditionalExpr();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addLambdaExprNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addLambdaExprNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getLambdaExpr();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;
 	}
 
-	public static NodeSequenceInfo addUnknownNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static NodeSequenceInfo addUnknownNode(ArrayList<NodeSequenceInfo> nodeSequenceList) {
 		NodeSequenceInfo nodeSequenceInfo = NodeSequenceInfo.getUnknown();
 		nodeSequenceList.add(nodeSequenceInfo);
 		return nodeSequenceInfo;

@@ -402,7 +402,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 	    return alignToken + representStr;
 	}
 
-	public static String getMethodStr(short startEnd) {
+	public synchronized static String getMethodStr(short startEnd) {
 		return "METHOD " + getStringType(startEnd);
 	}
 
@@ -803,33 +803,33 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		this.representStr = "";
 	}
 
-	public static NodeSequenceInfo getOPBLK() {
+	public synchronized static NodeSequenceInfo getOPBLK() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.OPBK;
 		return op;
 	}
 
-	public static NodeSequenceInfo getCLBLK() {
+	public synchronized static NodeSequenceInfo getCLBLK() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.CLBK;
 		return op;
 	}
 
-	public static NodeSequenceInfo getSTSTM(short stm) {
+	public synchronized static NodeSequenceInfo getSTSTM(short stm) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.START;
 		op.representStr = "STSTM{" + getStringType(stm) + "}";
 		return op;
 	}
 
-	public static NodeSequenceInfo getENSTM(short stm) {
+	public synchronized static NodeSequenceInfo getENSTM(short stm) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.END;
 		op.representStr = "ENSTM{" + getStringType(stm) + "}";
 		return op;
 	}
 
-	public static NodeSequenceInfo getPartNode(short endMt, boolean isOpen) {
+	public synchronized static NodeSequenceInfo getPartNode(short endMt, boolean isOpen) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = endMt;
 		if (endMt == NodeSequenceConstant.CASE_PART)
@@ -856,22 +856,22 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
-	public static boolean isOpenPart(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isOpenPart(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
 	}
 
-	public static boolean isClosePart(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isClosePart(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.NODE_PART
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 
-	public static boolean isOpenBrak(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isOpenBrak(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ARRAY_ACCESS
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
 	}
 
-	public static boolean isCloseBrak(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isCloseBrak(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ARRAY_ACCESS
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
@@ -916,7 +916,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return alignToken + "LAMBDA";
 	}
 
-	public static NodeSequenceInfo getStartMethod(String type) {
+	public synchronized static NodeSequenceInfo getStartMethod(String type) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
 		op.startEnd = NodeSequenceConstant.START;
@@ -924,12 +924,12 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
-	public static boolean isStartMethod(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isStartMethod(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHOD
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.START;
 	}
 
-	public static NodeSequenceInfo getEndMethod() {
+	public synchronized static NodeSequenceInfo getEndMethod() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.METHOD;
 		op.startEnd = NodeSequenceConstant.END;
@@ -937,123 +937,123 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return op;
 	}
 
-	public static boolean isEndMethod(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isEndMethod(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHOD
 				&& nodeSequenceInfo.startEnd == NodeSequenceConstant.END;
 	}
 	
-	public static NodeSequenceInfo getFieldDeclaration() {
+	public synchronized static NodeSequenceInfo getFieldDeclaration() {
         NodeSequenceInfo op = new NodeSequenceInfo();
         op.nodeType = NodeSequenceConstant.FIELD;
         op.representStr = "FIELD_DECLARE";
         return op;
     }
 
-	public static NodeSequenceInfo getSEPA(short sepa, char type) {
+	public synchronized static NodeSequenceInfo getSEPA(short sepa, char type) {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.SEPA;
 		op.representStr = "SEPA" + "(" + type + ")";
 		return op;
 	}
 
-	public static boolean isSEPA(NodeSequenceInfo nodeSequenceInfo, char type) {
+	public synchronized static boolean isSEPA(NodeSequenceInfo nodeSequenceInfo, char type) {
 		return nodeSequenceInfo.representStr.equals("SEPA" + "(" + type + ")");
 	}
 
-	public static NodeSequenceInfo getConditionalExpr() {
+	public synchronized static NodeSequenceInfo getConditionalExpr() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.CONDITIONAL_EXPR;
 		op.representStr = "CEXP";
 		return op;
 	}
 
-	public static boolean isConditionalExpr(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isConditionalExpr(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONDITIONAL_EXPR;
 	}
 
-	public static NodeSequenceInfo getLambdaExpr() {
+	public synchronized static NodeSequenceInfo getLambdaExpr() {
 		NodeSequenceInfo op = new NodeSequenceInfo();
 		op.nodeType = NodeSequenceConstant.LAMBDA;
 		op.representStr = "LAMBDA";
 		return op;
 	}
 
-	public static NodeSequenceInfo getUnknown() {
+	public synchronized static NodeSequenceInfo getUnknown() {
 		NodeSequenceInfo node = new NodeSequenceInfo();
 		node.nodeType = NodeSequenceConstant.UNKNOWN;
 		node.representStr = "<unk>";
 		return node;
 	}
 
-	public static boolean isConstructor(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isConstructor(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTOR;
 	}
 
-	public static boolean isConstructorOrMethod(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isConstructorOrMethod(NodeSequenceInfo nodeSequenceInfo) {
 		return isConstructor(nodeSequenceInfo) || isStartMethod(nodeSequenceInfo);
 	}
 
-	public static boolean isMethodAccess(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isMethodAccess(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHODACCESS;
 	}
 
-	public static boolean isConstructorCall(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isConstructorCall(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CONSTRUCTORCALL;
 	}
 
-	public static boolean isArrayCreation(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isArrayCreation(NodeSequenceInfo nodeSequenceInfo) {
 		return isConstructorCall(nodeSequenceInfo) && nodeSequenceInfo.oriNode instanceof ArrayCreationExpr;
 	}
 
-	public static boolean isObjectCreation(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isObjectCreation(NodeSequenceInfo nodeSequenceInfo) {
 		return isConstructorCall(nodeSequenceInfo) && nodeSequenceInfo.oriNode instanceof ObjectCreationExpr;
 	}
 
-	public static boolean isFieldAccess(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isFieldAccess(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.FIELDACCESS;
 	}
 
-	public static boolean isCast(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isCast(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CAST;
 	}
 
-	public static boolean isOPBLK(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isOPBLK(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPBK;
 	}
 
-	public static boolean isCLBLK(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isCLBLK(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.CLBK;
 	}
 
-	public static boolean isClassExpr(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isClassExpr(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.VAR && "Class".equals(nodeSequenceInfo.getAttachedType());
 	}
 
-	public static boolean isVar(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isVar(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.VAR;
 	}
 
-	public static boolean isOperator(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isOperator(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.OPERATOR;
 	}
 
-	public static boolean isUnaryOperator(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isUnaryOperator(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.UOPERATOR;
 	}
 
-	public static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL;
 	}
 
-	public static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo, String literalType) {
+	public synchronized static boolean isLiteral(NodeSequenceInfo nodeSequenceInfo, String literalType) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL && nodeSequenceInfo.getAttachedType().equals(literalType);
 	}
 
-	public static boolean isAssign(NodeSequenceInfo nodeSequenceInfo) {
+	public synchronized static boolean isAssign(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ASSIGN;
 	}
 
-	public static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
+	public synchronized static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
 		StringBuilder sb = new StringBuilder();
 		for (NodeSequenceInfo nodeSequenceInfo: nodeSequenceList) {
 			sb.append(' ');
