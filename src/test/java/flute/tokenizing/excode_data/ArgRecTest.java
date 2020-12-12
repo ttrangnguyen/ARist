@@ -19,6 +19,12 @@ public class ArgRecTest {
     private String expected_excode;
     private String expected_lex;
 
+    private String methodAccessExcode;
+    private String methodAccessLex;
+
+    private String objectCreationExcode;
+    private String objectCreationLex;
+
     private boolean ignored = false;
 
     private transient List<NodeSequenceInfo> expected_excode_ori;
@@ -101,6 +107,38 @@ public class ArgRecTest {
 
     public void setExpected_lex(String expected_lex) {
         this.expected_lex = expected_lex;
+    }
+
+    public String getMethodAccessExcode() {
+        return methodAccessExcode;
+    }
+
+    public void setMethodAccessExcode(String methodAccessExcode) {
+        this.methodAccessExcode = methodAccessExcode;
+    }
+
+    public String getMethodAccessLex() {
+        return methodAccessLex;
+    }
+
+    public void setMethodAccessLex(String methodAccessLex) {
+        this.methodAccessLex = methodAccessLex;
+    }
+
+    public String getObjectCreationExcode() {
+        return objectCreationExcode;
+    }
+
+    public void setObjectCreationExcode(String objectCreationExcode) {
+        this.objectCreationExcode = objectCreationExcode;
+    }
+
+    public String getObjectCreationLex() {
+        return objectCreationLex;
+    }
+
+    public void setObjectCreationLex(String objectCreationLex) {
+        this.objectCreationLex = objectCreationLex;
     }
 
     public boolean isIgnored() {

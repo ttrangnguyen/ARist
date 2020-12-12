@@ -377,10 +377,38 @@ public class ArgRecTestGenerator {
                 }
 
                 for (int j = 0; j < oneArgTests.size(); ++j) {
+                    ArgRecTest oneArgTest = oneArgTests.get(j);
                     if (j == oneArgTests.size() - 1) {
-                        oneArgTests.get(j).setArgPos(methodCall.getArguments().size());
+                        oneArgTest.setArgPos(methodCall.getArguments().size());
                     } else {
-                        oneArgTests.get(j).setArgPos(j + 1);
+                        oneArgTest.setArgPos(j + 1);
+                    }
+
+                    String expectedExcode = oneArgTest.getExpected_excode();
+                    String expectedLex = oneArgTest.getExpected_lex();
+                    for (NodeSequenceInfo argExcode: oneArgTest.getExpected_excode_ori()) {
+                        if (NodeSequenceInfo.isMethodAccess(argExcode)) {
+                            int tmp = StringUtils.indexOf(expectedExcode, "M_ACCESS(");
+                            tmp = expectedExcode.indexOf("OPEN_PART", tmp);
+                            oneArgTest.setMethodAccessExcode(expectedExcode.substring(0, tmp + 9));
+
+                            String methodNameArg = argExcode.getAttachedAccess();
+                            tmp = StringUtils.indexOf(expectedLex, methodNameArg + "(");
+                            oneArgTest.setMethodAccessLex(expectedLex.substring(0, tmp + methodNameArg.length() + 1));
+
+                            break;
+                        }
+                        if (NodeSequenceInfo.isObjectCreation(argExcode)) {
+                            int tmp = StringUtils.indexOf(expectedExcode, "C_CALL(");
+                            tmp = expectedExcode.indexOf("OPEN_PART", tmp);
+                            oneArgTest.setObjectCreationExcode(expectedExcode.substring(0, tmp + 9));
+
+                            String classNameArg = argExcode.getAttachedAccess();
+                            tmp = StringUtils.indexOf(expectedLex, classNameArg + "(");
+                            oneArgTest.setObjectCreationLex(expectedLex.substring(0, tmp + classNameArg.length() + 1));
+
+                            break;
+                        }
                     }
                 }
 

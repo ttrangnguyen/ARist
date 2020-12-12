@@ -39,20 +39,14 @@ public class ArgRecTester {
         //TODO: Handle unknown excode
         if (expectedExpcode.contains("<unk>")) return true;
 
-        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
-            if (NodeSequenceInfo.isMethodAccess(excode)) {
-                int tmp = StringUtils.indexOf(expectedExpcode, "M_ACCESS(");
-                tmp = expectedExpcode.indexOf("OPEN_PART", tmp);
-                if (test.getNext_excode().contains(expectedExpcode.substring(0, tmp + 9))) return true;
-                break;
-            }
-            if (NodeSequenceInfo.isObjectCreation(excode)) {
-                int tmp = StringUtils.indexOf(expectedExpcode, "C_CALL(");
-                tmp = expectedExpcode.indexOf("OPEN_PART", tmp);
-                if (test.getNext_excode().contains(expectedExpcode.substring(0, tmp + 9))) return true;
-                break;
-            }
+        if (test.getMethodAccessExcode() != null) {
+            if (test.getNext_excode().contains(test.getMethodAccessExcode())) return true;
         }
+
+        if (test.getObjectCreationExcode() != null) {
+            if (test.getNext_excode().contains(test.getObjectCreationExcode())) return true;
+        }
+
         return false;
     }
 
@@ -75,20 +69,14 @@ public class ArgRecTester {
             if (test.getNext_lexList().contains("this." + expectedLex)) return true;
         }
 
-        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
-            if (NodeSequenceInfo.isMethodAccess(excode)) {
-                String methodName = excode.getAttachedAccess();
-                int tmp = StringUtils.indexOf(expectedLex, methodName + "(");
-                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + methodName.length() + 1))) return true;
-                break;
-            }
-            if (NodeSequenceInfo.isObjectCreation(excode)) {
-                String className = excode.getAttachedAccess();
-                int tmp = StringUtils.indexOf(expectedLex, className + "(");
-                if (test.getNext_lexList().contains(expectedLex.substring(0, tmp + className.length() + 1))) return true;
-                break;
-            }
+        if (test.getMethodAccessLex() != null) {
+            if (test.getNext_lexList().contains(test.getMethodAccessLex())) return true;
         }
+
+        if (test.getObjectCreationLex() != null) {
+            if (test.getNext_lexList().contains(test.getObjectCreationLex())) return true;
+        }
+
         return false;
     }
 
@@ -111,20 +99,14 @@ public class ArgRecTester {
             if (result.equals("this." + expectedLex)) return true;
         }
 
-        for (NodeSequenceInfo excode: test.getExpected_excode_ori()) {
-            if (NodeSequenceInfo.isMethodAccess(excode)) {
-                String methodName = excode.getAttachedAccess();
-                int tmp = StringUtils.indexOf(expectedLex, methodName + "(");
-                if (result.equals(expectedLex.substring(0, tmp + methodName.length() + 1))) return true;
-                break;
-            }
-            if (NodeSequenceInfo.isObjectCreation(excode)) {
-                String className = excode.getAttachedAccess();
-                int tmp = StringUtils.indexOf(expectedLex, className + "(");
-                if (result.equals(expectedLex.substring(0, tmp + className.length() + 1))) return true;
-                break;
-            }
+        if (test.getMethodAccessLex() != null) {
+            if (result.equals(test.getMethodAccessLex())) return true;
         }
+
+        if (test.getObjectCreationLex() != null) {
+            if (result.equals(test.getObjectCreationLex())) return true;
+        }
+
         return false;
     }
 
