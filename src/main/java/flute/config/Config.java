@@ -98,6 +98,8 @@ public class Config {
      Config for test
      ***/
 
+    public final static boolean TEST_ARG_ONE_BY_ONE = false;
+
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
 

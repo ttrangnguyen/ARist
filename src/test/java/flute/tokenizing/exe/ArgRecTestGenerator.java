@@ -434,14 +434,22 @@ public class ArgRecTestGenerator {
         return generateAll(-1);
     }
 
-    public static List<AllArgRecTest> getAllArgRecTests(List<ArgRecTest> oneArgRecTests) {
-        List<AllArgRecTest> tests = new ArrayList<>();
+    public static List<MultipleArgRecTest> getSingleArgRecTests(List<ArgRecTest> oneArgRecTests) {
+        List<MultipleArgRecTest> tests = new ArrayList<>();
+        for (ArgRecTest test: oneArgRecTests) {
+            tests.add(test.toSingleArgRecTest());
+        }
+        return tests;
+    }
+
+    public static List<MultipleArgRecTest> getAllArgRecTests(List<ArgRecTest> oneArgRecTests) {
+        List<MultipleArgRecTest> tests = new ArrayList<>();
         List<ArgRecTest> pile = new ArrayList<>();
         for (int i = 0; i < oneArgRecTests.size(); ++i) {
             ArgRecTest oneArgTest = oneArgRecTests.get(i);
             pile.add(oneArgTest);
             if (i == oneArgRecTests.size() - 1 || oneArgRecTests.get(i + 1).getArgPos() <= 1) {
-                AllArgRecTest test = new AllArgRecTest();
+                MultipleArgRecTest test = new MultipleArgRecTest();
                 if (pile.size() > 0) {
                     test.setLex_context(pile.get(0).getLex_context());
                     test.setExcode_context(pile.get(0).getExcode_context());

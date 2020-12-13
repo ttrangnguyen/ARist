@@ -1,6 +1,7 @@
 package flute.tokenizing.excode_data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ArgRecTest {
@@ -155,5 +156,20 @@ public class ArgRecTest {
 
     public void setExpected_excode_ori(List<NodeSequenceInfo> expected_excode_ori) {
         this.expected_excode_ori = expected_excode_ori;
+    }
+
+    public MultipleArgRecTest toSingleArgRecTest() {
+        MultipleArgRecTest test = new MultipleArgRecTest();
+        test.setFilePath(this.getFilePath());
+        test.setNumArg(1);
+        test.setLex_context(this.getLex_context());
+        test.setExcode_context(this.getExcode_context());
+        test.setNext_excode(Collections.singletonList(this.getNext_excode()));
+        test.setNext_lex(Collections.singletonList(this.getNext_lex()));
+        test.setExpected_excode(this.getExpected_excode());
+        test.setExpected_lex(this.getExpected_lex());
+        test.setIgnored(this.isIgnored());
+        test.setArgRecTestList(Collections.singletonList(this));
+        return test;
     }
 }

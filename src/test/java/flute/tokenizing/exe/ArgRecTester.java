@@ -9,7 +9,7 @@ import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
-import flute.tokenizing.excode_data.AllArgRecTest;
+import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.utils.ProgressBar;
 import flute.utils.file_writing.CSVWritor;
@@ -49,7 +49,7 @@ public class ArgRecTester {
         return false;
     }
 
-    public static boolean canAcceptGeneratedExcodes(AllArgRecTest test) {
+    public static boolean canAcceptGeneratedExcodes(MultipleArgRecTest test) {
         for (ArgRecTest oneArgTest: test.getArgRecTestList())
             if (!canAcceptGeneratedExcodes(oneArgTest)) return false;
         return true;
@@ -79,7 +79,7 @@ public class ArgRecTester {
         return false;
     }
 
-    public static boolean canAcceptGeneratedLexes(AllArgRecTest test) {
+    public static boolean canAcceptGeneratedLexes(MultipleArgRecTest test) {
         for (ArgRecTest oneArgTest: test.getArgRecTestList())
             if (!canAcceptGeneratedLexes(oneArgTest)) return false;
         return true;
@@ -109,7 +109,7 @@ public class ArgRecTester {
         return false;
     }
 
-    public static boolean canAcceptResult(AllArgRecTest test, String result) {
+    public static boolean canAcceptResult(MultipleArgRecTest test, String result) {
         int i = -1;
         for (ArgRecTest oneArgTest: test.getArgRecTestList()) {
             StringBuilder sb = new StringBuilder();
@@ -127,7 +127,7 @@ public class ArgRecTester {
         return true;
     }
 
-    public static void updateTopKResult(AllArgRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+    public static void updateTopKResult(MultipleArgRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
                                         String modelName) {
 
         boolean isOverallCorrectTopK = false;
@@ -183,20 +183,24 @@ public class ArgRecTester {
         for (int k: tops) row.add(String.format("Overall top-%d accuracy", k));
         for (int k: tops) row.add(String.format("Actual top-%d accuracy", k));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
-        for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
-            row = new ArrayList<>();
-            row.add(String.format("%d", i));
-            row.add(String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)));
-            if (isNGramUsed) {
-                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%dArg%d", k, i)).getMean()));
+
+        if (!Config.TEST_ARG_ONE_BY_ONE) {
+            for (int i = 0; i <= dataFrame.getVariable("NumArg").getMax(); ++i) {
+                row = new ArrayList<>();
+                row.add(String.format("%d", i));
+                row.add(String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)));
+                if (isNGramUsed) {
+                    for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%dArg%d", k, i)).getMean()));
+                }
+                if (isRNNUsed) {
+                    for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
+                }
+                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
+                for (int k: tops) row.add("");
+                accuracyPerNumArg.add(row.toArray(new String[row.size()]));
             }
-            if (isRNNUsed) {
-                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
-            }
-            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
-            for (int k: tops) row.add("");
-            accuracyPerNumArg.add(row.toArray(new String[row.size()]));
         }
+
         row = new ArrayList<>();
         row.add("all");
         row.add("100");
@@ -210,10 +214,11 @@ public class ArgRecTester {
         for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getSum()
                 / (dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getCount() + ignoredTestCount)));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
+
         CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accuracyPerNumArg);
     }
 
-    public static void test(Response response, Map<Integer, Boolean> testMap, AllArgRecTest test, int testSize, ProgressBar testProgressBar) {
+    public static void test(Response response, Map<Integer, Boolean> testMap, MultipleArgRecTest test, int testSize, ProgressBar testProgressBar) {
         PredictResponse predictResponse = (PredictResponse) response;
         isNGramUsed = predictResponse.getData().ngram != null;
         isRNNUsed = predictResponse.getData().rnn != null;
@@ -267,10 +272,10 @@ public class ArgRecTester {
         String projectName = "log4j";
         Timer timer = new Timer();
         timer.startCounter();
-        List<AllArgRecTest> generatedTests = getTests(projectName, false, false);
+        List<MultipleArgRecTest> generatedTests = getTests(projectName, false, false);
         //List<AllArgRecTest> generatedTests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
-        List<AllArgRecTest> tests = new ArrayList<>();
-        for (AllArgRecTest test: generatedTests)
+        List<MultipleArgRecTest> tests = new ArrayList<>();
+        for (MultipleArgRecTest test: generatedTests)
             if (!test.isIgnored()) tests.add(test);
         double averageGetTestsTime = timer.getTimeCounter() / 1000f / generatedTests.size();
 
@@ -279,7 +284,7 @@ public class ArgRecTester {
         System.out.println("Generated " + generatedTests.size() + " tests.");
         System.out.println("Ignored " + (generatedTests.size() - tests.size()) + " tests.");
 
-        for (AllArgRecTest test: tests) {
+        for (MultipleArgRecTest test: tests) {
             dataFrame.insert("Generated excode count", test.getNext_excodeList().size());
             dataFrame.insert("Generated lexical count", test.getNext_lexList().size());
         }
@@ -290,7 +295,7 @@ public class ArgRecTester {
                 dataFrame.getVariable("Generated lexical count").getSum());
 
         Map<Integer, Boolean> testMap = new HashMap<>();
-        for (AllArgRecTest test: tests) {
+        for (MultipleArgRecTest test: tests) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
             if (canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
@@ -313,7 +318,7 @@ public class ArgRecTester {
         System.out.printf("Adequate generated candidates: %.2f%%%n",
                 dataFrame.getVariable("Adequate generated candidates").getMean() * 100);
 
-        List<List<AllArgRecTest>> testBatches = null;
+        List<List<MultipleArgRecTest>> testBatches = null;
 
         if (Config.MULTIPROCESS) {
             int batchSize = IntMath.divide(tests.size(), Config.NUM_THREAD, RoundingMode.UP);
@@ -326,12 +331,12 @@ public class ArgRecTester {
             final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
             final List<Future<?>> futures = new ArrayList<>();
 
-            List<List<AllArgRecTest>> finalTestBatches = testBatches;
-            for (List<AllArgRecTest> testBatch : finalTestBatches) {
+            List<List<MultipleArgRecTest>> finalTestBatches = testBatches;
+            for (List<MultipleArgRecTest> testBatch : finalTestBatches) {
                 Future<?> future = executor.submit(() -> {
                     try {
                         SocketClient socketClient = new SocketClient(18007);
-                        for (AllArgRecTest test : testBatch) {
+                        for (MultipleArgRecTest test : testBatch) {
                             Response response = socketClient.write(gson.toJson(test));
                             if (response instanceof PredictResponse) {
                                 test(response, testMap, test, tests.size(), testProgressBar);
@@ -358,7 +363,7 @@ public class ArgRecTester {
         } else {
             try {
                 SocketClient socketClient = new SocketClient(18007);
-                for (AllArgRecTest test : tests) {
+                for (MultipleArgRecTest test : tests) {
                     Response response = socketClient.write(gson.toJson(test));
                     if (response instanceof PredictResponse) {
                         test(response, testMap, test, tests.size(), testProgressBar);
@@ -380,7 +385,7 @@ public class ArgRecTester {
         generator.setLengthLimit(CONTEXT_LENGTH_LIMIT);
     }
 
-    public static List<AllArgRecTest> getTests(String projectName, boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
+    public static List<MultipleArgRecTest> getTests(String projectName, boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
         List<ArgRecTest> tests;
         if (fromSavefile) {
             tests = readTestsFromFile(Config.LOG_DIR + projectName + "_tests.txt");
@@ -395,10 +400,10 @@ public class ArgRecTester {
 
             if (doSaveTestsAfterGen) saveTests(projectName, tests);
         }
-        return generator.getAllArgRecTests(tests);
+        return Config.TEST_ARG_ONE_BY_ONE? generator.getSingleArgRecTests(tests) : generator.getAllArgRecTests(tests);
     }
 
-    public static List<AllArgRecTest> getTests(String projectName, boolean fromSavefile) throws IOException {
+    public static List<MultipleArgRecTest> getTests(String projectName, boolean fromSavefile) throws IOException {
         return getTests(projectName, fromSavefile, false);
     }
 
@@ -469,8 +474,8 @@ public class ArgRecTester {
         }
     }
 
-    public static void logTests(List<AllArgRecTest> tests) {
-        for (AllArgRecTest test: tests) {
+    public static void logTests(List<MultipleArgRecTest> tests) {
+        for (MultipleArgRecTest test: tests) {
             System.out.println(gson.toJson(test));
         }
     }
