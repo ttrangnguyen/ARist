@@ -75,15 +75,13 @@ def java_tokenize(text, tokenizer, train_len, last_only=False):
             i += 2
         elif lines[i] == '$':
             method_level -= 1
-            if method_level == 0:
-                # Method end
-                if class_level > 0:
-                    for j in range(1, len(all_tokens)):
-                        seq = all_tokens[max(j - train_len, 0):j]
-                        text_sequences.append(seq)
-                        text_method_names.append(method_name)
-                        text_class_names.append(class_name)
-                all_tokens = []
+            if method_level == 0 and class_level > 0:
+                for j in range(1, len(all_tokens)):
+                    seq = all_tokens[max(j - train_len, 0):j]
+                    text_sequences.append(seq)
+                    text_method_names.append(method_name)
+                    text_class_names.append(class_name)
+            all_tokens = []
             i += 1
         elif method_level > 0:
             stripped = lines[i].strip()
@@ -158,8 +156,8 @@ def listdirs(folder):
 
 if __name__ == "__main__":
     data_types = ['train', 'validate', 'test']
-    data_parent_folders = ['data_csv_6_gram', 'data_csv_7_gram']
-    train_len = [5 + 1, 6 + 1]
+    data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
+    train_len = [4 + 1, 6 + 1]
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
             projects = listdirs("../../../../../../data_classform/java/" + data_type)

@@ -51,6 +51,11 @@ def get_class_name(class_token):
     return class_token[12:-1]
 
 
+def get_enum_name(enum_token):
+    # ENUM{START,classname}
+    return enum_token[11:-1]
+
+
 def get_method_name_tokens(method_token):
     method_name = get_method_name(method_token)
     return tokenize(method_name)
@@ -61,33 +66,51 @@ def get_class_name_tokens(class_token):
     return tokenize(class_name)
 
 
+def get_enum_name_tokens(enum_token):
+    enum_name = get_enum_name(enum_token)
+    return tokenize(enum_name)
+
+
 def excode_tokenize(text, tokenizer, train_len, tokens, method_content_only=True):
     data = text.strip().split(" ")
     text_sequences = []
     text_method_names = []
     text_class_names = []
+    all_tokens = []
     class_name_tokens = None
+    method_name_tokens = None
+    class_level = 0
+    method_level = 0
     if method_content_only:
         i = 0
         while i < len(data):
             if data[i][:7] == "CLASS{S":
-                if class_name_tokens is None:
+                class_level += 1
+                if class_level == 1:
                     class_name_tokens = get_class_name_tokens(data[i])
-            elif data[i][:7] == "CLASS{E":
-                class_name_tokens = None
+            elif data[i][:6] == "ENUM{S":
+                class_level += 1
+                if class_level == 1:
+                    class_name_tokens = get_enum_name_tokens(data[i])
+            elif data[i][:7] == "CLASS{E" or data[i][:6] == "ENUM{E":
+                class_level -= 1
+                if class_level == 0:
+                    class_name_tokens = None
             elif data[i][:7] == "METHOD{":
-                method_name_tokens = get_method_name_tokens(data[i])
-                all_tokens = []
-                while data[i] != "OPBLK" and data[i] != "ENDMETHOD":
-                    i += 1
-                while i < len(data) and data[i] != "ENDMETHOD":
-                    all_tokens += modify(data[i], tokens)
-                    i += 1
-                for j in range(1, len(all_tokens)):
-                    seq = all_tokens[max(j - train_len, 0):j]
-                    text_sequences.append(seq)
-                    text_method_names.append(method_name_tokens)
-                    text_class_names.append(class_name_tokens)
+                method_level += 1
+                if method_level == 1:
+                    method_name_tokens = get_method_name_tokens(data[i])
+            elif data[i] == "ENDMETHOD":
+                method_level -= 1
+                if method_level == 0:
+                    for j in range(1, len(all_tokens)):
+                        seq = all_tokens[max(j - train_len, 0):j]
+                        text_sequences.append(seq)
+                        text_method_names.append(method_name_tokens)
+                        text_class_names.append(class_name_tokens)
+                    all_tokens = []
+            elif method_level > 0:
+                all_tokens += modify(data[i], tokens)
             i += 1
         sequences = tokenizer.texts_to_sequences(text_sequences)
         method_names_tokens = tokenizer.texts_to_sequences(text_method_names)
@@ -135,7 +158,6 @@ def preprocess(train_path, csv_path, train_len, token_path=None):
         tokens = read_file(token_path).lower().split("\n")
         for f in os.listdir(train_path):
             text = read_file(os.path.join(train_path, f))
-            # print(text_sequences)
             sequences, method_names_tokens, class_name_tokens = excode_tokenize(text, tokenizer, train_len, tokens)
             writer.writerows(prepare_sequence(sequences, train_len, method_names_tokens, class_name_tokens))
 
@@ -153,8 +175,8 @@ def listdirs(folder):
 
 if __name__ == '__main__':
     data_types = ['train', 'validate', 'test']
-    data_parent_folders = ['data_csv_6_gram', 'data_csv_7_gram']
-    train_len = [5 + 1, 6 + 1]
+    data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
+    train_len = [4 + 1, 6 + 1]
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
             projects = listdirs("../../../../../../data_classform/excode/" + data_type)

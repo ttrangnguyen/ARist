@@ -150,7 +150,10 @@ def flute(conn, clientId):
         #                                       tokenizer=java_tokenizer,
         #                                       train_len=train_len)[0]
         if USE_RNN:
-            method_name = tokenize(data['method_name'])
+            if data['method_name'] != "":
+                method_name = tokenize(data['method_name'])
+            else:
+                method_name = "<UNK>"
             class_name = tokenize(data['class_name'])
             method_name_tokens_excode = excode_tokenizer.texts_to_sequences([method_name])[0]
             class_name_tokens_excode = excode_tokenizer.texts_to_sequences([class_name])[0]
