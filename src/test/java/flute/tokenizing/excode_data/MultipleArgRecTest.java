@@ -18,6 +18,9 @@ public class MultipleArgRecTest {
     private String expected_excode;
     private String expected_lex;
 
+    private String method_name ="";
+    private String class_name ="";
+
     private boolean ignored = false;
 
     private transient List<ArgRecTest> argRecTestList;
@@ -110,6 +113,22 @@ public class MultipleArgRecTest {
 
     public void setExpected_lex(String expected_lex) {
         this.expected_lex = expected_lex;
+    }
+
+    public String getMethodScope_name() {
+        return method_name;
+    }
+
+    public void setMethodScope_name(String method_name) {
+        this.method_name = method_name;
+    }
+
+    public String getClass_name() {
+        return class_name;
+    }
+
+    public void setClass_name(String class_name) {
+        this.class_name = class_name;
     }
 
     public boolean isIgnored() {
