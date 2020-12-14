@@ -23,29 +23,11 @@ import java.util.*;
 public class ArgRecTestGenerator {
     private JavaExcodeTokenizer tokenizer;
     private ProjectParser projectParser;
-    private String[] targetAPIs;
     private int lengthLimit = -1;
 
     public ArgRecTestGenerator(String projectPath, ProjectParser projectParser) {
         tokenizer = new JavaExcodeTokenizer(projectPath);
         this.projectParser = projectParser;
-    }
-
-    public String[] getTargetAPIs() {
-        return targetAPIs;
-    }
-
-    public void setTargetAPIs(String[] targetAPIs) {
-        if (targetAPIs.length == 0) {
-            this.targetAPIs = null;
-        }
-        else {
-            this.targetAPIs = targetAPIs;
-        }
-    }
-
-    public int getLengthLimit() {
-        return lengthLimit;
     }
 
     public void setLengthLimit(int lengthLimit) {
@@ -241,22 +223,8 @@ public class ArgRecTestGenerator {
                     stack.remove(stack.size() - 1);
                     continue;
                 }
-                //System.out.println("Position: " + methodCall.getBegin().get());
 
-                String classQualifiedName = fileParser.getCurMethodInvocation().getClassQualifiedName().orElse(null);
-                if (targetAPIs != null) {
-                    boolean flag = false;
-                    for (String targetAPI: targetAPIs) {
-                        if (classQualifiedName.startsWith(targetAPI + '.')) {
-                            flag = true;
-                            break;
-                        }
-                    }
-                    if (!flag) {
-                        stack.remove(stack.size() - 1);
-                        continue;
-                    }
-                }
+                //System.out.println("Position: " + methodCall.getBegin().get());
 
                 List<ArgRecTest> oneArgTests = new ArrayList<>();
                 int methodCallIdx = stack.get(stack.size() - 1);

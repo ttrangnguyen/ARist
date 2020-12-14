@@ -382,7 +382,6 @@ public class ArgRecTester {
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
-        generator.setTargetAPIs(Config.TARGET_APIS);
         generator.setLengthLimit(CONTEXT_LENGTH_LIMIT);
     }
 
