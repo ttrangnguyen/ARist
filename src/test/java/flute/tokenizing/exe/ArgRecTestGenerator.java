@@ -223,8 +223,9 @@ public class ArgRecTestGenerator {
                     stack.remove(stack.size() - 1);
                     continue;
                 }
-
                 //System.out.println("Position: " + methodCall.getBegin().get());
+
+                String classQualifiedName = fileParser.getCurMethodInvocation().getClassQualifiedName().orElse(null);
 
                 List<ArgRecTest> oneArgTests = new ArrayList<>();
                 int methodCallIdx = stack.get(stack.size() - 1);
@@ -281,6 +282,7 @@ public class ArgRecTestGenerator {
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
                                     test.setNext_lex(nextLexList);
+                                    test.setMethodInvocClassQualifiedName(classQualifiedName);
                                     test.setExpected_excode_ori(argExcodes);
                                     if (isClean(argExcodes)) {
                                         cleanTest(test);
@@ -367,6 +369,7 @@ public class ArgRecTestGenerator {
                         }
                         test.setNext_excode(nextExcodeList);
                         test.setNext_lex(nextLexList);
+                        test.setMethodInvocClassQualifiedName(classQualifiedName);
                         if (isClean) {
                             cleanTest(test);
                         } else {

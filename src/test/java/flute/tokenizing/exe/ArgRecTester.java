@@ -272,7 +272,7 @@ public class ArgRecTester {
         String projectName = "log4j";
         Timer timer = new Timer();
         timer.startCounter();
-        List<MultipleArgRecTest> generatedTests = getTests(projectName, false, false);
+        List<MultipleArgRecTest> generatedTests = getTests(projectName, false, true);
         //List<AllArgRecTest> generatedTests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
         List<MultipleArgRecTest> tests = new ArrayList<>();
         for (MultipleArgRecTest test: generatedTests)
@@ -400,6 +400,22 @@ public class ArgRecTester {
 
             if (doSaveTestsAfterGen) saveTests(projectName, tests);
         }
+
+        if (Config.TEST_APIS != null && Config.TEST_APIS.length > 0) {
+            List<ArgRecTest> tmp = new ArrayList<>();
+            for (ArgRecTest test: tests) {
+                if (test.getMethodInvocClassQualifiedName() != null) {
+                    for (String targetAPI: Config.TEST_APIS) {{
+                        if (test.getMethodInvocClassQualifiedName().startsWith(targetAPI + '.')) {
+                            tmp.add(test);
+                            break;
+                        }
+                    }}
+                }
+            }
+            tests = tmp;
+        }
+
         return Config.TEST_ARG_ONE_BY_ONE? generator.getSingleArgRecTests(tests) : generator.getAllArgRecTests(tests);
     }
 

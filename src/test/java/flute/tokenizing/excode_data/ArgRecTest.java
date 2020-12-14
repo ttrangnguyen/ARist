@@ -29,6 +29,8 @@ public class ArgRecTest {
     private String objectCreationExcode;
     private String objectCreationLex;
 
+    private String methodInvocClassQualifiedName;
+
     private boolean ignored = false;
 
     private transient List<NodeSequenceInfo> expected_excode_ori;
@@ -159,6 +161,14 @@ public class ArgRecTest {
 
     public void setObjectCreationLex(String objectCreationLex) {
         this.objectCreationLex = objectCreationLex;
+    }
+
+    public String getMethodInvocClassQualifiedName() {
+        return methodInvocClassQualifiedName;
+    }
+
+    public void setMethodInvocClassQualifiedName(String methodInvocClassQualifiedName) {
+        this.methodInvocClassQualifiedName = methodInvocClassQualifiedName;
     }
 
     public boolean isIgnored() {
