@@ -1,6 +1,7 @@
 package flute.tokenizing.excode_data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ArgRecTest {
@@ -18,6 +19,12 @@ public class ArgRecTest {
 
     private String expected_excode;
     private String expected_lex;
+
+    private String methodAccessExcode;
+    private String methodAccessLex;
+
+    private String objectCreationExcode;
+    private String objectCreationLex;
 
     private boolean ignored = false;
 
@@ -103,6 +110,38 @@ public class ArgRecTest {
         this.expected_lex = expected_lex;
     }
 
+    public String getMethodAccessExcode() {
+        return methodAccessExcode;
+    }
+
+    public void setMethodAccessExcode(String methodAccessExcode) {
+        this.methodAccessExcode = methodAccessExcode;
+    }
+
+    public String getMethodAccessLex() {
+        return methodAccessLex;
+    }
+
+    public void setMethodAccessLex(String methodAccessLex) {
+        this.methodAccessLex = methodAccessLex;
+    }
+
+    public String getObjectCreationExcode() {
+        return objectCreationExcode;
+    }
+
+    public void setObjectCreationExcode(String objectCreationExcode) {
+        this.objectCreationExcode = objectCreationExcode;
+    }
+
+    public String getObjectCreationLex() {
+        return objectCreationLex;
+    }
+
+    public void setObjectCreationLex(String objectCreationLex) {
+        this.objectCreationLex = objectCreationLex;
+    }
+
     public boolean isIgnored() {
         return ignored;
     }
@@ -117,5 +156,20 @@ public class ArgRecTest {
 
     public void setExpected_excode_ori(List<NodeSequenceInfo> expected_excode_ori) {
         this.expected_excode_ori = expected_excode_ori;
+    }
+
+    public MultipleArgRecTest toSingleArgRecTest() {
+        MultipleArgRecTest test = new MultipleArgRecTest();
+        test.setFilePath(this.getFilePath());
+        test.setNumArg(1);
+        test.setLex_context(this.getLex_context());
+        test.setExcode_context(this.getExcode_context());
+        test.setNext_excode(Collections.singletonList(this.getNext_excode()));
+        test.setNext_lex(Collections.singletonList(this.getNext_lex()));
+        test.setExpected_excode(this.getExpected_excode());
+        test.setExpected_lex(this.getExpected_lex());
+        test.setIgnored(this.isIgnored());
+        test.setArgRecTestList(Collections.singletonList(this));
+        return test;
     }
 }

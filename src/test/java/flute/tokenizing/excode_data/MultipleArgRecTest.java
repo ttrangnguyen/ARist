@@ -3,7 +3,7 @@ package flute.tokenizing.excode_data;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AllArgRecTest {
+public class MultipleArgRecTest {
     private static int count = 0;
     private transient int id;
     private String filePath;
@@ -22,7 +22,7 @@ public class AllArgRecTest {
 
     private transient List<ArgRecTest> argRecTestList;
 
-    public AllArgRecTest() {
+    public MultipleArgRecTest() {
         id = count++;
     }
 
