@@ -175,8 +175,8 @@ def listdirs(folder):
 
 if __name__ == '__main__':
     data_types = ['train', 'validate', 'test']
-    data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
-    train_len = [4 + 1, 6 + 1]
+    data_parent_folders = ['data_csv_6_gram']
+    train_len = [5 + 1]
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
             projects = listdirs("../../../../../../data_classform/excode/" + data_type)

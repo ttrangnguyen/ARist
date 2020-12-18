@@ -4,9 +4,9 @@ from pathlib import Path
 
 # proj = ['ant', 'batik', 'log4j', 'lucene', 'xalan', 'xerces']
 proj = ['netbeans', 'eclipse']
-typ = ['excode']
+typ = ['excode', 'java']
 dt = ['train', 'test', 'validate']
-data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
+data_parent_folders = ['data_csv_6_gram']
 
 for sub_typ in typ:
     for sub_dt in dt:
