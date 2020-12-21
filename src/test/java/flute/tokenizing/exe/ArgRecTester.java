@@ -130,6 +130,12 @@ public class ArgRecTester {
     public static void updateTopKResult(MultipleArgRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
                                         String modelName) {
 
+        if (test.isIgnored()) {
+            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
+            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, test.getNumArg()), 0);
+            return;
+        }
+
         boolean isOverallCorrectTopK = false;
         for (int i = 0; i < Math.min(k, results.size()); ++i) {
             if (canAcceptResult(test, results.get(i))) {
@@ -141,6 +147,9 @@ public class ArgRecTester {
         if (isOverallCorrectTopK) {
             dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
             dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, test.getNumArg()), 1);
+
+            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 1);
+            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, test.getNumArg()), 1);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 1);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, test.getNumArg()), 1);
@@ -148,6 +157,9 @@ public class ArgRecTester {
         } else {
             dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
             dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, test.getNumArg()), 0);
+
+            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
+            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, test.getNumArg()), 0);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, test.getNumArg()), 0);
@@ -159,7 +171,7 @@ public class ArgRecTester {
     private static boolean isNGramUsed = false;
     private static boolean isRNNUsed = false;
 
-    public static void printResult(String projectName, double averageGetTestsTime, int ignoredTestCount) {
+    public static void printResult(String projectName, double averageGetTestsTime) {
         System.out.println("==========================");
         System.out.println("Number of tests: " + dataFrame.getVariable("Tested").getCount());
         System.out.println("Average parsing runtime: " + averageGetTestsTime + "s");
@@ -196,7 +208,7 @@ public class ArgRecTester {
                     for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
                 }
                 for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
-                for (int k: tops) row.add("");
+                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%dArg%d", k, i)).getMean()));
                 accuracyPerNumArg.add(row.toArray(new String[row.size()]));
             }
         }
@@ -211,8 +223,7 @@ public class ArgRecTester {
             for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
         }
         for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean()));
-        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getSum()
-                / (dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getCount() + ignoredTestCount)));
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%d", k)).getMean()));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
 
         CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accuracyPerNumArg);
@@ -272,22 +283,22 @@ public class ArgRecTester {
         String projectName = "log4j";
         Timer timer = new Timer();
         timer.startCounter();
-        List<MultipleArgRecTest> generatedTests = getTests(projectName, false, true);
-        //List<AllArgRecTest> generatedTests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
-        List<MultipleArgRecTest> tests = new ArrayList<>();
-        for (MultipleArgRecTest test: generatedTests)
-            if (!test.isIgnored()) tests.add(test);
-        double averageGetTestsTime = timer.getTimeCounter() / 1000f / generatedTests.size();
+        List<MultipleArgRecTest> tests = getTests(projectName, false, true);
+        //List<AllArgRecTest> tests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
+        double averageGetTestsTime = timer.getTimeCounter() / 1000f / tests.size();
 
         //logTests(tests);
 
-        System.out.println("Generated " + generatedTests.size() + " tests.");
-        System.out.println("Ignored " + (generatedTests.size() - tests.size()) + " tests.");
+        for (MultipleArgRecTest test: tests) dataFrame.insert("Ignored test", test.isIgnored());
 
-        for (MultipleArgRecTest test: tests) {
-            dataFrame.insert("Generated excode count", test.getNext_excodeList().size());
-            dataFrame.insert("Generated lexical count", test.getNext_lexList().size());
-        }
+        System.out.println("Generated " + dataFrame.getVariable("Ignored test").getCount() + " tests.");
+        System.out.println("Ignored " + dataFrame.getVariable("Ignored test").getSum() + " tests.");
+
+        for (MultipleArgRecTest test: tests)
+            if (!test.isIgnored()) {
+                dataFrame.insert("Generated excode count", test.getNext_excodeList().size());
+                dataFrame.insert("Generated lexical count", test.getNext_lexList().size());
+            }
         System.out.println("Number of generated excode candidates: " +
                 dataFrame.getVariable("Generated excode count").getSum());
 
@@ -295,20 +306,21 @@ public class ArgRecTester {
                 dataFrame.getVariable("Generated lexical count").getSum());
 
         Map<Integer, Boolean> testMap = new HashMap<>();
-        for (MultipleArgRecTest test: tests) {
-            boolean adequateGeneratedExcode = false;
-            boolean adequateGeneratedLex = false;
-            if (canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
-            if (canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
-            dataFrame.insert("Adequate generated excodes", adequateGeneratedExcode);
-            dataFrame.insert("Adequate generated lexicals", adequateGeneratedLex);
-            dataFrame.insert("Adequate generated candidates", adequateGeneratedExcode && adequateGeneratedLex);
-            if (adequateGeneratedExcode && adequateGeneratedLex) {
-                testMap.put(test.getId(), true);
-            } else {
-                //Logger.write(gson.toJson(test), projectName + "_inadequate_generated_arg_tests.txt");
+        for (MultipleArgRecTest test: tests)
+            if (!test.isIgnored()) {
+                boolean adequateGeneratedExcode = false;
+                boolean adequateGeneratedLex = false;
+                if (canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
+                if (canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
+                dataFrame.insert("Adequate generated excodes", adequateGeneratedExcode);
+                dataFrame.insert("Adequate generated lexicals", adequateGeneratedLex);
+                dataFrame.insert("Adequate generated candidates", adequateGeneratedExcode && adequateGeneratedLex);
+                if (adequateGeneratedExcode && adequateGeneratedLex) {
+                    testMap.put(test.getId(), true);
+                } else {
+                    //Logger.write(gson.toJson(test), projectName + "_inadequate_generated_arg_tests.txt");
+                }
             }
-        }
         System.out.printf("Adequate generated excodes: %.2f%%%n",
                 dataFrame.getVariable("Adequate generated excodes").getMean() * 100);
 
@@ -374,7 +386,7 @@ public class ArgRecTester {
                 e.printStackTrace();
             }
         }
-        printResult(projectName, averageGetTestsTime, generatedTests.size() - tests.size());
+        printResult(projectName, averageGetTestsTime);
     }
 
     public static void setupGenerator(String projectName) throws IOException {
