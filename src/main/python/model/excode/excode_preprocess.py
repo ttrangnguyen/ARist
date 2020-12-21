@@ -31,40 +31,99 @@ def modify(word, tokens):
         return [word.lower()]
 
 
-def prepare_sequence(sequence, train_len):
-    return pad_sequences(sequence, maxlen=train_len, padding='pre')
+def prepare_sequence(sequence, train_len, *args):
+    padded_sequences = pad_sequences(sequence, maxlen=train_len, padding='pre')
+    rows = []
+    for i in range(len(padded_sequences)):
+        row = list(padded_sequences[i])
+        for j in range(len(args)):
+            row.append(args[j][i])
+        rows.append(row)
+    return rows
 
 
-def create_java_tokenizer():
-    tokenizer = load(open('excode_tokenizer', 'rb'))
-    return tokenizer
+def get_method_name(method_token):
+    return method_token[method_token.find(",")+1:-1]
 
 
-def excode_tokenize(text, tokenizer, train_len, tokens, method_only=True):
+def get_class_name(class_token):
+    # CLASS{START,classname}
+    return class_token[12:-1]
+
+
+def get_enum_name(enum_token):
+    # ENUM{START,classname}
+    return enum_token[11:-1]
+
+
+def get_method_name_tokens(method_token):
+    method_name = get_method_name(method_token)
+    return tokenize(method_name)
+
+
+def get_class_name_tokens(class_token):
+    class_name = get_class_name(class_token)
+    return tokenize(class_name)
+
+
+def get_enum_name_tokens(enum_token):
+    enum_name = get_enum_name(enum_token)
+    return tokenize(enum_name)
+
+
+def excode_tokenize(text, tokenizer, train_len, tokens, method_content_only=True):
     data = text.strip().split(" ")
     text_sequences = []
-    if method_only:
+    text_method_names = []
+    text_class_names = []
+    all_tokens = []
+    class_name_tokens = None
+    method_name_tokens = None
+    class_level = 0
+    method_level = 0
+    if method_content_only:
         i = 0
         while i < len(data):
-            if data[i][:7] == "METHOD{":
-                all_tokens = modify(data[i], tokens)
-                start_pos = len(all_tokens)
-                i += 1
-                while i < len(data) and data[i] != "ENDMETHOD":
-                    all_tokens += modify(data[i], tokens)
-                    i += 1
-                for j in range(start_pos, len(all_tokens)):
-                    seq = all_tokens[max(j - train_len, 0):j]
-                    text_sequences.append(seq)
+            if data[i][:7] == "CLASS{S":
+                class_level += 1
+                if class_level == 1:
+                    class_name_tokens = get_class_name_tokens(data[i])
+            elif data[i][:6] == "ENUM{S":
+                class_level += 1
+                if class_level == 1:
+                    class_name_tokens = get_enum_name_tokens(data[i])
+            elif data[i][:7] == "CLASS{E" or data[i][:6] == "ENUM{E":
+                class_level -= 1
+                if class_level == 0:
+                    class_name_tokens = None
+            elif data[i][:7] == "METHOD{":
+                method_level += 1
+                if method_level == 1:
+                    method_name_tokens = get_method_name_tokens(data[i])
+            elif data[i] == "ENDMETHOD":
+                method_level -= 1
+                if method_level == 0:
+                    for j in range(1, len(all_tokens)):
+                        seq = all_tokens[max(j - train_len, 0):j]
+                        text_sequences.append(seq)
+                        text_method_names.append(method_name_tokens)
+                        text_class_names.append(class_name_tokens)
+                    all_tokens = []
+            elif method_level > 0:
+                all_tokens += modify(data[i], tokens)
             i += 1
+        sequences = tokenizer.texts_to_sequences(text_sequences)
+        method_names_tokens = tokenizer.texts_to_sequences(text_method_names)
+        class_names_tokens = tokenizer.texts_to_sequences(text_class_names)
+        return sequences, method_names_tokens, class_names_tokens
     else:
         all_tokens = []
         for d in data:
             all_tokens += modify(d, tokens)
         seq = all_tokens[max(len(all_tokens) - train_len, 0):len(all_tokens)]
         text_sequences = [seq]
-    sequences = tokenizer.texts_to_sequences(text_sequences)
-    return sequences
+        sequences = tokenizer.texts_to_sequences(text_sequences)
+        return sequences
 
 
 def excode_tokenize_candidates(candidates, tokenizer, tokens):
@@ -79,27 +138,35 @@ def excode_tokenize_candidates(candidates, tokenizer, tokens):
     return sequences
 
 
-def create_excode_tokenizer():
+def load_excode_tokenizer():
     tokenizer = load(open('excode_tokenizer', 'rb'))
     return tokenizer
 
 
-def preprocess(train_path, token_path, csv_path, train_len):
-    tokenizer = create_excode_tokenizer()
+def preprocess(train_path, csv_path, train_len, token_path=None):
+    tokenizer = load_excode_tokenizer()
 
     with open(csv_path, 'w', newline='') as excode_csv:
         writer = csv.writer(excode_csv)
         index = []
         for i in range(train_len - 1):
             index.append("input{}".format(i))
-        index.append("output")
+        index.append("label")
+        index.append("method_name")
+        index.append("class_name")
         writer.writerow(index)
         tokens = read_file(token_path).lower().split("\n")
         for f in os.listdir(train_path):
             text = read_file(os.path.join(train_path, f))
-            # print(text_sequences)
-            sequences = excode_tokenize(text, tokenizer, train_len, tokens)
-            writer.writerows(prepare_sequence(sequences, train_len))
+            sequences, method_names_tokens, class_name_tokens = excode_tokenize(text, tokenizer, train_len, tokens)
+            writer.writerows(prepare_sequence(sequences, train_len, method_names_tokens, class_name_tokens))
+
+    import pandas as pd
+    df = pd.read_csv(csv_path)
+    cols = list(df.columns)
+    cols[:train_len] = ["label"] + cols[:train_len-1]
+    df_reorder = df[cols]
+    df_reorder.to_csv(csv_path, index=False)
 
 
 def listdirs(folder):
@@ -108,15 +175,15 @@ def listdirs(folder):
 
 if __name__ == '__main__':
     data_types = ['train', 'validate', 'test']
-    data_parent_folders = ['data_csv_21_gram', 'data_csv_3_gram', 'data_csv_7_gram']
-    train_len = [20 + 1, 2 + 1, 6 + 1]
+    data_parent_folders = ['data_csv_6_gram']
+    train_len = [5 + 1]
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
             projects = listdirs("../../../../../../data_classform/excode/" + data_type)
             for project in projects:
                 Path('../../../../../../' + data_parent_folders[i] + '/excode/' + project).mkdir(parents=True, exist_ok=True)
                 preprocess(train_path='../../../../../../data_classform/excode/' + data_type + '/' + project + '/',
-                           token_path='../../../../../data_dict/excode/excode_tokens_n_symbols.txt',
                            csv_path='../../../../../../' + data_parent_folders[i] + '/excode/' + project + '/excode_' +
                                     data_type + "_" + project + '.csv',
-                           train_len = train_len[i])
+                           train_len = train_len[i],
+                           token_path='../../../../../data_dict/excode/excode_tokens_n_symbols.txt',)

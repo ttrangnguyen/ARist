@@ -5,6 +5,7 @@ import flute.antlr4.config.Config;
 import flute.tokenizing.exe.GetDirStructureCrossProject;
 import flute.tokenizing.parsing.JavaFileParser;
 import flute.tokenizing.excode_data.FileInfo;
+import flute.utils.file_processing.*;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.utils.Pair;
@@ -25,23 +26,65 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
+import flute.jdtparser.FileParser;
+import flute.jdtparser.ProjectParser;
+import org.eclipse.core.internal.resources.Project;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
 // netbeans stops = [0, 5000, 9759]
 
 public class Parser {
-    public static final int parseBegin = 5001;
-    public static final int parseEnd = 9759;
+    public static int parseBegin = 0;
+    public static int parseEnd = 23000;
+    public static final boolean CREATE_DATA_PATH = false;
     public static final int recursionMaxDepth = 1;
     public static final int threshPerDepth = 7;
 
-    private HashMap<SystemTableCrossProject, String> systemTableCrossProjectMap;
-    private HashMap<String, Integer> LOC;
+    private final String projectName;
+    private final String projectSrcPath;
+    private final String javaTrainPath, javaTestPath, javaValidatePath;
+    private final String excodeTrainPath, excodeTestPath, excodeValidatePath;
+    private final ProjectParser projectParser;
+    private HashSet<String> validateFilesPath;
+    private HashSet<String> testFilesPath;
 
-    public Parser() {
-        systemTableCrossProjectMap = new HashMap<>();
-        LOC = new HashMap<>();
+    private SystemTableCrossProject systemTableCrossProject;
+    private int LOC;
+
+    public Parser(String projectName, String srcPath, int parseBegin, int parseEnd) {
+        this.projectName = projectName;
+        this.projectSrcPath = projectName + srcPath;
+        Parser.parseBegin = parseBegin;
+        Parser.parseEnd = parseEnd;
+        systemTableCrossProject = new SystemTableCrossProject();
+        DirProcessor.createDirectoryIfNotExists(Config.excodeTrainDataPath);
+        DirProcessor.createDirectoryIfNotExists(Config.excodeValidateDataPath);
+        DirProcessor.createDirectoryIfNotExists(Config.excodeTestDataPath);
+        DirProcessor.createDirectoryIfNotExists(Config.javaTrainDataPath);
+        DirProcessor.createDirectoryIfNotExists(Config.javaValidateDataPath);
+        DirProcessor.createDirectoryIfNotExists(Config.javaTestDataPath);
+        DirProcessor.createDirectoryIfNotExists(Config.trainFilesPath);
+        DirProcessor.createDirectoryIfNotExists(Config.validateFilesPath);
+        DirProcessor.createDirectoryIfNotExists(Config.testFilesPath);
+
+        javaTrainPath = DirProcessor.createDirectoryIfNotExists(Config.javaTrainDataPath, projectName);
+        javaTestPath = DirProcessor.createDirectoryIfNotExists(Config.javaTestDataPath, projectName);
+        javaValidatePath = DirProcessor.createDirectoryIfNotExists(Config.javaValidateDataPath, projectName);
+        excodeTrainPath = DirProcessor.createDirectoryIfNotExists(Config.excodeTrainDataPath, projectName);
+        excodeTestPath = DirProcessor.createDirectoryIfNotExists(Config.excodeTestDataPath, projectName);
+        excodeValidatePath = DirProcessor.createDirectoryIfNotExists(Config.excodeValidateDataPath, projectName);
+        validateFilesPath = new HashSet<>();
+        testFilesPath = new HashSet<>();
+
+        try {
+            flute.config.Config.loadConfig(flute.config.Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
+                flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
     }
 
     public void run() {
@@ -51,53 +94,23 @@ public class Parser {
     }
 
     private void translateJavaToExcode() {
-        File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
-        for (File project : projects) {
-            String srcPath;
-//            if (project.getName().equals("eclipse-platform-sources-4.17")) {
-//                srcPath = "";
-//            } else continue;
-            if (project.getName().equals("netbeans")) {
-                srcPath = "/ide";
-            } else continue;
-//            if (project.getName().equals("ant")) {
-//                srcPath = "/src/main";
-//            } else if (project.getName().equals("batik")) {
-//                srcPath = "/sources";
-//            } else if (project.getName().equals("log4j")) {
-//                srcPath = "/src/main/java";
-//            } else if (project.getName().equals("lucene")) {
-//                srcPath = "/lucene/src/java";
-//            } else if (project.getName().equals("xalan")) {
-//                srcPath = "/src/";
-//            } else if (project.getName().equals("xerces")) {
-//                srcPath = "/src/";
-//            } else continue;
-            translateJavaToExcode(project.getName(), project.getName() + srcPath);
-        }
-    }
-
-    private void translateJavaToExcode(String projectName, String projectSrcPath) {
         Logger.initDebug("debugVisitor.txt");
         List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectsPath + projectSrcPath);
-        Integer numFiles = allSubFilesTmp.size();
-        Integer fileCount = 0;
+        int numFiles = allSubFilesTmp.size();
+        int fileCount = 0;
         Logger.log("allSubFiles size: " + numFiles);
         MetricsVisitor visitor = new MetricsVisitor();
-        SystemTableCrossProject systemTableCrossProject = new SystemTableCrossProject();
-        systemTableCrossProjectMap.put(systemTableCrossProject, projectName);
-        Integer totalLOC = 0;
+        systemTableCrossProject = new SystemTableCrossProject();
         for (File file : allSubFilesTmp) {
             fileCount++;
             if (fileCount-1 < parseBegin || fileCount-1 > parseEnd)
                 continue;
             if (!canTest(file, projectName)) continue;
-            Integer linesOfCode = CountLOC.count(file);
-            totalLOC += linesOfCode;
+            int thisFileLOC = CountLOC.count(file);
+            LOC += thisFileLOC;
 //            System.out.println(file.getAbsolutePath());
             JavaFileParser.visitFile(visitor, file, systemTableCrossProject, "xxx/");
         }
-        LOC.put(projectName, totalLOC);
         GetDirStructureCrossProject.buildSystemPackageList(systemTableCrossProject);
         systemTableCrossProject.buildTypeFullMap();
         systemTableCrossProject.buildMethodMap();
@@ -112,11 +125,20 @@ public class Parser {
         Logger.closeDebug();
     }
 
+    //special method for netbeans and eclipse only
+    private boolean canTest(File file, String projectName) {
+        if (projectName.equals("netbeans") || projectName.equals("eclipse")) {
+            return file.getAbsolutePath().contains("src")
+                    && !file.getAbsolutePath().contains("examples")
+                    && !file.getAbsolutePath().contains("test")
+                    && !file.getAbsolutePath().contains("demo");
+        }
+        return true;
+    }
+
     private void checkExcodeGrammar() {
         try {
-            for (Map.Entry<SystemTableCrossProject, String> entry : systemTableCrossProjectMap.entrySet()) {
-                checkExcodeGrammar(entry.getKey(), entry.getValue());
-            }
+            checkExcodeGrammar(systemTableCrossProject, projectName);
         }
         catch (IOException e){
             e.printStackTrace();
@@ -165,114 +187,170 @@ public class Parser {
 
     private void createExcodeFiles() {
         try {
-            for (Map.Entry<SystemTableCrossProject, String> entry : systemTableCrossProjectMap.entrySet()) {
-                createExcodeFiles(entry.getKey(), entry.getValue());
-            }
-        } catch (IOException e) {
+            if (CREATE_DATA_PATH) createDataFilesPath();
+            createDataFiles();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private boolean canTest(File file, String projectName) {
-        if (projectName.equals("netbeans") || projectName.equals("eclipse-platform-sources-4.17")) {
-            return file.getAbsolutePath().contains("src")
-                    && !file.getAbsolutePath().contains("examples")
-                    && !file.getAbsolutePath().contains("test")
-                    && !file.getAbsolutePath().contains("demo");
-        }
-        return true;
+    private boolean trainTestSplited(String projectName) {
+        File testPath = new File(Config.testFilesPath + projectName + ".txt");
+        return testPath.exists();
     }
 
-    private void createExcodeFiles(SystemTableCrossProject systemTableCrossProject, String projectName) throws IOException {
-        String javaProjectTrainingPath = createDirectory(Config.javaTrainingPath, projectName);
-        String javaProjectTestingPath = createDirectory(Config.javaTestingPath, projectName);
-        String javaProjectValidatingPath = createDirectory(Config.javaValidatingPath, projectName);
-        String excodeProjectTrainingPath = createDirectory(Config.excodeTrainingPath, projectName);
-        String excodeProjectTestingPath = createDirectory(Config.excodeTestingPath, projectName);
-        String excodeProjectValidatingPath = createDirectory(Config.excodeValidatingPath, projectName);
-        FileWriter testFilePaths = new FileWriter(new File(Config.testFilePath + projectName + ".txt"), true);
 
-        int testLOCThresh = (int) (LOC.get(projectName) * 0.1);
-        int validateLOCThresh = (int) (LOC.get(projectName) * 0.9 * 0.15);
-        int trainLOCThresh = LOC.get(projectName) - testLOCThresh - validateLOCThresh;
+    private void createDataFilesPath() throws IOException {
+        FileWriter trainFilesPath = new FileWriter(new File(Config.trainFilesPath + projectName + ".txt"), true);
+        FileWriter validateFilesPath = new FileWriter(new File(Config.validateFilesPath + projectName + ".txt"), true);
+        FileWriter testFilesPath = new FileWriter(new File(Config.testFilesPath + projectName + ".txt"), true);
+
+        int testLOCThresh = (int) (LOC * 0.1);
+        int validateLOCThresh = (int) (LOC * 0.9 * 0.15);
+        int trainLOCThresh = LOC - testLOCThresh - validateLOCThresh;
         int currentTestLOC = 0;
         int currentValidateLOC = 0;
         int currentTrainLOC = 0;
 
-        boolean testCap = false;
-        boolean validateCap = false;
-
         for (FileInfo fileInfo : systemTableCrossProject.fileList) {
             StringBuilder builder = new StringBuilder();
             for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
-//                    System.out.print(node.toString());
                 String space = " ";
-//                    if (node.toString().contains("STSTM{")) {
-//                        builder.append("\n");
-//                        space = "";
-//                    }
                 builder.append(node.toString().replace(" ", "").replace("\r\n", space));
             }
 
-            String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
-            String excodeFilePath;
-            String javaFileTokenPath;
             while (true) {
-                if (canTest(fileInfo.file, projectName) && toTest() && !testCap) {
-                    String absolutePath = fileInfo.file.getAbsolutePath();
-                    testFilePaths.write(absolutePath.substring(absolutePath.indexOf(projectName)) + "\n");
-                    javaFileTokenPath = javaProjectTestingPath +
-                            fileInfo.file.getName().replace(".java", ".txt");
-                    excodeFilePath = excodeProjectTestingPath +
-                            filePath[filePath.length - 1].replace(".java", ".txt");
+                final String absolutePath = fileInfo.file.getAbsolutePath();
+                final String relativePath = absolutePath.substring(absolutePath.indexOf(projectName)) + "\n";
+                if (toTest() && currentTestLOC <= testLOCThresh) {
+                    testFilesPath.write(relativePath);
                     currentTestLOC += CountLOC.count(fileInfo.file);
-                    if (currentTestLOC > testLOCThresh) testCap = true;
                     break;
-                } else if (toValidate() && !validateCap){
-                    javaFileTokenPath = javaProjectValidatingPath +
-                            fileInfo.file.getName().replace(".java", ".txt");
-                    excodeFilePath = excodeProjectValidatingPath +
-                            filePath[filePath.length - 1].replace(".java", ".txt");
+                } else if (toValidate() && currentValidateLOC <= validateLOCThresh){
+                    validateFilesPath.write(relativePath);
                     currentValidateLOC += CountLOC.count((fileInfo.file));
-                    if (currentValidateLOC > validateLOCThresh) validateCap = true;
                     break;
-                } else if (currentTrainLOC <= trainLOCThresh || (testCap && validateCap)){
-                    javaFileTokenPath = javaProjectTrainingPath +
-                            fileInfo.file.getName().replace(".java", ".txt");
-                    excodeFilePath = excodeProjectTrainingPath +
-                            filePath[filePath.length - 1].replace(".java", ".txt");
+                } else if (currentTrainLOC <= trainLOCThresh){
+                    trainFilesPath.write(relativePath);
                     currentTrainLOC += CountLOC.count((fileInfo.file));
                     break;
                 }
             }
-
-
-            File fout = new File(excodeFilePath);
-            FileOutputStream fos = new FileOutputStream(fout);
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-            bw.write(builder.toString());
-            bw.close();
-
-            FileWriter writer = new FileWriter(javaFileTokenPath);
-            String fileContent = JavaTokenizer.removePackagesAndImports(fileInfo.file.getAbsolutePath());
-            fileContent = fileContent.replaceAll("[a-zA-Z0-9_]*.class", ".class")
-                            .replaceAll("\\[.*?]", "[]");
-
-            ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
-            for (String token : tokens) {
-                writer.write(token + "\n");
-            }
-            writer.close();
         }
-        testFilePaths.close();
+        trainFilesPath.close();
+        validateFilesPath.close();
+        testFilesPath.close();
     }
 
-    private String createDirectory(String root, String subDir) {
-        File projectDirectory = new File(root + subDir + "/");
-        if (!projectDirectory.exists()) {
-            projectDirectory.mkdir();
+    private void createDataFiles() throws Exception {
+        validateFilesPath = FileProcessor.readLineByLine(Config.validateFilesPath + projectName + ".txt");
+        testFilesPath = FileProcessor.readLineByLine(Config.testFilesPath + projectName + ".txt");
+        for (FileInfo fileInfo : systemTableCrossProject.fileList) {
+            String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
+            String excodeFilePath;
+            String javaFileTokenPath;
+
+            final String absolutePath = fileInfo.file.getAbsolutePath();
+            final String relativePath = absolutePath.substring(absolutePath.indexOf(projectName));
+            if (testFilesPath.contains(relativePath)) {
+                javaFileTokenPath = javaTestPath +
+                        fileInfo.file.getName().replace(".java", ".txt");
+                excodeFilePath = excodeTestPath +
+                        filePath[filePath.length - 1].replace(".java", ".txt");
+            } else if (validateFilesPath.contains(relativePath)){
+                javaFileTokenPath = javaValidatePath +
+                        fileInfo.file.getName().replace(".java", ".txt");
+                excodeFilePath = excodeValidatePath +
+                        filePath[filePath.length - 1].replace(".java", ".txt");
+            } else {
+                javaFileTokenPath = javaTrainPath +
+                        fileInfo.file.getName().replace(".java", ".txt");
+                excodeFilePath = excodeTrainPath +
+                        filePath[filePath.length - 1].replace(".java", ".txt");
+            }
+
+//            createExcodeFile(fileInfo, excodeFilePath);
+            createJavaFile(absolutePath, javaFileTokenPath);
         }
-        return projectDirectory.getPath() + "/";
+    }
+
+    private void createExcodeFile(FileInfo fileInfo, String excodeFilePath) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
+            String space = " ";
+            builder.append(node.toString().replace(" ", "").replace("\r\n", space));
+        }
+
+        File fout = new File(excodeFilePath);
+        FileOutputStream fos = new FileOutputStream(fout);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        bw.write(builder.toString());
+        bw.close();
+    }
+
+    private void createJavaFile(String absolutePath, String javaFileTokenPath) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(absolutePath));
+        String currentMethodName;
+        boolean insideMethod = false;
+        boolean insideClass = false;
+        StringBuilder fileContentBuilder = new StringBuilder();
+        int curLineNum = 0;
+        File curFile = new File(absolutePath);
+        FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+        ArrayList<String> classStack = new ArrayList<>();
+        for (String line = reader.readLine(); line!=null; line=reader.readLine()) {
+//            FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+            ++curLineNum;
+            if (line.equals("")) continue;
+            try {
+                fileParser.setPosition(curLineNum, 1);
+            } catch (Exception e) {
+//                e.printStackTrace();
+//                System.out.println(curLineNum);  // always exception
+                insideMethod = false;
+                continue;
+            }
+            Optional<String> classScopeName = fileParser.getCurClassScopeName();
+            Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
+            if (classScopeName.isPresent()) {
+                if (!insideClass) {
+                    insideClass = true;
+                    classStack.add(classScopeName.get());
+                    fileContentBuilder.append("`").append(classScopeName.get());
+                } else if (!classScopeName.get().equals(classStack.get(classStack.size() - 1))) {
+                    if (classStack.size() > 1 && classScopeName.get().equals(classStack.get(classStack.size() - 2))) {
+                        classStack.remove(classStack.size() - 1);
+                        fileContentBuilder.append("¬");
+                    } else {
+                        classStack.add(classScopeName.get());
+                        fileContentBuilder.append("`").append(classScopeName.get());
+                    }
+                }
+            } else if (insideClass){
+                fileContentBuilder.append("¬");
+                classStack.remove(0);
+                insideClass = false;
+            }
+            if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
+                if (!insideMethod) {
+                    insideMethod = true;
+                    currentMethodName = methodScopeName.get();
+                    fileContentBuilder.append("#").append(currentMethodName);
+                }
+                fileContentBuilder.append(line).append("\n");
+            } else if (insideMethod){
+                fileContentBuilder.append("$");
+                insideMethod = false;
+            }
+        }
+        FileWriter writer = new FileWriter(javaFileTokenPath);
+        String fileContent = fileContentBuilder.toString().replaceAll("[a-zA-Z0-9_]+.class", ".class")
+                .replaceAll("\\[.*?]", "[]");
+        ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
+        for (String token : tokens) {
+            writer.write(token + "\n");
+        }
+        writer.close();
     }
 
 //    private void createExcodeJSONData() {
@@ -320,7 +398,7 @@ public class Parser {
         return 0;
     }
 
-    public ArrayList<ArrayList<String>> expandExcodeSeq(ArrayList<String> exSeq, String lastExcodeStatement, int depth) {
+    private ArrayList<ArrayList<String>> expandExcodeSeq(ArrayList<String> exSeq, String lastExcodeStatement, int depth) {
 //        ArrayList<ArrayList<String>> newExSeqs = new ArrayList<>();
 //        if (isEnded(exSeq) || reachMaxDepth(depth)) {
 //            newExSeqs.add(exSeq);
@@ -488,12 +566,60 @@ public class Parser {
         }
     }
 
-    public HashMap<SystemTableCrossProject, String> getSystemTableCrossProjectMap() {
-        return this.systemTableCrossProjectMap;
-    }
-
     public static void main(String[] args) {
-        Parser parser = new Parser();
-        parser.run();
+        // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
+        // netbeans stops = [0, 5000, 9759]
+//        Parser parser = new Parser("eclipse", "", 0, 23000);
+//        parser.run();
+//        parser = new Parser("eclipse", "", 23001, 28000);
+//        parser.run();
+//        Parser parser = new Parser("eclipse", "", 28001, 35000);
+//        parser.run();
+//        parser = new Parser("eclipse", "", 35001, 42000);
+//        parser.run();
+//        Parser parser = new Parser("eclipse", "", 42001, 46177);
+//        parser.run();
+//        Parser parser = new Parser("netbeans", "/ide", 0, 5000);
+//        parser.run();
+//        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
+//        parser.run();
+
+
+//        File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
+//        ProjectParser projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
+//                flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
+////        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\eclipse\\eclipse.pde.ui\\ui\\org.eclipse.pde.core\\src\\org\\eclipse\\pde\\internal\\core\\plugin\\AbbreviatedPluginHandler.java");
+////        File curFile = new File("D:\\Research\\Flute\\storage\\repositories\\git\\netbeans\\ide\\html\\src\\org\\netbeans\\modules\\html\\palette\\items\\A.java");
+//        File curFile = new File("D:\\Research\\Flute\\src\\main\\java\\flute\\antlr4\\config\\Bruh.java");
+//        FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+//        try {
+//            fileParser.setPosition(13, 1);
+//        } catch (Exception e) {
+////                e.printStackTrace();
+////                System.out.println(curLineNum);  // always exception
+//        }
+//        Optional<String> classScopeName = fileParser.getCurClassScopeName();
+//        classScopeName.ifPresent(System.out::println);
+//        Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
+//        if (methodScopeName.isPresent()) {
+//            System.out.println("DMM");
+//        }
+//        Parser parser = new Parser("netbeans", "/ide");
+//        parser.run();
+
+        //            if (project.getName().equals("eclipse-platform-sources-4.17")) {
+//                srcPath = "";
+        //            if (project.getName().equals("ant")) {
+//                srcPath = "/src/main";
+//            } else if (project.getName().equals("batik")) {
+//                srcPath = "/sources";
+//            } else if (project.getName().equals("log4j")) {
+//                srcPath = "/src/main/java";
+//            } else if (project.getName().equals("lucene")) {
+//                srcPath = "/lucene/src/java";
+//            } else if (project.getName().equals("xalan")) {
+//                srcPath = "/src/";
+//            } else if (project.getName().equals("xerces")) {
+//                srcPath = "/src/";
     }
 }

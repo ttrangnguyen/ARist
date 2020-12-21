@@ -223,8 +223,9 @@ public class ArgRecTestGenerator {
                     stack.remove(stack.size() - 1);
                     continue;
                 }
-
                 //System.out.println("Position: " + methodCall.getBegin().get());
+
+                String classQualifiedName = fileParser.getCurMethodInvocation().getClassQualifiedName().orElse(null);
 
                 List<ArgRecTest> oneArgTests = new ArrayList<>();
                 int methodCallIdx = stack.get(stack.size() - 1);
@@ -275,10 +276,13 @@ public class ArgRecTestGenerator {
                                     ArgRecTest test = new ArgRecTest();
                                     test.setLex_context(tokenizedContextMethodCall);
                                     test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
+                                    test.setMethodScope_name(fileParser.getCurMethodScopeName().orElse(""));
+                                    test.setClass_name(fileParser.getCurClassScopeName().orElse(""));
                                     test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                                     test.setExpected_lex(arg.toString());
                                     test.setNext_excode(nextExcodeList);
                                     test.setNext_lex(nextLexList);
+                                    test.setMethodInvocClassQualifiedName(classQualifiedName);
                                     test.setExpected_excode_ori(argExcodes);
                                     if (isClean(argExcodes)) {
                                         cleanTest(test);
@@ -342,6 +346,8 @@ public class ArgRecTestGenerator {
                         ArgRecTest test = new ArgRecTest();
                         test.setLex_context(tokenizedContextMethodCall);
                         test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
+                        test.setMethodScope_name(fileParser.getCurMethodScopeName().orElse(""));
+                        test.setClass_name(fileParser.getCurClassScopeName().orElse(""));
                         boolean isClean = true;
                         if (methodCall.getArguments().isEmpty()) {
                             test.setExpected_excode(excodes.get(i).toStringSimple());
@@ -363,6 +369,7 @@ public class ArgRecTestGenerator {
                         }
                         test.setNext_excode(nextExcodeList);
                         test.setNext_lex(nextLexList);
+                        test.setMethodInvocClassQualifiedName(classQualifiedName);
                         if (isClean) {
                             cleanTest(test);
                         } else {
@@ -453,6 +460,8 @@ public class ArgRecTestGenerator {
                 if (pile.size() > 0) {
                     test.setLex_context(pile.get(0).getLex_context());
                     test.setExcode_context(pile.get(0).getExcode_context());
+                    test.setMethodScope_name(pile.get(0).getMethodScope_name());
+                    test.setClass_name(pile.get(0).getClass_name());
                 }
 
                 StringBuilder expectedExcode = new StringBuilder();

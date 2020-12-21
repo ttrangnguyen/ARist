@@ -1014,6 +1014,14 @@ public class FileParser {
         return false;
     }
 
+    public boolean checkInsideMethod() {
+        if (this.getCurMethodScope() != null && this.getCurMethodScope() instanceof MethodDeclaration) {
+            return this.checkInsideMethod((MethodDeclaration) this.getCurMethodScope());
+        } else {
+            return false;
+        }
+    }
+
     public File getCurFile() {
         return curFile;
     }

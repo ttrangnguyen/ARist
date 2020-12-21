@@ -12,6 +12,9 @@ public class MultipleArgRecTest {
     private List<String> lex_context;
     private String excode_context;
 
+    private String method_name ="";
+    private String class_name ="";
+
     private List<List<String>> next_excode;
     private List<List<List<String>>> next_lex;
 
@@ -60,6 +63,22 @@ public class MultipleArgRecTest {
 
     public void setExcode_context(String excode_context) {
         this.excode_context = excode_context;
+    }
+
+    public String getMethodScope_name() {
+        return method_name;
+    }
+
+    public void setMethodScope_name(String method_name) {
+        this.method_name = method_name;
+    }
+
+    public String getClass_name() {
+        return class_name;
+    }
+
+    public void setClass_name(String class_name) {
+        this.class_name = class_name;
     }
 
     public List<List<String>> getNext_excode() {

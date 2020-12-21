@@ -14,6 +14,9 @@ public class ArgRecTest {
     private List<String> lex_context;
     private String excode_context;
 
+    private String method_name = "";
+    private String class_name = "";
+
     private List<String> next_excode;
     private List<List<String>> next_lex;
 
@@ -25,6 +28,8 @@ public class ArgRecTest {
 
     private String objectCreationExcode;
     private String objectCreationLex;
+
+    private String methodInvocClassQualifiedName;
 
     private boolean ignored = false;
 
@@ -68,6 +73,22 @@ public class ArgRecTest {
 
     public void setExcode_context(String excode_context) {
         this.excode_context = excode_context;
+    }
+
+    public String getMethodScope_name() {
+        return method_name;
+    }
+
+    public void setMethodScope_name(String method_name) {
+        this.method_name = method_name;
+    }
+
+    public String getClass_name() {
+        return class_name;
+    }
+
+    public void setClass_name(String class_name) {
+        this.class_name = class_name;
     }
 
     public List<String> getNext_excode() {
@@ -142,6 +163,14 @@ public class ArgRecTest {
         this.objectCreationLex = objectCreationLex;
     }
 
+    public String getMethodInvocClassQualifiedName() {
+        return methodInvocClassQualifiedName;
+    }
+
+    public void setMethodInvocClassQualifiedName(String methodInvocClassQualifiedName) {
+        this.methodInvocClassQualifiedName = methodInvocClassQualifiedName;
+    }
+
     public boolean isIgnored() {
         return ignored;
     }
@@ -164,6 +193,8 @@ public class ArgRecTest {
         test.setNumArg(1);
         test.setLex_context(this.getLex_context());
         test.setExcode_context(this.getExcode_context());
+        test.setMethodScope_name(this.getMethodScope_name());
+        test.setClass_name(this.getClass_name());
         test.setNext_excode(Collections.singletonList(this.getNext_excode()));
         test.setNext_lex(Collections.singletonList(this.getNext_lex()));
         test.setExpected_excode(this.getExpected_excode());
