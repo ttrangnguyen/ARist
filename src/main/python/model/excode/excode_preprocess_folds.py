@@ -174,17 +174,23 @@ def listdirs(folder):
 
 
 if __name__ == '__main__':
-    data_types = ['train', 'validate', 'test']
-    data_parent_folders = ['data_csv_6_gram']
-    train_len = [5 + 1]
+    data_types = ['fold_' + str(x) for x in range(10)]
+    data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
+    train_len = [4 + 1, 6 + 1]
+    version = '3'
+    n_folds = 10
+    data_version_path = '../../../../../../data_v' + version + '/'
+
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
-            projects = listdirs("../../../../../../data_classform/excode/" + data_type)
+            projects_path = data_version_path + 'data_classform/excode' + '/' \
+                            + str(n_folds) + '_folds' + '/' + data_type + '/'
+            projects = listdirs(projects_path)
             for project in projects:
-                Path('../../../../../../' + data_parent_folders[i] + '/excode/' + project).mkdir(parents=True,
-                                                                                                 exist_ok=True)
-                preprocess(train_path='../../../../../../data_classform/excode/' + data_type + '/' + project + '/',
-                           csv_path='../../../../../../' + data_parent_folders[i] + '/excode/' + project + '/excode_' +
+                Path(data_version_path + data_parent_folders[i] + '/excode/' + project).\
+                    mkdir(parents=True, exist_ok=True)
+                preprocess(train_path=projects_path + project + '/',
+                           csv_path=data_version_path + data_parent_folders[i] + '/excode/' + project + '/excode_' +
                                     data_type + "_" + project + '.csv',
                            train_len = train_len[i],
                            token_path='../../../../../data_dict/excode/excode_tokens_n_symbols.txt',)
