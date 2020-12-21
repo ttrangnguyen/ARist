@@ -128,7 +128,7 @@ public class DataFrame {
         return vars.get(label);
     }
 
-    public void insert(String label, double data) {
+    public synchronized void insert(String label, double data) {
         Variable variable = getVariable(label);
         variable.insert(data);
     }
