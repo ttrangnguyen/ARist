@@ -137,7 +137,11 @@ def flute(conn, clientId):
             break
         total_guesses += 1
         data = data.decode("utf-8")
+        print(data)
         data = json.loads(data)
+        if ('type' in data) and (data['type'] == "tokenize"):
+            conn.send(('{type:"tokenize", data:' + json.dumps(tokenize(data['data'])) + '}\n').encode())
+            continue
         startTime = perf_counter()
         origin_data = copy.deepcopy(data)
         response = '{type:"predict", data:{'

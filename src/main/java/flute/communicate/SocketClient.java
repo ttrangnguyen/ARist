@@ -1,9 +1,9 @@
 package flute.communicate;
 
 import com.google.gson.Gson;
-import flute.communicate.schema.DefaultResponse;
 import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
+import flute.communicate.schema.TokenizeResponse;
 
 import java.io.*;
 import java.net.Socket;
@@ -46,11 +46,18 @@ public class SocketClient {
             case "predict":
                 response = gson.fromJson(responseLine, PredictResponse.class);
                 break;
+            case "tokenize":
+                response = gson.fromJson(responseLine, TokenizeResponse.class);
+                break;
             default:
                 System.out.println("No match");
         }
 
         return response;
+    }
+
+    public Response tokenizeService(String data) throws IOException {
+        return this.write("{\"type\":\"tokenize\",\"data\":\"" + data + "\"}");
     }
 
     public void close() throws IOException {
