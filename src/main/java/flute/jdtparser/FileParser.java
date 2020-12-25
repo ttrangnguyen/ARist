@@ -201,12 +201,12 @@ public class FileParser {
 
         ASTNode scope = getScope(curPosition);
 
+        visibleVariables.clear();
+        initVariables.clear();
+
         if (scope != null) {
             isStatic = isStaticScope(scope);
             getVariableScope(scope);
-        } else {
-            visibleVariables.clear();
-            initVariables.clear();
         }
     }
 
