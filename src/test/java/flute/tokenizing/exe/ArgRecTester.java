@@ -192,8 +192,8 @@ public class ArgRecTester {
         if (isRNNUsed) {
             for (int k: tops) row.add(String.format("RNN's top-%d accuracy", k));
         }
-        for (int k: tops) row.add(String.format("Overall top-%d accuracy", k));
-        for (int k: tops) row.add(String.format("Actual top-%d accuracy", k));
+        for (int k: tops) row.add(String.format("Top-%d precision", k));
+        for (int k: tops) row.add(String.format("Top-%d recall", k));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
 
         if (!Config.TEST_ARG_ONE_BY_ONE) {
