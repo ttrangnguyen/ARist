@@ -3,6 +3,7 @@ import json
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
 from name_stat.name_tokenizer import tokenize
+from name_stat.similarly import lexSim
 from keras.models import load_model
 from model.predictor import prepare, predict, evaluate
 from time import perf_counter
@@ -142,6 +143,10 @@ def flute(conn, clientId):
         if ('type' in data) and (data['type'] == "tokenize"):
             conn.send(('{type:"tokenize", data:' + json.dumps(tokenize(data['data'])) + '}\n').encode())
             continue
+        else:
+            if ('type' in data) and (data['type'] == "lexSim"):
+                conn.send(('{type:"lexSim", data:' + json.dumps(lexSim(data['s1'], data['s2'])) + '}\n').encode())
+                continue
         startTime = perf_counter()
         origin_data = copy.deepcopy(data)
         response = '{type:"predict", data:{'

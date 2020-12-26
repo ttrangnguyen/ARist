@@ -1,6 +1,7 @@
 package flute.communicate;
 
 import com.google.gson.Gson;
+import flute.communicate.schema.LexSimResponse;
 import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
 import flute.communicate.schema.TokenizeResponse;
@@ -9,6 +10,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Optional;
 
 public class SocketClient {
     BufferedReader is = null;
@@ -49,6 +51,9 @@ public class SocketClient {
             case "tokenize":
                 response = gson.fromJson(responseLine, TokenizeResponse.class);
                 break;
+            case "lexSim":
+                response = gson.fromJson(responseLine, LexSimResponse.class);
+                break;
             default:
                 System.out.println("No match");
         }
@@ -56,8 +61,20 @@ public class SocketClient {
         return response;
     }
 
-    public Response tokenizeService(String data) throws IOException {
-        return this.write("{\"type\":\"tokenize\",\"data\":\"" + data + "\"}");
+    public Optional<List<String>> tokenizeService(String data) throws IOException {
+        Response response = this.write("{\"type\":\"tokenize\",\"data\":\"" + data + "\"}");
+        if (response instanceof TokenizeResponse) {
+            return Optional.of(((TokenizeResponse) response).getData());
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Float> lexSimService(String s1, String s2) throws IOException {
+        Response response = this.write("{\"type\":\"lexSim\", \"s1\":\"" + s1 + "\", \"s2\":\"" + s2 + "\"}");
+        if (response instanceof LexSimResponse) {
+            return Optional.of(((LexSimResponse) response).getData());
+        }
+        return Optional.empty();
     }
 
     public void close() throws IOException {
