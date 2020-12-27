@@ -5,7 +5,6 @@ import flute.communicate.SocketClient;
 import flute.config.Config;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
-import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.dom.*;
@@ -19,18 +18,25 @@ import java.util.stream.Collectors;
 public class PredictTest {
     private static float alpha = 0.5f;
     private static String projectName = "netbeans";
-    private static List<FileParser> fileParserList = new ArrayList();
+    private static ProjectParser projectParser;
 
-    private static HashMap<String, MethodDeclaration> methodDeclarationHashMap = new HashMap<>();
+    public static MethodDeclaration findMethodDeclaration(IMethodBinding iMethodBinding, CompilationUnit curCu) {
+        ASTNode methodDeclaration = curCu.findDeclaringNode(iMethodBinding.getKey());
+        if (methodDeclaration != null) {
+            return (MethodDeclaration) methodDeclaration;
+        }
+        //create a compilation unit from binding class
+        CompilationUnit virtualCu = projectParser.createCU(iMethodBinding.getDeclaringClass().getName(), iMethodBinding.getDeclaringClass().toString());
+        return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
+    }
 
     public static void main(String[] args) throws Exception {
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
 
-        ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
+        projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 
-        List<File> allJavaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
-        List<File> javaFiles = allJavaFiles.stream().filter(file -> {
+        List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR).stream().filter(file -> {
             if (!file.getAbsolutePath().contains("src")) return false;
 
             for (String blackName : Config.BLACKLIST_NAME_SRC) {
@@ -40,25 +46,11 @@ public class PredictTest {
             return true;
         }).collect(Collectors.toList());
 
-        ProgressBar progressBar = new ProgressBar();
-        int numFile = 0;
-        for (File javaFile : javaFiles) {
-            FileParser fileParser = new FileParser(projectParser, javaFile, 0);
-            fileParserList.add(fileParser);
-            fileParser.getCu().accept(new ASTVisitor() {
-                @Override
-                public boolean visit(MethodDeclaration methodDeclaration) {
-                    methodDeclarationHashMap.put(methodDeclaration.resolveBinding().getKey(), methodDeclaration);
-                    return true;
-                }
-            });
-            progressBar.setProgress(numFile++ * 1f / javaFiles.size(), true);
-        }
-
         SocketClient socketClient = new SocketClient(18007);
         Gson gson = new Gson();
 
-        for (FileParser fileParser : fileParserList) {
+        for (File javaFile : javaFiles) {
+            FileParser fileParser = new FileParser(projectParser, javaFile, 0);
             fileParser.getCu().accept(new ASTVisitor() {
                 @Override
                 public boolean visit(MethodInvocation methodInvocation) {
@@ -72,7 +64,10 @@ public class PredictTest {
 
                                 IMethodBinding binding = (IMethodBinding) methodInvocation.getName().resolveBinding();
 
-                                MethodDeclaration methodDeclaration = methodDeclarationHashMap.get(binding.getKey());
+                                //break on varargs
+                                if (binding.isVarargs() && idx >= binding.getParameterTypes().length) continue;
+
+                                MethodDeclaration methodDeclaration = findMethodDeclaration(binding, fileParser.getCu());
 
                                 if (methodDeclaration.parameters().get(idx) instanceof SingleVariableDeclaration) {
                                     SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) methodDeclaration.parameters().get(idx);
@@ -93,11 +88,11 @@ public class PredictTest {
 
                                 similarData.setCandidates(nextLexList);
 
-
                                 similarData.setExpectedOutputSimilarly(
                                         socketClient.lexSimService(similarData.getExpectedOutput(), similarData.getArgName()).orElse(-1f)
                                 );
 
+                                //add next similarly
                                 List<Float> nextSimilarly = new ArrayList<>();
                                 for (String nextLex : nextLexList) {
                                     nextSimilarly.add(
