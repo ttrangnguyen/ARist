@@ -30,9 +30,9 @@ public class PredictTestRAMOptimize {
         }
 
         for (File javaFile : javaFiles) {
-            FileParser fileParser = new FileParser(projectParser, javaFile, 0);
-            if (fileParser.getCu().findDeclaringNode(bindingKey) != null) {
-                return (MethodDeclaration) fileParser.getCu().findDeclaringNode(bindingKey);
+            CompilationUnit cu = projectParser.createCU(javaFile);
+            if (cu.findDeclaringNode(bindingKey) != null) {
+                return (MethodDeclaration) cu.findDeclaringNode(bindingKey);
             }
         }
         return null;
