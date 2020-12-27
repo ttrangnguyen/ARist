@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class PredictTestRAMOptimize {
     private static float alpha = 0.5f;
-    private static String projectName = "log4j";
+    private static String projectName = "eclipse";
     private static List<FileParser> fileParserList = new ArrayList();
 
     private static List<File> javaFiles;

@@ -5,6 +5,7 @@ import flute.communicate.SocketClient;
 import flute.config.Config;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
+import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.dom.*;
@@ -17,17 +18,10 @@ import java.util.stream.Collectors;
 
 public class PredictTest {
     private static float alpha = 0.5f;
-    private static String projectName = "log4j";
+    private static String projectName = "netbeans";
     private static List<FileParser> fileParserList = new ArrayList();
 
-    public static MethodDeclaration findMethodDeclaration(String bindingKey) {
-        for (FileParser fileParser : fileParserList) {
-            if (fileParser.getCu().findDeclaringNode(bindingKey) != null) {
-                return (MethodDeclaration) fileParser.getCu().findDeclaringNode(bindingKey);
-            }
-        }
-        return null;
-    }
+    private static HashMap<String, MethodDeclaration> methodDeclarationHashMap = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
@@ -46,9 +40,19 @@ public class PredictTest {
             return true;
         }).collect(Collectors.toList());
 
+        ProgressBar progressBar = new ProgressBar();
+        int numFile = 0;
         for (File javaFile : javaFiles) {
             FileParser fileParser = new FileParser(projectParser, javaFile, 0);
             fileParserList.add(fileParser);
+            fileParser.getCu().accept(new ASTVisitor() {
+                @Override
+                public boolean visit(MethodDeclaration methodDeclaration) {
+                    methodDeclarationHashMap.put(methodDeclaration.resolveBinding().getKey(), methodDeclaration);
+                    return true;
+                }
+            });
+            progressBar.setProgress(numFile++ * 1f / javaFiles.size(), true);
         }
 
         SocketClient socketClient = new SocketClient(18007);
@@ -68,7 +72,7 @@ public class PredictTest {
 
                                 IMethodBinding binding = (IMethodBinding) methodInvocation.getName().resolveBinding();
 
-                                MethodDeclaration methodDeclaration = findMethodDeclaration(binding.getKey());
+                                MethodDeclaration methodDeclaration = methodDeclarationHashMap.get(binding.getKey());
 
                                 if (methodDeclaration.parameters().get(idx) instanceof SingleVariableDeclaration) {
                                     SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) methodDeclaration.parameters().get(idx);
