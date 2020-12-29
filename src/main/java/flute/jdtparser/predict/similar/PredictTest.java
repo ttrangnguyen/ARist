@@ -54,9 +54,9 @@ public class PredictTest {
 
         int numberOfSet = 10;
 
-        HashMap<Float, Float> result = new HashMap<>();
+        HashMap<Float, ResultMap> result = new HashMap<>(); //number candidate/precision
         for (int i = 0; i <= numberOfSet; i++) {
-            result.put(i * 1f / numberOfSet, 0f);
+            result.put(i * 1f / numberOfSet, new ResultMap());
         }
 
         ProgressBar progressBar = new ProgressBar();
@@ -131,7 +131,15 @@ public class PredictTest {
                                 if (similarData.getStep1Result()) {
                                     for (Float key : result.keySet()) {
                                         if (key <= similarData.getExpectedOutputSimilarly()) {
-                                            result.put(key, result.get(key) + 1);
+                                            result.get(key).setPrecision(result.get(key).getPrecision() + 1);
+                                        }
+                                    }
+                                }
+
+                                for (Float key : result.keySet()) {
+                                    for (Float candidateSimilarly : similarData.getCandidatesSimilarly()) {
+                                        if (key <= candidateSimilarly) {
+                                            result.get(key).setNumCandidate(result.get(key).getNumCandidate() + 1);
                                         }
                                     }
                                 }
@@ -149,12 +157,42 @@ public class PredictTest {
 
         Logger.delete(projectName + "_result_similarly.csv");
         Logger.write(String.format("Number of test, %d", numberOfTest), projectName + "_result_similarly.csv");
-        Logger.write("Alpha, Precision", projectName + "_result_similarly.csv");
+        Logger.write("Alpha, Candidates, Precision, ", projectName + "_result_similarly.csv");
         for (int i = 0; i <= numberOfSet; i++) {
             float key = i * 1f / numberOfSet;
-            result.put(key, result.get(key) * 1f / numberOfTest);
-            System.out.println(String.format("%5.2f%%", key * 100f) + " \t " + String.format("%.4f%%", result.get(key) * 100f));
-            Logger.write(String.format("%.2f%%", key * 100f) + ", " + String.format("%.4f%%", result.get(key) * 100f), projectName + "_result_similarly.csv");
+            result.get(key).setPrecision(result.get(key).getPrecision() * 1f / numberOfTest);
+            System.out.println(String.format("%6.2f%%", key * 100f)
+                    + " \t " + String.format("%8d candidates", result.get(key).getNumCandidate())
+                    + " \t " + String.format("%.4f%%", result.get(key).getPrecision() * 100f));
+            Logger.write(String.format("%.2f%%", key * 100f)
+                    + ", "+ result.get(key).getNumCandidate()
+                    + ", " + String.format("%.4f%%", result.get(key).getPrecision() * 100f), projectName + "_result_similarly.csv");
         }
+    }
+}
+
+class ResultMap {
+    private long numCandidate;
+    private float precision;
+
+    public ResultMap() {
+        numCandidate = 0;
+        precision = 0f;
+    }
+
+    public long getNumCandidate() {
+        return numCandidate;
+    }
+
+    public void setNumCandidate(long numCandidate) {
+        this.numCandidate = numCandidate;
+    }
+
+    public float getPrecision() {
+        return precision;
+    }
+
+    public void setPrecision(float precision) {
+        this.precision = precision;
     }
 }
