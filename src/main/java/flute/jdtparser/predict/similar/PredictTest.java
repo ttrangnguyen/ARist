@@ -5,6 +5,7 @@ import flute.communicate.SocketClient;
 import flute.config.Config;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
+import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.dom.*;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PredictTest {
-    private static String projectName = "log4j";
+    private static String projectName = "eclipse";
     private static ProjectParser projectParser;
 
     private static long numberOfTest = 0;
@@ -58,7 +59,10 @@ public class PredictTest {
             result.put(i * 1f / numberOfSet, 0f);
         }
 
+        ProgressBar progressBar = new ProgressBar();
+        long fileCount = 0;
         for (File javaFile : javaFiles) {
+            progressBar.setProgress(fileCount++ * 1f / javaFiles.size(), true);
             FileParser fileParser = new FileParser(projectParser, javaFile, 0);
             fileParser.getCu().accept(new ASTVisitor() {
                 @Override
@@ -121,7 +125,6 @@ public class PredictTest {
 
                                 similarData.setCandidatesSimilarly(nextSimilarly);
 
-                                System.out.println(gson.toJson(similarData));
                                 numberOfTest++;
 
                                 if (similarData.getStep1Result()) {
