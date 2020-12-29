@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PredictTest {
-    private static String projectName = "eclipse";
+    private static String projectName = "log4j";
     private static ProjectParser projectParser;
 
     private static long numberOfTest = 0;
@@ -98,10 +98,11 @@ public class PredictTest {
                                     nextLexList.addAll(params.get(nextExcode));
                                 }
 
-                                nextLexList = nextLexList.stream().filter(nextLex -> {
-                                    return !nextLex.equals("\"\"");
-                                }).collect(Collectors.toList());
+                                Object oldN = nextLexList;
 
+                                nextLexList = nextLexList.stream().filter(nextLex -> {
+                                    return !(nextLex.equals("\"\"") || nextLex.equals("true") || nextLex.equals("false") || nextLex.contains("."));
+                                }).collect(Collectors.toList());
 
                                 similarData.setCandidates(nextLexList);
 
