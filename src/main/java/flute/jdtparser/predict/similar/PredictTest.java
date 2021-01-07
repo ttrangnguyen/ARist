@@ -14,14 +14,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PredictTest {
     private static String projectName = "log4j";
     private static ProjectParser projectParser;
 
+    private static int shortName = 0; //name have no more 3 character
+    private static int numberName = 0; //name have least one number in character
+
     private static long numberOfTest = 0;
 
+    public static boolean containsNumber(String s) {
+        return Pattern.compile("[0-9]").matcher(s).find();
+    }
 
     public static MethodDeclaration findMethodDeclaration(IMethodBinding iMethodBinding, CompilationUnit curCu) {
         ASTNode methodDeclaration = curCu.findDeclaringNode(iMethodBinding.getKey());
@@ -34,6 +41,8 @@ public class PredictTest {
     }
 
     public static void main(String[] args) throws Exception {
+        List<SimilarData> similarZeroList = new ArrayList<>();
+
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
 
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
@@ -144,6 +153,17 @@ public class PredictTest {
                                     }
                                 }
 
+                                if (similarData.getStep1Result() && similarData.getExpectedOutputSimilarly() == 0) {
+                                    similarZeroList.add(similarData);
+                                    Logger.write(gson.toJson(similarData), projectName + "_similarly_zero.txt");
+                                    if (containsNumber(similarData.getArgName()) || containsNumber(similarData.getExpectedOutput())) {
+                                        numberName++;
+                                    }
+                                    if (similarData.getArgName().length() < 4 || similarData.getExpectedOutput().length() < 4) {
+                                        shortName++;
+                                    }
+                                }
+
                                 Logger.write(gson.toJson(similarData), projectName + "_similarly.txt");
                             }
                         }
@@ -156,6 +176,13 @@ public class PredictTest {
         }
 
         Logger.delete(projectName + "_result_similarly.csv");
+
+        System.out.printf("Argument or parameter have least one number: %4.2f%%\n", numberName * 100.0f / similarZeroList.size());
+        System.out.printf("Argument or parameter have no more 3 character: %4.2f%%\n", shortName * 100.0f / similarZeroList.size());
+
+        Logger.write(String.format("Argument or parameter have least one number, %4.2f%%", numberName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter have no more 3 character, %4.2f%%", shortName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+
         Logger.write(String.format("Number of test, %d", numberOfTest), projectName + "_result_similarly.csv");
         Logger.write("Alpha, Candidates, Precision, ", projectName + "_result_similarly.csv");
         for (int i = 0; i <= numberOfSet; i++) {
@@ -165,7 +192,7 @@ public class PredictTest {
                     + " \t " + String.format("%8d candidates", result.get(key).getNumCandidate())
                     + " \t " + String.format("%.4f%%", result.get(key).getPrecision() * 100f));
             Logger.write(String.format("%.2f%%", key * 100f)
-                    + ", "+ result.get(key).getNumCandidate()
+                    + ", " + result.get(key).getNumCandidate()
                     + ", " + String.format("%.4f%%", result.get(key).getPrecision() * 100f), projectName + "_result_similarly.csv");
         }
     }
