@@ -20,8 +20,8 @@ public class ArgRecTest {
     private List<String> next_excode;
     private List<List<String>> next_lex;
 
-    private String expected_excode;
-    private String expected_lex;
+    private String expected_excode = "";
+    private String expected_lex = "";
 
     private String methodAccessExcode;
     private String methodAccessLex;
@@ -105,7 +105,7 @@ public class ArgRecTest {
 
     public List<String> getNext_lexList() {
         List<String> list = new ArrayList<>();
-        for (List<String> nl: next_lex) {
+        for (List<String> nl : next_lex) {
             list.addAll(nl);
         }
         return list;
