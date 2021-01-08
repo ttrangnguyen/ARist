@@ -14,11 +14,12 @@ public class Logger {
     }
 
     public static void error(String line) {
-        System.err.println("ERROR: "+ line);
+        System.err.println("ERROR: " + line);
         write(line, "error.txt");
     }
+
     public static void warning(String line) {
-        System.err.println("WARNING: "+ line);
+        System.err.println("WARNING: " + line);
         write(line, "warning.txt");
     }
 
@@ -33,23 +34,29 @@ public class Logger {
         }
     }
 
-    public static void initDebug(String debugName){
+    public static void delete(String filename) {
+        File file = new File(Config.LOG_DIR + filename);
+        file.delete();
+    }
+
+    public static void initDebug(String debugName) {
         try {
             fw = new FileWriter(Config.LOG_DIR + debugName);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public static void logDebug(Object obj){
+
+    public static void logDebug(Object obj) {
         try {
-            fw.append(obj +"\r\n");
+            fw.append(obj + "\r\n");
             fw.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void closeDebug(){
+    public static void closeDebug() {
         try {
             fw.close();
         } catch (IOException e) {
@@ -60,7 +67,7 @@ public class Logger {
     /**
      * Logs the given object to console.
      */
-    public static void log(Object obj){
+    public static void log(Object obj) {
         System.out.println(obj);
     }
 }

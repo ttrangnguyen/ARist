@@ -8,6 +8,15 @@ public class SimilarData {
     private String argName;
     private List<String> candidates;
     private List<Float> candidatesSimilarly;
+    private boolean step1Result;
+
+    public void setStep1Result(boolean step1Result) {
+        this.step1Result = step1Result;
+    }
+
+    public boolean getStep1Result() {
+        return step1Result;
+    }
 
     public float getExpectedOutputSimilarly() {
         return expectedOutputSimilarly;
