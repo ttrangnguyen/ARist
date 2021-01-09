@@ -1,8 +1,6 @@
 package flute.jdtparser.utils;
 
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IVariableBinding;
-import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.*;
 
 import flute.config.Config;
 
@@ -64,5 +62,20 @@ public class ParserUtils {
                 list.add(declaredField);
             }
         }
+    }
+
+    public static List<SimpleName> parseSimpleName(ASTNode expr) {
+        List<SimpleName> simpleNameList = new ArrayList<>();
+
+        expr.accept(new ASTVisitor() {
+            @Override
+            public boolean visit(SimpleName simpleName) {
+                if(simpleName.resolveBinding() instanceof IVariableBinding){
+                    simpleNameList.add(simpleName);
+                }
+                return true;
+            }
+        });
+        return simpleNameList;
     }
 }
