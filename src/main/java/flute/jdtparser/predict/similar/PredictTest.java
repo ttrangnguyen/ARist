@@ -191,7 +191,7 @@ public class PredictTest {
         System.out.printf("Argument or parameter is local variable: %4.2f%%\n", localName * 100.0f / similarZeroList.size());
         System.out.printf("Argument or parameter is short local variable: %4.2f%%\n", shortLocalName * 100.0f / similarZeroList.size());
 
-        Logger.write(("Statistic in arg have lexSim equal 0", projectName + "_result_similarly.csv");
+        Logger.write("Statistic in arg have lexSim equal 0", projectName + "_result_similarly.csv");
         Logger.write(String.format("Argument or parameter have least one number, %4.2f%%", numberName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
         Logger.write(String.format("Argument or parameter have no more 3 character, %4.2f%%", shortName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
         Logger.write(String.format("Argument or parameter is local variable, %4.2f%%\n", localName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
