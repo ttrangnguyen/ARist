@@ -7,6 +7,7 @@ public class Variable {
     private ITypeBinding typeBinding;
     private String name;
     private boolean isInitialized = false;
+    private boolean isLocalVariable = false;
 
     public Variable(ITypeBinding typeBinding, String name) {
         this.typeBinding = typeBinding;
@@ -43,6 +44,14 @@ public class Variable {
 
     public void setInitialized(boolean initialized) {
         isInitialized = initialized;
+    }
+
+    public boolean isLocalVariable() {
+        return isLocalVariable;
+    }
+
+    public void setLocalVariable(boolean localVariable) {
+        isLocalVariable = localVariable;
     }
 
     @Override
