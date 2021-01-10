@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -21,10 +22,15 @@ public class PredictTest {
     private static String projectName = "log4j";
     private static ProjectParser projectParser;
 
-    private static int shortName = 0; //name have no more 3 character
-    private static int numberName = 0; //name have least one number in character
-    private static int localName = 0; //name is local variable
-    private static int shortLocalName = 0; //short name is variable name
+    private static HashMap<StatData, Integer> numberEO = new HashMap<>();
+    private static HashMap<StatData, Integer> numberCandidate = new HashMap<>();
+
+    static {
+        for (StatData key : EnumSet.allOf(StatData.class)) {
+            numberEO.put(key, 0);
+            numberCandidate.put(key, 0);
+        }
+    }
 
     private static long numberOfTest = 0;
 
@@ -159,16 +165,31 @@ public class PredictTest {
                                     similarZeroList.add(similarData);
                                     Logger.write(gson.toJson(similarData), projectName + "_similarly_zero.txt");
                                     if (containsNumber(similarData.getArgName()) || containsNumber(similarData.getExpectedOutput())) {
-                                        numberName++;
+                                        numberEO.put(StatData.NUMBER_NAME, numberEO.get(StatData.NUMBER_NAME) + 1);
                                     }
                                     if (similarData.getArgName().length() < 4 || similarData.getExpectedOutput().length() < 4) {
-                                        shortName++;
-                                        if (fileParser.getLocalVariableList().contains(similarData.getArgName())) {
-                                            shortLocalName++;
+                                        numberEO.put(StatData.SHORT_NAME, numberEO.get(StatData.SHORT_NAME) + 1);
+                                        if (fileParser.getLocalVariableList().contains(similarData.getArgName()) && similarData.getArgName().length() < 4) {
+                                            numberEO.put(StatData.SHORT_LOCAL_NAME, numberEO.get(StatData.SHORT_NAME) + 1);
                                         }
                                     }
                                     if (fileParser.getLocalVariableList().contains(similarData.getArgName())) {
-                                        localName++;
+                                        numberEO.put(StatData.LOCAL_NAME, numberEO.get(StatData.LOCAL_NAME) + 1);
+                                    }
+
+                                    for (String nextLex : nextLexList) {
+                                        if (containsNumber(nextLex)) {
+                                            numberCandidate.put(StatData.NUMBER_NAME, numberCandidate.get(StatData.NUMBER_NAME) + 1);
+                                        }
+                                        if (nextLex.length() < 4) {
+                                            numberCandidate.put(StatData.SHORT_NAME, numberCandidate.get(StatData.SHORT_NAME) + 1);
+                                            if (fileParser.getLocalVariableList().contains(nextLex)) {
+                                                numberCandidate.put(StatData.SHORT_LOCAL_NAME, numberCandidate.get(StatData.SHORT_NAME) + 1);
+                                            }
+                                        }
+                                        if (fileParser.getLocalVariableList().contains(nextLex)) {
+                                            numberCandidate.put(StatData.LOCAL_NAME, numberCandidate.get(StatData.LOCAL_NAME) + 1);
+                                        }
                                     }
                                 }
 
@@ -185,17 +206,28 @@ public class PredictTest {
 
         Logger.delete(projectName + "_result_similarly.csv");
 
-        System.out.printf("Statistic in arg have lexSim equal 0:");
-        System.out.printf("Argument or parameter have least one number: %4.2f%%\n", numberName * 100.0f / similarZeroList.size());
-        System.out.printf("Argument or parameter have no more 3 character: %4.2f%%\n", shortName * 100.0f / similarZeroList.size());
-        System.out.printf("Argument or parameter is local variable: %4.2f%%\n", localName * 100.0f / similarZeroList.size());
-        System.out.printf("Argument or parameter is short local variable: %4.2f%%\n", shortLocalName * 100.0f / similarZeroList.size());
+        System.out.println("Statistic in arg have lexSim equal 0:");
+        System.out.printf("Argument or parameter have least one number: %4.2f%%\n", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size());
+        System.out.printf("Argument or parameter have no more 3 character: %4.2f%%\n", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size());
+        System.out.printf("Parameter is local variable: %4.2f%%\n", numberEO.get(StatData.LOCAL_NAME) * 100.0f / similarZeroList.size());
+        System.out.printf("Parameter is short local variable: %4.2f%%\n", numberEO.get(StatData.SHORT_LOCAL_NAME) * 100.0f / similarZeroList.size());
+
+        System.out.printf("Number of candidate least one number: %d\n", numberCandidate.get(StatData.NUMBER_NAME));
+        System.out.printf("Number of candidate have no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME));
+        System.out.printf("Number of candidate  is local variable: %d\n", numberCandidate.get(StatData.LOCAL_NAME));
+        System.out.printf("Number of candidate  is short local variable: %d\n", numberCandidate.get(StatData.SHORT_LOCAL_NAME));
 
         Logger.write("Statistic in arg have lexSim equal 0", projectName + "_result_similarly.csv");
-        Logger.write(String.format("Argument or parameter have least one number, %4.2f%%", numberName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
-        Logger.write(String.format("Argument or parameter have no more 3 character, %4.2f%%", shortName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
-        Logger.write(String.format("Argument or parameter is local variable, %4.2f%%\n", localName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
-        Logger.write(String.format("Argument or parameter is short local variablem %4.2f%%\n", shortLocalName * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter have least one number, %4.2f%%", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter have no more 3 character, %4.2f%%", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter is local variable, %4.2f%%\n", numberEO.get(StatData.LOCAL_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter is short local variable, %4.2f%%\n", numberEO.get(StatData.SHORT_LOCAL_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+
+        Logger.write(String.format("Number of candidate least one number: %d\n", numberCandidate.get(StatData.NUMBER_NAME)), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Number of candidate have no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME)), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Number of candidate  is local variable: %d\n", numberCandidate.get(StatData.LOCAL_NAME)), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Number of candidate  is short local variable: %d\n", numberCandidate.get(StatData.SHORT_LOCAL_NAME)), projectName + "_result_similarly.csv");
+
 
         Logger.write(String.format("Number of test, %d", numberOfTest), projectName + "_result_similarly.csv");
         Logger.write("Alpha, Candidates, Precision, ", projectName + "_result_similarly.csv");
