@@ -207,24 +207,24 @@ public class PredictTest {
         Logger.delete(projectName + "_result_similarly.csv");
 
         System.out.println("Statistic in arg have lexSim equal 0:");
-        System.out.printf("Argument or parameter have least one number: %4.2f%%\n", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size());
-        System.out.printf("Argument or parameter have no more 3 character: %4.2f%%\n", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size());
+        System.out.printf("Argument or parameter has least one number: %4.2f%%\n", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size());
+        System.out.printf("Argument or parameter has no more 3 character: %4.2f%%\n", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size());
         System.out.printf("Parameter is local variable: %4.2f%%\n", numberEO.get(StatData.LOCAL_NAME) * 100.0f / similarZeroList.size());
         System.out.printf("Parameter is short local variable: %4.2f%%\n", numberEO.get(StatData.SHORT_LOCAL_NAME) * 100.0f / similarZeroList.size());
 
         System.out.printf("Number of candidate least one number: %d\n", numberCandidate.get(StatData.NUMBER_NAME));
-        System.out.printf("Number of candidate have no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME));
-        System.out.printf("Number of candidate  is local variable: %d\n", numberCandidate.get(StatData.LOCAL_NAME));
-        System.out.printf("Number of candidate  is short local variable: %d\n", numberCandidate.get(StatData.SHORT_LOCAL_NAME));
+        System.out.printf("Number of candidate has no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME));
+        System.out.printf("Number of candidate is local variable: %d\n", numberCandidate.get(StatData.LOCAL_NAME));
+        System.out.printf("Number of candidate is short local variable: %d\n", numberCandidate.get(StatData.SHORT_LOCAL_NAME));
 
         Logger.write("Statistic in arg have lexSim equal 0", projectName + "_result_similarly.csv");
-        Logger.write(String.format("Argument or parameter have least one number, %4.2f%%", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
-        Logger.write(String.format("Argument or parameter have no more 3 character, %4.2f%%", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter has least one number, %4.2f%%", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Argument or parameter has no more 3 character, %4.2f%%", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
         Logger.write(String.format("Argument or parameter is local variable, %4.2f%%\n", numberEO.get(StatData.LOCAL_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
         Logger.write(String.format("Argument or parameter is short local variable, %4.2f%%\n", numberEO.get(StatData.SHORT_LOCAL_NAME) * 100.0f / similarZeroList.size()), projectName + "_result_similarly.csv");
 
         Logger.write(String.format("Number of candidate least one number: %d\n", numberCandidate.get(StatData.NUMBER_NAME)), projectName + "_result_similarly.csv");
-        Logger.write(String.format("Number of candidate have no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME)), projectName + "_result_similarly.csv");
+        Logger.write(String.format("Number of candidate has no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME)), projectName + "_result_similarly.csv");
         Logger.write(String.format("Number of candidate  is local variable: %d\n", numberCandidate.get(StatData.LOCAL_NAME)), projectName + "_result_similarly.csv");
         Logger.write(String.format("Number of candidate  is short local variable: %d\n", numberCandidate.get(StatData.SHORT_LOCAL_NAME)), projectName + "_result_similarly.csv");
 
