@@ -943,6 +943,24 @@ public class FileParser {
         return localVariableList;
     }
 
+    public Optional<String> getArgName(int pos) {
+        Optional<String> result = Optional.empty();
+        MethodDeclaration methodDeclaration = ParserUtils.findMethodDeclaration(getCurMethodInvocation().resolveMethodBinding(), cu, projectParser);
+        Object arg = null;
+
+        if (methodDeclaration.isVarargs() && pos > methodDeclaration.parameters().size()) {
+            arg = methodDeclaration.parameters().get(methodDeclaration.parameters().size() - 1);
+        } else {
+            arg = methodDeclaration.parameters().get(pos);
+        }
+
+        if (arg instanceof SingleVariableDeclaration) {
+            SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) arg;
+            result = Optional.of(singleVariableDeclaration.getName().toString());
+        }
+        return result;
+    }
+
     private void addInitVariable(String variableName, int endPosition) {
         if (endPosition < curPosition) {
             initVariables.put(variableName, endPosition);

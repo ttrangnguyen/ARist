@@ -1,5 +1,6 @@
 package flute.jdtparser.utils;
 
+import flute.jdtparser.ProjectParser;
 import org.eclipse.jdt.core.dom.*;
 
 import flute.config.Config;
@@ -77,5 +78,15 @@ public class ParserUtils {
             }
         });
         return simpleNameList;
+    }
+
+    public static MethodDeclaration findMethodDeclaration(IMethodBinding iMethodBinding, CompilationUnit curCu, ProjectParser projectParser) {
+        ASTNode methodDeclaration = curCu.findDeclaringNode(iMethodBinding.getKey());
+        if (methodDeclaration != null) {
+            return (MethodDeclaration) methodDeclaration;
+        }
+        //create a compilation unit from binding class
+        CompilationUnit virtualCu = projectParser.createCU(iMethodBinding.getDeclaringClass().getName(), iMethodBinding.getDeclaringClass().toString());
+        return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
     }
 }

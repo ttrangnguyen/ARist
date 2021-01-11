@@ -5,6 +5,7 @@ import flute.communicate.SocketClient;
 import flute.config.Config;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
+import flute.jdtparser.utils.ParserUtils;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.logging.Logger;
@@ -36,16 +37,6 @@ public class PredictTest {
 
     public static boolean containsNumber(String s) {
         return Pattern.compile("[0-9]").matcher(s).find();
-    }
-
-    public static MethodDeclaration findMethodDeclaration(IMethodBinding iMethodBinding, CompilationUnit curCu) {
-        ASTNode methodDeclaration = curCu.findDeclaringNode(iMethodBinding.getKey());
-        if (methodDeclaration != null) {
-            return (MethodDeclaration) methodDeclaration;
-        }
-        //create a compilation unit from binding class
-        CompilationUnit virtualCu = projectParser.createCU(iMethodBinding.getDeclaringClass().getName(), iMethodBinding.getDeclaringClass().toString());
-        return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
     }
 
     public static void main(String[] args) throws Exception {
@@ -99,7 +90,7 @@ public class PredictTest {
                                 //break on varargs
                                 if (binding.isVarargs() && idx >= binding.getParameterTypes().length) continue;
 
-                                MethodDeclaration methodDeclaration = findMethodDeclaration(binding, fileParser.getCu());
+                                MethodDeclaration methodDeclaration = ParserUtils.findMethodDeclaration(binding, fileParser.getCu(), projectParser);
 
                                 if (methodDeclaration.parameters().get(idx) instanceof SingleVariableDeclaration) {
                                     SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) methodDeclaration.parameters().get(idx);
