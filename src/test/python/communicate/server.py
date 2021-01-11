@@ -45,20 +45,21 @@ excode_tokenizer_path = '../../../../src/main/python/model/excode/excode_tokeniz
 java_tokenizer_path = '../../../../src/main/python/model/java/java_tokenizer'
 excode_tokens_path = '../../../../data_dict/excode/excode_tokens_n_symbols.txt'
 
-
-def flute(conn, clientId):
-    rnn_manager = None
-    if USE_RNN:
-        rnn_manager = RNNManager(top_k, project, train_len,
-                                 excode_model_rnn_path, java_model_rnn_path,
+rnn_manager = None
+if USE_RNN:
+    rnn_manager = RNNManager(top_k, project, train_len,
+                             excode_model_rnn_path, java_model_rnn_path,
+                             excode_tokenizer_path, java_tokenizer_path,
+                             excode_tokens_path)
+ngram_manager = None
+if USE_NGRAM:
+    ngram_manager = NgramManager(top_k, project, train_len, ngram,
+                                 excode_model_ngram_path, java_model_ngram_path,
                                  excode_tokenizer_path, java_tokenizer_path,
                                  excode_tokens_path)
-    ngram_manager = None
-    if USE_NGRAM:
-        ngram_manager = NgramManager(top_k, project, train_len, ngram,
-                                     excode_model_ngram_path, java_model_ngram_path,
-                                     excode_tokenizer_path, java_tokenizer_path,
-                                     excode_tokens_path)
+
+
+def flute(conn, clientId):
     while True:
         data = recvall(conn)
         if not data:
