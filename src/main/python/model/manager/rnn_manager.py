@@ -11,7 +11,7 @@ import logging
 import sys
 import copy
 from model.utility import *
-from model_manager import ModelManager
+from model.manager.model_manager import ModelManager
 
 
 class RNNManager(ModelManager):
