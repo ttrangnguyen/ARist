@@ -391,6 +391,12 @@ public class ArgRecTestGenerator {
                         oneArgTest.setArgPos(j + 1);
                     }
 
+                    if (oneArgTest.getArgPos() == 0) {
+                        oneArgTest.setParam_name("");
+                    } else {
+                        oneArgTest.setParam_name(fileParser.getParamName(oneArgTest.getArgPos() - 1).orElse(null));
+                    }
+
                     String expectedExcode = oneArgTest.getExpected_excode();
                     String expectedLex = oneArgTest.getExpected_lex();
                     for (NodeSequenceInfo argExcode: oneArgTest.getExpected_excode_ori()) {
