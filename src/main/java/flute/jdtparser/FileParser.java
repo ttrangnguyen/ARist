@@ -948,6 +948,10 @@ public class FileParser {
         MethodDeclaration methodDeclaration = ParserUtils.findMethodDeclaration(getCurMethodInvocation().resolveMethodBinding(), cu, projectParser);
         Object param = null;
 
+        if (methodDeclaration == null) {
+            return result;
+        }
+
         if (methodDeclaration.isVarargs() && pos > methodDeclaration.parameters().size()) {
             param = methodDeclaration.parameters().get(methodDeclaration.parameters().size() - 1);
         } else {
