@@ -12,6 +12,8 @@ import sys
 import copy
 from model.utility import *
 from model.manager.model_manager import ModelManager
+from model.config import *
+from name_stat.similarly import lexSim
 
 
 class RNNManager(ModelManager):
