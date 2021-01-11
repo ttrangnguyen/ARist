@@ -170,13 +170,14 @@ public class PredictTest {
                                     if (similarData.getArgName().length() < 4 || similarData.getExpectedOutput().length() < 4) {
                                         numberEO.put(StatData.SHORT_NAME, numberEO.get(StatData.SHORT_NAME) + 1);
                                         if (fileParser.getLocalVariableList().contains(similarData.getArgName()) && similarData.getArgName().length() < 4) {
-                                            numberEO.put(StatData.SHORT_LOCAL_NAME, numberEO.get(StatData.SHORT_NAME) + 1);
+                                            numberEO.put(StatData.SHORT_LOCAL_NAME, numberEO.get(StatData.SHORT_LOCAL_NAME) + 1);
                                         }
                                     }
                                     if (fileParser.getLocalVariableList().contains(similarData.getArgName())) {
                                         numberEO.put(StatData.LOCAL_NAME, numberEO.get(StatData.LOCAL_NAME) + 1);
                                     }
 
+                                    //next lex
                                     for (String nextLex : nextLexList) {
                                         if (containsNumber(nextLex)) {
                                             numberCandidate.put(StatData.NUMBER_NAME, numberCandidate.get(StatData.NUMBER_NAME) + 1);
@@ -184,7 +185,7 @@ public class PredictTest {
                                         if (nextLex.length() < 4) {
                                             numberCandidate.put(StatData.SHORT_NAME, numberCandidate.get(StatData.SHORT_NAME) + 1);
                                             if (fileParser.getLocalVariableList().contains(nextLex)) {
-                                                numberCandidate.put(StatData.SHORT_LOCAL_NAME, numberCandidate.get(StatData.SHORT_NAME) + 1);
+                                                numberCandidate.put(StatData.SHORT_LOCAL_NAME, numberCandidate.get(StatData.SHORT_LOCAL_NAME) + 1);
                                             }
                                         }
                                         if (fileParser.getLocalVariableList().contains(nextLex)) {
@@ -208,12 +209,12 @@ public class PredictTest {
 
         System.out.println("Statistic in arg have lexSim equal 0:");
         System.out.printf("Argument or parameter has least one number: %4.2f%%\n", numberEO.get(StatData.NUMBER_NAME) * 100.0f / similarZeroList.size());
-        System.out.printf("Argument or parameter has no more 3 character: %4.2f%%\n", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size());
+        System.out.printf("Argument or parameter has no more than 3 character: %4.2f%%\n", numberEO.get(StatData.SHORT_NAME) * 100.0f / similarZeroList.size());
         System.out.printf("Parameter is local variable: %4.2f%%\n", numberEO.get(StatData.LOCAL_NAME) * 100.0f / similarZeroList.size());
         System.out.printf("Parameter is short local variable: %4.2f%%\n", numberEO.get(StatData.SHORT_LOCAL_NAME) * 100.0f / similarZeroList.size());
 
         System.out.printf("Number of candidate least one number: %d\n", numberCandidate.get(StatData.NUMBER_NAME));
-        System.out.printf("Number of candidate has no more 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME));
+        System.out.printf("Number of candidate has no more than 3 character: %d\n", numberCandidate.get(StatData.SHORT_NAME));
         System.out.printf("Number of candidate is local variable: %d\n", numberCandidate.get(StatData.LOCAL_NAME));
         System.out.printf("Number of candidate is short local variable: %d\n", numberCandidate.get(StatData.SHORT_LOCAL_NAME));
 
