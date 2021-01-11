@@ -394,11 +394,7 @@ public class ArgRecTestGenerator {
                     if (oneArgTest.getArgPos() == 0) {
                         oneArgTest.setParam_name("");
                     } else {
-                        try {
                             oneArgTest.setParam_name(fileParser.getParamName(oneArgTest.getArgPos() - 1).orElse(null));
-                        } catch (Exception e) {
-                            oneArgTest.setParam_name(null);
-                        }
                     }
 
                     String expectedExcode = oneArgTest.getExpected_excode();
