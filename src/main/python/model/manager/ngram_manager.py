@@ -11,6 +11,8 @@ import sys
 import copy
 from model.utility import *
 from model.manager.model_manager import *
+from model.config import *
+from name_stat.similarly import lexSim
 
 
 class NgramManager(ModelManager):
@@ -64,13 +66,15 @@ class NgramManager(ModelManager):
                     sentence = excode_context_textform[ex_suggest_id][0] + excode_suggestions_textform.split()
                     if p_id < n_param - 1:
                         sentence += ['sepa(,)']
-                    score = score_ngram(model=self.excode_model_ngram,
-                                        sentence=sentence,
-                                        n=self.ngram,
-                                        start_pos=len(excode_context_textform[ex_suggest_id][0]))
+                    model_score = score_ngram(model=self.excode_model_ngram,
+                                              sentence=sentence,
+                                              n=self.ngram,
+                                              start_pos=len(excode_context_textform[ex_suggest_id][0]))
+                    # lexsim = lexSim('a', 'b')
+                    # model_score = lexsim_weight * lexsim + model_weight * model_score
                     excode_suggestion_scores.append((sentence,
                                                      excode_context_textform[ex_suggest_id][1] + [i],
-                                                     score))
+                                                     model_score))
             sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[2])[:self.max_keep_step[p_id]]
             excode_context_textform = [(x[0], x[1]) for x in sorted_scores]
 
@@ -98,12 +102,14 @@ class NgramManager(ModelManager):
                         new_context = java_context_list[k][0] + java_suggestion
                         if j < n_param - 1:
                             new_context += [',']
-                        score = score_ngram(model=self.java_model_ngram,
-                                            sentence=new_context,
-                                            n=self.ngram,
-                                            start_pos=len(java_context_list[k][0]))
+                        model_score = score_ngram(model=self.java_model_ngram,
+                                                  sentence=new_context,
+                                                  n=self.ngram,
+                                                  start_pos=len(java_context_list[k][0]))
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
-                                                       + [(excode_context_textform[i][1][j], ii)], score))
+                                                       + [(excode_context_textform[i][1][j], ii)], model_score))
+                        # lexsim = lexSim('a', 'b')
+                        # model_score = lexsim_weight * lexsim + model_weight * model_score
                 sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[2])
                 if j < n_param - 1:
                     java_context_list = [(x[0], x[1]) for x in sorted_scores]

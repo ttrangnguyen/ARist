@@ -10,6 +10,8 @@ from model.manager.ngram_manager import NgramManager
 from model.manager.rnn_manager import RNNManager
 from name_stat.name_tokenizer import tokenize
 from name_stat.similarly import lexSim
+from config import *
+from model.config import *
 
 
 def recvall(sock):
@@ -29,21 +31,6 @@ def recvall(sock):
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('0.0.0.0', 18007))
 serv.listen(10)
-
-project = 'all'
-top_k = 10
-train_len = 6 + 1
-ngram = 4 + 1
-USE_RNN = False
-USE_NGRAM = True
-
-excode_model_rnn_path = "../../../../../model/excode_model_" + project + ".h5"
-java_model_rnn_path = "../../../../../model/java_model_" + project + ".h5"
-excode_model_ngram_path = "../../../../../model/excode_model_" + project + "ngram.pkl"
-java_model_ngram_path = "../../../../../model/java_model_" + project + "ngram.pkl"
-excode_tokenizer_path = '../../../../src/main/python/model/excode/excode_tokenizer'
-java_tokenizer_path = '../../../../src/main/python/model/java/java_tokenizer'
-excode_tokens_path = '../../../../data_dict/excode/excode_tokens_n_symbols.txt'
 
 rnn_manager = None
 if USE_RNN:
