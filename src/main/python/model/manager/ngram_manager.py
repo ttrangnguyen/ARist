@@ -10,7 +10,7 @@ import logging
 import sys
 import copy
 from model.utility import *
-from model_manager import *
+from model.manager.model_manager import *
 
 
 class NgramManager(ModelManager):
@@ -18,9 +18,9 @@ class NgramManager(ModelManager):
                  excode_model_ngram_path, java_model_ngram_path,
                  excode_tokenizer_path, java_tokenizer_path,
                  excode_tokens_path):
-        with open(excode_model_ngram_path) as fin:
+        with open(excode_model_ngram_path, 'rb') as fin:
             self.excode_model_ngram = dill.load(fin)
-        with open(java_model_ngram_path) as fin:
+        with open(java_model_ngram_path, 'rb') as fin:
             self.java_model_ngram = dill.load(fin)
         self.top_k = top_k
         self.train_len = train_len
