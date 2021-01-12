@@ -1,10 +1,12 @@
 package flute.jdtparser.utils;
 
+import flute.communicate.SocketClient;
 import flute.jdtparser.ProjectParser;
 import org.eclipse.jdt.core.dom.*;
 
 import flute.config.Config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,7 +73,7 @@ public class ParserUtils {
         expr.accept(new ASTVisitor() {
             @Override
             public boolean visit(SimpleName simpleName) {
-                if(simpleName.resolveBinding() instanceof IVariableBinding){
+                if (simpleName.resolveBinding() instanceof IVariableBinding) {
                     simpleNameList.add(simpleName);
                 }
                 return true;
@@ -88,5 +90,31 @@ public class ParserUtils {
         //create a compilation unit from binding class
         CompilationUnit virtualCu = projectParser.createCU(iMethodBinding.getDeclaringClass().getName(), iMethodBinding.getDeclaringClass().toString());
         return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
+    }
+
+    static SocketClient socketClient;
+
+    static {
+        try {
+            socketClient = new SocketClient(Config.SOCKET_PORT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean checkImportantVariable(String name, String paramName, List<String> localNameList) {
+        if (localNameList.contains(name)) {
+            return true;
+        }
+        //Tan check common name
+        try {
+            if (paramName == null) return true;
+            if (socketClient.lexSimService(name, paramName).orElse(-1f) < 0.5)
+                return false;
+        } catch (IOException e) {
+            return true;
+        }
+
+        return true;
     }
 }

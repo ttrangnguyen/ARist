@@ -51,7 +51,7 @@ public class PredictTest {
             return true;
         }).collect(Collectors.toList());
 
-        SocketClient socketClient = new SocketClient(18007);
+        SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
         Gson gson = new Gson();
 
         int numberOfSet = 10;

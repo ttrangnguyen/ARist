@@ -19,6 +19,8 @@ public class Config {
 
     public static String LOG_DIR = STORAGE_DIR + "logs/";
 
+    public final static int SOCKET_PORT = 18007;
+
     /***
      * Logging
      */
@@ -69,6 +71,7 @@ public class Config {
 
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false;
 
+    public final static boolean FEATURE_LIMIT_CANDIDATES = false;
     /***
      Config for crawler
      ***/

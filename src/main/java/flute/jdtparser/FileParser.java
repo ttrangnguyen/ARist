@@ -413,7 +413,10 @@ public class FileParser {
                     //Just add cast and array access for variable
                     if (ParserCompare.isTrue(compareValue)) {
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
-                        nextVariableMap.put(exCode, variable.getName());
+
+                        if (!Config.FEATURE_LIMIT_CANDIDATES || ParserUtils.checkImportantVariable(variable.getName(), getParamName(position).orElse(null), getLocalVariableList())) {
+                            nextVariableMap.put(exCode, variable.getName());
+                        }
                     } else if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
                         String exCode = "CAST(" + finalTypeNeedCheck.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, "(" + finalTypeNeedCheck.getName() + ") " + variable.getName());
