@@ -2,12 +2,13 @@ package flute.communicate;
 
 import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
+import flute.config.Config;
 
 public class Client {
 
     public static void main(String[] args) {
         try {
-            SocketClient socketClient = new SocketClient(18007);
+            SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
             Response response = socketClient.write("{\n" +
                     "  \"lex_context\": [\n" +
                     "    \"categoryDetail\",\n" +

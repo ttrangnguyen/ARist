@@ -279,7 +279,7 @@ public class ArgRecTester {
     }
 
     public static void main(String[] args) throws IOException {
-        String projectName = "log4j";
+        String projectName = "lucene";
         Timer timer = new Timer();
         timer.startCounter();
         List<MultipleArgRecTest> tests = getTests(projectName, false, true);
@@ -346,7 +346,7 @@ public class ArgRecTester {
             for (List<MultipleArgRecTest> testBatch : finalTestBatches) {
                 Future<?> future = executor.submit(() -> {
                     try {
-                        SocketClient socketClient = new SocketClient(18007);
+                        SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
                         for (MultipleArgRecTest test : testBatch) {
                             dataFrame.insert("Tested", 1);
                             testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
@@ -377,7 +377,7 @@ public class ArgRecTester {
             }
         } else {
             try {
-                SocketClient socketClient = new SocketClient(18007);
+                SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
                 for (MultipleArgRecTest test : tests) {
                     dataFrame.insert("Tested", 1);
                     testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
