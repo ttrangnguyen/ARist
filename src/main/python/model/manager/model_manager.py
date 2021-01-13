@@ -9,3 +9,7 @@ class ModelManager:
                     candidate_text += ", "
             origin.append(candidate_text)
         return origin
+
+    def is_valid_param(self, param):
+        invalid_phrases = ['null', '', 'true', 'false', '0']
+        return param not in invalid_phrases

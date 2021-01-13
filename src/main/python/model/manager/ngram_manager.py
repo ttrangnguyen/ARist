@@ -8,11 +8,11 @@ import dill
 from model.ngram_predictor import score_ngram
 import logging
 import sys
-import copy
 from model.utility import *
 from model.manager.model_manager import *
 from model.config import *
 from name_stat.similarly import lexSim
+import copy
 
 
 class NgramManager(ModelManager):
@@ -41,8 +41,8 @@ class NgramManager(ModelManager):
         self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
     def work(self, data):
-        start_time = perf_counter()
         origin_data = copy.deepcopy(data)
+        start_time = perf_counter()
         excode_context = excode_tokenize(data['excode_context'],
                                          tokenizer=self.excode_tokenizer,
                                          train_len=self.train_len,
@@ -70,6 +70,10 @@ class NgramManager(ModelManager):
                                               sentence=sentence,
                                               n=self.ngram,
                                               start_pos=len(excode_context_textform[ex_suggest_id][0]))
+                    # if data['param_list'][p_id] == 'null':
+                    #     pass
+                    # else:
+                    #     lexsim = lexSim(data['param_list'][p_id], data['next_excode'][p_id][ex_suggest_id])
                     # lexsim = lexSim('a', 'b')
                     # model_score = lexsim_weight * lexsim + model_weight * model_score
                     excode_suggestion_scores.append((sentence,
@@ -77,14 +81,13 @@ class NgramManager(ModelManager):
                                                      model_score))
             sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[2])[:self.max_keep_step[p_id]]
             excode_context_textform = [(x[0], x[1]) for x in sorted_scores]
-
         # logger.debug(sorted_scores)
         # logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         # logger.debug("Best excode suggestion(s):")
         # for i in range(min(self.top_k, len(excode_context_textform))):
         #     if expected_excode_text == excode_context_textform[i][0][self.ngram:]:
         #         ngram_excode_correct[i] += 1
-        java_suggestions_all = np.array(data['next_lex'], dtype=object)
+        java_suggestions_all = np.array(copy.deepcopy(data['next_lex']), dtype=object)
         for i in range(n_param):
             for j in range(len(java_suggestions_all[i])):
                 java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
@@ -106,8 +109,14 @@ class NgramManager(ModelManager):
                                                   sentence=new_context,
                                                   n=self.ngram,
                                                   start_pos=len(java_context_list[k][0]))
+                        print("JOMAMA", n_param, data['param_list'])
+                        if len(data['param_list']) > 0 and self.is_valid_param(data['param_list'][j]):
+                            print(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][ii])
+                            lexsim = lexSim(data['param_list'][j],
+                                            data['next_lex'][j][excode_context_textform[i][1][j]][ii])
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
                                                        + [(excode_context_textform[i][1][j], ii)], model_score))
+
                         # lexsim = lexSim('a', 'b')
                         # model_score = lexsim_weight * lexsim + model_weight * model_score
                 sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[2])
@@ -116,19 +125,19 @@ class NgramManager(ModelManager):
                 else:
                     java_context_list = sorted_scores
             all_candidate_lex += java_context_list
-        return self.select_top_candidates(all_candidate_lex, origin_data, start_time)
+        return self.select_top_candidates(all_candidate_lex, data, start_time)
         # logger.debug(sorted_scores)
         # logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         # logger.debug("Best java suggestion(s):")
 
-    def select_top_candidates(self, all_candidate_lex, origin_data, start_time):
+    def select_top_candidates(self, all_candidate_lex, data, start_time):
         sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])
         result_ngram = []
         for i in range(min(self.top_k, len(sorted_scores))):
             result_ngram.append(sorted_scores[i][1])
         runtime_ngram = perf_counter() - start_time
         self.logger.debug("Total n-gram runtime: " + str(runtime_ngram))
-        result_ngram = self.recreate(result_ngram, origin_data)
+        result_ngram = self.recreate(result_ngram, data)
         print("Result ngram:\n", result_ngram)
 
         response = 'ngram:{' \
