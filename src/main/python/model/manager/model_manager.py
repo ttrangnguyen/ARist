@@ -13,3 +13,26 @@ class ModelManager:
     def is_valid_param(self, param):
         invalid_phrases = ['null', '', 'true', 'false', '0']
         return param not in invalid_phrases
+
+    def score_lexsim(self, lexsim):
+        # lexsim=0
+        if abs(lexsim) < 1e-6:
+            return -1
+        # lexsim>0, <0.4
+        if lexsim < 0.4:
+            return -0.8
+        # lexsim>0.4, <0.5
+        if lexsim + 1e-6 < 0.5:
+            return -0.6
+        if abs(lexsim - 0.5) < 1e-6:
+            # lexsim=0.5
+            return -0.5
+        # lexsim>0.5, <0.6
+        if lexsim < 0.6:
+            return -0.4
+        # lexsim>0.6, <1
+        if lexsim + 1e-6 < 1:
+            return -0.3
+        else:
+            # lexsim=1
+            return 0

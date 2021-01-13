@@ -109,11 +109,11 @@ class NgramManager(ModelManager):
                                                   sentence=new_context,
                                                   n=self.ngram,
                                                   start_pos=len(java_context_list[k][0]))
-                        print("JOMAMA", n_param, data['param_list'])
                         if len(data['param_list']) > 0 and self.is_valid_param(data['param_list'][j]):
-                            print(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][ii])
+                            # self.logger.log(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][ii])
                             lexsim = lexSim(data['param_list'][j],
                                             data['next_lex'][j][excode_context_textform[i][1][j]][ii])
+                            model_score = self.score_lexsim(lexsim) + model_score * ngram_weight
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
                                                        + [(excode_context_textform[i][1][j], ii)], model_score))
 
