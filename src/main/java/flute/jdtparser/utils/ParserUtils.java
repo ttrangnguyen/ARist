@@ -2,15 +2,13 @@ package flute.jdtparser.utils;
 
 import flute.communicate.SocketClient;
 import flute.jdtparser.ProjectParser;
+import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.dom.*;
 
 import flute.config.Config;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class ParserUtils {
     private static ITypeBinding curType;
@@ -93,6 +91,7 @@ public class ParserUtils {
     }
 
     static SocketClient socketClient;
+    static HashSet<String> commonNames;
 
     static {
         try {
@@ -100,6 +99,7 @@ public class ParserUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        commonNames = FileProcessor.readLineByLine(Config.STORAGE_DIR + "/dict/common.txt");
     }
 
     public static boolean checkImportantVariable(String name, String paramName, List<String> localNameList) {
@@ -109,6 +109,7 @@ public class ParserUtils {
         //Tan check common name
         try {
             if (paramName == null) return true;
+            if (commonNames.contains(name)) return true;
             if (socketClient.lexSimService(name, paramName).orElse(-1f) < 0.5)
                 return false;
         } catch (IOException e) {
