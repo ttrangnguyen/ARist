@@ -39,7 +39,6 @@ class RNNManager(ModelManager):
         self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
     def work(self, data):
-        origin_data = copy.deepcopy(data)
         start_time = perf_counter()
         if data['method_name'] != "":
             method_name = tokenize(data['method_name'])
@@ -149,16 +148,16 @@ class RNNManager(ModelManager):
                     counter += 1
             sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])[:self.max_keep_step[j]]
             java_context = sorted_scores
-        return self.select_top_candidates(java_context, origin_data, start_time)
+        return self.select_top_candidates(java_context, data, start_time)
 
-    def select_top_candidates(self, java_context, origin_data, start_time):
+    def select_top_candidates(self, java_context, data, start_time):
         sorted_scores = sorted(java_context, key=lambda x: -x[1])[:self.top_k]
         result_rnn = []
         for i in range(min(self.top_k, len(sorted_scores))):
             result_rnn.append(sorted_scores[i][3])
         runtime_rnn = perf_counter() - start_time
         self.logger.debug("Total rnn runtime: " + str(runtime_rnn))
-        result_rnn = self.recreate(result_rnn, origin_data)
+        result_rnn = self.recreate(result_rnn, data)
         self.logger.debug("Result rnn:\n", result_rnn)
         response = 'rnn:{' \
                    + 'result:' + json.dumps(result_rnn) \
