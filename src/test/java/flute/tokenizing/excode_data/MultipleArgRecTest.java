@@ -14,6 +14,7 @@ public class MultipleArgRecTest {
 
     private String method_name ="";
     private String class_name ="";
+    private List<String> param_list;
 
     private List<List<String>> next_excode;
     private List<List<List<String>>> next_lex;
@@ -79,6 +80,14 @@ public class MultipleArgRecTest {
 
     public void setClass_name(String class_name) {
         this.class_name = class_name;
+    }
+
+    public List<String> getParam_list() {
+        return param_list;
+    }
+
+    public void setParam_list(List<String> param_list) {
+        this.param_list = param_list;
     }
 
     public List<List<String>> getNext_excode() {

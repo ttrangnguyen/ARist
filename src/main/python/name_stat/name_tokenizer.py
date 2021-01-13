@@ -19,24 +19,26 @@ def tokenize(word):
     # if (word.find("_") != -1 or len(word) == 0):
     # return []
 
+    ppWord = '%s' % word
+
     TAREG = re.compile("[<,>?\[\](){}&.|_]")
-    for match in re.finditer("[A-Z][A-Z\d]+", word):
+    for match in re.finditer("[A-Z][A-Z\d]+", ppWord):
         result = ""
         s = match.start()
         e = match.end()
-        if (e == len(word) or bool(TAREG.match(word[e]))):
+        if (e == len(ppWord) or bool(TAREG.match(ppWord[e]))):
             # CLASS => Class
-            result = word[s:e][1:].lower()
-            result = word[s:e][0] + result
+            result = ppWord[s:e][1:].lower()
+            result = ppWord[s:e][0] + result
         else:
             # CLASS => ClasS
-            result = word[s:e][1:-1].lower()
-            result = word[s:e][0] + result + word[s:e][-1]
+            result = ppWord[s:e][1:-1].lower()
+            result = ppWord[s:e][0] + result + ppWord[s:e][-1]
 
-        word = word[:s] + result + word[e:]
+        ppWord = ppWord[:s] + result + ppWord[e:]
 
     # Split ...
-    words = word.split("...")
+    words = ppWord.split("...")
 
     # Split type argument character
     for w in words:

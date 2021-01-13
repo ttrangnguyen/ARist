@@ -391,6 +391,12 @@ public class ArgRecTestGenerator {
                         oneArgTest.setArgPos(j + 1);
                     }
 
+                    if (oneArgTest.getArgPos() == 0) {
+                        oneArgTest.setParam_name("");
+                    } else {
+                            oneArgTest.setParam_name(fileParser.getParamName(oneArgTest.getArgPos() - 1).orElse(null));
+                    }
+
                     String expectedExcode = oneArgTest.getExpected_excode();
                     String expectedLex = oneArgTest.getExpected_lex();
                     for (NodeSequenceInfo argExcode: oneArgTest.getExpected_excode_ori()) {
@@ -463,6 +469,14 @@ public class ArgRecTestGenerator {
                     test.setMethodScope_name(pile.get(0).getMethodScope_name());
                     test.setClass_name(pile.get(0).getClass_name());
                 }
+
+                List<String> paramList = new ArrayList<>();
+                for (int j = 0; j < pile.size(); ++j) {
+                    if (!"".equals(pile.get(j).getParam_name())) {
+                        paramList.add(pile.get(j).getParam_name());
+                    }
+                }
+                test.setParam_list(paramList);
 
                 StringBuilder expectedExcode = new StringBuilder();
                 for (int j = 0; j < pile.size(); ++j) {

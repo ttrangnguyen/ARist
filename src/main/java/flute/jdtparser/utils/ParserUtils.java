@@ -1,13 +1,14 @@
 package flute.jdtparser.utils;
 
+import flute.communicate.SocketClient;
+import flute.jdtparser.ProjectParser;
+import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.dom.*;
 
 import flute.config.Config;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 public class ParserUtils {
     private static ITypeBinding curType;
@@ -70,12 +71,51 @@ public class ParserUtils {
         expr.accept(new ASTVisitor() {
             @Override
             public boolean visit(SimpleName simpleName) {
-                if(simpleName.resolveBinding() instanceof IVariableBinding){
+                if (simpleName.resolveBinding() instanceof IVariableBinding) {
                     simpleNameList.add(simpleName);
                 }
                 return true;
             }
         });
         return simpleNameList;
+    }
+
+    public static MethodDeclaration findMethodDeclaration(IMethodBinding iMethodBinding, CompilationUnit curCu, ProjectParser projectParser) {
+        ASTNode methodDeclaration = curCu.findDeclaringNode(iMethodBinding.getKey());
+        if (methodDeclaration != null) {
+            return (MethodDeclaration) methodDeclaration;
+        }
+        //create a compilation unit from binding class
+        CompilationUnit virtualCu = projectParser.createCU(iMethodBinding.getDeclaringClass().getName(), iMethodBinding.getDeclaringClass().toString());
+        return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
+    }
+
+    static SocketClient socketClient;
+    static HashSet<String> commonNames;
+
+    static {
+        try {
+            socketClient = new SocketClient(Config.SOCKET_PORT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        commonNames = FileProcessor.readLineByLine(Config.STORAGE_DIR + "/dict/common.txt");
+    }
+
+    public static boolean checkImportantVariable(String name, String paramName, List<String> localNameList) {
+        if (localNameList.contains(name)) {
+            return true;
+        }
+        //Tan check common name
+        try {
+            if (paramName == null) return true;
+            if (commonNames.contains(name)) return true;
+            if (socketClient.lexSimService(name, paramName).orElse(-1f) < 0.5)
+                return false;
+        } catch (IOException e) {
+            return true;
+        }
+
+        return true;
     }
 }

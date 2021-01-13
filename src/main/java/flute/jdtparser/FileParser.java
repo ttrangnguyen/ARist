@@ -413,7 +413,10 @@ public class FileParser {
                     //Just add cast and array access for variable
                     if (ParserCompare.isTrue(compareValue)) {
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
-                        nextVariableMap.put(exCode, variable.getName());
+
+                        if (!Config.FEATURE_LIMIT_CANDIDATES || ParserUtils.checkImportantVariable(variable.getName(), getParamName(position).orElse(null), getLocalVariableList())) {
+                            nextVariableMap.put(exCode, variable.getName());
+                        }
                     } else if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
                         String exCode = "CAST(" + finalTypeNeedCheck.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
                         nextVariableMap.put(exCode, "(" + finalTypeNeedCheck.getName() + ") " + variable.getName());
@@ -941,6 +944,28 @@ public class FileParser {
         ).collect(Collectors.toList()));
 
         return localVariableList;
+    }
+
+    public Optional<String> getParamName(int pos) {
+        Optional<String> result = Optional.empty();
+        MethodDeclaration methodDeclaration = ParserUtils.findMethodDeclaration(getCurMethodInvocation().resolveMethodBinding(), cu, projectParser);
+        Object param = null;
+
+        if (methodDeclaration == null) {
+            return result;
+        }
+
+        if (methodDeclaration.isVarargs() && pos > methodDeclaration.parameters().size()) {
+            param = methodDeclaration.parameters().get(methodDeclaration.parameters().size() - 1);
+        } else {
+            param = methodDeclaration.parameters().get(pos);
+        }
+
+        if (param instanceof SingleVariableDeclaration) {
+            SingleVariableDeclaration singleVariableDeclaration = (SingleVariableDeclaration) param;
+            result = Optional.of(singleVariableDeclaration.getName().toString());
+        }
+        return result;
     }
 
     private void addInitVariable(String variableName, int endPosition) {

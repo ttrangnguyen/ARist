@@ -16,6 +16,7 @@ public class ArgRecTest {
 
     private String method_name = "";
     private String class_name = "";
+    private String param_name = "";
 
     private List<String> next_excode;
     private List<List<String>> next_lex;
@@ -89,6 +90,14 @@ public class ArgRecTest {
 
     public void setClass_name(String class_name) {
         this.class_name = class_name;
+    }
+
+    public String getParam_name() {
+        return param_name;
+    }
+
+    public void setParam_name(String param_name) {
+        this.param_name = param_name;
     }
 
     public List<String> getNext_excode() {
@@ -195,6 +204,11 @@ public class ArgRecTest {
         test.setExcode_context(this.getExcode_context());
         test.setMethodScope_name(this.getMethodScope_name());
         test.setClass_name(this.getClass_name());
+        if ("".equals(this.getParam_name())) {
+            test.setParam_list(new ArrayList<>());
+        } else {
+            test.setParam_list(Collections.singletonList(this.getParam_name()));
+        }
         test.setNext_excode(Collections.singletonList(this.getNext_excode()));
         test.setNext_lex(Collections.singletonList(this.getNext_lex()));
         test.setExpected_excode(this.getExpected_excode());
