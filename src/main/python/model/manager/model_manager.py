@@ -20,11 +20,10 @@ class ModelManager:
         self.top_k = top_k
         self.train_len = train_len
         self.logger = logging.getLogger()
-        self.logger.disabled = not PRINT_LOG
         self.logger.setLevel(logging.DEBUG)
-
         # output_file_handler = logging.FileHandler("output.log")
         # logger.addHandler(output_file_handler)
+        self.logger.disabled = not PRINT_LOG
         stdout_handler = logging.StreamHandler(sys.stdout)
         self.logger.addHandler(stdout_handler)
         self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))

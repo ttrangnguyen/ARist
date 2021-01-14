@@ -156,8 +156,8 @@ def listdirs(folder):
 
 if __name__ == '__main__':
     data_types = ['fold_' + str(x) for x in range(10)]
-    data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
-    train_len = [4 + 1, 6 + 1]
+    data_parent_folders = ['data_csv_3_gram']
+    train_len = [2 + 1]
     version = '3'
     n_folds = 10
     data_version_path = '../../../../../../data_v' + version + '/'
