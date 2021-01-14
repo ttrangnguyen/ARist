@@ -29,7 +29,7 @@ def recvall(sock):
 
 
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serv.bind(('0.0.0.0', 18007))
+serv.bind(('0.0.0.0', PORT))
 serv.listen(10)
 
 rnn_manager = None
