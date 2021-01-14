@@ -20,7 +20,7 @@ class ModelManager:
         self.top_k = top_k
         self.train_len = train_len
         self.logger = logging.getLogger()
-        # logger.disabled = True
+        self.logger.disabled = not PRINT_LOG
         self.logger.setLevel(logging.DEBUG)
 
         # output_file_handler = logging.FileHandler("output.log")
