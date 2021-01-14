@@ -4,10 +4,10 @@ from pathlib import Path
 
 # proj = ['ant', 'batik', 'log4j', 'lucene', 'xalan', 'xerces']
 projects = ['netbeans', 'eclipse']
-data_forms = ['java', 'excode']
+data_forms = ['excode']
 # data_types = ['train', 'test', 'validate']
 data_types = ['fold_' + str(x) for x in range(10)]
-data_parent_folders = ['data_csv_5_gram', 'data_csv_7_gram']
+data_parent_folders = ['data_csv_3_gram']
 data_version = '3'
 
 for data_form in data_forms:

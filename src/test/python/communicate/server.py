@@ -10,7 +10,6 @@ from model.manager.ngram_manager import NgramManager
 from model.manager.rnn_manager import RNNManager
 from name_stat.name_tokenizer import tokenize
 from name_stat.similarly import lexSim
-from config import *
 from model.config import *
 
 
