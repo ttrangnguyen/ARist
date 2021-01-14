@@ -2,41 +2,21 @@ import json
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
 from name_stat.name_tokenizer import tokenize
-from keras.models import load_model
 from model.predictor import prepare, predict, evaluate
 from time import perf_counter
-from pickle import load
 import numpy as np
-import logging
-import sys
-import copy
-from model.utility import *
 from model.manager.model_manager import ModelManager
-from model.config import *
-from name_stat.similarly import lexSim
 
 
 class RNNManager(ModelManager):
     def __init__(self, top_k, project, train_len,
-                 excode_model_rnn_path, java_model_rnn_path,
+                 excode_model_path, java_model_path,
                  excode_tokenizer_path, java_tokenizer_path,
                  excode_tokens_path):
-        self.excode_model_rnn = load_model(excode_model_rnn_path)
-        self.java_model_rnn = load_model(java_model_rnn_path)
-        self.top_k = top_k
-        self.train_len = train_len
-        self.logger = logging.getLogger()
-        # logger.disabled = True
-        self.logger.setLevel(logging.DEBUG)
-
-        # output_file_handler = logging.FileHandler("output.log")
-        # logger.addHandler(output_file_handler)
-        stdout_handler = logging.StreamHandler(sys.stdout)
-        self.logger.addHandler(stdout_handler)
-        self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
-        self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
-        self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
-        self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+        super().__init__(top_k, project, train_len,
+                         excode_model_path, java_model_path,
+                         excode_tokenizer_path, java_tokenizer_path,
+                         excode_tokens_path)
 
     def work(self, data):
         start_time = perf_counter()
@@ -76,7 +56,7 @@ class RNNManager(ModelManager):
                 sentence_len_all += sentence_len
             x_test_all = np.array(x_test_all)
             y_test_all = np.array(y_test_all)
-            p_pred = predict(self.excode_model_rnn, x_test_all,
+            p_pred = predict(self.excode_model, x_test_all,
                              method_name_tokens=method_name_tokens_excode,
                              class_name_tokens=class_name_tokens_excode)
             log_p_sentence = evaluate(p_pred, y_test_all, sentence_len_all)
@@ -128,7 +108,7 @@ class RNNManager(ModelManager):
                 sentence_len_all += sentence_len
             x_test_all = np.array(x_test_all)
             y_test_all = np.array(y_test_all)
-            p_pred = predict(self.java_model_rnn, x_test_all,
+            p_pred = predict(self.java_model, x_test_all,
                              method_name_tokens=method_name_tokens_java,
                              class_name_tokens=class_name_tokens_java)
             log_p_sentence = evaluate(p_pred, y_test_all, sentence_len_all)

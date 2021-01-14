@@ -4,3 +4,4 @@ ngram = 4 + 1
 ngram_weight = 1
 USE_RNN = False
 USE_NGRAM = True
+USE_LEXSIM = True
