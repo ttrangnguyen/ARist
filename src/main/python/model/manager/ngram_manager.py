@@ -117,7 +117,7 @@ class NgramManager(ModelManager):
         runtime_ngram = perf_counter() - start_time
         self.logger.debug("Total n-gram runtime: " + str(runtime_ngram))
         result_ngram = self.recreate(result_ngram, data)
-        self.logger.debug("Result ngram: " + result_ngram)
+        self.logger.debug("Result ngram: " + json.dumps(result_ngram))
 
         response = 'ngram:{' \
                    + 'result:' + json.dumps(result_ngram) \
