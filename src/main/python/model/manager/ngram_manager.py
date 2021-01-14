@@ -2,13 +2,8 @@ import json
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
 from time import perf_counter
-from pickle import load
 import numpy as np
-import dill
 from model.ngram_predictor import score_ngram
-import logging
-import sys
-from model.utility import *
 from model.manager.model_manager import *
 from model.config import *
 from name_stat.similarly import lexSim
@@ -17,31 +12,16 @@ import copy
 
 class NgramManager(ModelManager):
     def __init__(self, top_k, project, train_len, ngram,
-                 excode_model_ngram_path, java_model_ngram_path,
+                 excode_model_path, java_model_path,
                  excode_tokenizer_path, java_tokenizer_path,
                  excode_tokens_path):
-        with open(excode_model_ngram_path, 'rb') as fin:
-            self.excode_model_ngram = dill.load(fin)
-        with open(java_model_ngram_path, 'rb') as fin:
-            self.java_model_ngram = dill.load(fin)
-        self.top_k = top_k
-        self.train_len = train_len
+        super().__init__(top_k, project, train_len,
+                         excode_model_path, java_model_path,
+                         excode_tokenizer_path, java_tokenizer_path,
+                         excode_tokens_path)
         self.ngram = ngram
-        self.logger = logging.getLogger()
-        # logger.disabled = True
-        self.logger.setLevel(logging.DEBUG)
-
-        # output_file_handler = logging.FileHandler("output.log")
-        # logger.addHandler(output_file_handler)
-        stdout_handler = logging.StreamHandler(sys.stdout)
-        self.logger.addHandler(stdout_handler)
-        self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
-        self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
-        self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
-        self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
     def work(self, data):
-        origin_data = copy.deepcopy(data)
         start_time = perf_counter()
         excode_context = excode_tokenize(data['excode_context'],
                                          tokenizer=self.excode_tokenizer,
@@ -66,7 +46,7 @@ class NgramManager(ModelManager):
                     sentence = excode_context_textform[ex_suggest_id][0] + excode_suggestions_textform.split()
                     if p_id < n_param - 1:
                         sentence += ['sepa(,)']
-                    model_score = score_ngram(model=self.excode_model_ngram,
+                    model_score = score_ngram(model=self.excode_model,
                                               sentence=sentence,
                                               n=self.ngram,
                                               start_pos=len(excode_context_textform[ex_suggest_id][0]))
@@ -105,12 +85,14 @@ class NgramManager(ModelManager):
                         new_context = java_context_list[k][0] + java_suggestion
                         if j < n_param - 1:
                             new_context += [',']
-                        model_score = score_ngram(model=self.java_model_ngram,
+                        model_score = score_ngram(model=self.java_model,
                                                   sentence=new_context,
                                                   n=self.ngram,
                                                   start_pos=len(java_context_list[k][0]))
-                        if len(data['param_list']) > 0 and self.is_valid_param(data['param_list'][j]):
-                            # self.logger.log(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][ii])
+                        if self.use_lexsim_flag() and is_not_empty_list(data['param_list']) \
+                                and self.is_valid_param(data['param_list'][j]):
+                            # self.logger.log(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][
+                            # ii])
                             lexsim = lexSim(data['param_list'][j],
                                             data['next_lex'][j][excode_context_textform[i][1][j]][ii])
                             model_score = self.score_lexsim(lexsim) + model_score * ngram_weight
