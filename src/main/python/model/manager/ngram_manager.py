@@ -98,9 +98,6 @@ class NgramManager(ModelManager):
                             model_score = self.score_lexsim(lexsim) + model_score * ngram_weight
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
                                                        + [(excode_context_textform[i][1][j], ii)], model_score))
-
-                        # lexsim = lexSim('a', 'b')
-                        # model_score = lexsim_weight * lexsim + model_weight * model_score
                 sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[2])
                 if j < n_param - 1:
                     java_context_list = [(x[0], x[1]) for x in sorted_scores]
@@ -120,7 +117,7 @@ class NgramManager(ModelManager):
         runtime_ngram = perf_counter() - start_time
         self.logger.debug("Total n-gram runtime: " + str(runtime_ngram))
         result_ngram = self.recreate(result_ngram, data)
-        print("Result ngram:\n", result_ngram)
+        self.logger.debug("Result ngram: " + result_ngram)
 
         response = 'ngram:{' \
                    + 'result:' + json.dumps(result_ngram) \
