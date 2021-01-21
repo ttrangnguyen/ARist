@@ -66,7 +66,7 @@ public class Config {
     public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false;
     public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false;
     public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false;
-
+    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false;

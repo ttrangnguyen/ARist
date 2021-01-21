@@ -459,9 +459,12 @@ public class FileParser {
                         }
                     }
                 });
+                if (Config.FEATURE_PARAM_TYPE_LAMBDA
+                        && nextVariableMap.getValue().isEmpty() && typeNeedCheck.isInterface()) {
+                    nextVariableMap.put("LAMBDA", "");
+                }
             }
         });
-
 
         return nextVariableMap;
     }
