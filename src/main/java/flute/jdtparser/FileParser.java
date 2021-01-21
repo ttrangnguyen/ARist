@@ -466,6 +466,34 @@ public class FileParser {
         return nextVariableMap;
     }
 
+    public Optional<List<IMethodBinding>> genMethodCall() {
+        if (curMethodInvocation == null) return Optional.empty();
+
+        ITypeBinding classBinding;
+        boolean isStaticExpr = false;
+        List<IMethodBinding> listMember = new ArrayList<>();
+
+        if (curMethodInvocation.getExpression() == null) {
+            classBinding = curClass;
+            isStaticExpr = isStaticScope(curMethodInvocation.getOrgASTNode());
+        } else {
+            classBinding = curMethodInvocation.getExpressionType();
+            isStaticExpr = curMethodInvocation.isStaticExpression();
+        }
+        ClassParser classParser = new ClassParser(classBinding);
+
+        List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
+
+        for (IMethodBinding methodBinding : methodBindings) {
+            //Add filter for parent expression
+            if (parentValue(curMethodInvocation.getOrgASTNode()) == null
+                    || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode()))) {
+                listMember.add(methodBinding);
+            }
+        }
+        return Optional.of(listMember);
+    }
+
     public void parseCurMethodInvocation() throws MethodInvocationNotFoundException {
         final ASTNode[] astNode = {null};
 
