@@ -18,7 +18,7 @@ class RNNManager(ModelManager):
                          excode_tokenizer_path, java_tokenizer_path,
                          excode_tokens_path)
 
-    def work(self, data):
+    def process(self, data):
         start_time = perf_counter()
         if data['method_name'] != "":
             method_name = tokenize(data['method_name'])

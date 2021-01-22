@@ -8,7 +8,7 @@ public class Client {
 
     public static void main(String[] args) {
         try {
-            SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
+            SocketClient socketClient = new SocketClient(17007);
             Response response = socketClient.write("{\n" +
                     "  \"lex_context\": [\n" +
                     "    \"categoryDetail\",\n" +
@@ -120,7 +120,13 @@ public class Client {
                     "  \"method_name\": \"StrongMethod\",\n" +
                     "  \"class_name\": \"StrongClass\",\n" +
                     "  \"expected_excode\": \"VAR(String) SEPA(,) VAR(String) SEPA(,) VAR(String)\",\n" +
-                    "  \"expected_lex\": \"categoryString, categoryString, categoryString\"\n" +
+                    "  \"expected_lex\": \"categoryString, categoryString, categoryString\",\n" +
+                    "  \"excode_context_no_method\": \"TYPE(Log) VAR(Log,log) ASSIGN(ASSIGN)\",\n" +
+                    "  \"method_candidate_excode\": [\n" +
+                    "    \"M_ACCESS(a,b,2)\",\n" +
+                    "    \"M_ACCESS(c,d,3)\",\n" +
+                    "    \"M_ACCESS(d,e,4)\"\n" +
+                    "  ]\n" +
                     "}");
             if (response instanceof PredictResponse) {
                 PredictResponse predictResponse = (PredictResponse) response;
