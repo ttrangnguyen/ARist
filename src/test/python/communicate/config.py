@@ -1,0 +1,3 @@
+SERVICES = ["param", "method_name"]
+PORT_PARAM = 18007
+PORT_METHOD_NAME = 17007

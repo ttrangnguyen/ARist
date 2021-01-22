@@ -109,5 +109,11 @@
   "method_name": "StrongMethod",
   "class_name": "StrongClass",
   "expected_excode": "VAR(String) SEPA(,) VAR(String) SEPA(,) VAR(String)",
-  "expected_lex": "categoryString, categoryString, categoryString"
+  "expected_lex": "categoryString, categoryString, categoryString",
+  "excode_context_no_method": "TYPE(Log) VAR(Log,log) ASSIGN(ASSIGN)",
+  "method_candidate_excode": [
+    "M_ACCESS(a,b,2)",
+    "M_ACCESS(c,d,3)",
+    "M_ACCESS(d,e,4)"
+  ]
 }
