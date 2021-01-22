@@ -126,8 +126,8 @@ class NgramManager(ModelManager):
         self.logger.debug("Total n-gram runtime: " + str(runtime_ngram))
         result_ngram = self.recreate(result_ngram, data)
         self.logger.debug("Result ngram: " + json.dumps(result_ngram))
-        response = 'result_param:' + json.dumps(result_ngram) \
-                   + ',runtime_param:' + str(runtime_ngram)
+        response = 'result:' + json.dumps(result_ngram) \
+                   + ',runtime:' + str(runtime_ngram)
         return response
 
     def predict_method_name(self, data):
@@ -157,5 +157,5 @@ class NgramManager(ModelManager):
         for i in best_candidates_index:
             best_candidates.append(data['method_candidate_excode'][best_candidates_index[i]])
         print(best_candidates)
-        return 'result_method_name:' + json.dumps(best_candidates) \
-               + ',runtime_method_name:' + str(perf_counter() - start_time)
+        return 'result:' + json.dumps(best_candidates) \
+               + ',runtime:' + str(perf_counter() - start_time)
