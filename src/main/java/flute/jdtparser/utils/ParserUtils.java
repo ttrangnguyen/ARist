@@ -94,15 +94,18 @@ public class ParserUtils {
     static HashSet<String> commonNames;
 
     static {
-        try {
-            socketClient = new SocketClient(Config.SOCKET_PORT);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (Config.FEATURE_LIMIT_CANDIDATES) {
+            try {
+                socketClient = new SocketClient(Config.SOCKET_PORT);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            commonNames = FileProcessor.readLineByLine(Config.STORAGE_DIR + "/dict/common.txt");
         }
-        commonNames = FileProcessor.readLineByLine(Config.STORAGE_DIR + "/dict/common.txt");
     }
 
     public static boolean checkImportantVariable(String name, String paramName, List<String> localNameList) {
+        System.out.println("a");
         if (localNameList.contains(name)) {
             return true;
         }
