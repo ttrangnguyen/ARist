@@ -107,7 +107,7 @@ public class ParserUtils {
     static {
         if (Config.FEATURE_LIMIT_CANDIDATES) {
             try {
-                socketClient = new SocketClient(Config.SOCKET_PORT);
+                socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
             } catch (Exception e) {
                 e.printStackTrace();
             }

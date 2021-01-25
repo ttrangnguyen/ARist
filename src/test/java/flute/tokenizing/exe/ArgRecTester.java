@@ -11,7 +11,6 @@ import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.ArgRecTest;
-import flute.tokenizing.excode_data.RecTest;
 import flute.utils.ProgressBar;
 import flute.utils.file_writing.CSVWritor;
 import flute.utils.logging.Logger;
@@ -347,7 +346,7 @@ public class ArgRecTester {
             for (List<MultipleArgRecTest> testBatch : finalTestBatches) {
                 Future<?> future = executor.submit(() -> {
                     try {
-                        SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
+                        SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
                         for (MultipleArgRecTest test : testBatch) {
                             dataFrame.insert("Tested", 1);
                             testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
@@ -378,7 +377,7 @@ public class ArgRecTester {
             }
         } else {
             try {
-                SocketClient socketClient = new SocketClient(Config.SOCKET_PORT);
+                SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
                 for (MultipleArgRecTest test : tests) {
                     dataFrame.insert("Tested", 1);
                     testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);

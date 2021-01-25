@@ -19,7 +19,8 @@ public class Config {
 
     public static String LOG_DIR = STORAGE_DIR + "logs/";
 
-    public final static int SOCKET_PORT = 18007;
+    public final static int PARAM_SERVICE_PORT = 18007;
+    public final static int METHOD_NAME_SERVICE_PORT = 17007;
 
     /***
      * Logging
@@ -101,7 +102,7 @@ public class Config {
      Config for test
      ***/
 
-    public final static boolean TEST_ARG_ONE_BY_ONE = true;
+    public final static boolean TEST_ARG_ONE_BY_ONE = false;
     public final static boolean TEST_ZERO_ARG = false;
 
     public static String TEST_FILE_PATH = "";
