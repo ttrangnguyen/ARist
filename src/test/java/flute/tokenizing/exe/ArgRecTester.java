@@ -437,7 +437,10 @@ public class ArgRecTester {
             tests = tmp;
         }
 
-        return Config.TEST_ARG_ONE_BY_ONE? generator.getSingleArgRecTests(tests) : generator.getAllArgRecTests(tests);
+        MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
+                new SingleArgRecTestGenerator(generator): new AllArgRecTestGenerator(generator);
+
+        return multipleGenerator.generate(tests);
     }
 
     public static List<MultipleArgRecTest> getTests(String projectName, boolean fromSavefile) throws IOException {

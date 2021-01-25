@@ -74,6 +74,6 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
         return tests;
     }
 
-    abstract List<RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
-                                                  MethodCallExpr methodCall, String contextMethodCall, String methodName);
+    abstract List<? extends RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
+                                                            MethodCallExpr methodCall, String contextMethodCall, String methodName);
 }
