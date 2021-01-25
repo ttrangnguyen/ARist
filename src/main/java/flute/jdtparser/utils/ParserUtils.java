@@ -1,6 +1,7 @@
 package flute.jdtparser.utils;
 
 import flute.communicate.SocketClient;
+import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
 import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.dom.*;
@@ -88,6 +89,16 @@ public class ParserUtils {
         //create a compilation unit from binding class
         CompilationUnit virtualCu = projectParser.createCU(iMethodBinding.getDeclaringClass().getName(), iMethodBinding.getDeclaringClass().toString());
         return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
+    }
+
+    public static MultiMap methodMap(List<IMethodBinding> methodList) {
+        MultiMap multiMap = new MultiMap();
+        for (IMethodBinding method : methodList) {
+            String exCode = "M_ACCESS("
+                    + method.getDeclaringClass().getName() + "," + method.getName() + "," + method.getParameterTypes().length + ")";
+            multiMap.put(exCode, method.getName());
+        }
+        return multiMap;
     }
 
     static SocketClient socketClient;
