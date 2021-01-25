@@ -49,7 +49,6 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
                 String methodScope = "";
                 if (methodCall.getScope().isPresent()) {
                     methodScope = methodCall.getScope().get() + ".";
-                    methodName = methodScope + methodName;
                 }
 
                 int curPos = getFileParser().getCurPosition();
@@ -65,7 +64,7 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
                 }
                 //System.out.println("Position: " + methodCall.getBegin().get());
 
-                tests.addAll(generateFromMethodCall(excodes, stack.get(stack.size() - 1), i, methodCall, contextMethodCall, methodName));
+                tests.addAll(generateFromMethodCall(excodes, stack.get(stack.size() - 1), i, methodCall, contextMethodCall, methodScope, methodName));
 
                 stack.remove(stack.size() - 1);
             }
@@ -75,5 +74,5 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
     }
 
     abstract List<? extends RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
-                                                            MethodCallExpr methodCall, String contextMethodCall, String methodName);
+                                                            MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName);
 }

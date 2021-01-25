@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ArgRecTest extends RecTest {
+public class ArgRecTest extends MethodCallRecTest {
     private int argPos;
 
     /**
@@ -25,11 +25,6 @@ public class ArgRecTest extends RecTest {
     private String methodAccessLex;
     private String objectCreationExcode;
     private String objectCreationLex;
-
-    /**
-     * For filtering
-     */
-    private String methodInvocClassQualifiedName;
 
     /**
      * References
@@ -106,14 +101,6 @@ public class ArgRecTest extends RecTest {
 
     public void setObjectCreationLex(String objectCreationLex) {
         this.objectCreationLex = objectCreationLex;
-    }
-
-    public String getMethodInvocClassQualifiedName() {
-        return methodInvocClassQualifiedName;
-    }
-
-    public void setMethodInvocClassQualifiedName(String methodInvocClassQualifiedName) {
-        this.methodInvocClassQualifiedName = methodInvocClassQualifiedName;
     }
 
     public List<NodeSequenceInfo> getExpected_excode_ori() {

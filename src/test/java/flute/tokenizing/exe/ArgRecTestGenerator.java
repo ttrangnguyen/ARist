@@ -37,11 +37,11 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
     @Override
     List<? extends RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
-                                                   MethodCallExpr methodCall, String contextMethodCall, String methodName) {
+                                                   MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
 
         List<RecTest> tests = new ArrayList<>();
 
-        String contextArg = contextMethodCall + methodName + '(';
+        String contextArg = contextMethodCall + methodScope + methodName + '(';
         String classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();

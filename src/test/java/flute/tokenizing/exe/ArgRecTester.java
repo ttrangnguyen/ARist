@@ -29,7 +29,7 @@ public class ArgRecTester {
 
     private static final Gson gson = new Gson();
     private static ArgRecTestGenerator generator;
-    private static DataFrame dataFrame = new DataFrame();;
+    private static DataFrame dataFrame = new DataFrame();
 
     public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
         String expectedExcode = test.getExpected_excode();

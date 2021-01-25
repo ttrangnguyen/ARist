@@ -24,10 +24,10 @@ public abstract class MultipleArgRecTestGenerator extends MethodCallRecTestGener
 
     @Override
     List<? extends RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
-                                                   MethodCallExpr methodCall, String contextMethodCall, String methodName) {
+                                                   MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
 
         List<ArgRecTest> tests = (List<ArgRecTest>) argRecTestGenerator.generateFromMethodCall(excodes, methodCallStartIdx, methodCallEndIdx,
-                methodCall, contextMethodCall, methodName);
+                methodCall, contextMethodCall, methodScope, methodName);
 
         return generate(tests);
     }
