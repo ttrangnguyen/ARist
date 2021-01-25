@@ -489,8 +489,8 @@ public class FileParser {
 
         for (IMethodBinding methodBinding : methodBindings) {
             //Add filter for parent expression
-            if (parentValue(curMethodInvocation.getOrgASTNode()) == null
-                    || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode()))) {
+            if (!methodBinding.isConstructor() && (parentValue(curMethodInvocation.getOrgASTNode()) == null
+                    || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode())))) {
                 listMember.add(methodBinding);
             }
         }
