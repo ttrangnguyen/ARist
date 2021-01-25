@@ -29,7 +29,13 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
         String classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
         int contextIdx = methodCallStartIdx - 1;
 
-        MultiMap methodMap = ParserUtils.methodMap(getFileParser().genMethodCall().get());
+        MultiMap methodMap = null;
+        try {
+            methodMap = ParserUtils.methodMap(getFileParser().genMethodCall().get());
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return tests;
+        }
+
         List<String> methodExcodeList = new ArrayList<>(methodMap.getValue().keySet());
         List<List<String>> methodLexList = new ArrayList<>();
         for (String methodExcode : methodExcodeList) {

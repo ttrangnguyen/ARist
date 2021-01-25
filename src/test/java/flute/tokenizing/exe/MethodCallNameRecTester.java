@@ -9,10 +9,10 @@ import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
-import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.utils.ProgressBar;
+import flute.utils.file_writing.CSVWritor;
 import flute.utils.logging.Logger;
 import flute.utils.logging.Timer;
 
@@ -43,8 +43,134 @@ public class MethodCallNameRecTester {
         return false;
     }
 
+    public static boolean canAcceptResult(MethodCallNameRecTest test, String result) {
+        String expectedLex = test.getExpected_lex();
+        if (result.equals(expectedLex)) return true;
+        return false;
+    }
+
+    public static void updateTopKResult(MethodCallNameRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+                                        String modelName) {
+
+        if (test.isIgnored()) {
+            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
+            return;
+        }
+
+        boolean isOverallCorrectTopK = false;
+        for (int i = 0; i < Math.min(k, results.size()); ++i) {
+            if (canAcceptResult(test, results.get(i))) {
+                isOverallCorrectTopK = true;
+                break;
+            }
+        }
+
+        if (isOverallCorrectTopK) {
+            dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
+
+            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 1);
+            if (adequateGeneratedCandidate) {
+                dataFrame.insert(String.format("%sTop%d", modelName, k), 1);
+            }
+        } else {
+            dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
+
+            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
+            if (adequateGeneratedCandidate) {
+                dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
+            }
+        }
+    }
+
+    private static final int[] tops = {1, 3, 5, 10};
+    private static boolean isNGramUsed = false;
+    private static boolean isRNNUsed = false;
+
+    public static void printResult(String projectName, double averageGetTestsTime) {
+        System.out.println("==========================");
+        System.out.println("Number of tests: " + dataFrame.getVariable("Tested").getCount());
+        System.out.println("Average parsing runtime: " + averageGetTestsTime + "s");
+        if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
+        if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+        System.out.println("Average overall runtime: "
+                + (dataFrame.getVariable("NGram's runtime").getMean()
+                + dataFrame.getVariable("RNN's runtime").getMean()
+                + averageGetTestsTime) + "s");
+
+        List<String[]> accuracyPerNumArg = new ArrayList<>();
+        List<String> row = new ArrayList<>();
+        if (isNGramUsed) {
+            for (int k: tops) row.add(String.format("NGram's top-%d accuracy", k));
+        }
+        if (isRNNUsed) {
+            for (int k: tops) row.add(String.format("RNN's top-%d accuracy", k));
+        }
+        for (int k: tops) row.add(String.format("Top-%d precision", k));
+        for (int k: tops) row.add(String.format("Top-%d recall", k));
+        accuracyPerNumArg.add(row.toArray(new String[row.size()]));
+
+        row = new ArrayList<>();
+        if (isNGramUsed) {
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%d", k)).getMean()));
+        }
+        if (isRNNUsed) {
+            for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
+        }
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean()));
+        for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%d", k)).getMean()));
+        accuracyPerNumArg.add(row.toArray(new String[row.size()]));
+
+        CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accuracyPerNumArg);
+    }
+
+    public static void test(Response response, Map<Integer, Boolean> testMap, MethodCallNameRecTest test) {
+        PredictResponse predictResponse = (PredictResponse) response;
+        isNGramUsed = predictResponse.getData().ngram != null;
+        isRNNUsed = predictResponse.getData().rnn != null;
+        List<String> nGramResults = null;
+        if (isNGramUsed) nGramResults = predictResponse.getData().ngram.getResult();
+        List<String> RNNResults = null;
+        if (isRNNUsed) RNNResults = predictResponse.getData().rnn.getResult();
+//        System.out.println("==========================");
+//        System.out.println(gson.toJson(test));
+//        if (isNGramUsed) {
+//            System.out.println("==========================");
+//            System.out.println("NGram's results:");
+//            nGramResults.forEach(item -> {
+//                System.out.println(item);
+//            });
+//            System.out.println("==========================");
+//            System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+//        }
+//
+//        if (isRNNUsed) {
+//            System.out.println("==========================");
+//            System.out.println("RNN's results:");
+//            RNNResults.forEach(item -> {
+//                System.out.println(item);
+//            });
+//            System.out.println("==========================");
+//            System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
+//        }
+
+        if (isNGramUsed) {
+            for (int k : tops)
+                updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
+                        "nGram");
+        }
+
+        if (isRNNUsed) {
+            for (int k : tops)
+                updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
+                        "RNN");
+        }
+
+        if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
+        if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
+    }
+
     public static void main(String[] args) throws IOException {
-        String projectName = "lucene";
+        String projectName = "demo";
         Timer timer = new Timer();
         timer.startCounter();
         List<MethodCallNameRecTest> tests = getTests(projectName, false, true);
@@ -102,59 +228,60 @@ public class MethodCallNameRecTester {
 
         ProgressBar testProgressBar = new ProgressBar();
 
-//        if (Config.MULTIPROCESS) {
-//            final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
-//            final List<Future<?>> futures = new ArrayList<>();
-//
-//            List<List<MethodCallNameRecTest>> finalTestBatches = testBatches;
-//            for (List<MethodCallNameRecTest> testBatch : finalTestBatches) {
-//                Future<?> future = executor.submit(() -> {
-//                    try {
-//                        SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
-//                        for (MethodCallNameRecTest test : testBatch) {
-//                            dataFrame.insert("Tested", 1);
-//                            testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
-//
-//                            Response response = socketClient.write(gson.toJson(test));
-//                            if (response instanceof PredictResponse) {
-//                                test(response, testMap, test);
-//                            }
-//                        }
-//                        socketClient.close();
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                });
-//                futures.add(future);
-//            }
-//            boolean isDone = false;
-//            while (!isDone) {
-//                boolean isProcessing = false;
-//                for (Future<?> future : futures) {
-//                    if (!future.isDone()) {
-//                        isProcessing = true;
-//                        break;
-//                    }
-//                }
-//                if (!isProcessing) isDone = true;
-//            }
-//        } else {
-//            try {
-//                SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
-//                for (MethodCallNameRecTest test : tests) {
-//                    dataFrame.insert("Tested", 1);
-//                    testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
-//
-//                    Response response = socketClient.write(gson.toJson(test));
-//                    if (response instanceof PredictResponse) {
-//                        test(response, testMap, test);
-//                    }
-//                }
-//                socketClient.close();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
+        if (Config.MULTIPROCESS) {
+            final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
+            final List<Future<?>> futures = new ArrayList<>();
+
+            List<List<MethodCallNameRecTest>> finalTestBatches = testBatches;
+            for (List<MethodCallNameRecTest> testBatch : finalTestBatches) {
+                Future<?> future = executor.submit(() -> {
+                    try {
+                        SocketClient socketClient = new SocketClient(Config.METHOD_NAME_SERVICE_PORT);
+                        for (MethodCallNameRecTest test : testBatch) {
+                            dataFrame.insert("Tested", 1);
+                            testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
+
+                            Response response = socketClient.write(gson.toJson(test));
+                            if (response instanceof PredictResponse) {
+                                test(response, testMap, test);
+                            }
+                        }
+                        socketClient.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                futures.add(future);
+            }
+            boolean isDone = false;
+            while (!isDone) {
+                boolean isProcessing = false;
+                for (Future<?> future : futures) {
+                    if (!future.isDone()) {
+                        isProcessing = true;
+                        break;
+                    }
+                }
+                if (!isProcessing) isDone = true;
+            }
+        } else {
+            try {
+                SocketClient socketClient = new SocketClient(Config.METHOD_NAME_SERVICE_PORT);
+                for (MethodCallNameRecTest test : tests) {
+                    dataFrame.insert("Tested", 1);
+                    testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
+
+                    Response response = socketClient.write(gson.toJson(test));
+                    if (response instanceof PredictResponse) {
+                        test(response, testMap, test);
+                    }
+                }
+                socketClient.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        printResult(projectName, averageGetTestsTime);
         System.exit(0);
     }
 
