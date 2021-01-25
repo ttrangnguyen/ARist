@@ -11,6 +11,7 @@ import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.ArgRecTest;
+import flute.tokenizing.excode_data.RecTest;
 import flute.utils.ProgressBar;
 import flute.utils.file_writing.CSVWritor;
 import flute.utils.logging.Logger;
@@ -455,7 +456,7 @@ public class ArgRecTester {
     }
 
     public static List<ArgRecTest> generateTestsFromDemoProject() {
-        return generator.generateAll();
+        return (List<ArgRecTest>) generator.generateAll();
     }
 
     public static List<ArgRecTest> generateTestsFromGitProject(String projectName) throws IOException {
@@ -469,13 +470,13 @@ public class ArgRecTester {
             String filePath = sc.nextLine();
             if (Config.MULTIPROCESS) {
                 Future<?> future = executor.submit(() -> {
-                    List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
+                    List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
                     for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
                     tests.addAll(oneFileTests);
                 });
                 futures.add(future);
             } else {
-                List<ArgRecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
+                List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
                 for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
                 tests.addAll(oneFileTests);
             }
@@ -501,7 +502,7 @@ public class ArgRecTester {
 
     public static List<ArgRecTest> generateTestsFromFile(String projectName, String filePath) throws IOException {
         setupGenerator(projectName);
-        return generator.generate(filePath);
+        return (List<ArgRecTest>) generator.generate(filePath);
     }
 
     public static void saveTests(String projectName, List<ArgRecTest> tests) {
