@@ -1,21 +1,13 @@
 package flute.tokenizing.exe;
 
 import com.github.javaparser.ParseException;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
-import com.github.javaparser.resolution.UnsolvedSymbolException;
-import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
-import flute.config.Config;
 import flute.data.MultiMap;
-import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
 import flute.utils.StringUtils;
 import flute.utils.file_processing.JavaTokenizer;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -41,115 +33,6 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
     private <T> List<T> truncateList(List<T> list) {
         return truncateList(list, true);
-    }
-
-    public static boolean isClean(List<NodeSequenceInfo> nodeSequenceList) {
-        for (NodeSequenceInfo excode: nodeSequenceList) {
-            // TODO: Ignore null literal for now
-            if (NodeSequenceInfo.isLiteral(excode, "null") && !Config.FEATURE_PARAM_TYPE_NULL_LIT) return false;
-            if (NodeSequenceInfo.isMethodAccess(excode) && !Config.FEATURE_PARAM_TYPE_METHOD_INVOC) return false;
-            if (NodeSequenceInfo.isOpenBrak(excode) && !Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS) return false;
-            if (NodeSequenceInfo.isCast(excode)) {
-                if (!Config.FEATURE_PARAM_TYPE_CAST) return false;
-                // Only accept (Class) object
-                if (!(nodeSequenceList.size() == 2 && NodeSequenceInfo.isVar(nodeSequenceList.get(1)))) return false;
-            }
-            if (NodeSequenceInfo.isObjectCreation(excode)) {
-                if (!Config.FEATURE_PARAM_TYPE_OBJ_CREATION) return false;
-                // Not accept Primitive wrapper classes
-                List primitiveWrapperClasses = Arrays.asList("Byte", "Short", "Integer", "Long", "Float", "Double", "Character", "Boolean");
-                if (primitiveWrapperClasses.contains(excode.getAttachedAccess())) return false;
-            };
-            if (NodeSequenceInfo.isArrayCreation(excode)) {
-                if (!Config.FEATURE_PARAM_TYPE_ARR_CREATION) return false;
-            }
-            if (!Config.FEATURE_PARAM_TYPE_COMPOUND) {
-                if (NodeSequenceInfo.isAssign(excode)) return false;
-                if (NodeSequenceInfo.isOperator(excode)) return false;
-                if (NodeSequenceInfo.isUnaryOperator(excode)) return false;
-                if (NodeSequenceInfo.isConditionalExpr(excode)) return false;
-
-                // For EnclosedExpr
-                if (excode == nodeSequenceList.get(0) && NodeSequenceInfo.isOpenPart(excode)) return false;
-            }
-            if (NodeSequenceInfo.isClassExpr(excode) && !Config.FEATURE_PARAM_TYPE_TYPE_LIT) return false;
-
-            // For static field access
-            if (NodeSequenceInfo.isFieldAccess(excode) && !Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {
-                FieldAccessExpr fieldAccess = (FieldAccessExpr) excode.oriNode;
-                boolean isScopeAClass = false;
-                if (fieldAccess.getScope() instanceof NameExpr) {
-                    try {
-                        ((NameExpr) fieldAccess.getScope()).resolve();
-                    }
-                    // Field access from generic type?
-                    catch (IllegalStateException ise) {
-                        isScopeAClass = true;
-                    }
-                    // Field access from a class
-                    catch (UnsolvedSymbolException use) {
-                        isScopeAClass = true;
-                    }
-                    // ???
-                    catch (UnsupportedOperationException uoe) {
-                        isScopeAClass = true;
-                    }
-                    // ???
-                    catch (RuntimeException re) {
-                        isScopeAClass = true;
-                    }
-                } else if (fieldAccess.getScope() instanceof FieldAccessExpr) {
-                    isScopeAClass = true;
-                }
-                if (isScopeAClass) {
-                    String scope = fieldAccess.getScope().toString();
-                    if (scope.indexOf('.') >= 0) {
-                        scope = scope.substring(scope.lastIndexOf('.') + 1);
-                    }
-                    if (Character.isUpperCase(scope.charAt(0))) {
-                        try {
-                            ResolvedFieldDeclaration resolve = fieldAccess.resolve().asField();
-                            if (resolve.isStatic() || resolve.declaringType().isInterface()) {
-                                //System.out.println("Detected: " + excode.oriNode);
-                                return false;
-                            }
-                        }
-                        // Not an actual field
-                        catch (IllegalStateException | UnsolvedSymbolException | UnsupportedOperationException e) {
-                            if (fieldAccess.getNameAsString().matches("^[A-Z]+(?:_[A-Z]+)*$")) {
-                                //System.out.println("Detected: " + excode.oriNode);
-                                return false;
-                            } else {
-                                //System.out.println(fieldAccess);
-                                //e.printStackTrace();
-                            }
-                        }
-                    } else {
-                        //use.printStackTrace();
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public static void cleanTest(ArgRecTest test) {
-        switch (test.getExpected_excode()) {
-            case "LIT(wildcard)":
-                test.setExpected_lex("?");
-                break;
-            case "LIT(null)":
-                test.setExpected_lex("null");
-                break;
-            case "LIT(num)":
-                test.setExpected_lex("0");
-                break;
-            case "LIT(String)":
-                test.setExpected_lex("\"\"");
-                break;
-            case "VAR(Class)":
-                test.setExpected_lex(".class");
-        }
     }
 
     @Override
@@ -217,8 +100,8 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setNext_lex(nextLexList);
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
-                            if (isClean(argExcodes)) {
-                                cleanTest(test);
+                            if (RecTestFilter.predictable(argExcodes)) {
+                                RecTestNormalizer.normalize(test);
                             } else {
                                 test.setIgnored(true);
                             }
@@ -298,13 +181,13 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                     }
                     test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
                     test.setExpected_excode_ori(argExcodes);
-                    if (!isClean(argExcodes)) isClean = false;
+                    if (!RecTestFilter.predictable(argExcodes)) isClean = false;
                 }
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
                 test.setMethodInvocClassQualifiedName(classQualifiedName);
                 if (isClean) {
-                    cleanTest(test);
+                    RecTestNormalizer.normalize(test);
                 } else {
                     test.setIgnored(true);
                 }
