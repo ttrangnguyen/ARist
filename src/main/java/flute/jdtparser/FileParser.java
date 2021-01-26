@@ -648,10 +648,11 @@ public class FileParser {
                             }
 
                             if (checkInvoMember(finalMethodInvocationParentModel.argumentTypes(), methodMember, positionParam)) {
-                                if (methodMember.isVarargs() && methodMember.getParameterTypes().length - 1 == positionParam) {
-                                    typeResults.add(methodMember.getParameterTypes()[positionParam].getComponentType());
+                                if (methodMember.isVarargs() && positionParam >= methodMember.getParameterTypes().length - 1) {
+                                    typeResults.add(methodMember.getParameterTypes()[methodMember.getParameterTypes().length - 1].getComponentType());
+                                } else {
+                                    typeResults.add(methodMember.getParameterTypes()[positionParam]);
                                 }
-                                typeResults.add(methodMember.getParameterTypes()[positionParam]);
                             }
                         }
                     }
