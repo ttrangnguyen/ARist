@@ -154,8 +154,8 @@ class NgramManager(ModelManager):
         sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
         best_candidates_index = [x[0] for x in sorted_scores]
         best_candidates = []
-        for i in best_candidates_index:
-            best_candidates.append(data['method_candidate_excode'][best_candidates_index[i]])
+        for x in best_candidates_index:
+            best_candidates.append(data['method_candidate_excode'][x])
         print(best_candidates)
         return 'result:' + json.dumps(best_candidates) \
                + ',runtime:' + str(perf_counter() - start_time)
