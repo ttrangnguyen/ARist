@@ -492,6 +492,14 @@ public class FileParser {
 
         List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
 
+        //filter for void
+        if (curMethodInvocation.getOrgASTNode().getParent() instanceof ExpressionStatement
+                && curMethodInvocation.getOrgASTNode().getParent().getParent() instanceof Block) {
+            methodBindings = methodBindings.stream().filter(method -> {
+                return method.getReturnType().getKey().equals("V"); //void
+            }).collect(Collectors.toList());
+        }
+
         for (IMethodBinding methodBinding : methodBindings) {
             //Add filter for parent expression
             if (!methodBinding.isConstructor() && (parentValue(curMethodInvocation.getOrgASTNode()) == null
