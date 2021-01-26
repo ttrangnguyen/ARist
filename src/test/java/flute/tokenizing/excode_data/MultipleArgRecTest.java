@@ -3,44 +3,24 @@ package flute.tokenizing.excode_data;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultipleArgRecTest {
-    private static int count = 0;
-    private transient int id;
-    private String filePath;
+public class MultipleArgRecTest extends RecTest {
     private transient int numArg;
 
-    private List<String> lex_context;
-    private String excode_context;
-
-    private String method_name ="";
-    private String class_name ="";
+    /**
+     * Additional features
+     */
     private List<String> param_list;
 
+    /**
+     * Recommendations
+     */
     private List<List<String>> next_excode;
     private List<List<List<String>>> next_lex;
 
-    private String expected_excode;
-    private String expected_lex;
-
-    private boolean ignored = false;
-
+    /**
+     * References
+     */
     private transient List<ArgRecTest> argRecTestList;
-
-    public MultipleArgRecTest() {
-        id = count++;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
 
     public int getNumArg() {
         return numArg;
@@ -48,38 +28,6 @@ public class MultipleArgRecTest {
 
     public void setNumArg(int numArg) {
         this.numArg = numArg;
-    }
-
-    public List<String> getLex_context() {
-        return lex_context;
-    }
-
-    public void setLex_context(List<String> lex_context) {
-        this.lex_context = lex_context;
-    }
-
-    public String getExcode_context() {
-        return excode_context;
-    }
-
-    public void setExcode_context(String excode_context) {
-        this.excode_context = excode_context;
-    }
-
-    public String getMethodScope_name() {
-        return method_name;
-    }
-
-    public void setMethodScope_name(String method_name) {
-        this.method_name = method_name;
-    }
-
-    public String getClass_name() {
-        return class_name;
-    }
-
-    public void setClass_name(String class_name) {
-        this.class_name = class_name;
     }
 
     public List<String> getParam_list() {
@@ -122,30 +70,6 @@ public class MultipleArgRecTest {
 
     public void setNext_lex(List<List<List<String>>> next_lex) {
         this.next_lex = next_lex;
-    }
-
-    public String getExpected_excode() {
-        return expected_excode;
-    }
-
-    public void setExpected_excode(String expected_excode) {
-        this.expected_excode = expected_excode;
-    }
-
-    public String getExpected_lex() {
-        return expected_lex;
-    }
-
-    public void setExpected_lex(String expected_lex) {
-        this.expected_lex = expected_lex;
-    }
-
-    public boolean isIgnored() {
-        return ignored;
-    }
-
-    public void setIgnored(boolean ignored) {
-        this.ignored = ignored;
     }
 
     public List<ArgRecTest> getArgRecTestList() {

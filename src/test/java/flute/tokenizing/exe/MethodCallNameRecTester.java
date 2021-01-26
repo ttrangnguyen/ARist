@@ -9,8 +9,8 @@ import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
+import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
-import flute.tokenizing.excode_data.ArgRecTest;
 import flute.utils.ProgressBar;
 import flute.utils.file_writing.CSVWritor;
 import flute.utils.logging.Logger;
@@ -24,115 +24,36 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class ArgRecTester {
-    private static final int CONTEXT_LENGTH_LIMIT = -1;
-
+public class MethodCallNameRecTester {
     private static final Gson gson = new Gson();
-    private static ArgRecTestGenerator generator;
+    private static MethodCallNameRecTestGenerator generator;
     private static DataFrame dataFrame = new DataFrame();
 
-    public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
+    public static boolean canAcceptGeneratedExcodes(MethodCallNameRecTest test) {
         String expectedExcode = test.getExpected_excode();
-        if (test.getNext_excode().contains(expectedExcode)) return true;
-
-        //TODO: Handle unknown excode
-        if (expectedExcode.contains("<unk>")) return true;
-
-        if (test.getMethodAccessExcode() != null) {
-            if (test.getNext_excode().contains(test.getMethodAccessExcode())) return true;
-        }
-
-        if (test.getObjectCreationExcode() != null) {
-            return test.getNext_excode().contains(test.getObjectCreationExcode());
-        }
+        if (test.getMethod_candidate_excode().contains(expectedExcode)) return true;
 
         return false;
     }
 
-    public static boolean canAcceptGeneratedExcodes(MultipleArgRecTest test) {
-        for (ArgRecTest oneArgTest: test.getArgRecTestList())
-            if (!canAcceptGeneratedExcodes(oneArgTest)) return false;
-        return true;
-    }
-
-    public static boolean canAcceptGeneratedLexes(ArgRecTest test) {
+    public static boolean canAcceptGeneratedLexes(MethodCallNameRecTest test) {
         String expectedLex = test.getExpected_lex();
-        if (expectedLex.contains(".this")) {
-            expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
-        }
-
-        if (test.getNext_lexList().contains(expectedLex)) return true;
-        if (expectedLex.startsWith("this.")) {
-            if (test.getNext_lexList().contains(expectedLex.substring(5))) return true;
-        } else {
-            if (test.getNext_lexList().contains("this." + expectedLex)) return true;
-        }
-
-        if (test.getMethodAccessLex() != null) {
-            if (test.getNext_lexList().contains(test.getMethodAccessLex())) return true;
-        }
-
-        if (test.getObjectCreationLex() != null) {
-            return test.getNext_lexList().contains(test.getObjectCreationLex());
-        }
+        if (test.getMethod_candidate_lexList().contains(expectedLex)) return true;
 
         return false;
     }
 
-    public static boolean canAcceptGeneratedLexes(MultipleArgRecTest test) {
-        for (ArgRecTest oneArgTest: test.getArgRecTestList())
-            if (!canAcceptGeneratedLexes(oneArgTest)) return false;
-        return true;
-    }
-
-    public static boolean canAcceptResult(ArgRecTest test, String result) {
+    public static boolean canAcceptResult(MethodCallNameRecTest test, String result) {
         String expectedLex = test.getExpected_lex();
-        if (expectedLex.contains(".this")) {
-            expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
-        }
-
         if (result.equals(expectedLex)) return true;
-        if (expectedLex.startsWith("this.")) {
-            if (result.equals(expectedLex.substring(5))) return true;
-        } else {
-            if (result.equals("this." + expectedLex)) return true;
-        }
-
-        if (test.getMethodAccessLex() != null) {
-            if (result.equals(test.getMethodAccessLex())) return true;
-        }
-
-        if (test.getObjectCreationLex() != null) {
-            return result.equals(test.getObjectCreationLex());
-        }
-
         return false;
     }
 
-    public static boolean canAcceptResult(MultipleArgRecTest test, String result) {
-        int i = -1;
-        for (ArgRecTest oneArgTest: test.getArgRecTestList()) {
-            StringBuilder sb = new StringBuilder();
-            int bal = 0;
-            while (++i < result.length()) {
-                char c = result.charAt(i);
-                if (c == '(') ++bal;
-                if (c == ')') --bal;
-                if (bal == 0 && c == ' ') continue;
-                if (bal == 0 && c == ',') break;
-                sb.append(c);
-            }
-            if (!canAcceptResult(oneArgTest, sb.toString())) return false;
-        }
-        return true;
-    }
-
-    public static void updateTopKResult(MultipleArgRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+    public static void updateTopKResult(MethodCallNameRecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
                                         String modelName) {
 
         if (test.isIgnored()) {
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
-            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, test.getNumArg()), 0);
             return;
         }
 
@@ -146,23 +67,17 @@ public class ArgRecTester {
 
         if (isOverallCorrectTopK) {
             dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
-            dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, test.getNumArg()), 1);
 
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 1);
-            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, test.getNumArg()), 1);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 1);
-                dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, test.getNumArg()), 1);
             }
         } else {
             dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
-            dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, test.getNumArg()), 0);
 
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
-            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, test.getNumArg()), 0);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
-                dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, test.getNumArg()), 0);
             }
         }
     }
@@ -184,8 +99,6 @@ public class ArgRecTester {
 
         List<String[]> accuracyPerNumArg = new ArrayList<>();
         List<String> row = new ArrayList<>();
-        row.add("Number of params");
-        row.add("Percentage distribution");
         if (isNGramUsed) {
             for (int k: tops) row.add(String.format("NGram's top-%d accuracy", k));
         }
@@ -196,27 +109,7 @@ public class ArgRecTester {
         for (int k: tops) row.add(String.format("Top-%d recall", k));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
 
-        if (!Config.TEST_ARG_ONE_BY_ONE) {
-            DataFrame.Variable numArgVar = dataFrame.getVariable("NumArg");
-            for (int i = (int)numArgVar.getMin(); i <= numArgVar.getMax(); ++i) {
-                row = new ArrayList<>();
-                row.add(String.format("%d", i));
-                row.add(String.format("%f", dataFrame.getVariable("NumArg").getProportionOfValue(i, true)));
-                if (isNGramUsed) {
-                    for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%dArg%d", k, i)).getMean()));
-                }
-                if (isRNNUsed) {
-                    for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
-                }
-                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
-                for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%dArg%d", k, i)).getMean()));
-                accuracyPerNumArg.add(row.toArray(new String[row.size()]));
-            }
-        }
-
         row = new ArrayList<>();
-        row.add("all");
-        row.add("100");
         if (isNGramUsed) {
             for (int k: tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%d", k)).getMean()));
         }
@@ -230,7 +123,7 @@ public class ArgRecTester {
         CSVWritor.write(Config.LOG_DIR + projectName + "_acc_per_num_arg.csv", accuracyPerNumArg);
     }
 
-    public static void test(Response response, Map<Integer, Boolean> testMap, MultipleArgRecTest test) {
+    public static void test(Response response, Map<Integer, Boolean> testMap, MethodCallNameRecTest test) {
         PredictResponse predictResponse = (PredictResponse) response;
         isNGramUsed = predictResponse.getData().ngram != null;
         isRNNUsed = predictResponse.getData().rnn != null;
@@ -274,29 +167,26 @@ public class ArgRecTester {
 
         if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
         if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
-
-        dataFrame.insert("NumArg", test.getNumArg());
     }
 
     public static void main(String[] args) throws IOException {
-        String projectName = "lucene";
+        String projectName = "demo";
         Timer timer = new Timer();
         timer.startCounter();
-        List<MultipleArgRecTest> tests = getTests(projectName, false, true);
-        //List<AllArgRecTest> tests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
+        List<MethodCallNameRecTest> tests = getTests(projectName, false, true);
+        //List<MethodCallNameRecTest> tests = generateTestsFromFile("demo", Config.REPO_DIR + "sampleproj/src/Main.java");
         double averageGetTestsTime = timer.getTimeCounter() / 1000f / tests.size();
 
         //logTests(tests);
 
-        for (MultipleArgRecTest test: tests) dataFrame.insert("Ignored test", test.isIgnored());
+        for (MethodCallNameRecTest test: tests) dataFrame.insert("Ignored test", test.isIgnored());
 
         System.out.println("Generated " + dataFrame.getVariable("Ignored test").getCount() + " tests.");
-        System.out.println("Ignored " + dataFrame.getVariable("Ignored test").getSum() + " tests.");
 
-        for (MultipleArgRecTest test: tests)
+        for (MethodCallNameRecTest test: tests)
             if (!test.isIgnored()) {
-                dataFrame.insert("Generated excode count", test.getNext_excodeList().size());
-                dataFrame.insert("Generated lexical count", test.getNext_lexList().size());
+                dataFrame.insert("Generated excode count", test.getMethod_candidate_excode().size());
+                dataFrame.insert("Generated lexical count", test.getMethod_candidate_lex().size());
             }
         System.out.println("Number of generated excode candidates: " +
                 dataFrame.getVariable("Generated excode count").getSum());
@@ -305,7 +195,7 @@ public class ArgRecTester {
                 dataFrame.getVariable("Generated lexical count").getSum());
 
         Map<Integer, Boolean> testMap = new HashMap<>();
-        for (MultipleArgRecTest test: tests)
+        for (MethodCallNameRecTest test: tests)
             if (!test.isIgnored()) {
                 boolean adequateGeneratedExcode = false;
                 boolean adequateGeneratedLex = false;
@@ -317,7 +207,7 @@ public class ArgRecTester {
                 if (adequateGeneratedExcode && adequateGeneratedLex) {
                     testMap.put(test.getId(), true);
                 } else {
-                    //Logger.write(gson.toJson(test), projectName + "_inadequate_generated_arg_tests.txt");
+                    //Logger.write(gson.toJson(test), projectName + "_inadequate_generated_method_call_name_tests.txt");
                 }
             }
         System.out.printf("Adequate generated excodes: %.2f%%%n",
@@ -329,7 +219,7 @@ public class ArgRecTester {
         System.out.printf("Adequate generated candidates: %.2f%%%n",
                 dataFrame.getVariable("Adequate generated candidates").getMean() * 100);
 
-        List<List<MultipleArgRecTest>> testBatches = null;
+        List<List<MethodCallNameRecTest>> testBatches = null;
 
         if (Config.MULTIPROCESS) {
             int batchSize = IntMath.divide(tests.size(), Config.NUM_THREAD, RoundingMode.UP);
@@ -342,15 +232,14 @@ public class ArgRecTester {
             final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
             final List<Future<?>> futures = new ArrayList<>();
 
-            List<List<MultipleArgRecTest>> finalTestBatches = testBatches;
-            for (List<MultipleArgRecTest> testBatch : finalTestBatches) {
+            List<List<MethodCallNameRecTest>> finalTestBatches = testBatches;
+            for (List<MethodCallNameRecTest> testBatch : finalTestBatches) {
                 Future<?> future = executor.submit(() -> {
                     try {
-                        SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
-                        for (MultipleArgRecTest test : testBatch) {
+                        SocketClient socketClient = new SocketClient(Config.METHOD_NAME_SERVICE_PORT);
+                        for (MethodCallNameRecTest test : testBatch) {
                             dataFrame.insert("Tested", 1);
                             testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
-                            if (test.getNumArg() == 0 && !Config.TEST_ZERO_ARG) continue;
 
                             Response response = socketClient.write(gson.toJson(test));
                             if (response instanceof PredictResponse) {
@@ -377,11 +266,10 @@ public class ArgRecTester {
             }
         } else {
             try {
-                SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
-                for (MultipleArgRecTest test : tests) {
+                SocketClient socketClient = new SocketClient(Config.METHOD_NAME_SERVICE_PORT);
+                for (MethodCallNameRecTest test : tests) {
                     dataFrame.insert("Tested", 1);
                     testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
-                    if (test.getNumArg() == 0 && !Config.TEST_ZERO_ARG) continue;
 
                     Response response = socketClient.write(gson.toJson(test));
                     if (response instanceof PredictResponse) {
@@ -401,12 +289,11 @@ public class ArgRecTester {
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
-        generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
-        generator.setLengthLimit(CONTEXT_LENGTH_LIMIT);
+        generator = new MethodCallNameRecTestGenerator(Config.PROJECT_DIR, projectParser);
     }
 
-    public static List<MultipleArgRecTest> getTests(String projectName, boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
-        List<ArgRecTest> tests;
+    public static List<MethodCallNameRecTest> getTests(String projectName, boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
+        List<MethodCallNameRecTest> tests;
         if (fromSavefile) {
             tests = readTestsFromFile(Config.LOG_DIR + projectName + "_tests.txt");
         } else {
@@ -422,8 +309,8 @@ public class ArgRecTester {
         }
 
         if (Config.TEST_APIS != null && Config.TEST_APIS.length > 0) {
-            List<ArgRecTest> tmp = new ArrayList<>();
-            for (ArgRecTest test: tests) {
+            List<MethodCallNameRecTest> tmp = new ArrayList<>();
+            for (MethodCallNameRecTest test: tests) {
                 if (test.getMethodInvocClassQualifiedName() != null) {
                     for (String targetAPI: Config.TEST_APIS) {{
                         if (test.getMethodInvocClassQualifiedName().startsWith(targetAPI + '.')) {
@@ -436,33 +323,30 @@ public class ArgRecTester {
             tests = tmp;
         }
 
-        MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
-                new SingleArgRecTestGenerator(generator): new AllArgRecTestGenerator(generator);
-
-        return multipleGenerator.generate(tests);
+        return tests;
     }
 
-    public static List<MultipleArgRecTest> getTests(String projectName, boolean fromSavefile) throws IOException {
+    public static List<MethodCallNameRecTest> getTests(String projectName, boolean fromSavefile) throws IOException {
         return getTests(projectName, fromSavefile, false);
     }
 
-    public static List<ArgRecTest> readTestsFromFile(String filePath) throws IOException {
+    public static List<MethodCallNameRecTest> readTestsFromFile(String filePath) throws IOException {
         Scanner sc = new Scanner(new File(filePath));
-        List<ArgRecTest> tests = new ArrayList<>();
+        List<MethodCallNameRecTest> tests = new ArrayList<>();
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
-            tests.add(gson.fromJson(line, ArgRecTest.class));
+            tests.add(gson.fromJson(line, MethodCallNameRecTest.class));
         }
         sc.close();
         return tests;
     }
 
-    public static List<ArgRecTest> generateTestsFromDemoProject() {
-        return (List<ArgRecTest>) generator.generateAll();
+    public static List<MethodCallNameRecTest> generateTestsFromDemoProject() {
+        return (List<MethodCallNameRecTest>) generator.generateAll();
     }
 
-    public static List<ArgRecTest> generateTestsFromGitProject(String projectName) throws IOException {
-        List<ArgRecTest> tests = new ArrayList<>();
+    public static List<MethodCallNameRecTest> generateTestsFromGitProject(String projectName) throws IOException {
+        List<MethodCallNameRecTest> tests = new ArrayList<>();
         Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
 
         final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
@@ -472,14 +356,14 @@ public class ArgRecTester {
             String filePath = sc.nextLine();
             if (Config.MULTIPROCESS) {
                 Future<?> future = executor.submit(() -> {
-                    List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                    for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
+                    List<MethodCallNameRecTest> oneFileTests = (List<MethodCallNameRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+                    for (MethodCallNameRecTest test : oneFileTests) test.setFilePath(filePath);
                     tests.addAll(oneFileTests);
                 });
                 futures.add(future);
             } else {
-                List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
+                List<MethodCallNameRecTest> oneFileTests = (List<MethodCallNameRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+                for (MethodCallNameRecTest test : oneFileTests) test.setFilePath(filePath);
                 tests.addAll(oneFileTests);
             }
         }
@@ -502,13 +386,13 @@ public class ArgRecTester {
         return tests;
     }
 
-    public static List<ArgRecTest> generateTestsFromFile(String projectName, String filePath) throws IOException {
+    public static List<MethodCallNameRecTest> generateTestsFromFile(String projectName, String filePath) throws IOException {
         setupGenerator(projectName);
-        return (List<ArgRecTest>) generator.generate(filePath);
+        return (List<MethodCallNameRecTest>) generator.generate(filePath);
     }
 
-    public static void saveTests(String projectName, List<ArgRecTest> tests) {
-        for (ArgRecTest test: tests) {
+    public static void saveTests(String projectName, List<MethodCallNameRecTest> tests) {
+        for (MethodCallNameRecTest test: tests) {
             Logger.write(gson.toJson(test), projectName + "_tests.txt");
         }
     }

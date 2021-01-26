@@ -90,7 +90,9 @@ class Server:
 
 
 if __name__ == "__main__":
-    param_server = Server(service="param", port=PORT_PARAM)
-    param_server.run()
-    method_name_server = Server(service="method_name", port=PORT_METHOD_NAME)
-    method_name_server.run()
+    if TEST_SERVICE == "param":
+        param_server = Server(service="param", port=PORT_PARAM)
+        param_server.run()
+    elif TEST_SERVICE == "method_name":
+        method_name_server = Server(service="method_name", port=PORT_METHOD_NAME)
+        method_name_server.run()
