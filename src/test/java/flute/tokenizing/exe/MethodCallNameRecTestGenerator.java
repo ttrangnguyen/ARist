@@ -31,7 +31,7 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
 
         MultiMap methodMap = null;
         try {
-            methodMap = ParserUtils.methodMap(getFileParser().genMethodCall().get());
+            methodMap = ParserUtils.methodMap(getFileParser().genMethodCall());
         } catch (ArrayIndexOutOfBoundsException e) {
             return tests;
         }

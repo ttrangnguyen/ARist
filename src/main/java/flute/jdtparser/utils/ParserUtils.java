@@ -91,9 +91,12 @@ public class ParserUtils {
         return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
     }
 
-    public static MultiMap methodMap(List<IMethodBinding> methodList) {
+    public static MultiMap methodMap(Optional<List<IMethodBinding>> methodList) {
         MultiMap multiMap = new MultiMap();
-        for (IMethodBinding method : methodList) {
+
+        if (!methodList.isPresent()) return multiMap;
+
+        for (IMethodBinding method : methodList.get()) {
             String exCode = "M_ACCESS("
                     + method.getDeclaringClass().getName() + "," + method.getName() + "," + method.getParameterTypes().length + ")";
             multiMap.put(exCode, method.getName());
