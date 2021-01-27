@@ -488,6 +488,9 @@ public class FileParser {
             classBinding = curMethodInvocation.getExpressionType();
             isStaticExpr = curMethodInvocation.isStaticExpression();
         }
+
+        if (classBinding == null) return Optional.empty(); //can not be resolved
+
         ClassParser classParser = new ClassParser(classBinding);
 
         List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
