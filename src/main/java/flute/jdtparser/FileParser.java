@@ -513,7 +513,8 @@ public class FileParser {
                         break;
                     }
                 }
-                if (availableCheck) listMember.add(methodBinding);
+                if (availableCheck)
+                    listMember.add(methodBinding);
             }
         }
         return Optional.of(listMember);
@@ -625,10 +626,9 @@ public class FileParser {
             } else {
                 return null;
             }
-        } else if (parentNode instanceof IfStatement) {
+        } else if (parentNode instanceof IfStatement || parentNode instanceof DoStatement || parentNode instanceof WhileStatement) {
             return new ITypeBinding[]{new BooleanPrimitiveType()};
         } else if (parentNode instanceof MethodInvocation || parentNode instanceof SuperMethodInvocation) {
-
             MethodInvocationModel methodInvocationParentModel = null;
             if (parentNode instanceof MethodInvocation) {
                 methodInvocationParentModel = new MethodInvocationModel(curClass, (MethodInvocation) parentNode);
