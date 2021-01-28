@@ -210,7 +210,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             if (oneArgTest.getArgPos() == 0) {
                 oneArgTest.setParam_name("");
             } else {
-                //oneArgTest.setParam_name(getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null));
+                oneArgTest.setParam_name(getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null));
             }
 
             String expectedExcode = oneArgTest.getExpected_excode();
