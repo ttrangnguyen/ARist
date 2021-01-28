@@ -5,8 +5,9 @@ ngram_weight = 1
 USE_RNN = False
 USE_NGRAM = True
 USE_LEXSIM = True
-LEXSIM_MULTIPLIER = 1
 PRINT_LOG = False
+LEXSIM_MULTIPLIER = 1
+LEXSIM_SMALL_PENALTY = -1  # log(0.1)
 
 project = 'all'
 testfold = 0

@@ -5,6 +5,7 @@ import sys
 from pickle import load
 from model.utility import *
 from model.config import *
+import math
 
 
 class ModelManager:
@@ -54,27 +55,11 @@ class ModelManager:
         return self.lexsim_flag
 
     def score_lexsim(self, lexsim):
-        # lexsim=0
-        if abs(lexsim) < 1e-6:
-            return -1 * LEXSIM_MULTIPLIER
-        # lexsim>0, <0.4
-        if lexsim < 0.4:
-            return -0.8 * LEXSIM_MULTIPLIER
-        # lexsim>0.4, <0.5
-        if lexsim + 1e-6 < 0.5:
-            return -0.6 * LEXSIM_MULTIPLIER
-        if abs(lexsim - 0.5) < 1e-6:
-            # lexsim=0.5
-            return -0.5 * LEXSIM_MULTIPLIER
-        # lexsim>0.5, <0.66
-        if lexsim < 0.66:
-            return -0.4 * LEXSIM_MULTIPLIER
-        # lexsim>0.66, <0.67
-        if lexsim < 0.67:
-            return -0.3 * LEXSIM_MULTIPLIER
-        # lexsim>0.67, <1
-        if lexsim + 1e-6 < 1:
-            return -0.2 * LEXSIM_MULTIPLIER
-        else:
-            # lexsim=1
-            return 0 * LEXSIM_MULTIPLIER
+        #1
+        # return lexsim * LEXSIM_MULTIPLIER
+
+        #2
+        # special case: lexsim could rarely be <= 0.1
+        if lexsim < 0.1:
+            return LEXSIM_SMALL_PENALTY * LEXSIM_MULTIPLIER
+        return math.log2(lexsim) * LEXSIM_MULTIPLIER
