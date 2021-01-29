@@ -3,7 +3,7 @@ package flute.tokenizing.excode_data;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultipleArgRecTest extends RecTest {
+public class MultipleArgRecTest extends MethodCallRecTest {
     private transient int numArg;
 
     /**

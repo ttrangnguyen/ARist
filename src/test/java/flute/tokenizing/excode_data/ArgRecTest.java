@@ -129,6 +129,7 @@ public class ArgRecTest extends MethodCallRecTest {
         test.setExpected_excode(this.getExpected_excode());
         test.setExpected_lex(this.getExpected_lex());
         test.setIgnored(this.isIgnored());
+        test.setMethodInvocClassQualifiedName(this.getMethodInvocClassQualifiedName());
         test.setArgRecTestList(Collections.singletonList(this));
         return test;
     }
