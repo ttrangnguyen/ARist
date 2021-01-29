@@ -15,6 +15,8 @@ public class ParserUtils {
     private static ITypeBinding curType;
     private static ITypeBinding nextType;
 
+    public static final List<String> numberInfixOperation = Arrays.asList(new String[]{"+", "-", "*", "/", "%", "<", "<=", ">", ">="});
+
     private static List<IVariableBinding> innerGetAllSuperFields(ITypeBinding iTypeBinding) {
         ITypeBinding superClass = iTypeBinding.getSuperclass();
         if (superClass == null) return new ArrayList<>();

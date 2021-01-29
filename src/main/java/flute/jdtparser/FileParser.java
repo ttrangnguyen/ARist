@@ -629,6 +629,13 @@ public class FileParser {
             } else {
                 return null;
             }
+        } else if (parentNode instanceof InfixExpression) {
+            InfixExpression infixExpression = (InfixExpression) parentNode;
+            String operator = infixExpression.getOperator().toString();
+            if (ParserUtils.numberInfixOperation.contains(operator)) {
+                return new ITypeBinding[]{new CommonNumType()};
+            } else
+                return null;
         } else if (parentNode instanceof IfStatement || parentNode instanceof DoStatement || parentNode instanceof WhileStatement) {
             return new ITypeBinding[]{new BooleanPrimitiveType()};
         } else if (parentNode instanceof MethodInvocation || parentNode instanceof SuperMethodInvocation) {
