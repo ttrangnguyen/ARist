@@ -503,6 +503,12 @@ public class FileParser {
             }).collect(Collectors.toList());
         }
 
+        if (Config.FEATURE_IGNORE_NATIVE_METHOD) {
+            methodBindings = methodBindings.stream().filter(method -> {
+                return !Modifier.isNative(method.getModifiers());
+            }).collect(Collectors.toList());
+        }
+
         for (IMethodBinding methodBinding : methodBindings) {
             //Add filter for parent expression
             if (!methodBinding.isConstructor() && (parentValue(curMethodInvocation.getOrgASTNode()) == null

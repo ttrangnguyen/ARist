@@ -73,6 +73,13 @@ public class Config {
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false;
 
     public final static boolean FEATURE_LIMIT_CANDIDATES = false;
+
+    /***
+     *  Method name feature
+     */
+
+    public final static boolean FEATURE_IGNORE_NATIVE_METHOD = true;
+
     /***
      Config for crawler
      ***/
