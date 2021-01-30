@@ -634,6 +634,8 @@ public class FileParser {
             String operator = infixExpression.getOperator().toString();
             if (ParserUtils.numberInfixOperation.contains(operator)) {
                 return new ITypeBinding[]{new CommonNumType()};
+            } else if (ParserUtils.boolInfixOperation.contains(operator)) {
+                return new ITypeBinding[]{new BooleanPrimitiveType()};
             } else
                 return null;
         } else if (parentNode instanceof IfStatement || parentNode instanceof DoStatement || parentNode instanceof WhileStatement) {
