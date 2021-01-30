@@ -495,12 +495,18 @@ public class FileParser {
 
         List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
 
-        //filter for void
-        if (curMethodInvocation.getOrgASTNode().getParent() instanceof ExpressionStatement
-                && curMethodInvocation.getOrgASTNode().getParent().getParent() instanceof Block) {
-            methodBindings = methodBindings.stream().filter(method -> {
-                return method.getReturnType().getKey().equals("V"); //void
-            }).collect(Collectors.toList());
+
+        if (Config.FEATURE_ONLY_VOID_FOR_STMT) {
+            //filter for void
+            if (curMethodInvocation.getOrgASTNode().getParent() instanceof ExpressionStatement
+                    && curMethodInvocation.getOrgASTNode().getParent().getParent() instanceof Block) {
+                ExpressionStatement expressionStatement = (ExpressionStatement) curMethodInvocation.getOrgASTNode().getParent();
+                if (expressionStatement.getExpression() == curMethodInvocation.getOrgASTNode()) {
+                    methodBindings = methodBindings.stream().filter(method -> {
+                        return method.getReturnType().getKey().equals("V"); //void
+                    }).collect(Collectors.toList());
+                }
+            }
         }
 
         if (Config.FEATURE_IGNORE_NATIVE_METHOD) {

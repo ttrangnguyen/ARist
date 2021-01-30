@@ -79,6 +79,7 @@ public class Config {
      */
 
     public final static boolean FEATURE_IGNORE_NATIVE_METHOD = true;
+    public final static boolean FEATURE_ONLY_VOID_FOR_STMT = false;
 
     /***
      Config for crawler
