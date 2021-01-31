@@ -42,7 +42,7 @@ public class Config {
      * Multiprocess
      */
 
-    public final static boolean MULTIPROCESS = true;
+    public final static boolean MULTIPROCESS = false;
     public final static int NUM_THREAD = 5;
 
     /***

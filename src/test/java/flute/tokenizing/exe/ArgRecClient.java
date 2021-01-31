@@ -8,6 +8,7 @@ import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.file_writing.CSVWritor;
+import flute.utils.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,13 +65,15 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     @Override
-    void test(Response response, RecTest test, boolean verbose) {
-        super.test(response, test, verbose);
+    void test(Response response, RecTest test, boolean verbose, boolean doPrintIncorrectPrediction) {
+        super.test(response, test, verbose, doPrintIncorrectPrediction);
         dataFrame.insert("NumArg", ((MultipleArgRecTest)test).getNumArg());
     }
 
     @Override
-    void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate, String modelName) {
+    void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+                          String modelName, boolean doPrintIncorrectPrediction) {
+
         MultipleArgRecTest multipleArgRecTest = (MultipleArgRecTest) test;
 
         if (test.isIgnored()) {
@@ -106,6 +109,10 @@ public class ArgRecClient extends MethodCallRecClient {
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
+
+                if (doPrintIncorrectPrediction) {
+                    Logger.write(gson.toJson(test), projectName + "_incorrect_" + getTestClass().getSimpleName() + "s_top_" + k + ".txt");
+                }
             }
         }
     }
@@ -169,7 +176,7 @@ public class ArgRecClient extends MethodCallRecClient {
 
         client.validateTests(tests, false);
         //RecClient.logTests(tests);
-        client.queryAndTest(tests, false);
+        client.queryAndTest(tests, false, false);
         client.printTestResult();
         System.exit(0);
     }

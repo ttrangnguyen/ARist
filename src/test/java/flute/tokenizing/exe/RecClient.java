@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public abstract class RecClient {
-    private static final Gson gson = new Gson();
+    public static final Gson gson = new Gson();
     private Class testClass;
     private Map<Integer, Boolean> testMap = new HashMap<>();
 
@@ -39,6 +39,10 @@ public abstract class RecClient {
 
     public RecClient(String projectName) {
         this.projectName = projectName;
+    }
+
+    Class getTestClass() {
+        return testClass;
     }
 
     void setTestClass(Class testClass) {
@@ -206,7 +210,7 @@ public abstract class RecClient {
 
     abstract SocketClient getSocketClient() throws Exception;
 
-    public void queryAndTest(List<? extends RecTest> tests, boolean verbose) {
+    public void queryAndTest(List<? extends RecTest> tests, boolean verbose, boolean doPrintIncorrectPrediction) {
         List<? extends List<? extends RecTest>> testBatches = null;
 
         if (Config.MULTIPROCESS) {
@@ -229,7 +233,7 @@ public abstract class RecClient {
                             dataFrame.insert("Tested", 1);
                             testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
 
-                            queryAndTest(socketClient, test, verbose);
+                            queryAndTest(socketClient, test, verbose, doPrintIncorrectPrediction);
                         }
                         socketClient.close();
                     } catch (Exception e) {
@@ -256,7 +260,7 @@ public abstract class RecClient {
                     dataFrame.insert("Tested", 1);
                     testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
 
-                    queryAndTest(socketClient, test, verbose);
+                    queryAndTest(socketClient, test, verbose, doPrintIncorrectPrediction);
                 }
                 socketClient.close();
             } catch (Exception e) {
@@ -266,13 +270,13 @@ public abstract class RecClient {
     }
 
     public void queryAndTest(List<? extends RecTest> tests) {
-        queryAndTest(tests, false);
+        queryAndTest(tests, false, false);
     }
 
-    public void queryAndTest(RecTest test, boolean verbose) {
+    public void queryAndTest(RecTest test, boolean verbose, boolean doPrintIncorrectPrediction) {
         try {
             SocketClient socketClient = getSocketClient();
-            queryAndTest(socketClient, test, verbose);
+            queryAndTest(socketClient, test, verbose, doPrintIncorrectPrediction);
             socketClient.close();
         }
         catch (Exception e) {
@@ -281,15 +285,15 @@ public abstract class RecClient {
     }
 
     public void queryAndTest(RecTest test) {
-        queryAndTest(test, false);
+        queryAndTest(test, false, false);
     }
 
-    private void queryAndTest(SocketClient socketClient, RecTest test, boolean verbose) throws IOException {
+    private void queryAndTest(SocketClient socketClient, RecTest test, boolean verbose, boolean doPrintIncorrectPrediction) throws IOException {
         if (doSkipTest(test)) return;
 
         Response response = socketClient.write(gson.toJson(test));
         if (response instanceof PredictResponse) {
-            test(response, test, verbose);
+            test(response, test, verbose, doPrintIncorrectPrediction);
         }
     }
 
@@ -297,7 +301,7 @@ public abstract class RecClient {
         return false;
     }
 
-    void test(Response response, RecTest test, boolean verbose) {
+    void test(Response response, RecTest test, boolean verbose, boolean doPrintIncorrectPrediction) {
         PredictResponse predictResponse = (PredictResponse) response;
         isNGramUsed = predictResponse.getData().ngram != null;
         isRNNUsed = predictResponse.getData().rnn != null;
@@ -333,13 +337,13 @@ public abstract class RecClient {
         if (isNGramUsed) {
             for (int k : this.tops)
                 updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
-                        "nGram");
+                        "nGram", doPrintIncorrectPrediction);
         }
 
         if (isRNNUsed) {
             for (int k : this.tops)
                 updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
-                        "RNN");
+                        "RNN", doPrintIncorrectPrediction);
         }
 
         if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
@@ -347,7 +351,7 @@ public abstract class RecClient {
     }
 
     abstract void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
-                                   String modelName);
+                                   String modelName, boolean doPrintIncorrectPrediction);
 
     public void printTestResult() {
         System.out.println("==========================");

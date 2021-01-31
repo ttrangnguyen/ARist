@@ -5,6 +5,7 @@ import flute.config.Config;
 import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.file_writing.CSVWritor;
+import flute.utils.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +46,8 @@ public class MethodCallNameRecClient extends MethodCallRecClient {
     }
 
     @Override
-    void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate, String modelName) {
+    void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+                          String modelName, boolean doPrintIncorrectPrediction) {
         if (test.isIgnored()) {
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
             return;
@@ -72,6 +74,10 @@ public class MethodCallNameRecClient extends MethodCallRecClient {
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
+
+                if (doPrintIncorrectPrediction) {
+                    Logger.write(gson.toJson(test), projectName + "_incorrect_" + getTestClass().getSimpleName() + "s_top_" + k + ".txt");
+                }
             }
         }
     }
@@ -113,7 +119,7 @@ public class MethodCallNameRecClient extends MethodCallRecClient {
 
         client.validateTests(tests, false);
         //RecClient.logTests(tests);
-        client.queryAndTest(tests, false);
+        client.queryAndTest(tests, false, false);
         client.printTestResult();
         System.exit(0);
     }
