@@ -1,19 +1,24 @@
 package flute.tokenizing.exe;
 
+import com.google.common.collect.Lists;
+import com.google.common.math.IntMath;
 import com.google.gson.Gson;
 import flute.analysis.structure.DataFrame;
+import flute.communicate.SocketClient;
+import flute.communicate.schema.PredictResponse;
+import flute.communicate.schema.Response;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.RecTest;
+import flute.utils.ProgressBar;
 import flute.utils.logging.Logger;
 import flute.utils.logging.Timer;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -21,10 +26,16 @@ import java.util.concurrent.Future;
 public abstract class RecClient {
     private static final Gson gson = new Gson();
     private Class testClass;
-    private String projectName;
+    private Map<Integer, Boolean> testMap = new HashMap<>();
+
+    boolean isNGramUsed = false;
+    boolean isRNNUsed = false;
+    String projectName;
     ProjectParser projectParser;
     RecTestGenerator generator;
     DataFrame dataFrame = new DataFrame();
+
+    int[] tops = {1, 3, 5, 10};
 
     public RecClient(String projectName) {
         this.projectName = projectName;
@@ -75,8 +86,7 @@ public abstract class RecClient {
         timer.startCounter();
         List<? extends RecTest> tests = getTests(fromSavefile, doSaveTestsAfterGen);
         double averageGetTestsTime = timer.getTimeCounter() / 1000f / tests.size();
-
-        //logTests(tests);
+        dataFrame.insert("averageGetTestsTime", averageGetTestsTime);
 
         for (RecTest test: tests) dataFrame.insert("Ignored test", test.isIgnored());
 
@@ -161,5 +171,192 @@ public abstract class RecClient {
         for (RecTest test: tests) {
             System.out.println(gson.toJson(test));
         }
+    }
+
+    public void validateTests(List<? extends RecTest> tests, boolean doPrintInadequateTests) {
+        for (RecTest test: tests)
+            if (!test.isIgnored()) {
+                boolean adequateGeneratedExcode = false;
+                boolean adequateGeneratedLex = false;
+                if (RecTester.canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
+                if (RecTester.canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
+                dataFrame.insert("Adequate generated excodes", adequateGeneratedExcode);
+                dataFrame.insert("Adequate generated lexicals", adequateGeneratedLex);
+                dataFrame.insert("Adequate generated candidates", adequateGeneratedExcode && adequateGeneratedLex);
+                if (adequateGeneratedExcode && adequateGeneratedLex) {
+                    testMap.put(test.getId(), true);
+                } else if (doPrintInadequateTests) {
+                    Logger.write(gson.toJson(test), projectName + "_inadequate_" + this.testClass.getSimpleName() + "s.txt");
+                }
+            }
+        System.out.printf("Adequate generated excodes: %.2f%%%n",
+                dataFrame.getVariable("Adequate generated excodes").getMean() * 100);
+
+        System.out.printf("Adequate generated lexicals: %.2f%%%n",
+                dataFrame.getVariable("Adequate generated lexicals").getMean() * 100);
+
+        System.out.printf("Adequate generated candidates: %.2f%%%n",
+                dataFrame.getVariable("Adequate generated candidates").getMean() * 100);
+    }
+
+    public void validateTests(List<? extends RecTest> tests) {
+        validateTests(tests, false);
+    }
+
+    abstract SocketClient getSocketClient() throws Exception;
+
+    public void queryAndTest(List<? extends RecTest> tests, boolean verbose) {
+        List<? extends List<? extends RecTest>> testBatches = null;
+
+        if (Config.MULTIPROCESS) {
+            int batchSize = IntMath.divide(tests.size(), Config.NUM_THREAD, RoundingMode.UP);
+            testBatches = Lists.partition(tests, batchSize);
+        }
+
+        ProgressBar testProgressBar = new ProgressBar();
+
+        if (Config.MULTIPROCESS) {
+            final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
+            final List<Future<?>> futures = new ArrayList<>();
+
+            List<? extends List<? extends RecTest>> finalTestBatches = testBatches;
+            for (List<? extends RecTest> testBatch : finalTestBatches) {
+                Future<?> future = executor.submit(() -> {
+                    try {
+                        SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
+                        for (RecTest test : testBatch) {
+                            dataFrame.insert("Tested", 1);
+                            testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
+
+                            queryAndTest(socketClient, test, verbose);
+                        }
+                        socketClient.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                futures.add(future);
+            }
+            boolean isDone = false;
+            while (!isDone) {
+                boolean isProcessing = false;
+                for (Future<?> future : futures) {
+                    if (!future.isDone()) {
+                        isProcessing = true;
+                        break;
+                    }
+                }
+                if (!isProcessing) isDone = true;
+            }
+        } else {
+            try {
+                SocketClient socketClient = getSocketClient();
+                for (RecTest test : tests) {
+                    dataFrame.insert("Tested", 1);
+                    testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
+
+                    queryAndTest(socketClient, test, verbose);
+                }
+                socketClient.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void queryAndTest(List<? extends RecTest> tests) {
+        queryAndTest(tests, false);
+    }
+
+    public void queryAndTest(RecTest test, boolean verbose) {
+        try {
+            SocketClient socketClient = getSocketClient();
+            queryAndTest(socketClient, test, verbose);
+            socketClient.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void queryAndTest(RecTest test) {
+        queryAndTest(test, false);
+    }
+
+    private void queryAndTest(SocketClient socketClient, RecTest test, boolean verbose) throws IOException {
+        if (doSkipTest(test)) return;
+
+        Response response = socketClient.write(gson.toJson(test));
+        if (response instanceof PredictResponse) {
+            test(response, test, verbose);
+        }
+    }
+
+    boolean doSkipTest(RecTest test) {
+        return false;
+    }
+
+    void test(Response response, RecTest test, boolean verbose) {
+        PredictResponse predictResponse = (PredictResponse) response;
+        isNGramUsed = predictResponse.getData().ngram != null;
+        isRNNUsed = predictResponse.getData().rnn != null;
+        List<String> nGramResults = null;
+        if (isNGramUsed) nGramResults = predictResponse.getData().ngram.getResult();
+        List<String> RNNResults = null;
+        if (isRNNUsed) RNNResults = predictResponse.getData().rnn.getResult();
+
+        if (verbose) {
+            System.out.println("==========================");
+            System.out.println(gson.toJson(test));
+            if (isNGramUsed) {
+                System.out.println("==========================");
+                System.out.println("NGram's results:");
+                nGramResults.forEach(item -> {
+                    System.out.println(item);
+                });
+                System.out.println("==========================");
+                System.out.println("NGram's runtime: " + predictResponse.getData().ngram.getRuntime() + "s");
+            }
+
+            if (isRNNUsed) {
+                System.out.println("==========================");
+                System.out.println("RNN's results:");
+                RNNResults.forEach(item -> {
+                    System.out.println(item);
+                });
+                System.out.println("==========================");
+                System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
+            }
+        }
+
+        if (isNGramUsed) {
+            for (int k : this.tops)
+                updateTopKResult(test, nGramResults, k, testMap.getOrDefault(test.getId(), false),
+                        "nGram");
+        }
+
+        if (isRNNUsed) {
+            for (int k : this.tops)
+                updateTopKResult(test, RNNResults, k, testMap.getOrDefault(test.getId(), false),
+                        "RNN");
+        }
+
+        if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
+        if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
+    }
+
+    abstract void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
+                                   String modelName);
+
+    public void printTestResult() {
+        System.out.println("==========================");
+        System.out.println("Number of tests: " + dataFrame.getVariable("Tested").getCount());
+        System.out.println("Average parsing runtime: " + dataFrame.getVariable("averageGetTestsTime").getSum() + "s");
+        if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
+        if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+        System.out.println("Average overall runtime: "
+                + (dataFrame.getVariable("NGram's runtime").getMean()
+                + dataFrame.getVariable("RNN's runtime").getMean()
+                + dataFrame.getVariable("averageGetTestsTime").getSum()) + "s");
     }
 }
