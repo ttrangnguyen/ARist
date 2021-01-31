@@ -126,6 +126,7 @@ public abstract class RecClient {
             String filePath = sc.nextLine();
             if (Config.MULTIPROCESS) {
                 Future<?> future = executor.submit(() -> {
+                    createNewGenerator();
                     List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
                     for (RecTest test : oneFileTests) test.setFilePath(filePath);
                     tests.addAll(oneFileTests);

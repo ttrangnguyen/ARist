@@ -171,5 +171,6 @@ public class ArgRecClient extends MethodCallRecClient {
         //RecClient.logTests(tests);
         client.queryAndTest(tests, false);
         client.printTestResult();
+        System.exit(0);
     }
 }
