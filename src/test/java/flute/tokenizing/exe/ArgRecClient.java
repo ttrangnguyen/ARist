@@ -55,7 +55,12 @@ public class ArgRecClient extends MethodCallRecClient {
 
     @Override
     SocketClient getSocketClient() throws Exception {
-        return new SocketClient(Config.PARAM_SERVICE_PORT);
+        return new SocketClient(getSocketPort());
+    }
+
+    @Override
+    int getSocketPort() {
+        return Config.PARAM_SERVICE_PORT;
     }
 
     @Override

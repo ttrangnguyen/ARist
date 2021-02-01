@@ -42,7 +42,12 @@ public class MethodCallNameRecClient extends MethodCallRecClient {
 
     @Override
     SocketClient getSocketClient() throws Exception {
-        return new SocketClient(Config.METHOD_NAME_SERVICE_PORT);
+        return new SocketClient(getSocketPort());
+    }
+
+    @Override
+    int getSocketPort(){
+        return Config.METHOD_NAME_SERVICE_PORT;
     }
 
     @Override

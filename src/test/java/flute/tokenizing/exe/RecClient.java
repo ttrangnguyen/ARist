@@ -209,6 +209,7 @@ public abstract class RecClient {
     }
 
     abstract SocketClient getSocketClient() throws Exception;
+    abstract int getSocketPort();
 
     public void queryAndTest(List<? extends RecTest> tests, boolean verbose, boolean doPrintIncorrectPrediction) {
         List<? extends List<? extends RecTest>> testBatches = null;
@@ -228,7 +229,7 @@ public abstract class RecClient {
             for (List<? extends RecTest> testBatch : finalTestBatches) {
                 Future<?> future = executor.submit(() -> {
                     try {
-                        SocketClient socketClient = new SocketClient(Config.PARAM_SERVICE_PORT);
+                        SocketClient socketClient = new SocketClient(getSocketPort());
                         for (RecTest test : testBatch) {
                             dataFrame.insert("Tested", 1);
                             testProgressBar.setProgress(dataFrame.getVariable("Tested").getCount() * 1f / tests.size(), true);
