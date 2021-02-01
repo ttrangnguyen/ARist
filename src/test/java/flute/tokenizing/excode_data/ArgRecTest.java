@@ -11,6 +11,7 @@ public class ArgRecTest extends MethodCallRecTest {
      * Additional features
      */
     private String param_name = "";
+    private List<List<Boolean>> is_local_var;
 
     /**
      * Recommendations
@@ -45,6 +46,14 @@ public class ArgRecTest extends MethodCallRecTest {
 
     public void setParam_name(String param_name) {
         this.param_name = param_name;
+    }
+
+    public List<List<Boolean>> getIs_local_var() {
+        return is_local_var;
+    }
+
+    public void setIs_local_var(List<List<Boolean>> is_local_var) {
+        this.is_local_var = is_local_var;
     }
 
     public List<String> getNext_excode() {
@@ -126,6 +135,7 @@ public class ArgRecTest extends MethodCallRecTest {
         }
         test.setNext_excode(Collections.singletonList(this.getNext_excode()));
         test.setNext_lex(Collections.singletonList(this.getNext_lex()));
+        test.setIs_local_var(Collections.singletonList(this.getIs_local_var()));
         test.setExpected_excode(this.getExpected_excode());
         test.setExpected_lex(this.getExpected_lex());
         test.setIgnored(this.isIgnored());

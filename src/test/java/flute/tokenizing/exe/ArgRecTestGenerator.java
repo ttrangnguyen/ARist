@@ -74,6 +74,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         for (String nextExcode : nextExcodeList) {
                             nextLexList.add(params.getValue().get(nextExcode));
                         }
+                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
                         ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -98,6 +99,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setExpected_lex(arg.toString());
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
+                            test.setIs_local_var(isLocalVarList);
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
                             if (RecTestFilter.predictable(argExcodes)) {
@@ -147,6 +149,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             for (String nextExcode : nextExcodeList) {
                 nextLexList.add(params.getValue().get(nextExcode));
             }
+            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
             try {
@@ -185,6 +188,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 }
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
+                test.setIs_local_var(isLocalVarList);
                 test.setMethodInvocClassQualifiedName(classQualifiedName);
                 if (isClean) {
                     RecTestNormalizer.normalize(test);
