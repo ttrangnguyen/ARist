@@ -97,13 +97,15 @@ class NgramManager(ModelManager):
                                                   sentence=new_context,
                                                   n=self.ngram,
                                                   start_pos=len(java_context_list[k][0]))
-                        if self.use_lexsim_flag() and is_not_empty_list(data['param_list']) \
+                        if USE_LEXSIM and is_not_empty_list(data['param_list']) \
                                 and self.is_valid_param(data['param_list'][j]):
                             # self.logger.log(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][
                             # ii])
                             lexsim = lexSim(data['param_list'][j],
                                             data['next_lex'][j][excode_context_textform[i][1][j]][ii])
-                            model_score = self.score_lexsim(lexsim) + model_score * ngram_weight
+                            model_score = self.score_lexsim(lexsim) + model_score * NGRAM_WEIGHT
+                            if USE_LOCAL_VAR and data['is_local_var'][j][excode_context_textform[i][1][j]][ii]:
+                                model_score = model_score + LOCAL_VAR_BONUS
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
                                                        + [(excode_context_textform[i][1][j], ii)], model_score))
                 sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[2])

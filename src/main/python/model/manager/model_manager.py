@@ -7,6 +7,7 @@ from model.utility import *
 from model.config import *
 import math
 
+# Score = model_score * lexsim(optional) * local_var_bonus(optional)
 
 class ModelManager:
     def __init__(self, top_k, project, train_len,
@@ -33,6 +34,7 @@ class ModelManager:
         self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
         self.lexsim_flag = USE_LEXSIM
 
+
     def recreate(self, result, data):
         origin = []
         for candidate_ids in result:
@@ -48,12 +50,6 @@ class ModelManager:
         invalid_phrases = ['null', '', 'true', 'false', '0']
         return param not in invalid_phrases
 
-    def set_lexsim_flag(self, value):
-        self.lexsim_flag = value
-
-    def use_lexsim_flag(self):
-        return self.lexsim_flag
-
     def score_lexsim(self, lexsim):
         #1
         # return lexsim * LEXSIM_MULTIPLIER
@@ -62,4 +58,5 @@ class ModelManager:
         # special case: lexsim could rarely be <= 0.1
         if lexsim < 0.1:
             return LEXSIM_SMALL_PENALTY * LEXSIM_MULTIPLIER
-        return math.log2(lexsim) * LEXSIM_MULTIPLIER
+        else:
+            return math.log2(lexsim) * LEXSIM_MULTIPLIER
