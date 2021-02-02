@@ -511,7 +511,8 @@ public class FileParser {
 
         if (Config.FEATURE_IGNORE_NATIVE_METHOD) {
             methodBindings = methodBindings.stream().filter(method -> {
-                return !Modifier.isNative(method.getModifiers());
+                return !Modifier.isNative(method.getModifiers())
+                        && !method.getDeclaringClass().getKey().equals(TypeConstraintKey.OBJECT_TYPE);
             }).collect(Collectors.toList());
         }
 
