@@ -21,7 +21,7 @@ def tokenize(word):
 
     ppWord = '%s' % word
 
-    TAREG = re.compile("[<,>?\[\](){}&.|_]")
+    TAREG = re.compile("[<,>?\[\](){}&.|_=]")
     for match in re.finditer("[A-Z][A-Z\d]+", ppWord):
         result = ""
         s = match.start()
@@ -72,4 +72,4 @@ def tokenize(word):
 
     return np.concatenate(result).tolist()
 
-# print(tokenize("categoryString, categoryString, categoryString"))
+print(tokenize("a = b."))
