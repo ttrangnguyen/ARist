@@ -123,9 +123,9 @@ public class Client {
                     "  \"expected_lex\": \"categoryString, categoryString, categoryString\",\n" +
                     "  \"excode_context_no_method\": \"TYPE(Log) VAR(Log,log) ASSIGN(ASSIGN)\",\n" +
                     "  \"method_candidate_excode\": [\n" +
-                    "    \"M_ACCESS(a,b,2)\",\n" +
-                    "    \"M_ACCESS(c,d,3)\",\n" +
-                    "    \"M_ACCESS(d,e,4)\"\n" +
+                    "    \"M_ACCESS(a,fjskjfgbWorld,2)\",\n" +
+                    "    \"M_ACCESS(c,productManager,3)\",\n" +
+                    "    \"M_ACCESS(d,productManager,4)\"\n" +
                     "  ]\n" +
                     "}");
             if (response instanceof PredictResponse) {

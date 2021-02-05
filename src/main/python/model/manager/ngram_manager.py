@@ -133,31 +133,61 @@ class NgramManager(ModelManager):
         return response
 
     def predict_method_name(self, data):
+        # using lex only
         start_time = perf_counter()
-        excode_context = excode_tokenize(data['excode_context'],
-                                         tokenizer=self.excode_tokenizer,
-                                         train_len=self.train_len,
-                                         tokens=self.excode_tokens,
-                                         method_content_only=False)[0]
-
-        excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-self.ngram:]
-        excode_suggestions = excode_tokenize_candidates(data['method_candidate_excode'],
-                                                        tokenizer=self.excode_tokenizer,
-                                                        tokens=self.excode_tokens)
-        excode_suggestions_textforms = self.excode_tokenizer.sequences_to_texts(excode_suggestions)
-        excode_suggestion_scores = []
-        for i, excode_suggestions_textform in enumerate(excode_suggestions_textforms):
-            sentence = excode_context_textform + excode_suggestions_textform.split()
-            model_score = score_ngram(model=self.excode_model,
-                                      sentence=sentence,
+        method_candidate_lex = []
+        for method_candidate_excode in data['method_candidate_excode']:
+            method_candidate_lex.append(method_candidate_excode.split(',')[1])
+        method_candidate_lex = list(set(method_candidate_lex))
+        java_context = java_tokenize_take_last(data['lex_context'],
+                                               tokenizer=self.java_tokenizer,
+                                               train_len=self.train_len)
+        java_context = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-self.ngram:]
+        java_suggestions = java_tokenize_sentences(method_candidate_lex,
+                                                   tokenizer=self.java_tokenizer,
+                                                   to_sequence=False)
+        java_suggestion_scores = []
+        for i in range(len(java_suggestions)):
+            model_score = score_ngram(model=self.java_model,
+                                      sentence=java_context + java_suggestions[i],
                                       n=self.ngram,
-                                      start_pos=len(excode_context_textform))
-            excode_suggestion_scores.append((i, model_score))
-        sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
+                                      start_pos=len(java_context))
+            java_suggestion_scores.append((i, model_score))
+        sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
         best_candidates_index = [x[0] for x in sorted_scores]
         best_candidates = []
-        for x in best_candidates_index:
-            best_candidates.append(data['method_candidate_excode'][x])
+        for i in best_candidates_index:
+            best_candidates.append(method_candidate_lex[i])
         print(best_candidates)
         return 'result:' + json.dumps(best_candidates) \
                + ',runtime:' + str(perf_counter() - start_time)
+
+        # using excode only
+        # start_time = perf_counter()
+        # excode_context = excode_tokenize(data['excode_context'],
+        #                                  tokenizer=self.excode_tokenizer,
+        #                                  train_len=self.train_len,
+        #                                  tokens=self.excode_tokens,
+        #                                  method_content_only=False)[0]
+        #
+        # excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-self.ngram:]
+        # excode_suggestions = excode_tokenize_candidates(data['method_candidate_excode'],
+        #                                                 tokenizer=self.excode_tokenizer,
+        #                                                 tokens=self.excode_tokens)
+        # excode_suggestions_textforms = self.excode_tokenizer.sequences_to_texts(excode_suggestions)
+        # excode_suggestion_scores = []
+        # for i, excode_suggestions_textform in enumerate(excode_suggestions_textforms):
+        #     sentence = excode_context_textform + excode_suggestions_textform.split()
+        #     model_score = score_ngram(model=self.excode_model,
+        #                               sentence=sentence,
+        #                               n=self.ngram,
+        #                               start_pos=len(excode_context_textform))
+        #     excode_suggestion_scores.append((i, model_score))
+        # sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
+        # best_candidates_index = [x[0] for x in sorted_scores]
+        # best_candidates = []
+        # for x in best_candidates_index:
+        #     best_candidates.append(data['method_candidate_excode'][x])
+        # print(best_candidates)
+        # return 'result:' + json.dumps(best_candidates) \
+        #        + ',runtime:' + str(perf_counter() - start_time)
