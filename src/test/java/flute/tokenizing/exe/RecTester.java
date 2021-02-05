@@ -133,7 +133,7 @@ public class RecTester {
         if (test.getMethod_candidate_excode().contains(expectedExcode)) return true;
 
         //TODO: Handle unknown excode
-        if (expectedExcode.contains("<unk>")) {
+        if (/*expectedExcode.contains("<unk>")*/true) {
             String expectedNumParam = test.getExpected_excode().split(",")[2];
             for (String methodExcode: test.getMethod_candidate_excode()) {
                 if (!methodExcode.split(",")[1].equals(test.getExpected_lex())) continue;
