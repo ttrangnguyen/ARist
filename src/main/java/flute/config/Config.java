@@ -52,8 +52,7 @@ public class Config {
     public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
-    public final static boolean FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE = false;
-
+    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false;
     /***
      *  Type feature
      */
@@ -78,7 +77,7 @@ public class Config {
      *  Method name feature
      */
 
-    public final static boolean FEATURE_IGNORE_NATIVE_METHOD = true;
+    public final static boolean FEATURE_IGNORE_NATIVE_METHOD = false;
     public final static boolean FEATURE_ONLY_VOID_FOR_STMT = false;
 
     /***

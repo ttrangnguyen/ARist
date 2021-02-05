@@ -4,6 +4,9 @@ import flute.data.type.CustomVariableBinding;
 import flute.data.type.IntPrimitiveType;
 import flute.jdtparser.utils.ParserUtils;
 import flute.utils.parsing.CommonUtils;
+
+import flute.config.Config;
+
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -81,6 +84,12 @@ public class ClassParser {
 
         ParserUtils.addVariableToList(ParserUtils.getAllSuperFields(orgType), fields);
         parseSuperMethod(orgType.getSuperclass());
+
+        if (Config.FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE) {
+            for (ITypeBinding iType : orgType.getInterfaces()) {
+                parseSuperMethod(iType);
+            }
+        }
     }
 
     public ITypeBinding getOrgType() {

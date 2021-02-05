@@ -44,7 +44,7 @@ public class ParserUtils {
         List<IVariableBinding> variableBindings = new ArrayList<>();
         for (ITypeBinding anInterface : iTypeBinding.getInterfaces()) {
             Collections.addAll(variableBindings, anInterface.getDeclaredFields());
-            if (Config.FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE) {
+            if (Config.FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE) {
                 addVariableToList(getAllInterfaceFields(anInterface), variableBindings);
                 //variableBindings.addAll(getAllInterfaceFields(anInterface));
             }
