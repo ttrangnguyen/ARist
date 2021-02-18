@@ -147,16 +147,15 @@ class RNNManager(ModelManager):
         self.logger.debug("Total rnn runtime: " + str(runtime_rnn))
         result_rnn = self.recreate(result_rnn, data)
         self.logger.debug("Result rnn:\n", result_rnn)
-        response = 'rnn:{' \
-                   + 'result:' + json.dumps(result_rnn) \
-                   + ',runtime:' + str(runtime_rnn) \
-                   + '}'
+        response = 'result:' + json.dumps(result_rnn) + ',runtime:' + str(runtime_rnn)
         return response
 
     def predict_method_name_using_lex(self, data):
         # using lex
         start_time = perf_counter()
         method_candidate_lex, java_context = self.prepare_method_name_prediction(data)
+        if len(method_candidate_lex) == 0:
+            return 'result:[],runtime:"0"'
         if data['method_name'] != "":
             method_name = tokenize(data['method_name'])
         else:
