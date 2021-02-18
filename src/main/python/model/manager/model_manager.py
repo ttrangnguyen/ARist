@@ -1,11 +1,18 @@
+import json
+
+from time import perf_counter
+
 import dill
 import logging
 
 import sys
 from pickle import load
+
+from model.java.java_preprocess import java_tokenize_take_last
 from model.utility import *
 from model.config import *
 import math
+import keras
 
 # Score = model_score * lexsim(optional) * local_var_bonus(optional)
 
@@ -14,10 +21,8 @@ class ModelManager:
                  excode_model_path, java_model_path,
                  excode_tokenizer_path, java_tokenizer_path,
                  excode_tokens_path):
-        with open(excode_model_path, 'rb') as fin:
-            self.excode_model = dill.load(fin)
-        with open(java_model_path, 'rb') as fin:
-            self.java_model = dill.load(fin)
+        self.excode_model = self.load_model(excode_model_path)
+        self.java_model = self.load_model(java_model_path)
         self.project = project
         self.top_k = top_k
         self.train_len = train_len
@@ -34,6 +39,13 @@ class ModelManager:
         self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
         self.lexsim_flag = USE_LEXSIM
 
+    def load_model(self, model_path):
+        if model_path[-2:] == 'h5':
+            model = keras.models.load_model(model_path)
+            return model
+        else:
+            with open(model_path, 'rb') as fin:
+                return dill.load(fin)
 
     def recreate(self, result, data):
         origin = []
@@ -60,3 +72,23 @@ class ModelManager:
             return LEXSIM_SMALL_PENALTY * LEXSIM_MULTIPLIER
         else:
             return math.log2(lexsim) * LEXSIM_MULTIPLIER
+
+    def prepare_method_name_prediction(self, data):
+        method_candidate_lex = []
+        for method_candidate_excode in data['method_candidate_excode']:
+            method_candidate_lex.append(method_candidate_excode.split(',')[1])
+        method_candidate_lex = list(set(method_candidate_lex))
+        java_context = java_tokenize_take_last(data['lex_context'],
+                                               tokenizer=self.java_tokenizer,
+                                               train_len=self.train_len)
+        return method_candidate_lex, java_context
+
+    def select_top_method_name_candidates(self, java_suggestion_scores, method_candidate_lex, start_time):
+        sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
+        best_candidates_index = [x[0] for x in sorted_scores]
+        best_candidates = []
+        for i in best_candidates_index:
+            best_candidates.append(method_candidate_lex[i])
+        print(best_candidates)
+        return 'result:' + json.dumps(best_candidates) \
+               + ',runtime:' + str(perf_counter() - start_time)

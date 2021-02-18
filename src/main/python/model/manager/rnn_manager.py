@@ -2,7 +2,7 @@ import json
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
 from name_stat.name_tokenizer import tokenize
-from model.predictor import prepare, predict, evaluate
+from model.predictor import prepare_sentences, predict, evaluate
 from time import perf_counter
 import numpy as np
 from model.manager.model_manager import ModelManager
@@ -18,7 +18,15 @@ class RNNManager(ModelManager):
                          excode_tokenizer_path, java_tokenizer_path,
                          excode_tokens_path)
 
-    def process(self, data):
+    def process(self, data, service):
+        response = "rnn:{"
+        if service == "param":
+            response += self.predict_param(data)
+        elif service == "method_name":
+            response += self.predict_method_name_using_lex(data)
+        return response + "}"
+
+    def predict_param(self, data):
         start_time = perf_counter()
         if data['method_name'] != "":
             method_name = tokenize(data['method_name'])
@@ -47,10 +55,10 @@ class RNNManager(ModelManager):
             sentence_len_all = []
             for ex_suggest_id in range(len(excode_context)):
                 curr_context = excode_origin_context + excode_context[ex_suggest_id][0][0]
-                x_test, y_test, sentence_len = prepare(curr_context,
-                                                       excode_suggestions,
-                                                       self.train_len,
-                                                       len(curr_context))
+                x_test, y_test, sentence_len = prepare_sentences(curr_context,
+                                                                 excode_suggestions,
+                                                                 self.train_len,
+                                                                 len(curr_context))
                 x_test_all += x_test.tolist()
                 y_test_all += y_test.tolist()
                 sentence_len_all += sentence_len
@@ -100,9 +108,9 @@ class RNNManager(ModelManager):
                 i = java_context[k][2]
                 java_suggestions = java_suggestions_all[j][excode_context[i][1][j]]
                 curr_context = java_origin_context + java_context[k][0]
-                x_test, y_test, sentence_len = prepare(curr_context,
-                                                       java_suggestions, self.train_len,
-                                                       len(curr_context))
+                x_test, y_test, sentence_len = prepare_sentences(curr_context,
+                                                                 java_suggestions, self.train_len,
+                                                                 len(curr_context))
                 x_test_all += x_test.tolist()
                 y_test_all += y_test.tolist()
                 sentence_len_all += sentence_len
@@ -144,3 +152,29 @@ class RNNManager(ModelManager):
                    + ',runtime:' + str(runtime_rnn) \
                    + '}'
         return response
+
+    def predict_method_name_using_lex(self, data):
+        # using lex
+        start_time = perf_counter()
+        method_candidate_lex, java_context = self.prepare_method_name_prediction(data)
+        if data['method_name'] != "":
+            method_name = tokenize(data['method_name'])
+        else:
+            method_name = "<UNK>"
+        class_name = tokenize(data['class_name'])
+        method_name_tokens_java = self.java_tokenizer.texts_to_sequences([method_name])[0]
+        class_name_tokens_java = self.java_tokenizer.texts_to_sequences([class_name])[0]
+        java_suggestions = java_tokenize_sentences(method_candidate_lex,
+                                                   tokenizer=self.java_tokenizer,
+                                                   to_sequence=True)
+        x_test, y_test, sentence_len = prepare_sentences(java_context,
+                                                         java_suggestions, self.train_len,
+                                                         len(java_context))
+        p_pred = predict(self.java_model, x_test,
+                         method_name_tokens=method_name_tokens_java,
+                         class_name_tokens=class_name_tokens_java)
+        log_p_sentence = evaluate(p_pred, y_test, sentence_len)
+        java_suggestion_scores = []
+        for i in range(len(log_p_sentence)):
+            java_suggestion_scores.append((i, log_p_sentence[i]))
+        return self.select_top_method_name_candidates(java_suggestion_scores, method_candidate_lex, start_time)
