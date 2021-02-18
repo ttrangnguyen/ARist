@@ -16,6 +16,7 @@ import keras
 
 # Score = model_score * lexsim(optional) * local_var_bonus(optional)
 
+
 class ModelManager:
     def __init__(self, top_k, project, train_len,
                  excode_model_path, java_model_path,
