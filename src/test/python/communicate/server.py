@@ -63,8 +63,8 @@ class Server:
                     conn.send(('{type:"lexSim", data:' + json.dumps(lexSim(data['s1'], data['s2'])) + '}\n').encode())
                     continue
             response = '{type:"predict", data:{'
-            # if USE_RNN:
-            #     response += self.rnn_manager.process(data, self.service)
+            if USE_RNN:
+                response += self.rnn_manager.process(data, self.service)
             if USE_NGRAM:
                 if USE_RNN:
                     response += ','

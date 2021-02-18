@@ -15,7 +15,7 @@ def prepare_sentence(seq, train_len, start_pos):
     return x, y
 
 
-def prepare(context, sentences, train_len, start_pos):
+def prepare_sentences(context, sentences, train_len, start_pos):
     x_test_all = []
     y_test_all = []
     sentence_len = []

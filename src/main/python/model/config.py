@@ -1,9 +1,9 @@
 top_k = 10
 train_len = 6 + 1
-ngram = 2 + 1  # 3-gram
-NGRAM_WEIGHT = 1
-USE_RNN = False
-USE_NGRAM = True
+ngram = 4 + 1  # 5-gram
+NGRAM_SCORE_WEIGHT = 1
+USE_RNN = True
+USE_NGRAM = False
 USE_LEXSIM = True
 USE_LOCAL_VAR = False
 
@@ -15,8 +15,10 @@ PRINT_LOG = False
 
 project = 'all'
 testfold = 0
-excode_model_rnn_path = "../../../../../model/excode_model_" + project + "_testfold_" + str(testfold) + ".h5"
-java_model_rnn_path = "../../../../../model/java_model_" + project + "_testfold_" + str(testfold) + ".h5"
+# excode_model_rnn_path = "../../../../../model/excode_model_" + project + "_testfold_" + str(testfold) + ".h5"
+# java_model_rnn_path = "../../../../../model/java_model_" + project + "_testfold_" + str(testfold) + ".h5"
+excode_model_rnn_path = "../../../../../model/excode_model_all.h5"
+java_model_rnn_path = "../../../../../model/java_model_all.h5"
 excode_model_ngram_path = "../../../../../model/v3-10fold-ngram/" + str(ngram) + " gram/excode_model_" \
                           + project + "_testfold_" + str(testfold) + "_ngram.pkl"
 java_model_ngram_path = "../../../../../model/v3-10fold-ngram/" + str(ngram) + " gram/java_model_" \
