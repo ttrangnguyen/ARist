@@ -32,6 +32,7 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                     test.setExcode_context(pile.get(0).getExcode_context());
                     test.setMethodScope_name(pile.get(0).getMethodScope_name());
                     test.setClass_name(pile.get(0).getClass_name());
+                    test.setMethodInvocClassQualifiedName(pile.get(0).getMethodInvocClassQualifiedName());
                 }
 
                 List<String> paramList = new ArrayList<>();
@@ -62,16 +63,19 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
 
                 List<List<String>> allNextExcodeList = new ArrayList<>();
                 List<List<List<String>>> allNextLexList = new ArrayList<>();
+                List<List<List<Boolean>>> allIsLocalVarList = new ArrayList<>();
                 test.setIgnored(false);
                 for (int j = 0; j < pile.size(); ++j) {
                     allNextExcodeList.add(pile.get(j).getNext_excode());
                     allNextLexList.add(pile.get(j).getNext_lex());
+                    allIsLocalVarList.add(pile.get(j).getIs_local_var());
                     if (pile.get(j).isIgnored()) {
                         test.setIgnored(true);
                     }
                 }
                 test.setNext_excode(allNextExcodeList);
                 test.setNext_lex(allNextLexList);
+                test.setIs_local_var(allIsLocalVarList);
                 test.setArgRecTestList(pile);
                 test.setNumArg(pile.get(pile.size() - 1).getArgPos());
 

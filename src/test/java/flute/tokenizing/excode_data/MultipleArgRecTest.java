@@ -3,13 +3,14 @@ package flute.tokenizing.excode_data;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultipleArgRecTest extends RecTest {
+public class MultipleArgRecTest extends MethodCallRecTest {
     private transient int numArg;
 
     /**
      * Additional features
      */
     private List<String> param_list;
+    private List<List<List<Boolean>>> is_local_var;
 
     /**
      * Recommendations
@@ -36,6 +37,14 @@ public class MultipleArgRecTest extends RecTest {
 
     public void setParam_list(List<String> param_list) {
         this.param_list = param_list;
+    }
+
+    public List<List<List<Boolean>>> getIs_local_var() {
+        return is_local_var;
+    }
+
+    public void setIs_local_var(List<List<List<Boolean>>> is_local_var) {
+        this.is_local_var = is_local_var;
     }
 
     public List<List<String>> getNext_excode() {

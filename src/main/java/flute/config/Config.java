@@ -42,7 +42,7 @@ public class Config {
      * Multiprocess
      */
 
-    public final static boolean MULTIPROCESS = false;
+    public final static boolean MULTIPROCESS = true;
     public final static int NUM_THREAD = 5;
 
     /***
@@ -52,8 +52,7 @@ public class Config {
     public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
-    public final static boolean FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE = false;
-
+    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false;
     /***
      *  Type feature
      */
@@ -73,6 +72,14 @@ public class Config {
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false;
 
     public final static boolean FEATURE_LIMIT_CANDIDATES = false;
+
+    /***
+     *  Method name feature
+     */
+
+    public final static boolean FEATURE_IGNORE_NATIVE_METHOD = false;
+    public final static boolean FEATURE_ONLY_VOID_FOR_STMT = false;
+
     /***
      Config for crawler
      ***/
@@ -102,7 +109,7 @@ public class Config {
      Config for test
      ***/
 
-    public final static boolean TEST_ARG_ONE_BY_ONE = false;
+    public final static boolean TEST_ARG_ONE_BY_ONE = true;
     public final static boolean TEST_ZERO_ARG = false;
 
     public static String TEST_FILE_PATH = "";

@@ -15,6 +15,9 @@ public class ParserUtils {
     private static ITypeBinding curType;
     private static ITypeBinding nextType;
 
+    public static final List<String> numberInfixOperation = Arrays.asList(new String[]{"+", "-", "*", "/", "%", "<", "<=", ">", ">="});
+    public static final List<String> boolInfixOperation = Arrays.asList(new String[]{"||", "&&"});
+
     private static List<IVariableBinding> innerGetAllSuperFields(ITypeBinding iTypeBinding) {
         ITypeBinding superClass = iTypeBinding.getSuperclass();
         if (superClass == null) return new ArrayList<>();
@@ -41,7 +44,7 @@ public class ParserUtils {
         List<IVariableBinding> variableBindings = new ArrayList<>();
         for (ITypeBinding anInterface : iTypeBinding.getInterfaces()) {
             Collections.addAll(variableBindings, anInterface.getDeclaredFields());
-            if (Config.FEATURE_ADD_FIELD_FROM_SUPER_INTERFACE) {
+            if (Config.FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE) {
                 addVariableToList(getAllInterfaceFields(anInterface), variableBindings);
                 //variableBindings.addAll(getAllInterfaceFields(anInterface));
             }
@@ -91,9 +94,12 @@ public class ParserUtils {
         return (MethodDeclaration) virtualCu.findDeclaringNode(iMethodBinding.getKey());
     }
 
-    public static MultiMap methodMap(List<IMethodBinding> methodList) {
+    public static MultiMap methodMap(Optional<List<IMethodBinding>> methodList) {
         MultiMap multiMap = new MultiMap();
-        for (IMethodBinding method : methodList) {
+
+        if (!methodList.isPresent()) return multiMap;
+
+        for (IMethodBinding method : methodList.get()) {
             String exCode = "M_ACCESS("
                     + method.getDeclaringClass().getName() + "," + method.getName() + "," + method.getParameterTypes().length + ")";
             multiMap.put(exCode, method.getName());

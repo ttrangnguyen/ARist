@@ -9,10 +9,7 @@ import flute.data.*;
 import flute.data.type.*;
 import flute.data.constraint.ParserConstant;
 import flute.data.exception.*;
-import flute.data.typemodel.ArgumentModel;
-import flute.data.typemodel.ClassModel;
-import flute.data.typemodel.MethodCallTypeArgument;
-import flute.data.typemodel.Variable;
+import flute.data.typemodel.*;
 
 import flute.jdtparser.utils.ParserCompare;
 import flute.jdtparser.utils.ParserUtils;
@@ -224,24 +221,24 @@ public class FileParser {
      * @return First params can append the position of a method invocation.
      */
     public MultiMap genFirstParams() {
-        return genNextParams(0);
+        return genNextParams(0, null);
     }
 
     /**
      * @return Next params can append the position of a method invocation with some pre-written parameters.
      */
     public MultiMap genNextParams() {
-        return genNextParams(-1);
+        return genNextParams(-1, null);
     }
 
     /**
      * @return Next params can append the input position of a method invocation with sublist of pre-written parameters.
      */
     public MultiMap genParamsAt(int position, String... keys) {
-        return genNextParams(position, keys);
+        return genNextParams(position, null, keys);
     }
 
-    private MultiMap genNextParams(int position, String... keys) {
+    private MultiMap genNextParams(int position, IMethodBinding method, String... keys) {
         if (curMethodInvocation == null) return null;
 
         String methodName = curMethodInvocation.getName().getIdentifier();
@@ -250,7 +247,8 @@ public class FileParser {
         String expressionTypeKey = null;
         ITypeBinding classBinding;
 
-        List<ArgumentModel> preArgs = position >= 0 ? curMethodInvocation.argumentTypes().subList(0, position) : curMethodInvocation.argumentTypes();
+        List<ArgumentModel> preArgs = position >= 0 && method == null
+                ? curMethodInvocation.argumentTypes().subList(0, position) : curMethodInvocation.argumentTypes();
 
         List<IMethodBinding> listMember = new ArrayList<>();
 
@@ -260,7 +258,10 @@ public class FileParser {
             listMember.add(methodCallTypeArgument.getMethodBinding());
         } else {
             expressionTypeKey = curMethodInvocation.getExpressionType() == null ? null : curMethodInvocation.getExpressionType().getKey();
-            if (!Config.FEATURE_USER_CHOOSE_METHOD) {
+
+            if (method != null) {
+                listMember.add(method);
+            } else if (!Config.FEATURE_USER_CHOOSE_METHOD) {
                 if (curMethodInvocation.getExpression() == null) {
                     classBinding = curClass;
                     isStaticExpr = isStaticScope(curMethodInvocation.getOrgASTNode());
@@ -292,8 +293,12 @@ public class FileParser {
         MultiMap nextVariableMap = new MultiMap();
 
         int methodArgLength = preArgs.size();
-        methodArgLength = methodArgLength > 0 && preArgs.get(methodArgLength - 1).toString().equals("$missing$")
-                ? methodArgLength - 1 : methodArgLength;
+        if (method == null) {
+            methodArgLength = methodArgLength > 0 && preArgs.get(methodArgLength - 1).toString().equals("$missing$")
+                    ? methodArgLength - 1 : methodArgLength;
+        } else {
+            methodArgLength = position;
+        }
 
         int finalMethodArgLength = methodArgLength;
 
@@ -483,15 +488,49 @@ public class FileParser {
             classBinding = curMethodInvocation.getExpressionType();
             isStaticExpr = curMethodInvocation.isStaticExpression();
         }
+
+        if (classBinding == null) return Optional.empty(); //can not be resolved
+
         ClassParser classParser = new ClassParser(classBinding);
 
         List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
+
+
+        if (Config.FEATURE_ONLY_VOID_FOR_STMT) {
+            //filter for void
+            if (curMethodInvocation.getOrgASTNode().getParent() instanceof ExpressionStatement
+                    && curMethodInvocation.getOrgASTNode().getParent().getParent() instanceof Block) {
+                ExpressionStatement expressionStatement = (ExpressionStatement) curMethodInvocation.getOrgASTNode().getParent();
+                if (expressionStatement.getExpression() == curMethodInvocation.getOrgASTNode()) {
+                    methodBindings = methodBindings.stream().filter(method -> {
+                        return method.getReturnType().getKey().equals("V"); //void
+                    }).collect(Collectors.toList());
+                }
+            }
+        }
+
+        if (Config.FEATURE_IGNORE_NATIVE_METHOD) {
+            methodBindings = methodBindings.stream().filter(method -> {
+                return !Modifier.isNative(method.getModifiers())
+                        && !method.getDeclaringClass().getKey().equals(TypeConstraintKey.OBJECT_TYPE);
+            }).collect(Collectors.toList());
+        }
 
         for (IMethodBinding methodBinding : methodBindings) {
             //Add filter for parent expression
             if (!methodBinding.isConstructor() && (parentValue(curMethodInvocation.getOrgASTNode()) == null
                     || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode())))) {
-                listMember.add(methodBinding);
+                int lengthCheck = methodBinding.isVarargs() ? methodBinding.getParameterTypes().length - 1 : methodBinding.getParameterTypes().length;
+                boolean availableCheck = true;
+                for (int i = 0; i < lengthCheck; i++) {
+                    MultiMap listResult = genNextParams(i, methodBinding);
+                    if (listResult.getValue().isEmpty()) {
+                        availableCheck = false;
+                        break;
+                    }
+                }
+                if (availableCheck)
+                    listMember.add(methodBinding);
             }
         }
         return Optional.of(listMember);
@@ -603,10 +642,18 @@ public class FileParser {
             } else {
                 return null;
             }
-        } else if (parentNode instanceof IfStatement) {
+        } else if (parentNode instanceof InfixExpression) {
+            InfixExpression infixExpression = (InfixExpression) parentNode;
+            String operator = infixExpression.getOperator().toString();
+            if (ParserUtils.numberInfixOperation.contains(operator)) {
+                return new ITypeBinding[]{new CommonNumType()};
+            } else if (ParserUtils.boolInfixOperation.contains(operator)) {
+                return new ITypeBinding[]{new BooleanPrimitiveType()};
+            } else
+                return null;
+        } else if (parentNode instanceof IfStatement || parentNode instanceof DoStatement || parentNode instanceof WhileStatement) {
             return new ITypeBinding[]{new BooleanPrimitiveType()};
         } else if (parentNode instanceof MethodInvocation || parentNode instanceof SuperMethodInvocation) {
-
             MethodInvocationModel methodInvocationParentModel = null;
             if (parentNode instanceof MethodInvocation) {
                 methodInvocationParentModel = new MethodInvocationModel(curClass, (MethodInvocation) parentNode);
@@ -648,10 +695,11 @@ public class FileParser {
                             }
 
                             if (checkInvoMember(finalMethodInvocationParentModel.argumentTypes(), methodMember, positionParam)) {
-                                if (methodMember.isVarargs() && methodMember.getParameterTypes().length - 1 == positionParam) {
-                                    typeResults.add(methodMember.getParameterTypes()[positionParam].getComponentType());
+                                if (methodMember.isVarargs() && positionParam >= methodMember.getParameterTypes().length - 1) {
+                                    typeResults.add(methodMember.getParameterTypes()[methodMember.getParameterTypes().length - 1].getComponentType());
+                                } else {
+                                    typeResults.add(methodMember.getParameterTypes()[positionParam]);
                                 }
-                                typeResults.add(methodMember.getParameterTypes()[positionParam]);
                             }
                         }
                     }

@@ -1,13 +1,17 @@
 top_k = 10
 train_len = 6 + 1
 ngram = 2 + 1  # 3-gram
-ngram_weight = 1
+NGRAM_WEIGHT = 1
 USE_RNN = False
 USE_NGRAM = True
 USE_LEXSIM = True
-PRINT_LOG = False
+USE_LOCAL_VAR = False
+
 LEXSIM_MULTIPLIER = 1
-LEXSIM_SMALL_PENALTY = -1  # log(0.1)
+LEXSIM_SMALL_PENALTY = -3.32193  # log2(0.1)
+LOCAL_VAR_BONUS = 1  # log2(2)
+
+PRINT_LOG = False
 
 project = 'all'
 testfold = 0
