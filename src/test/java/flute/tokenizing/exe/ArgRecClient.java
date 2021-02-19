@@ -167,8 +167,19 @@ public class ArgRecClient extends MethodCallRecClient {
         if (this.isRNNUsed) {
             for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
         }
-        for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean()));
-        for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%d", k)).getMean()));
+        String bestModel = "nGram";
+        for (int k: this.tops) {
+            double nGramAcc = dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean();
+            double RNNAcc = dataFrame.getVariable(String.format("RNNOverallTop%d", k)).getMean();
+            if (Math.abs(nGramAcc - RNNAcc) > 1e-7) {
+                if (nGramAcc < RNNAcc) {
+                    bestModel = "RNN";
+                }
+                break;
+            }
+        }
+        for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("%sOverallTop%d", bestModel, k)).getMean()));
+        for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("%sActualTop%d", bestModel, k)).getMean()));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
 
         CSVWritor.write(Config.LOG_DIR + this.projectName + "_arg_rec_acc.csv", accuracyPerNumArg);
