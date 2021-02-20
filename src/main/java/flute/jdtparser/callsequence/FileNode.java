@@ -99,6 +99,22 @@ public class FileNode {
             tryStatement.catchClauses().forEach(catchClause -> {
                 parseMinimalCFG(((CatchClause) catchClause).getBody(), tryNode);
             });
+        } else if (statement instanceof WhileStatement) {
+            WhileStatement whileStatement = (WhileStatement) statement;
+            MinimalNode conditionNode = new IfNode(whileStatement.getExpression());
+            parentNode.addNextNode(conditionNode);
+            parseMinimalCFG(whileStatement.getBody(), conditionNode, false);
+            parseMinimalCFG(null, conditionNode, false);
+        } else if (statement instanceof DoStatement) {
+            DoStatement doStatement = (DoStatement) statement;
+            MinimalNode doBody = parseMinimalCFG(doStatement.getBody(), parentNode, false);
+
+            curNode = doBody;
+
+            MinimalNode conditionNode = new IfNode(doStatement.getExpression());
+            doBody.addNextNode(conditionNode);
+            parseMinimalCFG(doStatement.getBody(), conditionNode, false);
+            parseMinimalCFG(null, conditionNode, false);
         } else {
             if ((parentNode instanceof StmtNode) && ((StmtNode) parentNode).getStatement() == null) {
                 ((StmtNode) parentNode).setStatement(statement);
@@ -159,6 +175,7 @@ public class FileNode {
                 return super.visit(methodDeclaration);
             }
         });
+        System.out.println("a");
     }
 
     public FileParser getFileParser() {
