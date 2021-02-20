@@ -69,28 +69,64 @@ public class FileNode {
     List<MinimalCFGNode> rootNodeList = new ArrayList<>();
     int methodId = 0;
 
-    public MinimalCFGNode parseMinimalCFG(Statement statement, MinimalCFGNode parentNode) {
-        final MinimalCFGNode[] curNode = {parentNode};
+    public MinimalCFGNode parseMinimalCFG(ASTNode statement, MinimalCFGNode parentNode) {
+        return parseMinimalCFG(statement, parentNode, true);
+    }
+
+    //statement is statement or expression
+    public MinimalCFGNode parseMinimalCFG(ASTNode statement, MinimalCFGNode parentNode, boolean isMainLoop) {
+        MinimalCFGNode curNode = parentNode;
         if (statement instanceof Block) {
             Block block = (Block) statement;
-            block.statements().forEach(stmt -> {
-                curNode[0] = parseMinimalCFG((Statement) stmt, curNode[0]);
-            });
+            for (int i = 0; i < block.statements().size(); i++) {
+                curNode = parseMinimalCFG((Statement) block.statements().get(i), curNode, false);
+            }
         } else if (statement instanceof IfStatement) {
-
+            IfStatement ifStatement = (IfStatement) statement;
+            MinimalCFGNode conditionNode = parseMinimalCFG(ifStatement.getExpression(), parentNode, false);
+            parseMinimalCFG(ifStatement.getThenStatement(), conditionNode, false);
+            parseMinimalCFG(ifStatement.getElseStatement(), conditionNode, false);
         } else if (statement instanceof TryStatement) {
             TryStatement tryStatement = (TryStatement) statement;
-            tryStatement.getBody();
+            parseMinimalCFG(tryStatement.getBody(), parentNode);
+            tryStatement.catchClauses().forEach(catchClause -> {
+                parseMinimalCFG(((CatchClause) catchClause).getBody(), parentNode);
+            });
         } else {
             if (rootNodeList.size() - 1 < methodId) rootNodeList.add(parentNode);
             if (parentNode.getStatement() == null) {
                 parentNode.setStatement(statement);
             } else {
-                curNode[0] = new MinimalCFGNode(statement);
-                parentNode.addNextNode(curNode[0]);
+                curNode = new MinimalCFGNode(statement);
+                parentNode.addNextNode(curNode);
             }
         }
-        return curNode[0];
+        if(isMainLoop){
+            flatNode(rootNodeList.get(methodId));
+        }
+        return curNode;
+    }
+
+    public void flatNode(MinimalCFGNode node){
+        if(node.getNextNode().size() == 1){
+            node = node.getNextNode().get(0);
+            flatNode(node);
+        }else{
+            for (int i = 0; i < node.getNextNode().size() - 1; i++) {
+                MinimalCFGNode finalNode = node;
+                lastNode(node.getNextNode().get(i)).forEach(endNode->{
+                    endNode.addNextNode(finalNode.getNextNode().get(finalNode.getNextNode().size()-1));
+                });
+            }
+            node.getNextNode().remove(node.getNextNode().size() - 1);
+        }
+    }
+
+    /**
+     * Todo
+     */
+    public List<MinimalCFGNode> lastNode(MinimalCFGNode node){
+        return null;
     }
 
     public void parse() {
