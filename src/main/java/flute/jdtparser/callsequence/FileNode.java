@@ -1,12 +1,11 @@
 package flute.jdtparser.callsequence;
 
 import flute.jdtparser.FileParser;
+import flute.jdtparser.callsequence.expr.ThisExpressionCustom;
 import flute.jdtparser.callsequence.node.cfg.*;
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class FileNode {
@@ -16,59 +15,9 @@ public class FileNode {
         this.fileParser = fileParser;
     }
 
-    private HashMap<IBinding, MethodCallNode> callSequence = new HashMap<>();
-    private HashMap<IBinding, MethodCallNode> lastNode = new HashMap<>();
-
-
-    public void addToSequence(MethodInvocation methodInvocation) {
-        Expression expr = methodInvocation.getExpression();
-        IBinding bindingKey = null;
-        if (expr instanceof SimpleName) {
-            SimpleName simpleName = (SimpleName) expr;
-            bindingKey = simpleName.resolveBinding();
-        } else {
-            if (expr == null) {
-                bindingKey = methodInvocation.resolveMethodBinding().getDeclaringClass();
-            } else
-                bindingKey = expr.resolveTypeBinding();
-        }
-        if (callSequence.get(bindingKey) == null) {
-            MethodCallNode rootNode = new MethodCallNode(methodInvocation);
-            callSequence.put(bindingKey, rootNode);
-            lastNode.put(bindingKey, rootNode);
-        } else {
-            MethodCallNode nextNode = new MethodCallNode(methodInvocation);
-            lastNode.get(bindingKey).addChildNode(nextNode);
-            lastNode.put(bindingKey, nextNode);
-        }
-    }
-
-    private void parseStmt(Statement statement) {
-        if (statement instanceof Block) {
-            Block block = (Block) statement;
-            block.statements().forEach(stmt -> {
-                parseStmt((Statement) stmt);
-            });
-        } else if (!(statement instanceof IfStatement
-                || statement instanceof TryStatement)) {
-            statement.accept(new ASTVisitor() {
-                @Override
-                public boolean visit(MethodInvocation methodInvocation) {
-                    addToSequence(methodInvocation);
-                    return super.visit(methodInvocation);
-                }
-            });
-        } else if (statement instanceof TryStatement) {
-            TryStatement tryStatement = (TryStatement) statement;
-            parseStmt(tryStatement.getBody());
-        }
-//        else if (statement instanceof IfStatement) {
-//            IfStatement ifStatement = (IfStatement) statement;
-//            parseStmt(ifStatement.getThenStatement());
-//        }
-    }
-
     List<MinimalNode> rootNodeList = new ArrayList<>();
+    List<Set<IBinding>> trackingNodeList = new ArrayList<>();
+
     int methodId = 0;
 
     public MinimalNode parseMinimalCFG(Statement statement, MinimalNode parentNode) {
@@ -189,6 +138,25 @@ public class FileNode {
         }
     }
 
+    public static IBinding genBindingKey(MethodInvocation methodInvocation) {
+        Expression expr = methodInvocation.getExpression();
+        IBinding bindingKey = null;
+        if (expr instanceof SimpleName) {
+            SimpleName simpleName = (SimpleName) expr;
+            bindingKey = simpleName.resolveBinding();
+        } else {
+            if (expr == null) {
+                ITypeBinding resolveType = methodInvocation.resolveMethodBinding() == null
+                        ? null : methodInvocation.resolveMethodBinding().getDeclaringClass();
+                bindingKey = ThisExpressionCustom.create(resolveType);
+            } else if (expr instanceof ThisExpression) {
+                bindingKey = ThisExpressionCustom.create(expr.resolveTypeBinding());
+            } else
+                bindingKey = expr.resolveTypeBinding();
+        }
+        return bindingKey;
+    }
+
     public void parse() {
         fileParser.getCu().accept(new ASTVisitor() {
             @Override
@@ -196,6 +164,18 @@ public class FileNode {
                 StartNode startNode = new StartNode();
                 rootNodeList.add(startNode);
                 parseMinimalCFG(methodDeclaration.getBody(), startNode);
+                trackingNodeList.add(new HashSet<>());
+
+                methodDeclaration.accept(new ASTVisitor() {
+                    @Override
+                    public boolean visit(MethodInvocation methodInvocation) {
+                        IBinding bindingKey = genBindingKey(methodInvocation);
+
+                        trackingNodeList.get(methodId).add(bindingKey);
+                        return super.visit(methodDeclaration);
+                    }
+                });
+
                 methodId++;
                 return super.visit(methodDeclaration);
             }
