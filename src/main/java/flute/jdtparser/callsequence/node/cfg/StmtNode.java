@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StmtNode extends MinimalNode{
-    private Statement statement;
+    private ASTNode statement;
 
-    public StmtNode(Statement statement) {
+    public StmtNode(ASTNode statement) {
         this.statement = statement;
     }
 
@@ -17,7 +17,7 @@ public class StmtNode extends MinimalNode{
         return statement;
     }
 
-    public void setStatement(Statement statement) {
+    public void setStatement(ASTNode statement) {
         this.statement = statement;
     }
 

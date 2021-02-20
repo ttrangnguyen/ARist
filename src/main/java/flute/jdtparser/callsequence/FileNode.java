@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FileNode {
     private FileParser fileParser;
@@ -74,7 +75,7 @@ public class FileNode {
         return parseMinimalCFG(statement, parentNode, true);
     }
 
-    public MinimalNode parseMinimalCFG(Statement statement, MinimalNode parentNode, boolean isMainLoop) {
+    public MinimalNode parseMinimalCFG(ASTNode statement, MinimalNode parentNode, boolean isMainLoop) {
         MinimalNode curNode = parentNode;
         if (statement instanceof Block) {
             Block block = (Block) statement;
@@ -115,6 +116,30 @@ public class FileNode {
             doBody.addNextNode(conditionNode);
             parseMinimalCFG(doStatement.getBody(), conditionNode, false);
             parseMinimalCFG(null, conditionNode, false);
+        } else if (statement instanceof ForStatement) {
+            ForStatement forStatement = (ForStatement) statement;
+
+            AtomicReference<MinimalNode> lastNode = new AtomicReference<>();
+            forStatement.initializers().forEach(expr -> {
+                ASTNode astNode = (ASTNode) expr;
+                lastNode.set(parseMinimalCFG(astNode, parentNode, false));
+            });
+
+            if (lastNode.get() == null)
+                lastNode.set(parentNode);
+
+            curNode = lastNode.get();
+
+            MinimalNode conditionNode = new IfNode(forStatement.getExpression());
+            lastNode.get().addNextNode(conditionNode);
+
+            MinimalNode forBody = parseMinimalCFG(forStatement.getBody(), conditionNode, false);
+            parseMinimalCFG(null, conditionNode, false);
+
+            forStatement.updaters().forEach(expr -> {
+                ASTNode astNode = (ASTNode) expr;
+                lastNode.set(parseMinimalCFG(astNode, forBody, false));
+            });
         } else {
             if ((parentNode instanceof StmtNode) && ((StmtNode) parentNode).getStatement() == null) {
                 ((StmtNode) parentNode).setStatement(statement);
@@ -175,7 +200,6 @@ public class FileNode {
                 return super.visit(methodDeclaration);
             }
         });
-        System.out.println("a");
     }
 
     public FileParser getFileParser() {
