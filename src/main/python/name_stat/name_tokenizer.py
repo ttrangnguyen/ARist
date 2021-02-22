@@ -12,8 +12,10 @@ def splitCase(match):
 
 
 def tokenize(word):
+    if (len(word)):
+        return []
+
     camelCases = []
-    split_cases = []
 
     # Do not predict snake_cases
     # if (word.find("_") != -1 or len(word) == 0):
@@ -72,4 +74,4 @@ def tokenize(word):
 
     return np.concatenate(result).tolist()
 
-print(tokenize("a = b."))
+# print(tokenize("a = b."))
