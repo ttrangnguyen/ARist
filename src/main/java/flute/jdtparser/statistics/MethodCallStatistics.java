@@ -2,6 +2,7 @@ package flute.jdtparser.statistics;
 
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.logging.Logger;
@@ -50,8 +51,16 @@ public class MethodCallStatistics {
             cu.accept(new ASTVisitor() {
                 @Override
                 public boolean visit(MethodInvocation methodInvocation) {
-                    increaseMap(unsortedMap, methodInvocation.resolveMethodBinding().getKey());
+                    if (methodInvocation.resolveMethodBinding() != null)
+                        increaseMap(unsortedMap, Utils.nodeToString(methodInvocation.resolveMethodBinding()));
                     return super.visit(methodInvocation);
+                }
+
+                @Override
+                public boolean visit(SuperMethodInvocation superMethodInvocation) {
+                    if (superMethodInvocation.resolveMethodBinding() != null)
+                        increaseMap(unsortedMap, Utils.nodeToString(superMethodInvocation.resolveMethodBinding()));
+                    return super.visit(superMethodInvocation);
                 }
             });
         }

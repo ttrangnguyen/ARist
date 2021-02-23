@@ -1,8 +1,6 @@
 package flute.jdtparser.callsequence.node.cfg;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,5 +29,25 @@ public class Utils {
                 }
             });
         return methodInvocationList;
+    }
+
+    public static String nodeToString(IMethodBinding methodInvocation) {
+        String result;
+        String identifierName = String.join(".",
+                methodInvocation.getDeclaringClass().getQualifiedName(),
+                methodInvocation.getName());
+        String paramTypes = "";
+        for (ITypeBinding param : methodInvocation.getParameterTypes()) {
+            if (paramTypes.length() == 0) {
+                paramTypes = param.getQualifiedName();
+            } else {
+                paramTypes = String.join(",", paramTypes, param.getQualifiedName());
+            }
+        }
+        result = identifierName + "(" + paramTypes + ")";
+
+        result += methodInvocation.getReturnType().getQualifiedName();
+
+        return result;
     }
 }
