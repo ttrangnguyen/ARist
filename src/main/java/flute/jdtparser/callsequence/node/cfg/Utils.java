@@ -1,9 +1,11 @@
 package flute.jdtparser.callsequence.node.cfg;
 
+import flute.jdtparser.callsequence.node.ast.CaseBlock;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Utils {
     public static List<MethodInvocation> extractNode(MinimalNode minimalNode) {
@@ -14,6 +16,12 @@ public class Utils {
         } else if (minimalNode instanceof IfNode) {
             IfNode ifNode = (IfNode) minimalNode;
             return visitMethodCall(ifNode.getExpression());
+        } else if (minimalNode instanceof SwitchNode) {
+            SwitchNode switchNode = (SwitchNode) minimalNode;
+            return visitMethodCall(switchNode.getExpression());
+        } else if (minimalNode instanceof CaseNode) {
+            CaseNode caseNode = (CaseNode) minimalNode;
+            return visitMethodCall(caseNode.getExpression());
         }
         return methodInvocationList;
     }
@@ -49,5 +57,21 @@ public class Utils {
         result += methodInvocation.getReturnType().getQualifiedName();
 
         return result;
+    }
+
+    public static List<CaseBlock> parseCaseBlock(SwitchStatement switchStatement) {
+        List<CaseBlock> caseBlocks = new ArrayList<>();
+        AtomicReference<CaseBlock> caseBlock = new AtomicReference<>();
+        switchStatement.statements().forEach(stmt -> {
+            Statement statement = (Statement) stmt;
+            if (statement instanceof SwitchCase) {
+                if (caseBlock.get() != null) caseBlocks.add(caseBlock.get());
+                SwitchCase switchCase = (SwitchCase) statement;
+                caseBlock.set(new CaseBlock(switchCase.getExpression()));
+            } else {
+                caseBlock.get().statements().add(statement);
+            }
+        });
+        return caseBlocks;
     }
 }

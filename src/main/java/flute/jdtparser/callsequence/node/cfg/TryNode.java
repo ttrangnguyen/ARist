@@ -1,6 +1,6 @@
 package flute.jdtparser.callsequence.node.cfg;
 
-public class TryNode extends MinimalNode {
+public class TryNode extends BreakNode {
     public TryNode() {
         super();
     }
