@@ -2,6 +2,8 @@ package flute.jdtparser.callsequence;
 
 import flute.jdtparser.FileParser;
 import flute.jdtparser.callsequence.expr.ThisExpressionCustom;
+import flute.jdtparser.callsequence.node.ast.ASTCustomNode;
+import flute.jdtparser.callsequence.node.ast.CaseBlock;
 import flute.jdtparser.callsequence.node.cfg.*;
 import org.eclipse.jdt.core.dom.*;
 
@@ -24,6 +26,20 @@ public class FileNode {
         return parseMinimalCFG(statement, parentNode, true);
     }
 
+    public MinimalNode parseMinimalCFG(ASTCustomNode statement, MinimalNode parentNode, boolean isMainLoop) {
+        MinimalNode curNode = parentNode;
+        if (statement instanceof CaseBlock) {
+            CaseBlock block = (CaseBlock) statement;
+            for (int i = 0; i < block.statements().size(); i++) {
+                curNode = parseMinimalCFG((Statement) block.statements().get(i), curNode, false);
+            }
+            if (block.statements().size() == 0) {
+                curNode = parseMinimalCFG((ASTNode) null, curNode, false);
+            }
+        }
+        return curNode;
+    }
+
     public MinimalNode parseMinimalCFG(ASTNode statement, MinimalNode parentNode, boolean isMainLoop) {
         MinimalNode curNode = parentNode;
         if (statement instanceof Block) {
@@ -32,7 +48,7 @@ public class FileNode {
                 curNode = parseMinimalCFG((Statement) block.statements().get(i), curNode, false);
             }
             if (block.statements().size() == 0) {
-                curNode = parseMinimalCFG(null, curNode, false);
+                curNode = parseMinimalCFG((ASTNode) null, curNode, false);
             }
         } else if (statement instanceof IfStatement) {
             IfStatement ifStatement = (IfStatement) statement;
@@ -45,16 +61,25 @@ public class FileNode {
             parentNode.addNextNode(tryNode);
 
             TryStatement tryStatement = (TryStatement) statement;
-            parseMinimalCFG(tryStatement.getBody(), tryNode);
+            parseMinimalCFG(tryStatement.getBody(), tryNode, false);
             tryStatement.catchClauses().forEach(catchClause -> {
-                parseMinimalCFG(((CatchClause) catchClause).getBody(), tryNode);
+                parseMinimalCFG(((CatchClause) catchClause).getBody(), tryNode, false);
+            });
+        } else if (statement instanceof SwitchStatement) {
+            SwitchStatement switchStatement = (SwitchStatement) statement;
+            SwitchNode switchNode = new SwitchNode(switchStatement.getExpression());
+            parentNode.addNextNode(switchNode);
+            Utils.parseCaseBlock(switchStatement).forEach(caseBlock -> {
+                CaseNode caseNode = new CaseNode(caseBlock.getExpression());
+                switchNode.addNextNode(caseNode);
+                parseMinimalCFG(caseBlock, caseNode, false);
             });
         } else if (statement instanceof WhileStatement) {
             WhileStatement whileStatement = (WhileStatement) statement;
             MinimalNode conditionNode = new IfNode(whileStatement.getExpression());
             parentNode.addNextNode(conditionNode);
             parseMinimalCFG(whileStatement.getBody(), conditionNode, false);
-            parseMinimalCFG(null, conditionNode, false);
+            parseMinimalCFG((ASTNode) null, conditionNode, false);
         } else if (statement instanceof DoStatement) {
             DoStatement doStatement = (DoStatement) statement;
             MinimalNode doBody = parseMinimalCFG(doStatement.getBody(), parentNode, false);
@@ -64,7 +89,7 @@ public class FileNode {
             MinimalNode conditionNode = new IfNode(doStatement.getExpression());
             doBody.addNextNode(conditionNode);
             parseMinimalCFG(doStatement.getBody(), conditionNode, false);
-            parseMinimalCFG(null, conditionNode, false);
+            parseMinimalCFG((ASTNode) null, conditionNode, false);
         } else if (statement instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) statement;
 
@@ -83,7 +108,7 @@ public class FileNode {
             lastNode.get().addNextNode(conditionNode);
 
             MinimalNode forBody = parseMinimalCFG(forStatement.getBody(), conditionNode, false);
-            parseMinimalCFG(null, conditionNode, false);
+            parseMinimalCFG((ASTNode) null, conditionNode, false);
 
             forStatement.updaters().forEach(expr -> {
                 ASTNode astNode = (ASTNode) expr;
@@ -110,7 +135,7 @@ public class FileNode {
         } else if (node.getNextNode().size() >= 2) {
             int loopSize = node.getNextNode().size() - 2;
             for (int i = loopSize; i >= 0; i--) {
-                if ((node.getNextNode().get(i) instanceof TryNode) || (node.getNextNode().get(i) instanceof IfNode)) {
+                if ((node.getNextNode().get(i) instanceof BreakNode)) {
                     MinimalNode finalNode = node;
                     int finalI = i;
                     lastNode(node.getNextNode().get(i)).forEach(endNode -> {
