@@ -189,4 +189,12 @@ public class FileNode {
     public void setFileParser(FileParser fileParser) {
         this.fileParser = fileParser;
     }
+
+    public List<MinimalNode> getRootNodeList() {
+        return rootNodeList;
+    }
+
+    public List<Set<IBinding>> getTrackingNodeList() {
+        return trackingNodeList;
+    }
 }

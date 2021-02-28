@@ -1,10 +1,11 @@
 package flute.jdtparser.callsequence.node.cfg;
 
+import flute.jdtparser.callsequence.FileNode;
+import flute.jdtparser.callsequence.MethodCallNode;
 import flute.jdtparser.callsequence.node.ast.CaseBlock;
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Utils {
@@ -73,5 +74,92 @@ public class Utils {
             }
         });
         return caseBlocks;
+    }
+
+    public static MethodCallNode visitMinimalNode(MinimalNode minimalNode) {
+        List<MethodInvocation> methodInvocationList = Utils.extractNode(minimalNode);
+        MethodCallNode root = null;
+        MethodCallNode lastNode = null;
+        for (MethodInvocation methodInvocation: methodInvocationList) {
+            MethodCallNode methodCallNode = new MethodCallNode(methodInvocation);
+            if (lastNode == null) {
+                root = methodCallNode;
+                lastNode = methodCallNode;
+            } else {
+                lastNode.addChildNode(methodCallNode);
+                lastNode = methodCallNode;
+            }
+        }
+        for (MinimalNode childNode: minimalNode.getNextNode()) {
+            MethodCallNode methodCallNode = Utils.visitMinimalNode(childNode);
+            if (methodCallNode != null) {
+                if (lastNode == null) {
+                    root = methodCallNode;
+                    lastNode = methodCallNode;
+                } else {
+                    lastNode.addChildNode(methodCallNode);
+                }
+            }
+        }
+        return root;
+    }
+
+    public static void visitMethodCallNode(MethodCallNode node) {
+        if (node.getValue() != null) {
+            System.out.println(FileNode.genBindingKey(node.getValue()).getName() + ".");
+            visitMethodCallNode(node, new Stack<>());
+        } else {
+            System.out.println(FileNode.genBindingKey(node.getChildNode().get(0).getValue()).getName() + ".");
+            for (MethodCallNode childNode: node.getChildNode()) {
+                visitMethodCallNode(childNode, new Stack<>());
+            }
+        }
+        System.out.println();
+    }
+
+    private static void visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
+        stack.push(node);
+        if (node.getChildNode().size() == 0) {
+            StringBuilder sb = new StringBuilder();
+            for (MethodCallNode methodCallNode: stack) {
+                sb.append('\t');
+                sb.append(methodCallNode.getValue().getName());
+                sb.append(" ");
+            }
+            System.out.println(sb.toString());
+        }
+        for (MethodCallNode childNode: node.getChildNode()) {
+            visitMethodCallNode(childNode, stack);
+        }
+        stack.pop();
+    }
+
+    public static Map<IBinding, MethodCallNode> groupMethodCallNodeByTrackingNode(MethodCallNode node) {
+        Map<IBinding, MethodCallNode> map = new HashMap<>();
+        if (node == null) return map;
+        map.put(FileNode.genBindingKey(node.getValue()), node.copy());
+        for (MethodCallNode childNode: node.getChildNode()) {
+            Map<IBinding, MethodCallNode> childMap = groupMethodCallNodeByTrackingNode(childNode);
+            for (IBinding id: childMap.keySet()) {
+                if (!map.containsKey(id)) {
+                    map.put(id, new MethodCallNode(null));
+                }
+
+                if (childMap.get(id).getValue() != null) {
+                    map.get(id).addChildNode(childMap.get(id));
+                } else {
+                    for (MethodCallNode descendantNode: childMap.get(id).getChildNode()) {
+                        map.get(id).addChildNode(descendantNode);
+                    }
+                }
+            }
+        }
+
+        for (IBinding id: map.keySet())
+            if (map.get(id).getValue() == null && map.get(id).getChildNode().size() < 2) {
+                map.put(id, map.get(id).getChildNode().get(0));
+            }
+
+        return map;
     }
 }

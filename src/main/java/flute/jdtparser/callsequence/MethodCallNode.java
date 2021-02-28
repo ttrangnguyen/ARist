@@ -29,4 +29,8 @@ public class MethodCallNode {
     public void addChildNode(MethodCallNode node) {
         childNode.add(node);
     }
+
+    public MethodCallNode copy() {
+        return new MethodCallNode(getValue());
+    }
 }
