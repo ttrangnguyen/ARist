@@ -96,7 +96,7 @@ public abstract class RecTestGenerator {
             if (methodDeclaration == null) continue;
         }
 
-        if (getFileParser() != null) {
+        if (false/*getFileParser() != null*/) {
             FileNode fileNode = new FileNode(getFileParser());
             fileNode.parse();
 

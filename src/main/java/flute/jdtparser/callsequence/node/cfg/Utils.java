@@ -113,35 +113,36 @@ public class Utils {
         return root;
     }
 
-    public static void visitMethodCallNode(MethodCallNode node) {
+    public static List<List<String> > visitMethodCallNode(MethodCallNode node) {
         if (node.getValue() != null) {
 //            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName());
-            visitMethodCallNode(node, new Stack<>());
+            return visitMethodCallNode(node, new Stack<>());
         } else {
 //            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName());
+            List<List<String> > methodCallSequences = new ArrayList<>();
             for (MethodCallNode childNode : node.getChildNode()) {
-                visitMethodCallNode(childNode, new Stack<>());
+                methodCallSequences.addAll(visitMethodCallNode(childNode, new Stack<>()));
             }
+            return methodCallSequences;
         }
 //        System.out.println();
     }
 
-    private static void visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
+    private static List<List<String> > visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
+        List<List<String> > methodCallSequences = new ArrayList<>();
         stack.push(node);
         if (node.getChildNode().size() == 0) {
-            StringBuilder sb = new StringBuilder();
+            List<String> methodCallSequence = new ArrayList<>();
             for (MethodCallNode methodCallNode : stack) {
-                sb.append(' ');
-                sb.append(Utils.nodeToString(methodCallNode.getValue().resolveMethodBinding()));
+                methodCallSequence.add(Utils.nodeToString(methodCallNode.getValue().resolveMethodBinding()));
             }
-            String sequence = sb.toString().substring(1);
-            System.out.println(sequence);
-            Logger.write(sequence, "flatCFGLog.txt");
+            methodCallSequences.add(methodCallSequence);
         }
         for (MethodCallNode childNode : node.getChildNode()) {
-            visitMethodCallNode(childNode, stack);
+            methodCallSequences.addAll(visitMethodCallNode(childNode, stack));
         }
         stack.pop();
+        return methodCallSequences;
     }
 
     public static Map<IBinding, MethodCallNode> groupMethodCallNodeByTrackingNode(MethodCallNode node) {
