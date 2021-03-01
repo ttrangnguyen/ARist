@@ -6,6 +6,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class MethodInvocationModel {
@@ -17,6 +18,28 @@ public class MethodInvocationModel {
     List<ArgumentModel> argumentTypes = new ArrayList<>();
     ITypeBinding curClass;
     SimpleName methodName;
+
+    public MethodInvocationModel(MethodInvocation methodInvocation) {
+        this.curClass = null;
+        orgASTNode = methodInvocation;
+        methodBinding = methodInvocation.resolveMethodBinding();
+        expression = methodInvocation.getExpression();
+        expressionType = methodInvocation.getExpression() == null ? null : methodInvocation.getExpression().resolveTypeBinding();
+        arguments = methodInvocation.arguments();
+        genArgumentTypes();
+        methodName = methodInvocation.getName();
+    }
+
+    public MethodInvocationModel(SuperMethodInvocation superMethodInvocation) {
+        this.curClass = null;
+        orgASTNode = superMethodInvocation;
+        methodBinding = superMethodInvocation.resolveMethodBinding();
+        expression = superMethodInvocation;
+        expressionType = curClass.getSuperclass();
+        arguments = superMethodInvocation.arguments();
+        genArgumentTypes();
+        methodName = superMethodInvocation.getName();
+    }
 
     public MethodInvocationModel(ITypeBinding curClass, MethodInvocation methodInvocation) {
         this.curClass = curClass;
@@ -101,5 +124,13 @@ public class MethodInvocationModel {
     @Override
     public String toString() {
         return orgASTNode.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MethodInvocationModel that = (MethodInvocationModel) o;
+        return Objects.equals(orgASTNode, that.orgASTNode);
     }
 }

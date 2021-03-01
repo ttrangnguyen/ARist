@@ -1,6 +1,6 @@
 package flute.jdtparser.callsequence;
 
-import org.eclipse.jdt.core.dom.MethodInvocation;
+import flute.data.MethodInvocationModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,17 +8,17 @@ import java.util.List;
 public class MethodCallNode {
     private List<MethodCallNode> childNode = new ArrayList<>();
 
-    private MethodInvocation value;
+    private MethodInvocationModel value;
 
-    public MethodCallNode(MethodInvocation value) {
+    public MethodCallNode(MethodInvocationModel value) {
         this.value = value;
     }
 
-    public MethodInvocation getValue() {
+    public MethodInvocationModel getValue() {
         return value;
     }
 
-    public void setValue(MethodInvocation value) {
+    public void setValue(MethodInvocationModel value) {
         this.value = value;
     }
 

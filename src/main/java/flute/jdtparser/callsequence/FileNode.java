@@ -1,6 +1,8 @@
 package flute.jdtparser.callsequence;
 
+import flute.data.MethodInvocationModel;
 import flute.jdtparser.FileParser;
+import flute.jdtparser.callsequence.expr.SuperExpressionCustom;
 import flute.jdtparser.callsequence.expr.ThisExpressionCustom;
 import flute.jdtparser.callsequence.node.ast.ASTCustomNode;
 import flute.jdtparser.callsequence.node.ast.CaseBlock;
@@ -182,6 +184,21 @@ public class FileNode {
         return bindingKey;
     }
 
+    public static IBinding genBindingKey(SuperMethodInvocation superMethodInvocation) {
+        IBinding bindingKey = SuperExpressionCustom.create(superMethodInvocation.resolveMethodBinding().getDeclaringClass());
+        return bindingKey;
+    }
+
+    public static IBinding genBindingKey(MethodInvocationModel methodInvocationModel) {
+        ASTNode orgNode = methodInvocationModel.getOrgASTNode();
+        if (orgNode instanceof MethodInvocation) {
+            return genBindingKey((MethodInvocation) orgNode);
+        } else if (orgNode instanceof SuperMethodInvocation) {
+            return genBindingKey((SuperMethodInvocation) orgNode);
+        }
+        return null;
+    }
+
     public void parse() {
         fileParser.getCu().accept(new ASTVisitor() {
             @Override
@@ -195,9 +212,15 @@ public class FileNode {
                     @Override
                     public boolean visit(MethodInvocation methodInvocation) {
                         IBinding bindingKey = genBindingKey(methodInvocation);
-
                         trackingNodeList.get(methodId).add(bindingKey);
-                        return super.visit(methodDeclaration);
+                        return super.visit(methodInvocation);
+                    }
+
+                    @Override
+                    public boolean visit(SuperMethodInvocation superMethodInvocation) {
+                        IBinding bindingKey = genBindingKey(superMethodInvocation);
+                        trackingNodeList.get(methodId).add(bindingKey);
+                        return super.visit(superMethodInvocation);
                     }
                 });
 
