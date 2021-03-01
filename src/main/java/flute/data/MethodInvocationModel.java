@@ -35,7 +35,7 @@ public class MethodInvocationModel {
         orgASTNode = superMethodInvocation;
         methodBinding = superMethodInvocation.resolveMethodBinding();
         expression = superMethodInvocation;
-        expressionType = curClass.getSuperclass();
+        expressionType = superMethodInvocation.resolveMethodBinding().getDeclaringClass();
         arguments = superMethodInvocation.arguments();
         genArgumentTypes();
         methodName = superMethodInvocation.getName();

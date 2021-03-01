@@ -4,6 +4,7 @@ import flute.data.MethodInvocationModel;
 import flute.jdtparser.callsequence.FileNode;
 import flute.jdtparser.callsequence.MethodCallNode;
 import flute.jdtparser.callsequence.node.ast.CaseBlock;
+import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.*;
@@ -114,15 +115,15 @@ public class Utils {
 
     public static void visitMethodCallNode(MethodCallNode node) {
         if (node.getValue() != null) {
-            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName() + ".");
+//            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName());
             visitMethodCallNode(node, new Stack<>());
         } else {
-            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName() + ".");
+//            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName());
             for (MethodCallNode childNode : node.getChildNode()) {
                 visitMethodCallNode(childNode, new Stack<>());
             }
         }
-        System.out.println();
+//        System.out.println();
     }
 
     private static void visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
@@ -130,11 +131,12 @@ public class Utils {
         if (node.getChildNode().size() == 0) {
             StringBuilder sb = new StringBuilder();
             for (MethodCallNode methodCallNode : stack) {
-                sb.append('\t');
+                sb.append(' ');
                 sb.append(Utils.nodeToString(methodCallNode.getValue().resolveMethodBinding()));
-                sb.append(" ");
             }
-            System.out.println(sb.toString());
+            String sequence = sb.toString().substring(1);
+            System.out.println(sequence);
+            Logger.write(sequence, "flatCFGLog.txt");
         }
         for (MethodCallNode childNode : node.getChildNode()) {
             visitMethodCallNode(childNode, stack);
