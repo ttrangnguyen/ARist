@@ -248,4 +248,9 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
         tests.addAll(oneArgTests);
         return tests;
     }
+
+    @Override
+    void postProcess(List<RecTest> tests) {
+
+    }
 }

@@ -95,28 +95,12 @@ public abstract class RecTestGenerator {
             }
             if (methodDeclaration == null) continue;
         }
-
-        if (false/*getFileParser() != null*/) {
-            FileNode fileNode = new FileNode(getFileParser());
-            fileNode.parse();
-
-            // Build CFGs
-            List<MinimalNode> rootNodeList = fileNode.getRootNodeList();
-            for (MinimalNode rootNode: rootNodeList) {
-                // Build method invoc trees from CFGs
-                MethodCallNode methodCallNode = Utils.visitMinimalNode(rootNode);
-
-                // Group by tracking node
-                Map<IBinding, MethodCallNode> map = Utils.groupMethodCallNodeByTrackingNode(methodCallNode);
-                for (IBinding id: map.keySet()) {
-                    // Generate method invoc sequences
-                    Utils.visitMethodCallNode(map.get(id));
-                }
-            }
-        }
+        postProcess(tests);
 
         return tests;
     }
 
     abstract List<RecTest> generateInMethodScope(List<NodeSequenceInfo> excodes, int methodDeclarationStartIdx, int methodDeclarationEndIdx);
+
+    abstract void postProcess(List<RecTest> tests);
 }

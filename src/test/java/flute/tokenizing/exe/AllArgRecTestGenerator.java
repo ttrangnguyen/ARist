@@ -1,10 +1,7 @@
 package flute.tokenizing.exe;
 
 import flute.jdtparser.ProjectParser;
-import flute.tokenizing.excode_data.ArgRecTest;
-import flute.tokenizing.excode_data.MultipleArgRecTest;
-import flute.tokenizing.excode_data.NodeSequenceConstant;
-import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.tokenizing.excode_data.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,5 +82,10 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
             }
         }
         return tests;
+    }
+
+    @Override
+    void postProcess(List<RecTest> tests) {
+
     }
 }

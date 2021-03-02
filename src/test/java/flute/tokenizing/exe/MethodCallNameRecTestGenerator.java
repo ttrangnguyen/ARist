@@ -1,19 +1,23 @@
 package flute.tokenizing.exe;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import flute.data.MethodInvocationModel;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
+import flute.jdtparser.callsequence.FileNode;
+import flute.jdtparser.callsequence.MethodCallNode;
+import flute.jdtparser.callsequence.node.cfg.MinimalNode;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.jdtparser.utils.ParserUtils;
 import flute.tokenizing.excode_data.ContextInfo;
 import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.file_processing.JavaTokenizer;
+import org.eclipse.jdt.core.dom.IBinding;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
     public MethodCallNameRecTestGenerator(String projectPath, ProjectParser projectParser) {
@@ -63,6 +67,7 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
             test.setMethod_candidate_excode(methodExcodeList);
             test.setMethod_candidate_lex(methodLexList);
             test.setMethodInvocClassQualifiedName(classQualifiedName);
+            test.setMethodInvocationModel(getFileParser().getCurMethodInvocation());
             test.setIgnored(false);
 
             tests.add(test);
@@ -71,5 +76,63 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
         }
 
         return tests;
+    }
+
+    @Override
+    void postProcess(List<RecTest> tests) {
+        if (getFileParser() == null) return;
+        Map<MethodInvocationModel, MethodCallNameRecTest> testMap = new HashMap<>();
+        for (RecTest recTest: tests) {
+            if (recTest instanceof MethodCallNameRecTest) {
+                MethodCallNameRecTest test = (MethodCallNameRecTest)recTest;
+                testMap.put(test.getMethodInvocationModel(), test);
+            }
+            else return;
+        }
+
+        FileNode fileNode = new FileNode(getFileParser());
+        fileNode.parse();
+
+        // Build CFGs
+        List<MinimalNode> rootNodeList = fileNode.getRootNodeList();
+        for (MinimalNode rootNode: rootNodeList) {
+            // Build method invoc trees from CFGs
+            MethodCallNode methodCallNode = Utils.visitMinimalNode(rootNode);
+
+            // Group by tracking node
+            Map<IBinding, MethodCallNode> trackingNodeMap = Utils.groupMethodCallNodeByTrackingNode(methodCallNode);
+
+            for (IBinding id: trackingNodeMap.keySet()) {
+                // Generate method invoc sequences
+                Map<MethodCallNode, MethodCallNode> trace = new HashMap<>();
+
+                Stack<MethodCallNode> stack = new Stack<>();
+                stack.push(trackingNodeMap.get(id));
+                while (!stack.empty()) {
+                    MethodCallNode curNode = stack.pop();
+                    for (MethodCallNode childNode: curNode.getChildNode()) {
+                        stack.push(childNode);
+                        trace.put(childNode, curNode);
+                    }
+                    MethodCallNameRecTest test = testMap.getOrDefault(curNode.getValue(), null);
+                    if (test != null) {
+                        List<String> methodSequece = new ArrayList<>();
+                        while (curNode != null && curNode.getValue() != null) {
+                            methodSequece.add(
+                                    curNode.getValue().resolveMethodBinding() != null ?
+                                            Utils.nodeToString(curNode.getValue().resolveMethodBinding()) :
+                                            Utils.nodeToString(curNode.getValue())
+                            );
+                            curNode = trace.getOrDefault(curNode, null);
+                        }
+                        if (methodSequece.size() > 0) {
+                            methodSequece.remove(0);
+                            Collections.reverse(methodSequece);
+                            test.setMethod_invoc_context(methodSequece);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
