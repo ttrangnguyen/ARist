@@ -133,4 +133,9 @@ public class MethodInvocationModel {
         MethodInvocationModel that = (MethodInvocationModel) o;
         return Objects.equals(orgASTNode, that.orgASTNode);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orgASTNode);
+    }
 }
