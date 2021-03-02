@@ -32,6 +32,10 @@ public class ThisExpressionCustom implements IBinding {
         return declaringClass;
     }
 
+    public static void gc(){
+        listThis.clear();
+    }
+
     public void setDeclaringClass(ITypeBinding declaringClass) {
         this.declaringClass = declaringClass;
     }

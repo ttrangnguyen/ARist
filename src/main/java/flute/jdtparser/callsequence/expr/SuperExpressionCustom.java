@@ -28,6 +28,10 @@ public class SuperExpressionCustom implements IBinding {
         this.declaringClass = declaringClass;
     }
 
+    public static void gc(){
+        listSuper.clear();
+    }
+
     public ITypeBinding getDeclaringClass() {
         return declaringClass;
     }

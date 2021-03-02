@@ -166,6 +166,10 @@ public class FileNode {
     }
 
     public static IBinding genBindingKey(MethodInvocation methodInvocation) {
+        //auto gc
+        ThisExpressionCustom.gc();
+        SuperExpressionCustom.gc();
+
         Expression expr = methodInvocation.getExpression();
         IBinding bindingKey = null;
         if (expr instanceof SimpleName) {
