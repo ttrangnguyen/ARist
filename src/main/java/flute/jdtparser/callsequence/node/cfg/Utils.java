@@ -49,6 +49,10 @@ public class Utils {
         return methodInvocationList;
     }
 
+    public static String nodeToString(MethodInvocationModel methodInvocation) {
+        return methodInvocation.getName() + "(" + methodInvocation.arguments().size() + ")";
+    }
+
     public static String nodeToString(IMethodBinding methodInvocation) {
         if (methodInvocation == null) return "null";
         String result;
@@ -135,7 +139,11 @@ public class Utils {
         if (node.getChildNode().size() == 0) {
             List<String> methodCallSequence = new ArrayList<>();
             for (MethodCallNode methodCallNode : stack) {
-                methodCallSequence.add(Utils.nodeToString(methodCallNode.getValue().resolveMethodBinding()));
+                methodCallSequence.add(
+                        methodCallNode.getValue().resolveMethodBinding() != null ?
+                                Utils.nodeToString(methodCallNode.getValue().resolveMethodBinding()) :
+                                Utils.nodeToString(methodCallNode.getValue())
+                );
             }
             methodCallSequences.add(methodCallSequence);
         }

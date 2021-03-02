@@ -1,6 +1,7 @@
 package flute.jdtparser.statistics;
 
 import flute.config.Config;
+import flute.data.MethodInvocationModel;
 import flute.jdtparser.ProjectParser;
 import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.utils.ProgressBar;
@@ -53,6 +54,9 @@ public class MethodCallStatistics {
                 public boolean visit(MethodInvocation methodInvocation) {
                     if (methodInvocation.resolveMethodBinding() != null)
                         increaseMap(unsortedMap, Utils.nodeToString(methodInvocation.resolveMethodBinding()));
+                    else
+                        increaseMap(unsortedMap, Utils.nodeToString(new MethodInvocationModel(methodInvocation)));
+
                     return super.visit(methodInvocation);
                 }
 
@@ -60,6 +64,9 @@ public class MethodCallStatistics {
                 public boolean visit(SuperMethodInvocation superMethodInvocation) {
                     if (superMethodInvocation.resolveMethodBinding() != null)
                         increaseMap(unsortedMap, Utils.nodeToString(superMethodInvocation.resolveMethodBinding()));
+                    else
+                        increaseMap(unsortedMap, Utils.nodeToString(new MethodInvocationModel(superMethodInvocation)));
+
                     return super.visit(superMethodInvocation);
                 }
             });
