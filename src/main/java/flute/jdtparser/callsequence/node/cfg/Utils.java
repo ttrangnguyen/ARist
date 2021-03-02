@@ -50,6 +50,7 @@ public class Utils {
     }
 
     public static String nodeToString(IMethodBinding methodInvocation) {
+        if (methodInvocation == null) return "null";
         String result;
         String identifierName = String.join(".",
                 methodInvocation.getDeclaringClass().getQualifiedName(),
@@ -113,13 +114,13 @@ public class Utils {
         return root;
     }
 
-    public static List<List<String> > visitMethodCallNode(MethodCallNode node) {
+    public static List<List<String>> visitMethodCallNode(MethodCallNode node) {
         if (node.getValue() != null) {
 //            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName());
             return visitMethodCallNode(node, new Stack<>());
         } else {
 //            System.out.println(node.getValue().resolveMethodBinding().getDeclaringClass().getQualifiedName());
-            List<List<String> > methodCallSequences = new ArrayList<>();
+            List<List<String>> methodCallSequences = new ArrayList<>();
             for (MethodCallNode childNode : node.getChildNode()) {
                 methodCallSequences.addAll(visitMethodCallNode(childNode, new Stack<>()));
             }
@@ -128,8 +129,8 @@ public class Utils {
 //        System.out.println();
     }
 
-    private static List<List<String> > visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
-        List<List<String> > methodCallSequences = new ArrayList<>();
+    private static List<List<String>> visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
+        List<List<String>> methodCallSequences = new ArrayList<>();
         stack.push(node);
         if (node.getChildNode().size() == 0) {
             List<String> methodCallSequence = new ArrayList<>();
