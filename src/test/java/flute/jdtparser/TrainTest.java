@@ -64,7 +64,7 @@ public class TrainTest {
                     // Generate method invoc sequences
                     if (Config.TEST_APIS != null && Config.TEST_APIS.length > 0) {
                         String orgPackage = Utils.getOrgPackage(id);
-                        if (Utils.checkTargetAPI(orgPackage)) {
+                        if (!Utils.checkTargetAPI(orgPackage)) {
                             continue;
                         }
                     }

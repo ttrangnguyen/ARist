@@ -216,7 +216,6 @@ public class Utils {
     }
 
     public static boolean checkTargetAPI(String packageName) {
-        System.out.println(packageName);
         for (String targetAPI : Config.TEST_APIS) {
             {
                 if (packageName.startsWith(targetAPI)) {
