@@ -62,6 +62,12 @@ public class TrainTest {
                 Map<IBinding, MethodCallNode> map = Utils.groupMethodCallNodeByTrackingNode(methodCallNode);
                 for (IBinding id : map.keySet()) {
                     // Generate method invoc sequences
+                    if (Config.TEST_APIS != null && Config.TEST_APIS.length > 0) {
+                        String orgPackage = Utils.getOrgPackage(id);
+                        if (Utils.checkTargetAPI(orgPackage)) {
+                            continue;
+                        }
+                    }
                     List<List<String>> sequences = Utils.visitMethodCallNode(map.get(id));
                     for (List<String> sequence : sequences) {
                         Logger.write(String.join(" ", sequence), projectName + "/fold" + fold + "/" + curFile.getName() + ".txt");
