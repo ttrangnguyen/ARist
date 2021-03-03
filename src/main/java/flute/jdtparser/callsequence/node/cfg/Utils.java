@@ -204,10 +204,12 @@ public class Utils {
             }
         }
 
-        for (IBinding id : map.keySet())
+        for (IBinding id : map.keySet()) {
+            map.get(id).uniqueChildNode();
             if (map.get(id).getValue() == null && map.get(id).getChildNode().size() < 2) {
                 map.put(id, map.get(id).getChildNode().get(0));
             }
+        }
 
         return map;
     }
