@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SuperExpressionCustom implements IBinding {
-    public ITypeBinding declaringClass;
+    private ITypeBinding declaringClass;
 
     public static List<SuperExpressionCustom> listSuper = new ArrayList<>();
 

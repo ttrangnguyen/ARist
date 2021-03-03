@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ThisExpressionCustom implements IBinding {
-    public ITypeBinding declaringClass;
+    private ITypeBinding declaringClass;
 
     public static List<ThisExpressionCustom> listThis = new ArrayList<>();
 

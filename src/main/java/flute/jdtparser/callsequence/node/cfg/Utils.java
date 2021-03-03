@@ -3,8 +3,9 @@ package flute.jdtparser.callsequence.node.cfg;
 import flute.data.MethodInvocationModel;
 import flute.jdtparser.callsequence.FileNode;
 import flute.jdtparser.callsequence.MethodCallNode;
+import flute.jdtparser.callsequence.expr.SuperExpressionCustom;
+import flute.jdtparser.callsequence.expr.ThisExpressionCustom;
 import flute.jdtparser.callsequence.node.ast.CaseBlock;
-import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.*;
@@ -152,6 +153,34 @@ public class Utils {
         }
         stack.pop();
         return methodCallSequences;
+    }
+
+    public static String getOrgPackage(IBinding keyBinding) {
+        if (keyBinding == null) return "";
+        if (keyBinding instanceof ITypeBinding) {
+            ITypeBinding typeBinding = (ITypeBinding) keyBinding;
+            return getOrgPackage(typeBinding);
+        } else if (keyBinding instanceof IVariableBinding) {
+            IVariableBinding variableBinding = (IVariableBinding) keyBinding;
+            return getOrgPackage(variableBinding.getType());
+        } else if (keyBinding instanceof ThisExpressionCustom) {
+            ThisExpressionCustom thisExpressionCustom = (ThisExpressionCustom) keyBinding;
+            return getOrgPackage(thisExpressionCustom.getDeclaringClass());
+        } else if (keyBinding instanceof ThisExpressionCustom) {
+            ThisExpressionCustom thisExpressionCustom = (ThisExpressionCustom) keyBinding;
+            return getOrgPackage(thisExpressionCustom.getDeclaringClass());
+        } else if (keyBinding instanceof SuperExpressionCustom) {
+            SuperExpressionCustom superExpressionCustom = (SuperExpressionCustom) keyBinding;
+            if (superExpressionCustom.getDeclaringClass() != null) {
+                return getOrgPackage(superExpressionCustom.getDeclaringClass().getSuperclass());
+            }
+        }
+        return "";
+    }
+
+    public static String getOrgPackage(ITypeBinding typeBinding) {
+        if (typeBinding == null) return "";
+        return typeBinding.getPackage().getName();
     }
 
     public static Map<IBinding, MethodCallNode> groupMethodCallNodeByTrackingNode(MethodCallNode node) {
