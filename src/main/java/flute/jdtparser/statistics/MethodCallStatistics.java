@@ -3,6 +3,7 @@ package flute.jdtparser.statistics;
 import flute.config.Config;
 import flute.data.MethodInvocationModel;
 import flute.jdtparser.ProjectParser;
+import flute.jdtparser.callsequence.FileNode;
 import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
@@ -22,7 +23,7 @@ public class MethodCallStatistics {
     }
 
     public static void main(String[] args) throws IOException {
-        String projectName = "log4j";
+        String projectName = "ant";
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
 
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
@@ -52,21 +53,25 @@ public class MethodCallStatistics {
             cu.accept(new ASTVisitor() {
                 @Override
                 public boolean visit(MethodInvocation methodInvocation) {
-                    if (methodInvocation.resolveMethodBinding() != null)
-                        increaseMap(unsortedMap, Utils.nodeToString(methodInvocation.resolveMethodBinding()));
-                    else
-                        increaseMap(unsortedMap, Utils.nodeToString(new MethodInvocationModel(methodInvocation)));
-
+                    if (Config.TEST_APIS.length == 0
+                            || Utils.checkTargetAPI(Utils.getOrgPackage(FileNode.genBindingKey(methodInvocation)))) {
+                        if (methodInvocation.resolveMethodBinding() != null)
+                            increaseMap(unsortedMap, Utils.nodeToString(methodInvocation.resolveMethodBinding()));
+                        else
+                            increaseMap(unsortedMap, Utils.nodeToString(new MethodInvocationModel(methodInvocation)));
+                    }
                     return super.visit(methodInvocation);
                 }
 
                 @Override
                 public boolean visit(SuperMethodInvocation superMethodInvocation) {
-                    if (superMethodInvocation.resolveMethodBinding() != null)
-                        increaseMap(unsortedMap, Utils.nodeToString(superMethodInvocation.resolveMethodBinding()));
-                    else
-                        increaseMap(unsortedMap, Utils.nodeToString(new MethodInvocationModel(superMethodInvocation)));
-
+                    if (Config.TEST_APIS.length == 0
+                            || Utils.checkTargetAPI(Utils.getOrgPackage(FileNode.genBindingKey(superMethodInvocation)))) {
+                        if (superMethodInvocation.resolveMethodBinding() != null)
+                            increaseMap(unsortedMap, Utils.nodeToString(superMethodInvocation.resolveMethodBinding()));
+                        else
+                            increaseMap(unsortedMap, Utils.nodeToString(new MethodInvocationModel(superMethodInvocation)));
+                    }
                     return super.visit(superMethodInvocation);
                 }
             });

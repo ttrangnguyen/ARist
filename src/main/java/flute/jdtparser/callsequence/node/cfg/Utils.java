@@ -1,5 +1,6 @@
 package flute.jdtparser.callsequence.node.cfg;
 
+import flute.config.Config;
 import flute.data.MethodInvocationModel;
 import flute.jdtparser.callsequence.FileNode;
 import flute.jdtparser.callsequence.MethodCallNode;
@@ -179,7 +180,7 @@ public class Utils {
     }
 
     public static String getOrgPackage(ITypeBinding typeBinding) {
-        if (typeBinding == null) return "";
+        if (typeBinding == null || typeBinding.getPackage() == null) return "";
         return typeBinding.getPackage().getName();
     }
 
@@ -212,5 +213,17 @@ public class Utils {
         }
 
         return map;
+    }
+
+    public static boolean checkTargetAPI(String packageName) {
+        System.out.println(packageName);
+        for (String targetAPI : Config.TEST_APIS) {
+            {
+                if (packageName.startsWith(targetAPI)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
