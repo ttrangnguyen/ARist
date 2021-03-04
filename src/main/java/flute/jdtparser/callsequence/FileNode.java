@@ -189,6 +189,7 @@ public class FileNode {
     }
 
     public static IBinding genBindingKey(SuperMethodInvocation superMethodInvocation) {
+        if (superMethodInvocation.resolveMethodBinding() == null) return null;
         IBinding bindingKey = SuperExpressionCustom.create(superMethodInvocation.resolveMethodBinding().getDeclaringClass());
         return bindingKey;
     }
