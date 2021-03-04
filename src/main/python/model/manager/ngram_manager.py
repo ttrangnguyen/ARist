@@ -1,7 +1,5 @@
-import json
-from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
+from model.java.java_preprocess import java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
-from time import perf_counter
 import numpy as np
 from model.ngram_predictor import score_ngram
 from model.manager.model_manager import *
@@ -11,14 +9,8 @@ import copy
 
 
 class NgramManager(ModelManager):
-    def __init__(self, top_k, project, train_len, ngram,
-                 excode_model_path, java_model_path,
-                 excode_tokenizer_path, java_tokenizer_path,
-                 excode_tokens_path):
-        super().__init__(top_k, project, train_len,
-                         excode_model_path, java_model_path,
-                         excode_tokenizer_path, java_tokenizer_path,
-                         excode_tokens_path)
+    def __init__(self, top_k, project, train_len, ngram):
+        super().__init__(top_k, project, train_len)
         self.ngram = ngram
 
     def process(self, data, service):
@@ -26,7 +18,7 @@ class NgramManager(ModelManager):
         if service == "param":
             response += self.predict_param(data)
         elif service == "method_name":
-            response += self.predict_method_name_using_lex(data)
+            response += self.predict_method_name_using_cfg(data)
         return response + "}"
 
     def predict_param(self, data):
@@ -177,3 +169,18 @@ class NgramManager(ModelManager):
         print(best_candidates)
         return 'result:' + json.dumps(best_candidates) \
                + ',runtime:' + str(perf_counter() - start_time)
+
+    def predict_method_name_using_cfg(self, data):
+        start_time = perf_counter()
+        method_suggestion_scores = []
+        for i in range(len(data['next_lex'])):
+            for method_context in data['method_context']:
+                sentence = method_context + ' ' + data['next_lex'][i]
+                sentence = sentence.split()
+                model_score = score_ngram(model=self.java_model,
+                                          sentence=sentence,
+                                          n=self.ngram,
+                                          start_pos=0)
+                method_suggestion_scores.append((i, model_score))
+        return self.select_top_method_name_candidates(method_suggestion_scores, data['next_lex'], start_time)
+

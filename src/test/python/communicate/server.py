@@ -22,16 +22,10 @@ class Server:
 
         self.rnn_manager = None
         if USE_RNN:
-            self.rnn_manager = RNNManager(top_k, project, train_len,
-                                          excode_model_rnn_path, java_model_rnn_path,
-                                          excode_tokenizer_path, java_tokenizer_path,
-                                          excode_tokens_path)
+            self.rnn_manager = RNNManager(top_k, project, train_len)
         self.ngram_manager = None
         if USE_NGRAM:
-            self.ngram_manager = NgramManager(top_k, project, train_len, ngram,
-                                              excode_model_ngram_path, java_model_ngram_path,
-                                              excode_tokenizer_path, java_tokenizer_path,
-                                              excode_tokens_path)
+            self.ngram_manager = NgramManager(top_k, project, train_len, ngram)
         self.service = service
 
     def recvall(self, sock):

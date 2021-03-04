@@ -117,7 +117,7 @@ public class ParserUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            commonNames = FileProcessor.readLineByLine(Config.STORAGE_DIR + "/dict/common.txt");
+            commonNames = FileProcessor.readLineByLineToSet(Config.STORAGE_DIR + "/dict/common.txt");
         }
     }
 

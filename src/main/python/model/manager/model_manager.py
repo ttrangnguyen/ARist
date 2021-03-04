@@ -14,16 +14,28 @@ from model.config import *
 import math
 import keras
 
-# Score = model_score * lexsim(optional) * local_var_bonus(optional)
+# Param score = model_score * lexsim(optional) * local_var_bonus(optional)
+# Method call score = avg(model_score of (sequence[i]+candidate), for all context sequence)
 
 
 class ModelManager:
-    def __init__(self, top_k, project, train_len,
-                 excode_model_path, java_model_path,
-                 excode_tokenizer_path, java_tokenizer_path,
-                 excode_tokens_path):
-        self.excode_model = self.load_model(excode_model_path)
-        self.java_model = self.load_model(java_model_path)
+    def __init__(self, top_k, project, train_len):
+        if USE_EXCODE_MODEL:
+            if USE_RNN:
+                self.excode_model = self.load_model(excode_model_rnn_path)
+            elif USE_NGRAM:
+                self.excode_model = self.load_model(excode_model_ngram_path)
+            self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
+            self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
+        if USE_JAVA_MODEL:
+            if USE_RNN:
+                self.java_model = self.load_model(java_model_rnn_path)
+            elif USE_NGRAM:
+                self.java_model = self.load_model(java_model_ngram_path)
+            self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
+        if USE_METHOD_CALL_MODEL:
+            self.method_call_model = self.load_model(method_call_model_ngram_path)
+            self.method_call_tokenizer = load(open(method_call_tokenizer_path, 'rb'))
         self.project = project
         self.top_k = top_k
         self.train_len = train_len
@@ -34,9 +46,6 @@ class ModelManager:
         self.logger.disabled = not PRINT_LOG
         stdout_handler = logging.StreamHandler(sys.stdout)
         self.logger.addHandler(stdout_handler)
-        self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
-        self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
-        self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
         self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
         self.lexsim_flag = USE_LEXSIM
 

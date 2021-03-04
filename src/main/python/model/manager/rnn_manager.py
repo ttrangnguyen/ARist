@@ -9,14 +9,8 @@ from model.manager.model_manager import ModelManager
 
 
 class RNNManager(ModelManager):
-    def __init__(self, top_k, project, train_len,
-                 excode_model_path, java_model_path,
-                 excode_tokenizer_path, java_tokenizer_path,
-                 excode_tokens_path):
-        super().__init__(top_k, project, train_len,
-                         excode_model_path, java_model_path,
-                         excode_tokenizer_path, java_tokenizer_path,
-                         excode_tokens_path)
+    def __init__(self, top_k, project, train_len):
+        super().__init__(top_k, project, train_len)
 
     def process(self, data, service):
         response = "rnn:{"
