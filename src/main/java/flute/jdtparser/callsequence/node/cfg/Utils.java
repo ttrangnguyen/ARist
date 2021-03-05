@@ -135,19 +135,14 @@ public class Utils {
 //        System.out.println();
     }
 
-    private static List<List<String>> visitMethodCallNode(MethodCallNode node, Stack<MethodCallNode> stack) {
+    private static List<List<String>> visitMethodCallNode(MethodCallNode node, Stack<String> stack) {
+        stack.push(node.getValue().resolveMethodBinding() != null ?
+                Utils.nodeToString(node.getValue().resolveMethodBinding()) :
+                Utils.nodeToString(node.getValue()));
+
         List<List<String>> methodCallSequences = new ArrayList<>();
-        stack.push(node);
         if (node.getChildNode().size() == 0) {
-            List<String> methodCallSequence = new ArrayList<>();
-            for (MethodCallNode methodCallNode : stack) {
-                methodCallSequence.add(
-                        methodCallNode.getValue().resolveMethodBinding() != null ?
-                                Utils.nodeToString(methodCallNode.getValue().resolveMethodBinding()) :
-                                Utils.nodeToString(methodCallNode.getValue())
-                );
-            }
-            methodCallSequences.add(methodCallSequence);
+            methodCallSequences.add(stack);
         }
         for (MethodCallNode childNode : node.getChildNode()) {
             methodCallSequences.addAll(visitMethodCallNode(childNode, stack));

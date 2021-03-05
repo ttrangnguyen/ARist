@@ -114,35 +114,34 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
 
             for (IBinding id: trackingNodeMap.keySet()) {
                 // Generate method invoc sequences
-                Map<MethodCallNode, MethodCallNode> trace = new HashMap<>();
-
-                Stack<MethodCallNode> stack = new Stack<>();
-                stack.push(trackingNodeMap.get(id));
-                while (!stack.empty()) {
-                    MethodCallNode curNode = stack.pop();
-                    for (MethodCallNode childNode: curNode.getChildNode()) {
-                        stack.push(childNode);
-                        trace.put(childNode, curNode);
-                    }
-                    MethodCallNameRecTest test = testMap.getOrDefault(curNode.getValue(), null);
-                    if (test != null) {
-                        List<String> methodSequece = new ArrayList<>();
-                        while (curNode != null && curNode.getValue() != null) {
-                            methodSequece.add(
-                                    curNode.getValue().resolveMethodBinding() != null ?
-                                            Utils.nodeToString(curNode.getValue().resolveMethodBinding()) :
-                                            Utils.nodeToString(curNode.getValue())
-                            );
-                            curNode = trace.getOrDefault(curNode, null);
-                        }
-                        if (methodSequece.size() > 0) {
-                            methodSequece.remove(0);
-                            Collections.reverse(methodSequece);
-                            test.addMethod_context(String.join(" ", methodSequece));
-                        }
-                    }
-                }
+                visitMethodCallNode(trackingNodeMap.get(id), testMap);
             }
         }
+    }
+
+    private static void visitMethodCallNode(MethodCallNode node, Map<MethodInvocationModel, MethodCallNameRecTest> testMap) {
+        if (node.getValue() != null) {
+            visitMethodCallNode(node, testMap, new Stack<>());
+        } else {
+            for (MethodCallNode childNode : node.getChildNode()) {
+                visitMethodCallNode(childNode, testMap, new Stack<>());
+            }
+        }
+    }
+
+    private static void visitMethodCallNode(MethodCallNode node, Map<MethodInvocationModel, MethodCallNameRecTest> testMap, Stack<String> stack) {
+        MethodCallNameRecTest test = testMap.getOrDefault(node.getValue(), null);
+        if (test != null) {
+            test.addMethod_context(String.join(" ", stack));
+        }
+
+        stack.push(node.getValue().resolveMethodBinding() != null ?
+                Utils.nodeToString(node.getValue().resolveMethodBinding()) :
+                Utils.nodeToString(node.getValue()));
+
+        for (MethodCallNode childNode : node.getChildNode()) {
+            visitMethodCallNode(childNode, testMap, stack);
+        }
+        stack.pop();
     }
 }
