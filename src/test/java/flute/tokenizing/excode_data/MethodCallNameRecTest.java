@@ -9,7 +9,7 @@ public class MethodCallNameRecTest extends MethodCallRecTest {
     /**
      * Features
      */
-    private List<String> method_invoc_context;
+    private List<String> method_context;
 
     /**
      * Recommendations
@@ -17,17 +17,24 @@ public class MethodCallNameRecTest extends MethodCallRecTest {
     private List<String> method_candidate_excode;
     private List<List<String>> method_candidate_lex;
 
+    private List<String> next_lex;
+
     /**
      * References
      */
     private transient MethodInvocationModel methodInvocationModel;
 
-    public List<String> getMethod_invoc_context() {
-        return method_invoc_context;
+    public List<String> getMethod_context() {
+        return method_context;
     }
 
-    public void setMethod_invoc_context(List<String> method_invoc_context) {
-        this.method_invoc_context = method_invoc_context;
+    public void setMethod_context(List<String> method_context) {
+        this.method_context = method_context;
+    }
+
+    public void addMethod_context(String method_context) {
+        if (this.method_context == null) setMethod_context(new ArrayList<>());
+        this.method_context.add(method_context);
     }
 
     public List<String> getMethod_candidate_excode() {
@@ -52,6 +59,14 @@ public class MethodCallNameRecTest extends MethodCallRecTest {
 
     public void setMethod_candidate_lex(List<List<String>> method_candidate_lex) {
         this.method_candidate_lex = method_candidate_lex;
+    }
+
+    public List<String> getNext_lex() {
+        return next_lex;
+    }
+
+    public void setNext_lex(List<String> next_lex) {
+        this.next_lex = next_lex;
     }
 
     public MethodInvocationModel getMethodInvocationModel() {

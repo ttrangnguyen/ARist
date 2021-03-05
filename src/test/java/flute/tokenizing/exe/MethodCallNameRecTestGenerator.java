@@ -15,6 +15,7 @@ import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.file_processing.JavaTokenizer;
 import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import java.io.IOException;
 import java.util.*;
@@ -69,6 +70,15 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
             test.setMethodInvocClassQualifiedName(classQualifiedName);
             test.setMethodInvocationModel(getFileParser().getCurMethodInvocation());
             test.setIgnored(false);
+
+            List<IMethodBinding> methodBindingList = getFileParser().genMethodCall().orElse(null);
+            List<String> methodCandidates = new ArrayList<>();
+            if (methodBindingList != null) {
+                for (IMethodBinding methodBinding: methodBindingList) {
+                    methodCandidates.add(Utils.nodeToString(methodBinding));
+                }
+            }
+            test.setNext_lex(methodCandidates);
 
             tests.add(test);
         } catch (IOException e) {
@@ -128,7 +138,7 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
                         if (methodSequece.size() > 0) {
                             methodSequece.remove(0);
                             Collections.reverse(methodSequece);
-                            test.setMethod_invoc_context(methodSequece);
+                            test.addMethod_context(String.join(" ", methodSequece));
                         }
                     }
                 }
