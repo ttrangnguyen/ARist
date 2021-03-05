@@ -1,5 +1,6 @@
 from model.java.java_preprocess import java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
+from model.method_call.preprocessing import extract_method_call_from_cfg_string
 import numpy as np
 from model.ngram_predictor import score_ngram
 from model.manager.model_manager import *
@@ -9,8 +10,10 @@ import copy
 
 
 class NgramManager(ModelManager):
-    def __init__(self, top_k, project, train_len, ngram):
-        super().__init__(top_k, project, train_len)
+    def __init__(self, top_k, project, train_len, ngram, \
+                 excode_model_path, java_model_path, method_call_model_path):
+        super().__init__(top_k, project, train_len,
+                         excode_model_path, java_model_path, method_call_model_path)
         self.ngram = ngram
 
     def process(self, data, service):
@@ -174,13 +177,14 @@ class NgramManager(ModelManager):
         start_time = perf_counter()
         method_suggestion_scores = []
         for i in range(len(data['next_lex'])):
+            model_score = 0
             for method_context in data['method_context']:
                 sentence = method_context + ' ' + data['next_lex'][i]
-                sentence = sentence.split()
-                model_score = score_ngram(model=self.java_model,
-                                          sentence=sentence,
-                                          n=self.ngram,
-                                          start_pos=0)
-                method_suggestion_scores.append((i, model_score))
+                sentence = extract_method_call_from_cfg_string(sentence)
+                model_score += score_ngram(model=self.method_call_model,
+                                           sentence=sentence,
+                                           n=self.ngram,
+                                           start_pos=0)
+            method_suggestion_scores.append((i, model_score))
         return self.select_top_method_name_candidates(method_suggestion_scores, data['next_lex'], start_time)
 

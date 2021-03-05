@@ -1,13 +1,13 @@
 {
   "method_context": [
-    "sequence 1",
-    "sequence 2",
-    "sequence 3"
+    "sequence1 sequence1 sequence1 sequence1 sequence1 sequence1 sequence1 sequence1",
+    "sequence2",
+    "sequence3"
   ],
   "next_lex": [
-    "candidate 1",
-    "candidate 2",
-    "candidate 3"
+    "candidate1",
+    "candidate2",
+    "candidate3"
   ],
-  "expected_lex": "the chosen one"
+  "expected_lex": "candidate3"
 }

@@ -22,10 +22,16 @@ class Server:
 
         self.rnn_manager = None
         if USE_RNN:
-            self.rnn_manager = RNNManager(top_k, project, train_len)
+            self.rnn_manager = RNNManager(top_k, project, train_len,
+                                          excode_model_rnn_path,
+                                          java_model_rnn_path,
+                                          method_call_model_rnn_path)
         self.ngram_manager = None
         if USE_NGRAM:
-            self.ngram_manager = NgramManager(top_k, project, train_len, ngram)
+            self.ngram_manager = NgramManager(top_k, project, train_len, ngram,
+                                              excode_model_ngram_path,
+                                              java_model_ngram_path,
+                                              method_call_model_ngram_path)
         self.service = service
 
     def recvall(self, sock):

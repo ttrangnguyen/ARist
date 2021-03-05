@@ -115,7 +115,7 @@ public class Config {
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
     public static final String[] TEST_APIS = {
-//            "org.eclipse.swt",  //Eclipse (SWT)
+            "org.eclipse.swt",  //Eclipse (SWT)
 //            "java.awt",         //Netbeans (AWT)
 //            "javax.swing",      //Netbeans (Swing)
     };

@@ -10,7 +10,9 @@ from pickle import load
 
 from model.java.java_preprocess import java_tokenize_take_last
 from model.utility import *
-from model.config import *
+from model.config import USE_JAVA_MODEL, USE_EXCODE_MODEL, USE_METHOD_CALL_MODEL, \
+    PRINT_LOG, USE_LEXSIM, LEXSIM_MULTIPLIER, LEXSIM_SMALL_PENALTY,\
+    excode_tokenizer_path, excode_tokens_path, java_tokenizer_path, method_call_tokenizer_path
 import math
 import keras
 
@@ -19,22 +21,17 @@ import keras
 
 
 class ModelManager:
-    def __init__(self, top_k, project, train_len):
+    def __init__(self, top_k, project, train_len,
+                 excode_model_path, java_model_path, method_call_model_path):
         if USE_EXCODE_MODEL:
-            if USE_RNN:
-                self.excode_model = self.load_model(excode_model_rnn_path)
-            elif USE_NGRAM:
-                self.excode_model = self.load_model(excode_model_ngram_path)
+            self.excode_model = self.load_model(excode_model_path)
             self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
             self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
         if USE_JAVA_MODEL:
-            if USE_RNN:
-                self.java_model = self.load_model(java_model_rnn_path)
-            elif USE_NGRAM:
-                self.java_model = self.load_model(java_model_ngram_path)
+            self.java_model = self.load_model(java_model_path)
             self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
         if USE_METHOD_CALL_MODEL:
-            self.method_call_model = self.load_model(method_call_model_ngram_path)
+            self.method_call_model = self.load_model(method_call_model_path)
             self.method_call_tokenizer = load(open(method_call_tokenizer_path, 'rb'))
         self.project = project
         self.top_k = top_k
@@ -93,8 +90,8 @@ class ModelManager:
                                                train_len=self.train_len)
         return method_candidate_lex, java_context
 
-    def select_top_method_name_candidates(self, java_suggestion_scores, method_candidate_lex, start_time):
-        sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
+    def select_top_method_name_candidates(self, suggestion_scores, method_candidate_lex, start_time):
+        sorted_scores = sorted(suggestion_scores, key=lambda x: -x[1])[:self.top_k]
         best_candidates_index = [x[0] for x in sorted_scores]
         best_candidates = []
         for i in best_candidates_index:

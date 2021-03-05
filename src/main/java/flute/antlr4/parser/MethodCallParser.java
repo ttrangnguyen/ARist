@@ -78,14 +78,15 @@ public class MethodCallParser {
             // eclipse\eclipse.pde.ui\apitools\org.eclipse.pde.api.tools\src\org\eclipse\pde\api\tools\internal\builder\Reference.java
             // eclipse\eclipse.platform.ui.tools\bundles\org.eclipse.e4.tools.emf.ui\src\org\eclipse\e4\tools\emf\ ui\internal\common\component\UnsettableUpdateValueStrategy.java
             // eclipse\eclipse.platform.ui\bundles\org.eclipse.jface.databinding\src\org\eclipse\jface\internal\databinding\swt\WidgetTextProperty.java
-            // eclipse\eclipse.platform.text\org.eclipse.ui.workbench.texteditor\src\org\eclipse\ ui\texteditor\SourceViewerDecorationSupport.java
-            // 2 3 4 5?
+            // eclipse\eclipse.platform.text\org.eclipse.ui.workbench.texteditor\src\org\eclipse\ ui\texteditor\SourceViewerDecorationSupport.java     ok! swt
+            // 2 3 4 5? 7
+
+//            "eclipse\\eclipse.platform.ui.tools\\bundles\\org.eclipse.e4.tools.emf.ui\\src\\org\\eclipse\\e4\\tools\\emf\\ui\\internal\\common\\component\\UnsettableUpdateValueStrategy.java")
+//            "eclipse\\eclipse.platform.ui\\bundles\\org.eclipse.jface.databinding\\src\\org\\eclipse\\jface\\internal\\databinding\\swt\\WidgetTextProperty.java")
             for (String filePath : fileList) {
-                if (!(filePath.equals("eclipse\\eclipse.platform.ui\\bundles\\org.eclipse.jface.databinding\\src\\org\\eclipse\\jface\\internal\\databinding\\swt\\WidgetTextProperty.java")
-                || filePath.equals("eclipse\\eclipse.platform.text\\org.eclipse.ui.workbench.texteditor\\src\\org\\eclipse\\ui\\texteditor\\SourceViewerDecorationSupport.java"))){
-                    continue;
-                }
-//                if (filePath.equals("eclipse\\eclipse.pde.ui\\apitools\\org.eclipse.pde.api.tools\\src\\org\\eclipse\\pde\\api\\tools\\internal\\comparator\\ClassFileComparator.java")) {
+                if (filePath.equals("eclipse\\rt.equinox.framework\\bundles\\org.eclipse.osgi\\container\\src\\org\\eclipse\\osgi\\internal\\framework\\EquinoxBundle.java")){
+                } else continue;
+//                if (filePath.equals("eclipse\\rt.equinox.framework\\bundles\\org.eclipse.osgi\\container\\src\\org\\eclipse\\osgi\\internal\\framework\\EquinoxBundle.java")) {
 //                    gogogo = true;
 //                    continue;
 //                }

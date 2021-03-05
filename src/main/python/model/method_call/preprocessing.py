@@ -17,7 +17,7 @@ def listdirs(folder):
 
 
 def load_method_call_tokenizer():
-    tokenizer = load(open('method_call_tokenizer', 'rb'))
+    tokenizer = load(open('method_call_eclipse_swt_tokenizer_3', 'rb'))
     return tokenizer
 
 
@@ -25,9 +25,25 @@ def prepare_sequence(sequence, train_len):
     return pad_sequences(sequence, maxlen=train_len, padding='pre')
 
 
+def extract_method_call_from_cfg_string(string):
+    method_sequence = []
+    last = 0
+    for i in range(len(string)):
+        if string[i] == ' ' or i == len(string)-1:
+            # be wary of <? extends ...>
+            if not (string[i-1] == '?' or string[max(0, i-9):i] == '? extends'):
+                method_sequence.append(string[last:i+(i == len(string)-1)])
+                last = i+1
+    return method_sequence
+
+
 def tokenize(text, tokenizer, train_len):
-    sequences = tokenizer.texts_to_sequences(text.split('\n'))
-    print(sequences)
+    sequences = []
+    for line in text.split('\n'):
+        method_sequence = extract_method_call_from_cfg_string(line)
+        if len(method_sequence) > 0:
+            sequences.append(method_sequence)
+    sequences = tokenizer.texts_to_sequences(sequences)
     ngrams = []
     for sequence in sequences:
         for i in range(len(sequence)):
@@ -62,22 +78,21 @@ def preprocess(train_path, csv_path, train_len):
 
 if __name__ == '__main__':
     data_types = ['fold_' + str(x) for x in range(10)]
-    data_parent_folders = ['data_csv_5_gram']
-    train_len = [4 + 1]
+    data_parent_folders = ['data_csv_7_gram']
+    train_len = [6 + 1]
     version = '4'
     n_folds = 10
     data_version_path = '../../../../../../data_v' + version + '/'
+    projects = ['eclipse']
 
     for data_type in data_types:
         for i in range(len(data_parent_folders)):
-            projects_path = data_version_path + 'data_classform/method_call' + '/' \
-                            + str(n_folds) + '_folds' + '/' + data_type + '/'
-            projects = ['eclipse']
-            # projects = listdirs(projects_path)
             for project in projects:
+                projects_path = data_version_path + 'method_call/' + project + '/'
+                # projects = listdirs(projects_path)
                 Path(data_version_path + data_parent_folders[i] + '/method_call/' + project). \
                     mkdir(parents=True, exist_ok=True)
-                preprocess(train_path=projects_path + project + '/',
+                preprocess(train_path=projects_path + data_type + '/',
                            csv_path=data_version_path + data_parent_folders[i] + '/method_call/' + project
                                     + '/method_call_' + data_type + "_" + project + '.csv',
-                           train_len = train_len[i])
+                           train_len=train_len[i])
