@@ -5,24 +5,10 @@ import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 public class ThisExpressionCustom implements IBinding {
     private ITypeBinding declaringClass;
-
-    public static List<ThisExpressionCustom> listThis = new ArrayList<>();
-
-    public static ThisExpressionCustom create(ITypeBinding declaringClass) {
-        for (ThisExpressionCustom thisItem : listThis) {
-            if (declaringClass == thisItem.getDeclaringClass()) {
-                return thisItem;
-            }
-        }
-        ThisExpressionCustom newThis = new ThisExpressionCustom(declaringClass);
-        listThis.add(newThis);
-        return newThis;
-    }
 
     public ThisExpressionCustom(ITypeBinding declaringClass) {
         this.declaringClass = declaringClass;
@@ -30,10 +16,6 @@ public class ThisExpressionCustom implements IBinding {
 
     public ITypeBinding getDeclaringClass() {
         return declaringClass;
-    }
-
-    public static void gc(){
-        listThis.clear();
     }
 
     public void setDeclaringClass(ITypeBinding declaringClass) {
@@ -85,10 +67,6 @@ public class ThisExpressionCustom implements IBinding {
         return null;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return false;
-    }
 
     @Override
     public boolean isEqualTo(IBinding iBinding) {
@@ -98,5 +76,18 @@ public class ThisExpressionCustom implements IBinding {
     @Override
     public String toString() {
         return declaringClass.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ThisExpressionCustom that = (ThisExpressionCustom) o;
+        return Objects.equals(declaringClass, that.declaringClass);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(declaringClass);
     }
 }

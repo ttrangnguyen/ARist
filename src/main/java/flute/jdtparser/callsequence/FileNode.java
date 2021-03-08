@@ -166,10 +166,6 @@ public class FileNode {
     }
 
     public static IBinding genBindingKey(MethodInvocation methodInvocation) {
-        //auto gc
-        ThisExpressionCustom.gc();
-        SuperExpressionCustom.gc();
-
         Expression expr = methodInvocation.getExpression();
         IBinding bindingKey = null;
         if (expr instanceof SimpleName) {
@@ -179,9 +175,9 @@ public class FileNode {
             if (expr == null) {
                 ITypeBinding resolveType = methodInvocation.resolveMethodBinding() == null
                         ? null : methodInvocation.resolveMethodBinding().getDeclaringClass();
-                bindingKey = ThisExpressionCustom.create(resolveType);
+                bindingKey = new ThisExpressionCustom(resolveType);
             } else if (expr instanceof ThisExpression) {
-                bindingKey = ThisExpressionCustom.create(expr.resolveTypeBinding());
+                bindingKey = new ThisExpressionCustom(expr.resolveTypeBinding());
             } else
                 bindingKey = expr.resolveTypeBinding();
         }
@@ -190,7 +186,7 @@ public class FileNode {
 
     public static IBinding genBindingKey(SuperMethodInvocation superMethodInvocation) {
         if (superMethodInvocation.resolveMethodBinding() == null) return null;
-        IBinding bindingKey = SuperExpressionCustom.create(superMethodInvocation.resolveMethodBinding().getDeclaringClass());
+        IBinding bindingKey = new SuperExpressionCustom(superMethodInvocation.resolveMethodBinding().getDeclaringClass());
         return bindingKey;
     }
 

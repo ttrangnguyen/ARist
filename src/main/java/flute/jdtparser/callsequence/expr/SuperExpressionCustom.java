@@ -5,31 +5,13 @@ import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 public class SuperExpressionCustom implements IBinding {
     private ITypeBinding declaringClass;
 
-    public static List<SuperExpressionCustom> listSuper = new ArrayList<>();
-
-    public static SuperExpressionCustom create(ITypeBinding declaringClass) {
-        for (SuperExpressionCustom superItem : listSuper) {
-            if (declaringClass == superItem.getDeclaringClass()) {
-                return superItem;
-            }
-        }
-        SuperExpressionCustom newSuper = new SuperExpressionCustom(declaringClass);
-        listSuper.add(newSuper);
-        return newSuper;
-    }
-
     public SuperExpressionCustom(ITypeBinding declaringClass) {
         this.declaringClass = declaringClass;
-    }
-
-    public static void gc(){
-        listSuper.clear();
     }
 
     public ITypeBinding getDeclaringClass() {
@@ -86,11 +68,6 @@ public class SuperExpressionCustom implements IBinding {
     }
 
     @Override
-    public boolean equals(Object o) {
-        return false;
-    }
-
-    @Override
     public boolean isEqualTo(IBinding iBinding) {
         return false;
     }
@@ -98,5 +75,18 @@ public class SuperExpressionCustom implements IBinding {
     @Override
     public String toString() {
         return declaringClass.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SuperExpressionCustom that = (SuperExpressionCustom) o;
+        return Objects.equals(declaringClass, that.declaringClass);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(declaringClass);
     }
 }
