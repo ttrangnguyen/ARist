@@ -25,6 +25,12 @@ class NgramManager(ModelManager):
         return response + "}"
 
     def predict_param(self, data):
+        if PARAM_LEXICAL_ONLY:
+            return self.predict_param_using_lex(data)
+        else:
+            return self.predict_param_all_features(data)
+
+    def predict_param_all_features(self, data):
         start_time = perf_counter()
         excode_context = excode_tokenize(data['excode_context'],
                                          tokenizer=self.excode_tokenizer,
@@ -113,6 +119,51 @@ class NgramManager(ModelManager):
         # logger.debug(sorted_scores)
         # logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         # logger.debug("Best java suggestion(s):")
+
+    def predict_param_using_lex(self, data):
+        start_time = perf_counter()
+        java_context = java_tokenize_take_last(data['lex_context'],
+                                               tokenizer=self.java_tokenizer,
+                                               train_len=self.train_len)
+        java_suggestions_all = np.array(copy.deepcopy(data['next_lex']), dtype=object)
+        n_param = len(data['next_lex'])
+        for i in range(n_param):
+            for j in range(len(java_suggestions_all[i])):
+                java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
+                                                                     tokenizer=self.java_tokenizer,
+                                                                     to_sequence=False)
+        all_candidate_lex = []
+        java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-self.ngram:]
+        java_context_list = [(java_context_list, [])]
+        for j in range(n_param):
+            java_suggestion_scores = []
+            for k in range(len(java_context_list)):
+                for jj in range(len(java_suggestions_all[j])):
+                    java_suggestions = java_suggestions_all[j][jj]
+                    for ii, java_suggestion in enumerate(java_suggestions):
+                        new_context = java_context_list[k][0] + java_suggestion
+                        if j < n_param - 1:
+                            new_context += [',']
+                        model_score = score_ngram(model=self.java_model,
+                                                  sentence=new_context,
+                                                  n=self.ngram,
+                                                  start_pos=len(java_context_list[k][0]))
+                        if USE_LEXSIM and is_not_empty_list(data['param_list']) \
+                                and self.is_valid_param(data['param_list'][j]):
+                            lexsim = lexSim(data['param_list'][j],
+                                            data['next_lex'][j][jj][ii])
+                            model_score = self.score_lexsim(lexsim) + model_score * NGRAM_SCORE_WEIGHT
+                            if USE_LOCAL_VAR and data['is_local_var'][j][jj][ii]:
+                                model_score = model_score + LOCAL_VAR_BONUS
+                        java_suggestion_scores.append((new_context, java_context_list[k][1]
+                                                       + [(jj, ii)], model_score))
+            sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[2])
+            if j < n_param - 1:
+                java_context_list = [(x[0], x[1]) for x in sorted_scores]
+            else:
+                java_context_list = sorted_scores
+        all_candidate_lex += java_context_list
+        return self.select_top_param_candidates(all_candidate_lex, data, start_time)
 
     def select_top_param_candidates(self, all_candidate_lex, data, start_time):
         sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])

@@ -12,7 +12,7 @@ def splitCase(match):
 
 
 def tokenize(word):
-    if (len(word)):
+    if (len(word) == 0):
         return []
 
     camelCases = []
