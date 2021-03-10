@@ -181,10 +181,11 @@ class NgramManager(ModelManager):
             for method_context in data['method_context']:
                 sentence = method_context + ' ' + data['next_lex'][i]
                 sentence = extract_method_call_from_cfg_string(sentence)
-                model_score += score_ngram(model=self.method_call_model,
-                                           sentence=sentence,
-                                           n=self.ngram,
-                                           start_pos=0)
+                power = score_ngram(model=self.method_call_model,
+                                    sentence=sentence,
+                                    n=self.ngram,
+                                    start_pos=0)
+                model_score += math.pow(2, power)
             method_suggestion_scores.append((i, model_score))
         return self.select_top_method_name_candidates(method_suggestion_scores, data['next_lex'], start_time)
 

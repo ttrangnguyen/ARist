@@ -1,4 +1,7 @@
 import json
+
+import math
+
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
 from model.method_call.preprocessing import extract_method_call_from_cfg_string
@@ -184,12 +187,10 @@ class RNNManager(ModelManager):
             contexts += self.method_call_tokenizer.texts_to_sequences([context])
         for candidate in data['next_lex']:
             candidates += self.method_call_tokenizer.texts_to_sequences([[candidate]])
-
         x_test_all = []
         y_test_all = []
         sentence_len_all = []
         for i in range(len(candidates)):
-            accumulate_len = 0
             for method_context in contexts:
                 x_test, y_test, sentence_len = prepare_sentences(method_context,
                                                                  [candidates[i]],
@@ -197,12 +198,15 @@ class RNNManager(ModelManager):
                                                                  len(method_context))
                 x_test_all += x_test.tolist()
                 y_test_all += y_test.tolist()
-                accumulate_len += sum(sentence_len)
-            sentence_len_all.append(accumulate_len)
+                sentence_len_all += sentence_len
         x_test_all = np.array(x_test_all)
         y_test_all = np.array(y_test_all)
         p_pred = predict(self.method_call_model, x_test_all)
-        log_p_sentence = evaluate(p_pred, y_test_all, sentence_len_all)
-        for i in range(len(log_p_sentence)):
-            log_p_sentence[i] = (i, log_p_sentence[i])
-        return self.select_top_method_name_candidates(log_p_sentence, data['next_lex'], start_time)
+        log_p_sentences = evaluate(p_pred, y_test_all, sentence_len_all)
+        log_p_candidates = []
+        for i in range(len(data['next_lex'])):
+            sum_score = 0
+            for j in range(i*len(contexts), (i+1)*len(contexts)):
+                sum_score += math.pow(2, log_p_sentences[j])
+            log_p_candidates.append((i, sum_score))
+        return self.select_top_method_name_candidates(log_p_candidates, data['next_lex'], start_time)
