@@ -180,34 +180,52 @@ public class Utils {
     }
 
     public static Map<IBinding, MethodCallNode> groupMethodCallNodeByTrackingNode(MethodCallNode node) {
-        Map<IBinding, MethodCallNode> map = new HashMap<>();
-        if (node == null) return map;
-        map.put(FileNode.genBindingKey(node.getValue()), node.copy());
+        Map<IBinding, MethodCallNode> tracking2TreeMap = new HashMap<>();
+        if (node == null) return tracking2TreeMap;
+
+        Map<IBinding, List<MethodCallNode>> tracking2ListMap = new HashMap<>();
+        groupMethodCallNodeByTrackingNode(node, tracking2ListMap);
+
+        for (IBinding id: tracking2ListMap.keySet()) {
+            List<MethodCallNode> methodCallNodes = tracking2ListMap.get(id);
+            Stack<MethodCallNode> stack = new Stack<>();
+            // Add a virtual root node
+            stack.push(new MethodCallNode(null));
+            stack.peek().setArriveId(Integer.MIN_VALUE);
+            stack.peek().setLeaveId(Integer.MAX_VALUE);
+
+            for (MethodCallNode methodCallNode: methodCallNodes) {
+                while (!stack.peek().isAscendanceOf(methodCallNode)) {
+                    stack.pop().uniqueChildNode();
+                }
+                stack.peek().addChildNode(methodCallNode);
+                stack.add(methodCallNode);
+            }
+            while (stack.size() > 1) stack.pop().uniqueChildNode();
+            stack.peek().uniqueChildNode();
+            if (stack.peek().getChildNode().size() == 1) {
+                stack.push(stack.peek().getChildNode().get(0));
+            }
+            tracking2TreeMap.put(id, stack.peek());
+        }
+        return tracking2TreeMap;
+    }
+
+    private static void groupMethodCallNodeByTrackingNode(MethodCallNode node, Map<IBinding, List<MethodCallNode>> trackingMap) {
+        MethodCallNode copy = node.copy();
+        copy.markArrive();
+
+        IBinding id = FileNode.genBindingKey(node.getValue());
+        if (!trackingMap.containsKey(id)) {
+            // Add a virtual root node
+            trackingMap.put(id, new ArrayList<>());
+        }
+        trackingMap.get(id).add(copy);
         for (MethodCallNode childNode : node.getChildNode()) {
-            Map<IBinding, MethodCallNode> childMap = groupMethodCallNodeByTrackingNode(childNode);
-            for (IBinding id : childMap.keySet()) {
-                if (!map.containsKey(id)) {
-                    map.put(id, new MethodCallNode(null));
-                }
-
-                if (childMap.get(id).getValue() != null) {
-                    map.get(id).addChildNode(childMap.get(id));
-                } else {
-                    for (MethodCallNode descendantNode : childMap.get(id).getChildNode()) {
-                        map.get(id).addChildNode(descendantNode);
-                    }
-                }
-            }
+            groupMethodCallNodeByTrackingNode(childNode, trackingMap);
         }
 
-        for (IBinding id : map.keySet()) {
-            map.get(id).uniqueChildNode();
-            if (map.get(id).getValue() == null && map.get(id).getChildNode().size() < 2) {
-                map.put(id, map.get(id).getChildNode().get(0));
-            }
-        }
-
-        return map;
+        copy.markLeave();
     }
 
     public static boolean checkTargetAPI(String packageName) {
