@@ -66,7 +66,8 @@ class NgramManager(ModelManager):
                                                      excode_context_textform[ex_suggest_id][1] + [i],
                                                      model_score))
             sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[2])[:self.max_keep_step[p_id]]
-            excode_context_textform = [(x[0], x[1]) for x in sorted_scores]
+            # excode_context_textform = [(x[0], x[1]) for x in sorted_scores]
+            excode_context_textform = sorted_scores
         # logger.debug(sorted_scores)
         # logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         # logger.debug("Best excode suggestion(s):")
@@ -104,7 +105,8 @@ class NgramManager(ModelManager):
                             # ii])
                             lexsim = lexSim(data['param_list'][j],
                                             data['next_lex'][j][excode_context_textform[i][1][j]][ii])
-                            model_score = self.score_lexsim(lexsim) + model_score * NGRAM_SCORE_WEIGHT
+                            model_score = self.score_lexsim(lexsim) + model_score * NGRAM_SCORE_WEIGHT \
+                                          + excode_context_textform[i][2]
                             if USE_LOCAL_VAR and data['is_local_var'][j][excode_context_textform[i][1][j]][ii]:
                                 model_score = model_score + LOCAL_VAR_BONUS
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
