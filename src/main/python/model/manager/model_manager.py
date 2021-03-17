@@ -43,7 +43,7 @@ class ModelManager:
         self.logger.disabled = not PRINT_LOG
         stdout_handler = logging.StreamHandler(sys.stdout)
         self.logger.addHandler(stdout_handler)
-        self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+        self.max_keep_step = [50] * 100
         self.lexsim_flag = USE_LEXSIM
 
     def load_model(self, model_path):

@@ -32,26 +32,29 @@ class NgramManager(ModelManager):
 
     def predict_param_all_features(self, data):
         start_time = perf_counter()
-        excode_context = excode_tokenize(data['excode_context'],
-                                         tokenizer=self.excode_tokenizer,
-                                         train_len=self.train_len,
-                                         tokens=self.excode_tokens,
-                                         method_content_only=False)[0]
+        # excode_context = excode_tokenize(data['excode_context'],
+        #                                  tokenizer=self.excode_tokenizer,
+        #                                  train_len=self.train_len,
+        #                                  tokens=self.excode_tokens,
+        #                                  method_content_only=False)[0]
+        # excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-self.ngram:]
+        # excode_context_textform = [(excode_context_textform, [])]
+        excode_context_textform = [(data['excode_context'].split(' ')[-self.ngram:], [])]
         n_param = len(data['next_excode'])
-
-        excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-self.ngram:]
-        excode_context_textform = [(excode_context_textform, [])]
         for p_id in range(n_param):
-            excode_suggestions = excode_tokenize_candidates(data['next_excode'][p_id],
-                                                            tokenizer=self.excode_tokenizer,
-                                                            tokens=self.excode_tokens)
-            excode_suggestions_textforms = self.excode_tokenizer.sequences_to_texts(excode_suggestions)
+            # excode_suggestions = excode_tokenize_candidates(data['next_excode'][p_id],
+            #                                                 tokenizer=self.excode_tokenizer,
+            #                                                 tokens=self.excode_tokens)
+            # excode_suggestions_textforms = self.excode_tokenizer.sequences_to_texts(excode_suggestions)
+            excode_suggestions_textforms = [x for x in data['next_excode'][p_id]]
             excode_suggestion_scores = []
             for ex_suggest_id in range(len(excode_context_textform)):
                 for i, excode_suggestions_textform in enumerate(excode_suggestions_textforms):
                     sentence = excode_context_textform[ex_suggest_id][0] + excode_suggestions_textform.split()
                     if p_id < n_param - 1:
-                        sentence += ['sepa(,)']
+                        sentence += ['SEPA(,)']
+                        # be careful if lower case in training data
+                        # sentence += ['sepa(,)']
                     model_score = score_ngram(model=self.excode_model,
                                               sentence=sentence,
                                               n=self.ngram,
@@ -65,7 +68,10 @@ class NgramManager(ModelManager):
                     excode_suggestion_scores.append((sentence,
                                                      excode_context_textform[ex_suggest_id][1] + [i],
                                                      model_score))
-            sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[2])[:self.max_keep_step[p_id]]
+            if p_id > 0:
+                sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[2])[:self.max_keep_step[p_id]]
+            else:
+                sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[2])
             # excode_context_textform = [(x[0], x[1]) for x in sorted_scores]
             excode_context_textform = sorted_scores
         # logger.debug(sorted_scores)
