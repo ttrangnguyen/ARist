@@ -22,16 +22,16 @@ class Server:
 
         self.rnn_manager = None
         if USE_RNN:
-            self.rnn_manager = RNNManager(top_k, project, train_len,
-                                          excode_model_rnn_path,
-                                          java_model_rnn_path,
-                                          method_call_model_rnn_path)
+            self.rnn_manager = RNNManager(TOP_K, PROJECT, TRAIN_LEN_RNN,
+                                          EXCODE_MODEL_RNN_PATH,
+                                          JAVA_MODEL_RNN_PATH,
+                                          METHODCALL_MODEL_RNN_PATH)
         self.ngram_manager = None
         if USE_NGRAM:
-            self.ngram_manager = NgramManager(top_k, project, train_len, ngram,
-                                              excode_model_ngram_path,
-                                              java_model_ngram_path,
-                                              method_call_model_ngram_path)
+            self.ngram_manager = NgramManager(TOP_K, PROJECT, TRAIN_LEN_RNN,
+                                              EXCODE_MODEL_NGRAM_PATH,
+                                              JAVA_MODEL_NGRAM_PATH,
+                                              METHODCALL_MODEL_NGRAM_PATH)
         self.service = service
 
     def recvall(self, sock):
@@ -78,7 +78,7 @@ class Server:
 
     def run(self):
         clientId = 0
-        for filename in glob.glob('../../../../storage/result/' + project + '.' + "*"):
+        for filename in glob.glob('../../../../storage/result/' + PROJECT + '.' + "*"):
             os.remove(filename)
         print('[SERVER IS STARTED]')
         while True:

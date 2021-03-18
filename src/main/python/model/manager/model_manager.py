@@ -10,9 +10,7 @@ from pickle import load
 
 from model.java.java_preprocess import java_tokenize_take_last
 from model.utility import *
-from model.config import USE_JAVA_MODEL, USE_EXCODE_MODEL, USE_METHOD_CALL_MODEL, \
-    PRINT_LOG, USE_LEXSIM, LEXSIM_MULTIPLIER, LEXSIM_SMALL_PENALTY,\
-    excode_tokenizer_path, excode_tokens_path, java_tokenizer_path, method_call_tokenizer_path
+from model.config import *
 import math
 import keras
 
@@ -25,14 +23,14 @@ class ModelManager:
                  excode_model_path, java_model_path, method_call_model_path):
         if USE_EXCODE_MODEL:
             self.excode_model = self.load_model(excode_model_path)
-            self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
-            self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
+            self.excode_tokenizer = load(open(EXCODE_TOKENIZER_PATH, 'rb'))
+            self.excode_tokens = read_file(EXCODE_TOKENS_PATH).lower().split("\n")
         if USE_JAVA_MODEL:
             self.java_model = self.load_model(java_model_path)
-            self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
+            self.java_tokenizer = load(open(JAVA_TOKENIZER_PATH, 'rb'))
         if USE_METHOD_CALL_MODEL:
             self.method_call_model = self.load_model(method_call_model_path)
-            self.method_call_tokenizer = load(open(method_call_tokenizer_path, 'rb'))
+            self.method_call_tokenizer = load(open(METHODCALL_TOKENIZER_PATH, 'rb'))
         self.project = project
         self.top_k = top_k
         self.train_len = train_len

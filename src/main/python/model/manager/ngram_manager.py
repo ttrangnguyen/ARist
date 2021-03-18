@@ -10,11 +10,10 @@ import copy
 
 
 class NgramManager(ModelManager):
-    def __init__(self, top_k, project, train_len, ngram, \
+    def __init__(self, top_k, project, train_len,
                  excode_model_path, java_model_path, method_call_model_path):
         super().__init__(top_k, project, train_len,
                          excode_model_path, java_model_path, method_call_model_path)
-        self.ngram = ngram
 
     def process(self, data, service):
         response = "ngram:{"
@@ -39,7 +38,7 @@ class NgramManager(ModelManager):
         #                                  method_content_only=False)[0]
         # excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-self.ngram:]
         # excode_context_textform = [(excode_context_textform, [])]
-        excode_context_textform = [(data['excode_context'].split(' ')[-self.ngram:], [])]
+        excode_context_textform = [(data['excode_context'].split(' ')[-NGRAM_EXCODE_PARAM:], [])]
         n_param = len(data['next_excode'])
         for p_id in range(n_param):
             # excode_suggestions = excode_tokenize_candidates(data['next_excode'][p_id],
@@ -57,7 +56,7 @@ class NgramManager(ModelManager):
                         # sentence += ['sepa(,)']
                     model_score = score_ngram(model=self.excode_model,
                                               sentence=sentence,
-                                              n=self.ngram,
+                                              n=NGRAM_EXCODE_PARAM,
                                               start_pos=len(excode_context_textform[ex_suggest_id][0]))
                     # if data['param_list'][p_id] == 'null':
                     #     pass
@@ -91,7 +90,7 @@ class NgramManager(ModelManager):
                                                                      to_sequence=False)
         all_candidate_lex = []
         for i in range(len(excode_context_textform)):
-            java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-self.ngram:]
+            java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-NGRAM_LEXICAL_PARAM:]
             java_context_list = [(java_context_list, [])]
             for j in range(n_param):
                 java_suggestion_scores = []
@@ -103,7 +102,7 @@ class NgramManager(ModelManager):
                             new_context += [',']
                         model_score = score_ngram(model=self.java_model,
                                                   sentence=new_context,
-                                                  n=self.ngram,
+                                                  n=NGRAM_LEXICAL_PARAM,
                                                   start_pos=len(java_context_list[k][0]))
                         if USE_LEXSIM and is_not_empty_list(data['param_list']) \
                                 and self.is_valid_param(data['param_list'][j]):
@@ -141,7 +140,7 @@ class NgramManager(ModelManager):
                                                                      tokenizer=self.java_tokenizer,
                                                                      to_sequence=False)
         all_candidate_lex = []
-        java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-self.ngram:]
+        java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-NGRAM_LEXICAL_PARAM:]
         java_context_list = [(java_context_list, [])]
         for j in range(n_param):
             java_suggestion_scores = []
@@ -154,7 +153,7 @@ class NgramManager(ModelManager):
                             new_context += [',']
                         model_score = score_ngram(model=self.java_model,
                                                   sentence=new_context,
-                                                  n=self.ngram,
+                                                  n=NGRAM_LEXICAL_PARAM,
                                                   start_pos=len(java_context_list[k][0]))
                         if USE_LEXSIM and is_not_empty_list(data['param_list']) \
                                 and self.is_valid_param(data['param_list'][j]):
@@ -189,7 +188,7 @@ class NgramManager(ModelManager):
     def predict_method_name_using_lex(self, data):
         start_time = perf_counter()
         method_candidate_lex, java_context = self.prepare_method_name_prediction(data)
-        java_context = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-self.ngram:]
+        java_context = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-NGRAM_LEXICAL_METHODCALL:]
         java_suggestions = java_tokenize_sentences(method_candidate_lex,
                                                    tokenizer=self.java_tokenizer,
                                                    to_sequence=False)
@@ -197,7 +196,7 @@ class NgramManager(ModelManager):
         for i in range(len(java_suggestions)):
             model_score = score_ngram(model=self.java_model,
                                       sentence=java_context + java_suggestions[i],
-                                      n=self.ngram,
+                                      n=NGRAM_LEXICAL_METHODCALL,
                                       start_pos=len(java_context))
             java_suggestion_scores.append((i, model_score))
         return self.select_top_method_name_candidates(java_suggestion_scores, method_candidate_lex, start_time)
@@ -210,7 +209,7 @@ class NgramManager(ModelManager):
                                          tokens=self.excode_tokens,
                                          method_content_only=False)[0]
 
-        excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-self.ngram:]
+        excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-NGRAM_EXCODE_METHODCALL:]
         excode_suggestions = excode_tokenize_candidates(data['method_candidate_excode'],
                                                         tokenizer=self.excode_tokenizer,
                                                         tokens=self.excode_tokens)
@@ -220,7 +219,7 @@ class NgramManager(ModelManager):
             sentence = excode_context_textform + excode_suggestions_textform.split()
             model_score = score_ngram(model=self.excode_model,
                                       sentence=sentence,
-                                      n=self.ngram,
+                                      n=NGRAM_EXCODE_METHODCALL,
                                       start_pos=len(excode_context_textform))
             excode_suggestion_scores.append((i, model_score))
         sorted_scores = sorted(excode_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
@@ -242,7 +241,7 @@ class NgramManager(ModelManager):
                 sentence = extract_method_call_from_cfg_string(sentence)
                 power = score_ngram(model=self.method_call_model,
                                     sentence=sentence,
-                                    n=self.ngram,
+                                    n=NGRAM_LEXICAL_METHODCALL,
                                     start_pos=0)
                 model_score += math.pow(2, power)
             method_suggestion_scores.append((i, model_score))
