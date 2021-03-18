@@ -42,7 +42,7 @@ public class Config {
      * Multiprocess
      */
 
-    public final static boolean MULTIPROCESS = false;
+    public final static boolean MULTIPROCESS = true;
     public final static int NUM_THREAD = 5;
 
     /***
@@ -115,7 +115,7 @@ public class Config {
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
     public static final String[] TEST_APIS = {
-            "org.eclipse.swt",  //Eclipse (SWT)
+//            "org.eclipse.swt",  //Eclipse (SWT)
 //            "java.awt",         //Netbeans (AWT)
 //            "javax.swing",      //Netbeans (Swing)
     };
