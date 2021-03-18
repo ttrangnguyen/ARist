@@ -29,4 +29,7 @@ def comterms(s1, s2):
 
 
 def lexSim(s1, s2):
-    return (comterms(s1, s2) + comterms(s2, s1)) / (len(tokenize(s1)) + len(tokenize(s2)))
+    tokenZize = len(tokenize(s1)) + len(tokenize(s2))
+    if(tokenZize == 0):
+        return 0
+    return (comterms(s1, s2) + comterms(s2, s1)) / tokenZize
