@@ -4,10 +4,8 @@ import flute.data.typemodel.ArgumentModel;
 import flute.jdtparser.FileParser;
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MethodInvocationModel {
     private Expression expression = null;
@@ -119,6 +117,18 @@ public class MethodInvocationModel {
 
     public ASTNode getOrgASTNode() {
         return orgASTNode;
+    }
+
+    public String genClassString() {
+        return curClass.getQualifiedName();
+    }
+
+    public String genMethodString() {
+        List<ITypeBinding> params = Arrays.asList(methodBinding.getParameterTypes());
+        List<String> paramString = params.stream().map(param -> {
+            return param.getName();
+        }).collect(Collectors.toList());
+        return methodName.toString() + "(" + String.join(",", paramString) + ")";
     }
 
     @Override
