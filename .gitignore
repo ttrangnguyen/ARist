@@ -42,6 +42,7 @@ __pycache__
 # misc
 storage
 .idea/libraries
+docs/trainFilePath
 docs/testFilePath
 backup
 /.idea/

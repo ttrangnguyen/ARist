@@ -25,6 +25,7 @@ public class Logger {
 
     public static void write(String line, String filename) {
         File output = new File(Config.LOG_DIR + filename);
+        output.getParentFile().mkdirs();
         try {
             FileWriter fileWriter = new FileWriter(output, true);
             fileWriter.append(line + "\n");
