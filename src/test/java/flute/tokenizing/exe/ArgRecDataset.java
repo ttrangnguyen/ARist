@@ -94,7 +94,6 @@ public class ArgRecDataset {
     public void log(List<List<MultipleArgRecTest> > testFolds) {
         for (int i = 0; i < testFolds.size(); ++i) {
             for (MultipleArgRecTest test: testFolds.get(i)) {
-                System.out.println(test.getFilePath());
                 File classFile = new File(test.getFilePath());
                 String className = classFile.getName().replace(".java", ".txt");
                 Logger.write(gson.toJson(test),  "dataset/" + projectName + "/fold" + i + "/" + className);
