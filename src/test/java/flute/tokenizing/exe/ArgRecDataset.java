@@ -42,69 +42,93 @@ public class ArgRecDataset {
         generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
     }
 
-    public List<List<MultipleArgRecTest> > load() throws IOException {
+    private List<ArgRecTest> generateFromFile(String filePath) {
+        List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+        for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
+
+        if (Config.TEST_APIS != null && Config.TEST_APIS.length > 0) {
+            List<ArgRecTest> tmp = new ArrayList<>();
+            for (ArgRecTest test: oneFileTests) {
+                if (test.getMethodInvocClassQualifiedName() != null) {
+                    for (String targetAPI: Config.TEST_APIS) {
+                        if (test.getMethodInvocClassQualifiedName().startsWith(targetAPI + '.')) {
+                            tmp.add(test);
+                            break;
+                        }
+                    }
+                }
+            }
+            oneFileTests = tmp;
+        }
+
+        return oneFileTests;
+    }
+
+    public List<MultipleArgRecTest> load(boolean doLogEachFold) throws IOException {
         setupGenerator();
-        List<List<MultipleArgRecTest> > testFolds = new ArrayList<>();
+        List<MultipleArgRecTest> tests = new ArrayList<>();
         AllArgRecTestGenerator allArgRecTestGenerator = new AllArgRecTestGenerator((ArgRecTestGenerator) generator);
 
-        final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
-        final List<Future<?>> futures = new ArrayList<>();
-
         File trainListDir = new File("docs/trainFilePath/" + projectName);
+        int foldCnt = 0;
         for (File foldList: trainListDir.listFiles()) {
-            List<MultipleArgRecTest> tests = new ArrayList<>();
+            List<MultipleArgRecTest> oneFoldTests = new ArrayList<>();
+
+            final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
+            final List<Future<?>> futures = new ArrayList<>();
+
             Scanner sc = new Scanner(foldList);
             while (sc.hasNextLine()) {
                 String filePath = sc.nextLine();
                 if (Config.MULTIPROCESS) {
                     Future<?> future = executor.submit(() -> {
                         createNewGenerator();
-                        List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                        for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
-                        tests.addAll(allArgRecTestGenerator.generate(oneFileTests));
+                        List<ArgRecTest> oneFileTests = generateFromFile(filePath);
+                        oneFoldTests.addAll(allArgRecTestGenerator.generate(oneFileTests));
                     });
                     futures.add(future);
                 } else {
-                    List<ArgRecTest> oneFileTests = (List<ArgRecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                    for (ArgRecTest test : oneFileTests) test.setFilePath(filePath);
-                    tests.addAll(allArgRecTestGenerator.generate(oneFileTests));
+                    List<ArgRecTest> oneFileTests = generateFromFile(filePath);
+                    oneFoldTests.addAll(allArgRecTestGenerator.generate(oneFileTests));
                 }
             }
             sc.close();
-            testFolds.add(tests);
-        }
 
-        if (Config.MULTIPROCESS) {
-            boolean isDone = false;
-            while (!isDone) {
-                boolean isProcessing = false;
-                for (Future<?> future : futures) {
-                    if (!future.isDone()) {
-                        isProcessing = true;
-                        break;
+            if (Config.MULTIPROCESS) {
+                boolean isDone = false;
+                while (!isDone) {
+                    boolean isProcessing = false;
+                    for (Future<?> future : futures) {
+                        if (!future.isDone()) {
+                            isProcessing = true;
+                            break;
+                        }
                     }
+                    if (!isProcessing) isDone = true;
                 }
-                if (!isProcessing) isDone = true;
             }
+
+            if (doLogEachFold) {
+                logFold(oneFoldTests, foldCnt);
+                foldCnt += 1;
+            }
+            tests.addAll(oneFoldTests);
         }
 
-        return testFolds;
+        return tests;
     }
 
-    public void log(List<List<MultipleArgRecTest> > testFolds) {
-        for (int i = 0; i < testFolds.size(); ++i) {
-            for (MultipleArgRecTest test: testFolds.get(i)) {
-                File classFile = new File(test.getFilePath());
-                String className = classFile.getName().replace(".java", ".txt");
-                Logger.write(gson.toJson(test),  "dataset/" + projectName + "/fold" + i + "/" + className);
-            }
+    private void logFold(List<MultipleArgRecTest> tests, int fold) {
+        for (MultipleArgRecTest test: tests) {
+            File classFile = new File(test.getFilePath());
+            String className = classFile.getName().replace(".java", ".txt");
+            Logger.write(gson.toJson(test),  "dataset/" + projectName + "/fold" + fold + "/" + className);
         }
     }
 
     public static void main(String[] args) throws IOException {
         ArgRecDataset ds = new ArgRecDataset("eclipse");
-        List<List<MultipleArgRecTest> > tests = ds.load();
-        ds.log(tests);
+        ds.load(true);
         System.exit(0);
     }
 }
