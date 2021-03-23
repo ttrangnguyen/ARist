@@ -124,15 +124,15 @@ class NgramManager(ModelManager):
                         model_score = score_ngram(model=self.java_model,
                                                   sentence=new_context,
                                                   n=NGRAM_LEXICAL_PARAM,
-                                                  start_pos=len(java_context_list[k][0]))
+                                                  start_pos=len(java_context_list[k][0])) \
+                                    + excode_context_textform[i][2]
                         if USE_LEXSIM and is_not_empty_list(data['param_list']) \
                                 and self.is_valid_param(data['param_list'][j]):
                             # self.logger.log(java_suggestion, data['next_lex'][j][excode_context_textform[i][1][j]][
                             # ii])
                             lexsim = lexSim(data['param_list'][j],
                                             data['next_lex'][j][excode_context_textform[i][1][j]][ii])
-                            model_score = self.score_lexsim(lexsim) + model_score * NGRAM_SCORE_WEIGHT \
-                                          + excode_context_textform[i][2]
+                            model_score = self.score_lexsim(lexsim) + model_score * NGRAM_SCORE_WEIGHT
                             if USE_LOCAL_VAR and data['is_local_var'][j][excode_context_textform[i][1][j]][ii]:
                                 model_score = model_score + LOCAL_VAR_BONUS
                         java_suggestion_scores.append((new_context, java_context_list[k][1]
