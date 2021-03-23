@@ -6,6 +6,7 @@ from model.ngram_predictor import score_ngram
 from model.manager.model_manager import *
 from model.config import *
 from name_stat.similarly import lexSim
+from name_stat.name_tokenizer import tokenize
 import copy
 
 
@@ -28,6 +29,18 @@ class NgramManager(ModelManager):
             return self.predict_param_using_lex(data)
         else:
             return self.predict_param_all_features(data)
+
+    def tokenize_from_str(self, string):
+        tokens = []
+        for candidate_word in string.split():
+            tokens += tokenize(candidate_word)
+        return tokens
+
+    def tokenize_context_str(self, context):
+        tokens = []
+        for word in context:
+            tokens += self.tokenize_from_str(word)
+        return tokens
 
     def predict_param_all_features(self, data):
         start_time = perf_counter()
@@ -76,22 +89,30 @@ class NgramManager(ModelManager):
         # logger.debug(sorted_scores)
         # logger.debug('-----------------------------\n-----------------------------\n-----------------------------')
         # logger.debug("Best excode suggestion(s):")
-        # for i in range(min(self.top_k, len(excode_context_textform))):
-        #     if expected_excode_text == excode_context_textform[i][0][self.ngram:]:
-        #         ngram_excode_correct[i] += 1
-        java_context = java_tokenize_take_last(data['lex_context'],
-                                               tokenizer=self.java_tokenizer,
-                                               train_len=self.train_len)
-        java_suggestions_all = np.array(copy.deepcopy(data['next_lex']), dtype=object)
+
+        # java_context = java_tokenize_take_last(data['lex_context'],
+        #                                        tokenizer=self.java_tokenizer,
+        #                                        train_len=self.train_len)
+        # java_suggestions_all = np.array(copy.deepcopy(data['next_lex']), dtype=object)
+        # for i in range(n_param):
+        #     for j in range(len(java_suggestions_all[i])):
+        #         java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
+        #                                                              tokenizer=self.java_tokenizer,
+        #                                                              to_sequence=False)
+
+        java_context = self.tokenize_context_str(data['lex_context'])
+        java_suggestions_all = []
         for i in range(n_param):
-            for j in range(len(java_suggestions_all[i])):
-                java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
-                                                                     tokenizer=self.java_tokenizer,
-                                                                     to_sequence=False)
+            java_suggestions_all.append([])
+            for j in range(len(data['next_lex'][i])):
+                java_suggestions_all[i].append([])
+                for k in range(len(data['next_lex'][i][j])):
+                    candidate_tokens = self.tokenize_from_str(data['next_lex'][i][j][k])
+                    java_suggestions_all[i][j].append(candidate_tokens)
         all_candidate_lex = []
         for i in range(len(excode_context_textform)):
-            java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-NGRAM_LEXICAL_PARAM:]
-            java_context_list = [(java_context_list, [])]
+            # java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-NGRAM_LEXICAL_PARAM:]
+            java_context_list = [(java_context, [])]
             for j in range(n_param):
                 java_suggestion_scores = []
                 for k in range(len(java_context_list)):
@@ -129,19 +150,30 @@ class NgramManager(ModelManager):
 
     def predict_param_using_lex(self, data):
         start_time = perf_counter()
-        java_context = java_tokenize_take_last(data['lex_context'],
-                                               tokenizer=self.java_tokenizer,
-                                               train_len=self.train_len)
-        java_suggestions_all = np.array(copy.deepcopy(data['next_lex']), dtype=object)
         n_param = len(data['next_lex'])
+        # java_context = java_tokenize_take_last(data['lex_context'],
+        #                                        tokenizer=self.java_tokenizer,
+        #                                        train_len=self.train_len)
+        # java_suggestions_all = np.array(copy.deepcopy(data['next_lex']), dtype=object)
+        # for i in range(n_param):
+        #     for j in range(len(java_suggestions_all[i])):
+        #         java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
+        #                                                              tokenizer=self.java_tokenizer,
+        #                                                              to_sequence=False)
+        # all_candidate_lex = []
+        # java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()
+        # java_context_list = [(java_context_list, [])]
+        java_context = self.tokenize_context_str(data['lex_context'])
+        java_suggestions_all = []
         for i in range(n_param):
-            for j in range(len(java_suggestions_all[i])):
-                java_suggestions_all[i][j] = java_tokenize_sentences(data['next_lex'][i][j],
-                                                                     tokenizer=self.java_tokenizer,
-                                                                     to_sequence=False)
+            java_suggestions_all.append([])
+            for j in range(len(data['next_lex'][i])):
+                java_suggestions_all[i].append([])
+                for k in range(len(data['next_lex'][i][j])):
+                    candidate_tokens = self.tokenize_from_str(data['next_lex'][i][j][k])
+                    java_suggestions_all[i][j].append(candidate_tokens)
+        java_context_list = [(java_context, [])]
         all_candidate_lex = []
-        java_context_list = self.java_tokenizer.sequences_to_texts([java_context])[0].split()[-NGRAM_LEXICAL_PARAM:]
-        java_context_list = [(java_context_list, [])]
         for j in range(n_param):
             java_suggestion_scores = []
             for k in range(len(java_context_list)):
@@ -209,7 +241,8 @@ class NgramManager(ModelManager):
                                          tokens=self.excode_tokens,
                                          method_content_only=False)[0]
 
-        excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[-NGRAM_EXCODE_METHODCALL:]
+        excode_context_textform = self.excode_tokenizer.sequences_to_texts([excode_context])[0].split()[
+                                  -NGRAM_EXCODE_METHODCALL:]
         excode_suggestions = excode_tokenize_candidates(data['method_candidate_excode'],
                                                         tokenizer=self.excode_tokenizer,
                                                         tokens=self.excode_tokens)
@@ -246,4 +279,3 @@ class NgramManager(ModelManager):
                 model_score += math.pow(2, power)
             method_suggestion_scores.append((i, model_score))
         return self.select_top_method_name_candidates(method_suggestion_scores, data['next_lex'], start_time)
-
