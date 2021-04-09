@@ -243,8 +243,8 @@ public class Parser {
     }
 
     private void createDataFiles() throws Exception {
-        validateFilesPath = FileProcessor.readLineByLine(Config.validateFilesPath + projectName + ".txt");
-        testFilesPath = FileProcessor.readLineByLine(Config.testFilesPath + projectName + ".txt");
+        validateFilesPath = FileProcessor.readLineByLineToSet(Config.validateFilesPath + projectName + ".txt");
+        testFilesPath = FileProcessor.readLineByLineToSet(Config.testFilesPath + projectName + ".txt");
         for (FileInfo fileInfo : systemTableCrossProject.fileList) {
             String[] filePath = fileInfo.filePath.split(Pattern.quote(File.separator));
             String excodeFilePath;

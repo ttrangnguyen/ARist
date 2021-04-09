@@ -1,10 +1,7 @@
 package flute.tokenizing.exe;
 
 import flute.jdtparser.ProjectParser;
-import flute.tokenizing.excode_data.ArgRecTest;
-import flute.tokenizing.excode_data.MultipleArgRecTest;
-import flute.tokenizing.excode_data.NodeSequenceConstant;
-import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.tokenizing.excode_data.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +30,7 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                     test.setMethodScope_name(pile.get(0).getMethodScope_name());
                     test.setClass_name(pile.get(0).getClass_name());
                     test.setMethodInvocClassQualifiedName(pile.get(0).getMethodInvocClassQualifiedName());
+                    test.setFilePath(pile.get(0).getFilePath());
                 }
 
                 List<String> paramList = new ArrayList<>();
@@ -85,5 +83,10 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
             }
         }
         return tests;
+    }
+
+    @Override
+    void postProcess(List<RecTest> tests) {
+
     }
 }

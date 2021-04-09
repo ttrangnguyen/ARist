@@ -64,11 +64,10 @@ public abstract class RecClient {
 
     public List<? extends RecTest> getTests(boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
         List<RecTest> tests;
+        setupGenerator();
         if (fromSavefile) {
             tests = readTestsFromFile(Config.LOG_DIR + projectName + "_" + this.testClass.getSimpleName() + "s.txt");
         } else {
-            setupGenerator();
-
             if (projectName.equals("demo")) {
                 tests = generateTestsFromDemoProject();
             } else {

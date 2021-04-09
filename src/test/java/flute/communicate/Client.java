@@ -8,7 +8,7 @@ public class Client {
 
     public static void main(String[] args) {
         try {
-            SocketClient socketClient = new SocketClient(17007);
+            SocketClient socketClient = new SocketClient(18007);
             Response response = socketClient.write("{\n" +
                     "  \"lex_context\": [\n" +
                     "    \"categoryDetail\",\n" +
@@ -117,13 +117,18 @@ public class Client {
                     "      ]\n" +
                     "    ]\n" +
                     "  ],\n" +
+                    "  \"param_list\": [\n" +
+                    "    \"categoryDetail\",\n" +
+                    "    \"categoryString\",\n" +
+                    "    \"categoryString\"\n" +
+                    "  ],\n" +
                     "  \"method_name\": \"StrongMethod\",\n" +
                     "  \"class_name\": \"StrongClass\",\n" +
                     "  \"expected_excode\": \"VAR(String) SEPA(,) VAR(String) SEPA(,) VAR(String)\",\n" +
                     "  \"expected_lex\": \"categoryString, categoryString, categoryString\",\n" +
                     "  \"excode_context_no_method\": \"TYPE(Log) VAR(Log,log) ASSIGN(ASSIGN)\",\n" +
                     "  \"method_candidate_excode\": [\n" +
-                    "    \"M_ACCESS(a,fjskjfgbWorld,2)\",\n" +
+                    "    \"M_ACCESS(a,helloWorld,2)\",\n" +
                     "    \"M_ACCESS(c,productManager,3)\",\n" +
                     "    \"M_ACCESS(d,productManager,4)\"\n" +
                     "  ]\n" +

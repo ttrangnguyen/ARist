@@ -4,9 +4,8 @@ import flute.data.typemodel.ArgumentModel;
 import flute.jdtparser.FileParser;
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MethodInvocationModel {
     private Expression expression = null;
@@ -17,6 +16,28 @@ public class MethodInvocationModel {
     List<ArgumentModel> argumentTypes = new ArrayList<>();
     ITypeBinding curClass;
     SimpleName methodName;
+
+    public MethodInvocationModel(MethodInvocation methodInvocation) {
+        this.curClass = null;
+        orgASTNode = methodInvocation;
+        methodBinding = methodInvocation.resolveMethodBinding();
+        expression = methodInvocation.getExpression();
+        expressionType = methodInvocation.getExpression() == null ? null : methodInvocation.getExpression().resolveTypeBinding();
+        arguments = methodInvocation.arguments();
+        genArgumentTypes();
+        methodName = methodInvocation.getName();
+    }
+
+    public MethodInvocationModel(SuperMethodInvocation superMethodInvocation) {
+        this.curClass = null;
+        orgASTNode = superMethodInvocation;
+        methodBinding = superMethodInvocation.resolveMethodBinding();
+        expression = superMethodInvocation;
+        expressionType = methodBinding == null ? null : methodBinding.getDeclaringClass();
+        arguments = superMethodInvocation.arguments();
+        genArgumentTypes();
+        methodName = superMethodInvocation.getName();
+    }
 
     public MethodInvocationModel(ITypeBinding curClass, MethodInvocation methodInvocation) {
         this.curClass = curClass;
@@ -98,8 +119,33 @@ public class MethodInvocationModel {
         return orgASTNode;
     }
 
+    public String genClassString() {
+        return curClass.getQualifiedName();
+    }
+
+    public String genMethodString() {
+        List<ITypeBinding> params = Arrays.asList(methodBinding.getParameterTypes());
+        List<String> paramString = params.stream().map(param -> {
+            return param.getName();
+        }).collect(Collectors.toList());
+        return methodName.toString() + "(" + String.join(",", paramString) + ")";
+    }
+
     @Override
     public String toString() {
         return orgASTNode.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MethodInvocationModel that = (MethodInvocationModel) o;
+        return Objects.equals(orgASTNode, that.orgASTNode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orgASTNode);
     }
 }

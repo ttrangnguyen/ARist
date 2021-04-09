@@ -167,7 +167,7 @@ public class RecTester {
 
         //Results in lex
         String expectedLex = test.getExpected_lex();
-        if (result.equals(expectedLex)) return true;
+        if (result.contains(expectedLex)) return true;
 
         return false;
     }

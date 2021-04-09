@@ -1,11 +1,18 @@
-top_k = 10
-train_len = 6 + 1
-ngram = 4 + 1  # 5-gram
+TOP_K = 10
+TRAIN_LEN_RNN = 6 + 1
+NGRAM_EXCODE_PARAM = 3 + 1  # 4-gram
+NGRAM_LEXICAL_PARAM = 3 + 1  # 4-gram
+NGRAM_EXCODE_METHODCALL = 4 + 1
+NGRAM_LEXICAL_METHODCALL = 4 + 1
 NGRAM_SCORE_WEIGHT = 1
-USE_RNN = True
-USE_NGRAM = False
+USE_EXCODE_MODEL = True
+USE_JAVA_MODEL = True
+USE_METHOD_CALL_MODEL = False
+USE_RNN = False
+USE_NGRAM = True
 USE_LEXSIM = True
 USE_LOCAL_VAR = False
+PARAM_LEXICAL_ONLY = False
 
 LEXSIM_MULTIPLIER = 1
 LEXSIM_SMALL_PENALTY = -3.32193  # log2(0.1)
@@ -13,16 +20,19 @@ LOCAL_VAR_BONUS = 1  # log2(2)
 
 PRINT_LOG = False
 
-project = 'all'
-testfold = 0
+PROJECT = 'all'
+TESTFOLD = 0
 # excode_model_rnn_path = "../../../../../model/excode_model_" + project + "_testfold_" + str(testfold) + ".h5"
 # java_model_rnn_path = "../../../../../model/java_model_" + project + "_testfold_" + str(testfold) + ".h5"
-excode_model_rnn_path = "../../../../../model/excode_model_all.h5"
-java_model_rnn_path = "../../../../../model/java_model_all.h5"
-excode_model_ngram_path = "../../../../../model/v3-10fold-ngram/" + str(ngram) + " gram/excode_model_" \
-                          + project + "_testfold_" + str(testfold) + "_ngram.pkl"
-java_model_ngram_path = "../../../../../model/v3-10fold-ngram/" + str(ngram) + " gram/java_model_" \
-                        + project + "_testfold_" + str(testfold) + "_ngram.pkl"
-excode_tokenizer_path = '../../../../src/main/python/model/excode/excode_tokenizer'
-java_tokenizer_path = '../../../../src/main/python/model/java/java_tokenizer'
-excode_tokens_path = '../../../../data_dict/excode/excode_tokens_n_symbols.txt'
+METHODCALL_MODEL_RNN_PATH = "../../../../../model/v4-10fold-method/" + str(NGRAM_EXCODE_METHODCALL) + " gram/method_call_model_" \
+                             + PROJECT + "_testfold_" + str(TESTFOLD) + "_rnn.h5"
+EXCODE_MODEL_RNN_PATH = "../../../../../model/excode_model_all.h5"
+JAVA_MODEL_RNN_PATH = "../../../../../model/java_model_all.h5"
+METHODCALL_MODEL_NGRAM_PATH = "../../../../../model/v4-10fold/" + str(NGRAM_LEXICAL_METHODCALL) + " gram/method_call_model_" \
+                              + PROJECT + "_testfold_" + str(TESTFOLD) + "_ngram.pkl"
+EXCODE_MODEL_NGRAM_PATH = "../../../../../model/v5-eclipse-netbeans-whole/netbeans/4 gram/excode_model_netbeans_tokens_testfold_0full_vocab_ngram.pkl"
+JAVA_MODEL_NGRAM_PATH = "../../../../../model/v5-eclipse-netbeans-whole/netbeans/4 gram/java_model_netbeans_tokens_testfold_0full_vocab_ngram.pkl"
+EXCODE_TOKENIZER_PATH = '../../../../src/main/python/model/excode/excode_tokenizer'
+JAVA_TOKENIZER_PATH = '../../../../src/main/python/model/java/java_tokenizer'
+METHODCALL_TOKENIZER_PATH = '../../../../src/main/python/model/method_call/method_call_eclipse_swt_tokenizer_3'
+EXCODE_TOKENS_PATH = '../../../../data_dict/excode/excode_tokens_n_symbols.txt'

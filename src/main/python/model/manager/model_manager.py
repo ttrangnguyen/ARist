@@ -14,16 +14,23 @@ from model.config import *
 import math
 import keras
 
-# Score = model_score * lexsim(optional) * local_var_bonus(optional)
+# Param score = model_score * lexsim(optional) * local_var_bonus(optional)
+# Method call score = avg(model_score of (sequence[i]+candidate), for all context sequence)
 
 
 class ModelManager:
     def __init__(self, top_k, project, train_len,
-                 excode_model_path, java_model_path,
-                 excode_tokenizer_path, java_tokenizer_path,
-                 excode_tokens_path):
-        self.excode_model = self.load_model(excode_model_path)
-        self.java_model = self.load_model(java_model_path)
+                 excode_model_path, java_model_path, method_call_model_path):
+        if USE_EXCODE_MODEL:
+            self.excode_model = self.load_model(excode_model_path)
+            self.excode_tokenizer = load(open(EXCODE_TOKENIZER_PATH, 'rb'))
+            self.excode_tokens = read_file(EXCODE_TOKENS_PATH).lower().split("\n")
+        if USE_JAVA_MODEL:
+            self.java_model = self.load_model(java_model_path)
+            self.java_tokenizer = load(open(JAVA_TOKENIZER_PATH, 'rb'))
+        if USE_METHOD_CALL_MODEL:
+            self.method_call_model = self.load_model(method_call_model_path)
+            self.method_call_tokenizer = load(open(METHODCALL_TOKENIZER_PATH, 'rb'))
         self.project = project
         self.top_k = top_k
         self.train_len = train_len
@@ -34,10 +41,7 @@ class ModelManager:
         self.logger.disabled = not PRINT_LOG
         stdout_handler = logging.StreamHandler(sys.stdout)
         self.logger.addHandler(stdout_handler)
-        self.excode_tokenizer = load(open(excode_tokenizer_path, 'rb'))
-        self.java_tokenizer = load(open(java_tokenizer_path, 'rb'))
-        self.excode_tokens = read_file(excode_tokens_path).lower().split("\n")
-        self.max_keep_step = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+        self.max_keep_step = [50] * 100
         self.lexsim_flag = USE_LEXSIM
 
     def load_model(self, model_path):
@@ -84,8 +88,8 @@ class ModelManager:
                                                train_len=self.train_len)
         return method_candidate_lex, java_context
 
-    def select_top_method_name_candidates(self, java_suggestion_scores, method_candidate_lex, start_time):
-        sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[1])[:self.top_k]
+    def select_top_method_name_candidates(self, suggestion_scores, method_candidate_lex, start_time):
+        sorted_scores = sorted(suggestion_scores, key=lambda x: -x[1])[:self.top_k]
         best_candidates_index = [x[0] for x in sorted_scores]
         best_candidates = []
         for i in best_candidates_index:

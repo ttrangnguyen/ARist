@@ -1,6 +1,10 @@
 import json
+
+import math
+
 from model.java.java_preprocess import java_tokenize_take_last, java_tokenize_sentences
 from model.excode.excode_preprocess import excode_tokenize, excode_tokenize_candidates
+from model.method_call.preprocessing import extract_method_call_from_cfg_string
 from name_stat.name_tokenizer import tokenize
 from model.predictor import prepare_sentences, predict, evaluate
 from time import perf_counter
@@ -10,20 +14,16 @@ from model.manager.model_manager import ModelManager
 
 class RNNManager(ModelManager):
     def __init__(self, top_k, project, train_len,
-                 excode_model_path, java_model_path,
-                 excode_tokenizer_path, java_tokenizer_path,
-                 excode_tokens_path):
+                 excode_model_path, java_model_path, method_call_model_path):
         super().__init__(top_k, project, train_len,
-                         excode_model_path, java_model_path,
-                         excode_tokenizer_path, java_tokenizer_path,
-                         excode_tokens_path)
+                         excode_model_path, java_model_path, method_call_model_path)
 
     def process(self, data, service):
         response = "rnn:{"
         if service == "param":
             response += self.predict_param(data)
         elif service == "method_name":
-            response += self.predict_method_name_using_lex(data)
+            response += self.predict_method_name_using_cfg(data)
         return response + "}"
 
     def predict_param(self, data):
@@ -177,3 +177,36 @@ class RNNManager(ModelManager):
         for i in range(len(log_p_sentence)):
             java_suggestion_scores.append((i, log_p_sentence[i]))
         return self.select_top_method_name_candidates(java_suggestion_scores, method_candidate_lex, start_time)
+
+    def predict_method_name_using_cfg(self, data):
+        start_time = perf_counter()
+        contexts = []
+        candidates = []
+        for method_context in data['method_context']:
+            context = extract_method_call_from_cfg_string(method_context)
+            contexts += self.method_call_tokenizer.texts_to_sequences([context])
+        for candidate in data['next_lex']:
+            candidates += self.method_call_tokenizer.texts_to_sequences([[candidate]])
+        x_test_all = []
+        y_test_all = []
+        sentence_len_all = []
+        for i in range(len(candidates)):
+            for method_context in contexts:
+                x_test, y_test, sentence_len = prepare_sentences(method_context,
+                                                                 [candidates[i]],
+                                                                 self.train_len,
+                                                                 len(method_context))
+                x_test_all += x_test.tolist()
+                y_test_all += y_test.tolist()
+                sentence_len_all += sentence_len
+        x_test_all = np.array(x_test_all)
+        y_test_all = np.array(y_test_all)
+        p_pred = predict(self.method_call_model, x_test_all)
+        log_p_sentences = evaluate(p_pred, y_test_all, sentence_len_all)
+        log_p_candidates = []
+        for i in range(len(data['next_lex'])):
+            sum_score = 0
+            for j in range(i*len(contexts), (i+1)*len(contexts)):
+                sum_score += math.pow(2, log_p_sentences[j])
+            log_p_candidates.append((i, sum_score))
+        return self.select_top_method_name_candidates(log_p_candidates, data['next_lex'], start_time)

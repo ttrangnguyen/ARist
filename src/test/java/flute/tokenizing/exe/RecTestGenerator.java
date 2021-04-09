@@ -5,13 +5,19 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
+import flute.jdtparser.callsequence.FileNode;
+import flute.jdtparser.callsequence.MethodCallNode;
+import flute.jdtparser.callsequence.node.cfg.MinimalNode;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.file_processing.DirProcessor;
+import org.eclipse.jdt.core.dom.IBinding;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public abstract class RecTestGenerator {
     private JavaExcodeTokenizer tokenizer;
@@ -89,8 +95,12 @@ public abstract class RecTestGenerator {
             }
             if (methodDeclaration == null) continue;
         }
+        postProcess(tests);
+
         return tests;
     }
 
     abstract List<RecTest> generateInMethodScope(List<NodeSequenceInfo> excodes, int methodDeclarationStartIdx, int methodDeclarationEndIdx);
+
+    abstract void postProcess(List<RecTest> tests);
 }

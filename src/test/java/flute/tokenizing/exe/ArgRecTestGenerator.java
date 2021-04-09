@@ -2,6 +2,7 @@ package flute.tokenizing.exe;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.*;
+import flute.crawling.APICrawler;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
@@ -214,7 +215,19 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             if (oneArgTest.getArgPos() == 0) {
                 oneArgTest.setParam_name("");
             } else {
-                oneArgTest.setParam_name(getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null));
+                String paramName = getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null);
+                try {
+                    if(paramName == null){
+                        paramName = APICrawler.paramNames(
+                                getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
+                        ).get(oneArgTest.getArgPos() - 1);
+//                        System.out.println(paramName);
+                    }
+                } catch (Exception e) {
+//                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
+                    e.printStackTrace();
+                }
+                oneArgTest.setParam_name(paramName);
             }
 
             String expectedExcode = oneArgTest.getExpected_excode();
@@ -247,5 +260,10 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
         tests.addAll(oneArgTests);
         return tests;
+    }
+
+    @Override
+    void postProcess(List<RecTest> tests) {
+
     }
 }
