@@ -1,5 +1,6 @@
 package flute.tokenizing.exe;
 
+import flute.analysis.ExpressionType;
 import flute.analysis.structure.DataFrame;
 import flute.communicate.SocketClient;
 import flute.communicate.schema.Response;
@@ -73,6 +74,8 @@ public class ArgRecClient extends MethodCallRecClient {
     void test(Response response, RecTest test, boolean verbose, boolean doPrintIncorrectPrediction) {
         super.test(response, test, verbose, doPrintIncorrectPrediction);
         dataFrame.insert("NumArg", ((MultipleArgRecTest)test).getNumArg());
+        ExpressionType argType = ((MultipleArgRecTest)test).getArgRecTestList().get(0).getArgType();
+        if (argType != null) dataFrame.insert("ArgType", argType.ordinal());
     }
 
     @Override
@@ -84,6 +87,8 @@ public class ArgRecClient extends MethodCallRecClient {
         if (test.isIgnored()) {
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
             dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
+            dataFrame.insert(String.format("%sActualTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                    .getArgType()), 0);
             return;
         }
 
@@ -98,22 +103,34 @@ public class ArgRecClient extends MethodCallRecClient {
         if (isOverallCorrectTopK) {
             dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
             dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
+            dataFrame.insert(String.format("%sOverallTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                    .getArgType()), 1);
 
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 1);
             dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
+            dataFrame.insert(String.format("%sActualTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                    .getArgType()), 1);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 1);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
+                dataFrame.insert(String.format("%sTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                        .getArgType()), 1);
             }
         } else {
             dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
             dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
+            dataFrame.insert(String.format("%sOverallTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                    .getArgType()), 0);
 
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
             dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
+            dataFrame.insert(String.format("%sActualTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                    .getArgType()), 0);
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
+                dataFrame.insert(String.format("%sTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                        .getArgType()), 0);
 
                 if (doPrintIncorrectPrediction) {
                     Logger.write(gson.toJson(test), projectName + "_incorrect_" + getTestClass().getSimpleName() + "s_top_" + k + ".txt");
@@ -154,6 +171,21 @@ public class ArgRecClient extends MethodCallRecClient {
                 }
                 for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
                 for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%dArg%d", k, i)).getMean()));
+                accuracyPerNumArg.add(row.toArray(new String[row.size()]));
+            }
+        } else {
+            for (ExpressionType argType: ExpressionType.values()) {
+                row = new ArrayList<>();
+                row.add(String.format("%s", argType.toString()));
+                row.add(String.format("%f", dataFrame.getVariable("ArgType").getProportionOfValue(argType.ordinal(), true)));
+                if (this.isNGramUsed) {
+                    for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramTop%d%s", k, argType)).getMean()));
+                }
+                if (this.isRNNUsed) {
+                    for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d%s", k, argType)).getMean()));
+                }
+                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d%s", k, argType)).getMean()));
+                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%d%s", k, argType)).getMean()));
                 accuracyPerNumArg.add(row.toArray(new String[row.size()]));
             }
         }
