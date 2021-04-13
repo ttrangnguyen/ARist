@@ -77,7 +77,7 @@ public class StringUtils {
 		}
 
 		j = -1;
-		for (int i = 1; i < s.length(); ++i) {
+		for (int i = 0; i < s.length(); ++i) {
 			while (j >= 0 && t.charAt(j + 1) != s.charAt(i)) j = next[j];
 			if (t.charAt(j + 1) == s.charAt(i)) ++j;
 			if (j == t.length() - 1) return i - j;
