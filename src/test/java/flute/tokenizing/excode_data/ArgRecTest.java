@@ -1,5 +1,7 @@
 package flute.tokenizing.excode_data;
 
+import flute.analysis.ExpressionType;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +24,7 @@ public class ArgRecTest extends MethodCallRecTest {
     /**
      * Expected result (only the name is required)
      */
+    private ExpressionType argType;
     private String methodAccessExcode;
     private String methodAccessLex;
     private String objectCreationExcode;
@@ -80,6 +83,14 @@ public class ArgRecTest extends MethodCallRecTest {
         this.next_lex = next_lex;
     }
 
+    public ExpressionType getArgType() {
+        return argType;
+    }
+
+    public void setArgType(ExpressionType argType) {
+        this.argType = argType;
+    }
+
     public String getMethodAccessExcode() {
         return methodAccessExcode;
     }
@@ -123,7 +134,7 @@ public class ArgRecTest extends MethodCallRecTest {
     public MultipleArgRecTest toSingleArgRecTest() {
         MultipleArgRecTest test = new MultipleArgRecTest();
         test.setFilePath(this.getFilePath());
-        test.setNumArg(1);
+        test.setNumArg(this.getArgPos() != 0? 1: 0);
         test.setLex_context(this.getLex_context());
         test.setExcode_context(this.getExcode_context());
         test.setMethodScope_name(this.getMethodScope_name());

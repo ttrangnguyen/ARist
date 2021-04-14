@@ -14,9 +14,7 @@ import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.javaparsermodel.declarations.*;
 import com.github.javaparser.symbolsolver.javassistmodel.JavassistMethodDeclaration;
-import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionFieldDeclaration;
 import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionMethodDeclaration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
@@ -35,15 +33,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class JavaAnalyser {
-    enum ExpressionType {
-        NAME, METHOD_INVOC, FIELD_ACCESS, ARRAY_ACCESS, CAST, STRING_LIT, NUM_LIT, CHAR_LIT, TYPE_LIT, BOOL_LIT,
-        NULL_LIT, OBJ_CREATION, ARR_CREATION, THIS, SUPER, COMPOUND, LAMBDA, OTHERS
-    }
-
-    enum Origin {
-        REFLECT_FIELD, FIELD, PARAM, LOCAL_VAR, LIT, ENUM_CONST, CLASS, NULL, OBJ_CREATION, ARR_CREATION, THIS, SUPER, OTHERS
-    }
-
     private List<File> projects;
 
     private DataFrame dataFrame = new DataFrame();
@@ -352,48 +341,12 @@ public class JavaAnalyser {
             cu.findAll(MethodCallExpr.class).forEach(methodCallExpr -> {
                 boolean methodCallLogged = false;
                 for (Expression arg : methodCallExpr.getArguments()) {
-                    if (arg instanceof NameExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.NAME.ordinal());
-                    } else if (arg instanceof MethodCallExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.METHOD_INVOC.ordinal());
-                    } else if (arg instanceof FieldAccessExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.FIELD_ACCESS.ordinal());
-                    } else if (arg instanceof ArrayAccessExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.ARRAY_ACCESS.ordinal());
-                    } else if (arg instanceof CastExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.CAST.ordinal());
-                    } else if (arg instanceof StringLiteralExpr || arg instanceof TextBlockLiteralExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.STRING_LIT.ordinal());
+                    dataFrame.insert("Expression type of param", ExpressionType.get(arg).ordinal());
+                    if (ExpressionType.get(arg) == ExpressionType.STRING_LIT) {
                         if (!methodCallLogged) {
                             methodCallLogged = true;
                             //logMethodCall(methodCallExpr, file, "logStringArg.txt", false);
                         }
-                    } else if (arg instanceof IntegerLiteralExpr || arg instanceof LongLiteralExpr || arg instanceof DoubleLiteralExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.NUM_LIT.ordinal());
-                    } else if (arg instanceof CharLiteralExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.CHAR_LIT.ordinal());
-                    } else if (arg instanceof ClassExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.TYPE_LIT.ordinal());
-                    } else if (arg instanceof BooleanLiteralExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.BOOL_LIT.ordinal());
-                    } else if (arg instanceof NullLiteralExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.NULL_LIT.ordinal());
-                    } else if (arg instanceof ObjectCreationExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.OBJ_CREATION.ordinal());
-                    } else if (arg instanceof ArrayCreationExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.ARR_CREATION.ordinal());
-                    } else if (arg instanceof ThisExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.THIS.ordinal());
-                    } else if (arg instanceof SuperExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.SUPER.ordinal());
-                    } else if (arg instanceof AssignExpr || arg instanceof BinaryExpr || arg instanceof ConditionalExpr
-                            || arg instanceof EnclosedExpr || arg instanceof InstanceOfExpr || arg instanceof UnaryExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.COMPOUND.ordinal());
-                    } else if (arg instanceof LambdaExpr) {
-                        dataFrame.insert("Expression type of param", ExpressionType.LAMBDA.ordinal());
-                    } else {
-                        //System.out.println(arg.getClass());
-                        dataFrame.insert("Expression type of param", ExpressionType.OTHERS.ordinal());
                     }
                 }
             });
@@ -415,52 +368,8 @@ public class JavaAnalyser {
         try {
             cu.findAll(MethodCallExpr.class).forEach(methodCallExpr -> {
                 for (Expression arg : methodCallExpr.getArguments()) {
-                    if (arg instanceof StringLiteralExpr || arg instanceof TextBlockLiteralExpr) {
-                        dataFrame.insert("Origin of arg", Origin.LIT.ordinal());
-                    } else if (arg instanceof IntegerLiteralExpr || arg instanceof LongLiteralExpr || arg instanceof DoubleLiteralExpr) {
-                        dataFrame.insert("Origin of arg", Origin.LIT.ordinal());
-                    } else if (arg instanceof CharLiteralExpr) {
-                        dataFrame.insert("Origin of arg", Origin.LIT.ordinal());
-                    } else if (arg instanceof ClassExpr) {
-                        dataFrame.insert("Origin of arg", Origin.CLASS.ordinal());
-                    } else if (arg instanceof BooleanLiteralExpr) {
-                        dataFrame.insert("Origin of arg", Origin.LIT.ordinal());
-                    } else if (arg instanceof NullLiteralExpr) {
-                        dataFrame.insert("Origin of arg", Origin.NULL.ordinal());
-                    } else if (arg instanceof ObjectCreationExpr) {
-                        dataFrame.insert("Origin of arg", Origin.OBJ_CREATION.ordinal());
-                    } else if (arg instanceof ArrayCreationExpr) {
-                        dataFrame.insert("Origin of arg", Origin.ARR_CREATION.ordinal());
-                    } else if (arg instanceof ThisExpr) {
-                        dataFrame.insert("Origin of arg", Origin.THIS.ordinal());
-                    } else if (arg instanceof SuperExpr) {
-                        dataFrame.insert("Origin of arg", Origin.SUPER.ordinal());
-                    } else {
-                        if (arg.findFirst(NameExpr.class).isPresent()) {
-                            NameExpr name = arg.findFirst(NameExpr.class).get();
-                            try {
-                                ResolvedValueDeclaration resolve = name.resolve();
-                                if (resolve instanceof JavaParserFieldDeclaration) {
-                                    dataFrame.insert("Origin of arg", Origin.FIELD.ordinal());
-                                } else if (resolve instanceof ReflectionFieldDeclaration) {
-                                    dataFrame.insert("Origin of arg", Origin.REFLECT_FIELD.ordinal());
-                                } else if (resolve instanceof JavaParserParameterDeclaration) {
-                                    dataFrame.insert("Origin of arg", Origin.PARAM.ordinal());
-                                } else if (resolve instanceof JavaParserSymbolDeclaration) {
-                                    dataFrame.insert("Origin of arg", Origin.LOCAL_VAR.ordinal());
-                                } else if (resolve instanceof JavaParserClassDeclaration) {
-                                    dataFrame.insert("Origin of arg", Origin.OTHERS.ordinal());
-                                } else if (resolve instanceof JavaParserEnumConstantDeclaration) {
-                                    dataFrame.insert("Origin of arg", Origin.ENUM_CONST.ordinal());
-                                } else {
-                                    //System.out.println(resolve.getClass());
-                                    dataFrame.insert("Origin of arg", Origin.OTHERS.ordinal());
-                                }
-                            } catch (Exception e) {
-                                dataFrame.insert("Origin of arg", Origin.OTHERS.ordinal());
-                            }
-                        }
-                    }
+                    ExpressionOrigin origin = ExpressionOrigin.get(arg);
+                    if (origin != null) dataFrame.insert("Origin of arg", ExpressionOrigin.get(arg).ordinal());
                 }
             });
         } catch (ParseProblemException e) {
@@ -470,7 +379,7 @@ public class JavaAnalyser {
 
     private void printStatisticsOnOriginOfArgs() {
         Logger.write("Statistics on origin of arguments:");
-        for (Origin origin : Origin.values()) {
+        for (ExpressionOrigin origin : ExpressionOrigin.values()) {
             Logger.write(String.format("\t%-14s%14.2f%%", origin + ":", dataFrame.getVariable("Origin of arg").getProportionOfValue(origin.ordinal(), true)));
         }
         Logger.write("");

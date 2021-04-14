@@ -2,6 +2,7 @@ package flute.tokenizing.exe;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.*;
+import flute.analysis.ExpressionType;
 import flute.crawling.APICrawler;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
@@ -98,6 +99,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                             test.setExpected_lex(arg.toString());
+                            test.setArgType(ExpressionType.get(arg));
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
                             test.setIs_local_var(isLocalVarList);
@@ -184,6 +186,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                     }
                     test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
+                    test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
                     test.setExpected_excode_ori(argExcodes);
                     if (!RecTestFilter.predictable(argExcodes)) isClean = false;
                 }
