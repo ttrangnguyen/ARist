@@ -21,7 +21,7 @@ class NgramManager(ModelManager):
         if service == "param":
             response += self.predict_param(data)
         elif service == "method_name":
-            response += self.predict_method_name_using_cfg(data)
+            response += self.predict_method_name_using_excode_and_lex(data)
         return response + "}"
 
     def predict_param(self, data):
@@ -281,3 +281,37 @@ class NgramManager(ModelManager):
                 model_score += math.pow(2, power)
             method_suggestion_scores.append((i, model_score))
         return self.select_top_method_name_candidates(method_suggestion_scores, data['next_lex'], start_time)
+
+    def predict_method_name_using_excode_and_lex(self, data):
+        start_time = perf_counter()
+        excode_context = data['excode_context'].split(' ')[-NGRAM_EXCODE_PARAM:]
+        java_context = self.tokenize_context_str(data['lex_context'])
+        method_suggestion_scores = []
+        for i in range(len(data['method_candidate_excode'])):
+            excode_score = score_ngram(model=self.excode_model,
+                                       sentence=excode_context + [data['method_candidate_excode'][i]],
+                                       n=NGRAM_EXCODE_METHODCALL,
+                                       start_pos=len(excode_context))
+            lex_tokens = self.tokenize_from_str(data['method_candidate_lex'][i][0])
+            lex_score = score_ngram(model=self.java_model,
+                                    sentence=java_context + lex_tokens,
+                                    n=NGRAM_LEXICAL_METHODCALL,
+                                    start_pos=len(java_context))
+            model_score = excode_score + lex_score
+            method_suggestion_scores.append((i, model_score))
+        sorted_scores = sorted(method_suggestion_scores, key=lambda x: -x[1])
+        method_set = set()
+        best_candidates = []
+        for i in range(len(sorted_scores)):
+            origin_idx = sorted_scores[i][0]
+            method_lex = data['method_candidate_lex'][origin_idx][0]
+            if method_lex not in method_set:
+                method_set.add(method_lex)
+                best_candidates.append(method_lex)
+            if len(method_set) == self.top_k:
+                break
+        print(best_candidates)
+        return 'result:' + json.dumps(best_candidates) \
+               + ',runtime:' + str(perf_counter() - start_time)
+
+
