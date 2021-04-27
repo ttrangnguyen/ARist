@@ -88,6 +88,9 @@ public class MethodCallOriginStatisticsGIT {
                 return true;
             }).collect(Collectors.toList());
 
+            if (javaFiles.size() == 0) continue;
+
+
             int batchSize = IntMath.divide(javaFiles.size(), Config.NUM_THREAD, RoundingMode.UP);
             List<List<File>> fileBatches = Lists.partition(javaFiles, batchSize);
             final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
@@ -129,15 +132,15 @@ public class MethodCallOriginStatisticsGIT {
                 if (!isProcessing) isDone = true;
             }
 
-            Logger.write(String.format("PROJECT JRE call: %d ~ %.2f%%", projectData.jreCall, projectData.jreCall * 1f / projectData.getSum()), "stat.txt");
-            Logger.write(String.format("PROJECT Source call: %d ~ %.2f%%", projectData.srcCall, projectData.srcCall * 1f / projectData.getSum()), "stat.txt");
-            Logger.write(String.format("PROJECT Lib call: %d ~ %.2f%%", projectData.libCall, projectData.libCall * 1f / projectData.getSum()), "stat.txt");
+            Logger.write(String.format("PROJECT JRE call: %d ~ %.2f%%", projectData.jreCall, projectData.jreCall * 100f / projectData.getSum()), "stat.txt");
+            Logger.write(String.format("PROJECT Source call: %d ~ %.2f%%", projectData.srcCall, projectData.srcCall * 100f / projectData.getSum()), "stat.txt");
+            Logger.write(String.format("PROJECT Lib call: %d ~ %.2f%%", projectData.libCall, projectData.libCall * 100f / projectData.getSum()), "stat.txt");
             Logger.write("====");
 
             progressBar.setProgress(projectCount++ * 1f / projects.length, true);
-            System.out.println(String.format("JRE call: %d ~ %.2f%%", summaryData.jreCall, summaryData.jreCall * 1f / summaryData.getSum()));
-            System.out.println(String.format("Source call: %d ~ %.2f%%", summaryData.srcCall, summaryData.srcCall * 1f / summaryData.getSum()));
-            System.out.println(String.format("Lib call: %d ~ %.2f%%", summaryData.libCall, summaryData.libCall * 1f / summaryData.getSum()));
+            System.out.println(String.format("JRE call: %d ~ %.2f%%", summaryData.jreCall, summaryData.jreCall * 100f / summaryData.getSum()));
+            System.out.println(String.format("Source call: %d ~ %.2f%%", summaryData.srcCall, summaryData.srcCall * 100f / summaryData.getSum()));
+            System.out.println(String.format("Lib call: %d ~ %.2f%%", summaryData.libCall, summaryData.libCall * 100f / summaryData.getSum()));
         }
     }
 }
