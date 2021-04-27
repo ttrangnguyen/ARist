@@ -90,7 +90,6 @@ public class MethodCallOriginStatisticsGIT {
 
             if (javaFiles.size() == 0) continue;
 
-
             int batchSize = IntMath.divide(javaFiles.size(), Config.NUM_THREAD, RoundingMode.UP);
             List<List<File>> fileBatches = Lists.partition(javaFiles, batchSize);
             final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
