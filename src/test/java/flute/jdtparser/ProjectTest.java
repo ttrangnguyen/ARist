@@ -24,14 +24,11 @@ public class ProjectTest {
         Config.PROJECT_DIR = Config.STORAGE_DIR + "/repositories/git/JAVA_repos/demo";
 
         //download jar from pom.xml
-        AtomicReference<String> jarFolder = new AtomicReference<>();
         DirProcessor.getAllEntity(new File(Config.PROJECT_DIR), false).stream().filter(file -> {
             return file.getAbsolutePath().endsWith("/pom.xml");
         }).forEach(pomFile -> {
             try {
-                jarFolder.set(
-                        MvnDownloader.download(Config.PROJECT_DIR, pomFile.getAbsolutePath()).getAbsolutePath()
-                );
+                MvnDownloader.download(Config.PROJECT_DIR, pomFile.getAbsolutePath());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -47,7 +44,7 @@ public class ProjectTest {
         }
 
         //scan jar file
-        if (jarFolder.get() != null) Config.loadJarPath(jarFolder.get());
+        Config.loadJarPath(Config.PROJECT_DIR);
 
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
