@@ -4,10 +4,11 @@ import flute.config.Config;
 import flute.data.MultiMap;
 import flute.data.exception.ClassScopeNotFoundException;
 import flute.data.exception.MethodInvocationNotFoundException;
+
 import flute.utils.file_processing.DirProcessor;
-import flute.utils.logging.Timer;
 import flute.utils.mvn.MvnDownloader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import flute.utils.logging.Timer;
+
 import org.eclipse.jdt.core.compiler.IProblem;
 
 import java.io.File;
@@ -31,9 +32,7 @@ public class ProjectTest {
                 jarFolder.set(
                         MvnDownloader.download(Config.PROJECT_DIR, pomFile.getAbsolutePath()).getAbsolutePath()
                 );
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (XmlPullParserException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
