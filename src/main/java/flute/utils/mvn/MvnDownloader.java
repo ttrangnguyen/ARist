@@ -3,6 +3,7 @@ package flute.utils.mvn;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.bouncycastle.math.raw.Mod;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.w3c.dom.Document;
@@ -29,7 +30,7 @@ public class MvnDownloader {
         Model model = reader.read(new FileReader(pomPath));
 
         model.getDependencies().forEach(dependency -> {
-            String version = getVersion(dependency);
+            String version = getVersion(dependency, model);
             String jarUrl = "https://repo1.maven.org/maven2/" +
                     dependency.getGroupId().replace(".", "/")
                     + "/" + dependency.getArtifactId() + "/" + version + "/" + dependency.getArtifactId() + "-" + version + ".jar";
@@ -46,8 +47,15 @@ public class MvnDownloader {
         return new File(projectPath + "/flute-mvn");
     }
 
-    private static String getVersion(Dependency dependency) {
-        if (dependency.getVersion() != null) return dependency.getVersion();
+    private static String getVersion(Dependency dependency, Model model) {
+        if (dependency.getVersion() != null) {
+            if (dependency.getVersion().startsWith("${") && dependency.getVersion().endsWith("}")) {
+                return model.getProperties().getProperty(
+                        dependency.getVersion().substring(2, dependency.getVersion().length() - 1)
+                );
+            }
+            return dependency.getVersion();
+        }
         String metaUrl = "https://repo1.maven.org/maven2/" +
                 dependency.getGroupId().replace(".", "/")
                 + "/" + dependency.getArtifactId() + "/maven-metadata.xml";
