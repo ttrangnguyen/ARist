@@ -4,23 +4,55 @@ import flute.config.Config;
 import flute.data.MultiMap;
 import flute.data.exception.ClassScopeNotFoundException;
 import flute.data.exception.MethodInvocationNotFoundException;
-import org.eclipse.jdt.core.compiler.IProblem;
-import flute.utils.logging.Timer;
+import flute.utils.file_processing.DirProcessor;
+import flute.utils.mvn.MvnDownloader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class ProjectTest {
 
     public static void justRun() throws IOException {
-        Config.loadConfig(Config.STORAGE_DIR + "/json/netbeans.json");
+        Config.PROJECT_DIR = Config.STORAGE_DIR + "/repositories/git/JAVA_repos/demo";
+
+        //download jar from pom.xml
+        AtomicReference<String> jarFolder = new AtomicReference<>();
+        DirProcessor.getAllEntity(new File(Config.PROJECT_DIR), false).stream().filter(file -> {
+            return file.getAbsolutePath().endsWith("/pom.xml");
+        }).forEach(pomFile -> {
+            try {
+                jarFolder.set(
+                        MvnDownloader.download(Config.PROJECT_DIR, pomFile.getAbsolutePath()).getAbsolutePath()
+                );
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            }
+        });
+
+        //scan src folder
+        String[] prefixSrc = new String[]{"/src", "/demosrc", "/testsrc", "/antsrc", "/src_ant", "/src/main/java"};
+        for (String str : prefixSrc) {
+            try {
+                Config.loadSrcPath(Config.PROJECT_DIR, str);
+            } catch (Exception e) {
+            }
+        }
+
+        //scan jar file
+        if (jarFolder.get() != null) Config.loadJarPath(jarFolder.get());
+
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 
         //INPUT: Test file
+        Config.TEST_FILE_PATH = "";
         File curFile = new File(Config.TEST_FILE_PATH);
         //INPUT: Position after .
         FileParser fileParser = new FileParser(projectParser, curFile, Config.TEST_POSITION);
