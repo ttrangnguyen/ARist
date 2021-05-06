@@ -58,30 +58,31 @@ public class APITest {
                 Config.SOURCE_PATH, Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
     }
 
-    public static MultiMap test(BaseTestCase testCase, int pos) throws Exception {
+    public static MultiMap test(BaseTestCase testCase) throws Exception {
         if (!curProject.equals(testCase.getProjectName())) {
             initProject(testCase.getProjectName());
         }
 
         File curFile = new File(testCase.getRelativeFilePath());
-        FileParser fileParser = new FileParser(curProjectParser, curFile, 0);
-        fileParser.setPosition(
-                testCase.getBeginPosition().line, testCase.getBeginPosition().column
-        );
+        FileParser fileParser = new FileParser(curProjectParser, curFile, testCase.getBeginPosition().line, testCase.getBeginPosition().column);
+
         fileParser.parse();
-        return fileParser.genParamsAt(pos);
+        System.out.println(fileParser.getParamPosition());
+        return fileParser.genCurParams();
     }
 
     public static void main(String[] args) throws MavenInvocationException {
         BaseTestCase testCase = new BaseTestCase(
                 "demo", "/Users/maytinhdibo/Project/Flute/storage/repositories/git/JAVA_repos/demo/src/main/java/com/aweber/flume/sink/rabbitmq/RabbitMQSink.java",
-                new Position(200, 21), "context", "outer", "target"
+                new Position(326, 46), "context", "outer", "target"
         );
 
         try {
-            MultiMap result = test(testCase, 0);
+            MultiMap result = test(testCase);
+
             ProjectTest.printMap(result, "RESULT");
         } catch (Exception e) {
+            ;
             e.printStackTrace();
         }
     }

@@ -22,7 +22,8 @@ public class Config {
     public final static int PARAM_SERVICE_PORT = 18007;
     public final static int METHOD_NAME_SERVICE_PORT = 17007;
 
-    public static String MVN_HOME = "/usr/local/Cellar/maven/3.6.3_1/libexec";
+    public final static String MVN_HOME = "/usr/local/Cellar/maven/3.6.3_1/libexec";
+    public final static boolean TARGET_PARAM_POSITION = true;
 
     /***
      * Logging

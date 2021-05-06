@@ -231,6 +231,15 @@ public class FileParser {
         return genNextParams(-1, null);
     }
 
+    public MultiMap genCurParams() {
+        if (paramPosition != -1) {
+            return genNextParams(paramPosition, null);
+        } else {
+            return null;
+        }
+    }
+
+
     /**
      * @return Next params can append the input position of a method invocation with sublist of pre-written parameters.
      */
@@ -536,19 +545,63 @@ public class FileParser {
         return Optional.of(listMember);
     }
 
+    private int paramPosition = -1;
+
+    public int getParamPosition() {
+        return paramPosition;
+    }
+
     public void parseCurMethodInvocation() throws MethodInvocationNotFoundException {
         final ASTNode[] astNode = {null};
 
-        cu.accept(new ASTVisitor() {
-            public void preVisit(ASTNode node) {
-                if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
-                        && node.getStartPosition() <= curPosition
-                        && curPosition <= (node.getStartPosition() + node.getLength())) {
-                    astNode[0] = node;
-                }
-            }
-        });
+        if (Config.TARGET_PARAM_POSITION) {
+            cu.accept(new ASTVisitor() {
+                public void preVisit(ASTNode node) {
+                    if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
+                            && node.getStartPosition() <= curPosition
+                            && curPosition <= (node.getStartPosition() + node.getLength())) {
+                        int start = 0;
+                        int stop = 0;
+                        List arguments = null;
+                        if (node instanceof MethodInvocation) {
+                            MethodInvocation methodInvocation = (MethodInvocation) node;
+                            start = methodInvocation.getName().getStartPosition() + methodInvocation.getName().getLength();
+                            stop = methodInvocation.getStartPosition() + methodInvocation.getLength();
+                            arguments = methodInvocation.arguments();
+                        } else {
+                            SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
+                            start = superMethodInvocation.getName().getStartPosition() + superMethodInvocation.getName().getLength();
+                            stop = superMethodInvocation.getStartPosition() + superMethodInvocation.getLength();
+                            arguments = superMethodInvocation.arguments();
+                        }
+                        if (curPosition > start + 1 && curPosition < stop + 1) {
+                            astNode[0] = node;
+                            int pos = 0;
 
+                            paramPosition = -1;
+                            for (Object arg : arguments) {
+                                ASTNode astNodeArg = (ASTNode) arg;
+                                if (astNodeArg.getStartPosition() <= curPosition
+                                        && curPosition - 1 <= (astNodeArg.getStartPosition() + astNodeArg.getLength())) {
+                                    paramPosition = pos;
+                                }
+                                pos++;
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            cu.accept(new ASTVisitor() {
+                public void preVisit(ASTNode node) {
+                    if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
+                            && node.getStartPosition() <= curPosition
+                            && curPosition <= (node.getStartPosition() + node.getLength())) {
+                        astNode[0] = node;
+                    }
+                }
+            });
+        }
         if (astNode[0] == null) {
             curMethodInvocation = null;
             throw new MethodInvocationNotFoundException("Method invocation not found!");
