@@ -17,7 +17,7 @@ public class APITest {
 
     private static void initProject(String projectName) {
         curProject = projectName;
-        Config.PROJECT_DIR = Config.STORAGE_DIR + "repositories/git/JAVA_repos/" + projectName;
+        Config.PROJECT_DIR = APITestGenerator.REPO_FOLDER + projectName;
 
         String[] prefixSrc = new String[]{"/src", "/demosrc", "/testsrc", "/antsrc", "/src_ant", "/src/main/java"};
         for (String str : prefixSrc) {
@@ -63,18 +63,17 @@ public class APITest {
             initProject(testCase.getProjectName());
         }
 
-        File curFile = new File(testCase.getRelativeFilePath());
+        File curFile = new File(APITestGenerator.REPO_FOLDER + testCase.getProjectName() + "/" + testCase.getRelativeFilePath());
         FileParser fileParser = new FileParser(curProjectParser, curFile, testCase.getBeginPosition().line, testCase.getBeginPosition().column);
 
         fileParser.parse();
-        System.out.println(fileParser.getParamPosition());
         return fileParser.genCurParams();
     }
 
     public static void main(String[] args) throws MavenInvocationException {
         BaseTestCase testCase = new BaseTestCase(
-                "demo", "/Users/maytinhdibo/Project/Flute/storage/repositories/git/JAVA_repos/demo/src/main/java/com/aweber/flume/sink/rabbitmq/RabbitMQSink.java",
-                new Position(326, 46), "context", "outer", "target"
+                "3breadt_dd-plist", "src/test/java/com/dd/plist/test/NSNumberTest.java",
+                new Position(81, 44), "context", "outer", "target"
         );
 
         try {

@@ -4,6 +4,8 @@ import com.github.javaparser.Position;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.List;
+
 public class BaseTestCase {
     protected String projectName;
     protected String relativeFilePath;
@@ -14,6 +16,8 @@ public class BaseTestCase {
     protected String outerMethodSignature;
 
     protected String target;
+
+    protected List<Candidate> candidates;
 
     public BaseTestCase(String projectName, String relativeFilePath, Position beginPosition, String context, String outerMethodSignature, String target) {
         this.projectName = projectName;
@@ -102,5 +106,13 @@ public class BaseTestCase {
 
     public void setTarget(String target) {
         this.target = target;
+    }
+
+    public List<Candidate> getCandidates() {
+        return candidates;
+    }
+
+    public void setCandidates(List<Candidate> candidates) {
+        this.candidates = candidates;
     }
 }
