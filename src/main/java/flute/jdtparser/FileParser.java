@@ -13,6 +13,7 @@ import flute.data.typemodel.*;
 
 import flute.jdtparser.utils.ParserCompare;
 import flute.jdtparser.utils.ParserUtils;
+import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
@@ -27,6 +28,7 @@ import java.util.List;
 public class FileParser {
     private ProjectParser projectParser;
     private File curFile;
+    private String curFileContent;
     private int curPosition;
 
     private ITypeBinding curClass;
@@ -73,6 +75,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, String fileName, String fileContent, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = null;
+        this.curFileContent = fileContent;
         this.curPosition = curPosition;
         cu = projectParser.createCU(fileName, fileContent);
     }
@@ -88,6 +91,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, File curFile, int curLine, int curColumn) {
         this.projectParser = projectParser;
         this.curFile = curFile;
+        curFileContent = FileProcessor.read(curFile);
         cu = projectParser.createCU(curFile);
         this.curPosition = this.getPosition(curLine, curColumn);
     }
@@ -239,6 +243,15 @@ public class FileParser {
         }
     }
 
+    public String getCurContext() {
+        ASTNode curArg = (ASTNode) getCurMethodInvocation().arguments().get(paramPosition);
+        return curFileContent.substring(getCurMethodScope().getStartPosition(), curArg.getStartPosition());
+    }
+
+    public String getCurContext(int paramPos) {
+        ASTNode curArg = (ASTNode) getCurMethodInvocation().arguments().get(paramPos);
+        return curFileContent.substring(getCurMethodScope().getStartPosition(), curArg.getStartPosition());
+    }
 
     /**
      * @return Next params can append the input position of a method invocation with sublist of pre-written parameters.
