@@ -6,10 +6,13 @@ import flute.data.MultiMap;
 import flute.data.testcase.BaseTestCase;
 import flute.utils.file_processing.DirProcessor;
 import org.apache.maven.shared.invoker.*;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class APITest {
     private static String curProject = "";
@@ -70,15 +73,26 @@ public class APITest {
         return fileParser.genCurParams();
     }
 
+    public static Optional<List<IMethodBinding>> methodTest(BaseTestCase testCase) throws Exception {
+        if (!curProject.equals(testCase.getProjectName())) {
+            initProject(testCase.getProjectName());
+        }
+
+        File curFile = new File(APITestGenerator.REPO_FOLDER + testCase.getProjectName() + "/" + testCase.getRelativeFilePath());
+        FileParser fileParser = new FileParser(curProjectParser, curFile, testCase.getBeginPosition().line, testCase.getBeginPosition().column);
+
+        fileParser.parse();
+        return fileParser.genMethodCall();
+    }
+
     public static void main(String[] args) throws MavenInvocationException {
         BaseTestCase testCase = new BaseTestCase(
                 "3breadt_dd-plist", "src/test/java/com/dd/plist/test/NSNumberTest.java",
-                new Position(81, 44), "context", "outer", "target"
+                new Position(81, 40), "context", "outer", "target"
         );
 
         try {
             MultiMap result = test(testCase);
-
             ProjectTest.printMap(result, "RESULT");
         } catch (Exception e) {
             ;

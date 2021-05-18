@@ -18,6 +18,7 @@ public class BaseTestCase {
     protected String target;
 
     protected List<Candidate> candidates;
+    protected List<String> method_candidates;
 
     public BaseTestCase(String projectName, String relativeFilePath, Position beginPosition, String context, String outerMethodSignature, String target) {
         this.projectName = projectName;
@@ -114,5 +115,13 @@ public class BaseTestCase {
 
     public void setCandidates(List<Candidate> candidates) {
         this.candidates = candidates;
+    }
+
+    public List<String> getMethod_candidates() {
+        return method_candidates;
+    }
+
+    public void setMethod_candidates(List<String> method_candidates) {
+        this.method_candidates = method_candidates;
     }
 }
