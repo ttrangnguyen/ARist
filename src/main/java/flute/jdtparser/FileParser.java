@@ -190,6 +190,7 @@ public class FileParser {
      * @throws Exception
      */
     public void parse() throws MethodInvocationNotFoundException, ClassScopeNotFoundException {
+        paramPosition = -1;
         try {
             ITypeBinding clazz = getClassScope(curPosition);
             if (clazz != curClass) {
@@ -591,7 +592,7 @@ public class FileParser {
                             astNode[0] = node;
                             int pos = 0;
 
-                            paramPosition = -1;
+                            paramPosition = 0;
                             for (Object arg : arguments) {
                                 ASTNode astNodeArg = (ASTNode) arg;
                                 if (astNodeArg.getStartPosition() <= curPosition
