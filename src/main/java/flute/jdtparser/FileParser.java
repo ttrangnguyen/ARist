@@ -247,11 +247,23 @@ public class FileParser {
     }
 
     public String getCurContext() {
-        ASTNode curArg = (ASTNode) getCurMethodInvocation().arguments().get(paramPosition);
-        return curFileContent.substring(getCurMethodScope().getStartPosition(), curArg.getStartPosition());
+        return getCurContext(paramPosition);
     }
 
     public String getCurContext(int paramPos) {
+        if (paramPos == 0) {
+            ASTNode node = getCurMethodInvocation().getOrgASTNode();
+            int start;
+            if (node instanceof MethodInvocation) {
+                MethodInvocation methodInvocation = (MethodInvocation) node;
+                start = methodInvocation.getName().getStartPosition() + methodInvocation.getName().getLength() + 1;
+            } else {
+                SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
+                start = superMethodInvocation.getName().getStartPosition() + superMethodInvocation.getName().getLength() + 1;
+            }
+            return curFileContent.substring(getCurMethodScope().getStartPosition(), start);
+        }
+        if (paramPos < 0) return "";
         ASTNode curArg = (ASTNode) getCurMethodInvocation().arguments().get(paramPos);
         return curFileContent.substring(getCurMethodScope().getStartPosition(), curArg.getStartPosition());
     }
