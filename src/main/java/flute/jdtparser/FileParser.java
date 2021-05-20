@@ -59,6 +59,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, File curFile, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = curFile;
+        this.curFileContent = FileProcessor.read(curFile);
         this.curPosition = curPosition;
         cu = projectParser.createCU(curFile);
     }
@@ -91,7 +92,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, File curFile, int curLine, int curColumn) {
         this.projectParser = projectParser;
         this.curFile = curFile;
-        curFileContent = FileProcessor.read(curFile);
+        this.curFileContent = FileProcessor.read(curFile);
         cu = projectParser.createCU(curFile);
         this.curPosition = this.getPosition(curLine, curColumn);
     }
@@ -109,6 +110,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, String fileName, String fileContent, int curLine, int curColumn) {
         this.projectParser = projectParser;
         this.curFile = null;
+        this.curFileContent = fileContent;
         cu = projectParser.createCU(fileName, fileContent);
         this.curPosition = this.getPosition(curLine, curColumn);
     }
