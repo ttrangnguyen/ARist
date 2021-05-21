@@ -20,6 +20,8 @@ public class BaseTestCase {
     protected List<Candidate> candidates;
     protected List<String> method_candidates;
 
+    protected Candidate match;
+
     public BaseTestCase(String projectName, String relativeFilePath, Position beginPosition, String context, String outerMethodSignature, String target) {
         this.projectName = projectName;
         this.relativeFilePath = relativeFilePath;
@@ -123,5 +125,13 @@ public class BaseTestCase {
 
     public void setMethod_candidates(List<String> method_candidates) {
         this.method_candidates = method_candidates;
+    }
+
+    public Candidate getMatch() {
+        return match;
+    }
+
+    public void setMatch(Candidate match) {
+        this.match = match;
     }
 }

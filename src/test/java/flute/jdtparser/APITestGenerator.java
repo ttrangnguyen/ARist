@@ -7,6 +7,7 @@ import flute.config.Config;
 import flute.data.MultiMap;
 import flute.data.testcase.BaseTestCase;
 import flute.data.testcase.Candidate;
+import flute.testing.CandidateMatcher;
 import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
@@ -123,6 +124,11 @@ public class APITestGenerator {
                 });
 
                 testCase.setCandidates(candidates);
+                for (Candidate candidate: candidates)
+                    if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
+                        testCase.setMatch(candidate);
+                        break;
+                    }
                 bw.write(gson.toJson(testCase));
                 bw.newLine();
                 numberOfTest.getAndIncrement();
