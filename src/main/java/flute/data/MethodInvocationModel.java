@@ -131,6 +131,18 @@ public class MethodInvocationModel {
         return methodName.toString() + "(" + String.join(",", paramString) + ")";
     }
 
+    public int getParamStartPosition(){
+        int start;
+        if (orgASTNode instanceof MethodInvocation) {
+            MethodInvocation methodInvocation = (MethodInvocation) orgASTNode;
+            start = methodInvocation.getName().getStartPosition() + methodInvocation.getName().getLength();
+        } else {
+            SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) orgASTNode;
+            start = superMethodInvocation.getName().getStartPosition() + superMethodInvocation.getName().getLength() ;
+        }
+        return start;
+    }
+
     @Override
     public String toString() {
         return orgASTNode.toString();
