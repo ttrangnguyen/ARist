@@ -595,7 +595,7 @@ public class FileParser {
                             stop = superMethodInvocation.getStartPosition() + superMethodInvocation.getLength();
                             arguments = superMethodInvocation.arguments();
                         }
-                        if (curPosition >= start + 1) {
+                        if (curPosition > start + 1 && curPosition < stop + 1) {
                             astNode[0] = node;
                             int pos = 0;
 
@@ -606,6 +606,12 @@ public class FileParser {
                                         && curPosition - 1 <= (astNodeArg.getStartPosition() + astNodeArg.getLength())) {
                                     paramPosition = pos;
                                 }
+
+                                if (astNodeArg.getStartPosition() + astNodeArg.getLength() < curPosition - 1
+                                        && arguments.size() > pos + 1) {
+                                    paramPosition = pos + 1;
+                                }
+
                                 pos++;
                             }
                         }
