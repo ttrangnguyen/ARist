@@ -4,6 +4,7 @@ import com.github.javaparser.Position;
 import flute.config.Config;
 import flute.data.MultiMap;
 import flute.data.testcase.BaseTestCase;
+import flute.utils.Pair;
 import flute.utils.file_processing.DirProcessor;
 import org.apache.maven.shared.invoker.*;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -73,7 +74,7 @@ public class APITest {
         return fileParser.genCurParams();
     }
 
-    public static Optional<List<IMethodBinding>> methodTest(BaseTestCase testCase) throws Exception {
+    public static Pair<FileParser, Optional<List<IMethodBinding>>> methodTest(BaseTestCase testCase) throws Exception {
         if (!curProject.equals(testCase.getProjectName())) {
             initProject(testCase.getProjectName());
         }
@@ -82,7 +83,7 @@ public class APITest {
         FileParser fileParser = new FileParser(curProjectParser, curFile, testCase.getBeginPosition().line, testCase.getBeginPosition().column);
 
         fileParser.parse();
-        return fileParser.genMethodCall();
+        return new Pair<>(fileParser, fileParser.genMethodCall());
     }
 
     public static void main(String[] args) throws MavenInvocationException {

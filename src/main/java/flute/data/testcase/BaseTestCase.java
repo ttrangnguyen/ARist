@@ -16,9 +16,11 @@ public class BaseTestCase {
     protected String outerMethodSignature;
 
     protected String target;
+    protected String targetId;
+
 
     protected List<Candidate> candidates;
-    protected List<String> method_candidates;
+    protected List<MethodCandidate> method_candidates;
 
     protected Candidate match;
 
@@ -111,6 +113,14 @@ public class BaseTestCase {
         this.target = target;
     }
 
+    public String getTargetId() {
+        return targetId;
+    }
+
+    public void setTargetId(String target_id) {
+        this.targetId = target_id;
+    }
+
     public List<Candidate> getCandidates() {
         return candidates;
     }
@@ -119,11 +129,11 @@ public class BaseTestCase {
         this.candidates = candidates;
     }
 
-    public List<String> getMethod_candidates() {
+    public List<MethodCandidate> getMethod_candidates() {
         return method_candidates;
     }
 
-    public void setMethod_candidates(List<String> method_candidates) {
+    public void setMethod_candidates(List<MethodCandidate> method_candidates) {
         this.method_candidates = method_candidates;
     }
 

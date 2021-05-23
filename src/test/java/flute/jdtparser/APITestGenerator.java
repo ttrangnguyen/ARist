@@ -7,7 +7,10 @@ import flute.config.Config;
 import flute.data.MultiMap;
 import flute.data.testcase.BaseTestCase;
 import flute.data.testcase.Candidate;
+import flute.data.testcase.MethodCandidate;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.testing.CandidateMatcher;
+import flute.utils.Pair;
 import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
@@ -64,16 +67,12 @@ public class APITestGenerator {
         inputs.forEach(input -> {
             BaseTestCase testCase = gson.fromJson(input, BaseTestCase.class);
             try {
-                Optional<List<IMethodBinding>> result = APITest.methodTest(testCase);
-
-                if (result.isPresent()) {
-                    List<String> methodResult = result.get().stream().map(method -> {
-                        return method.getName();
+                Pair<FileParser, Optional<List<IMethodBinding>>> result = APITest.methodTest(testCase);
+                testCase.setTargetId(Utils.nodeToString(result.getFirst().getCurMethodInvocation().resolveMethodBinding()));
+                if (result.getSecond().isPresent()) {
+                    List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
+                        return new MethodCandidate(method.getName(), Utils.nodeToString(method));
                     }).collect(Collectors.toList());
-
-                    Set<String> set = new HashSet<>(methodResult);
-                    methodResult.clear();
-                    methodResult.addAll(set);
 
                     testCase.setMethod_candidates(methodResult);
                     bw.write(gson.toJson(testCase));
@@ -124,7 +123,7 @@ public class APITestGenerator {
                 });
 
                 testCase.setCandidates(candidates);
-                for (Candidate candidate: candidates)
+                for (Candidate candidate : candidates)
                     if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
                         testCase.setMatch(candidate);
                         break;
