@@ -24,13 +24,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class APITestGenerator {
-    public static final String REPO_FOLDER = "storage/repositories/git/JAVA_repos/";
-    public static final String INPUT_FOLDER = "/Users/maytinhdibo/Downloads/generated_test_cases/";
-    public static final String OUTPUT_FOLDER = "storage/logs/out/";
+    public static final String REPO_FOLDER = System.getProperty("repoFolder", "/Users/tuanngokien/Desktop/Software_Analysis/code_completion/Flute/storage/repositories/git/JAVA_repos/");
+    public static final String INPUT_FOLDER = System.getProperty("inputFolder","/Users/tuanngokien/Downloads/generated_test_cases");
+    public static final String OUTPUT_FOLDER = System.getProperty("outputFolder","storage/logs/out/");
 
-    public static final String PROJECT_NAME = "3breadt_dd-plist";
+    public static final String PROJECT_NAME = System.getProperty("repoName", "3breadt_dd-plist");
 
-    public static final boolean PARAM_TEST = false;
+    public static final boolean PARAM_TEST = true;
 
     public static void main(String[] args) throws IOException {
         if (PARAM_TEST) {
@@ -86,9 +86,10 @@ public class APITestGenerator {
                 numberOfErrorTest.getAndIncrement();
             }
         });
-        System.out.println("[RESULT] --------------[Generated " + numberOfTest + " tests]--------------");
+        System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
         System.out.println("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
         bw.close();
+        fstream.close();
     }
 
     private static void paramTest() throws IOException {
@@ -125,18 +126,18 @@ public class APITestGenerator {
                 testCase.setCandidates(candidates);
                 for (Candidate candidate : candidates)
                     if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
-                        testCase.setMatch(candidate);
+                        candidate.setTargetMatched(true);
                         break;
                     }
                 bw.write(gson.toJson(testCase));
                 bw.newLine();
                 numberOfTest.getAndIncrement();
             } catch (Exception e) {
-//                    e.printStackTrace();
+                    e.printStackTrace();
                 numberOfErrorTest.getAndIncrement();
             }
         });
-        System.out.println("[RESULT] --------------[Generated " + numberOfTest + " tests]--------------");
+        System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
         System.out.println("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
         bw.close();
     }

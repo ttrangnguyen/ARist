@@ -3,10 +3,12 @@ package flute.data.testcase;
 public class Candidate {
     protected String excode;
     protected String name;
+    protected boolean isTargetMatched;
 
     public Candidate(String excode, String name) {
         this.excode = excode;
         this.name = name;
+        this.isTargetMatched = false;
     }
 
     public String getExcode() {
@@ -23,5 +25,13 @@ public class Candidate {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isTargetMatched() {
+        return isTargetMatched;
+    }
+
+    public void setTargetMatched(boolean targetMatched) {
+        isTargetMatched = targetMatched;
     }
 }

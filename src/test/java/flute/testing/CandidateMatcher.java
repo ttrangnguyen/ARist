@@ -9,9 +9,9 @@ public class CandidateMatcher {
 
     public static String preprocess(String target) {
         target = emptyStringLiteral(target);
-        System.out.println(target);
+//        System.out.println(target);
         target = removeArrayAccessIndex(target);
-        System.out.println(target);
+//        System.out.println(target);
         return target;
     }
 
