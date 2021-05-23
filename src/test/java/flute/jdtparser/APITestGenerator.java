@@ -24,13 +24,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class APITestGenerator {
-    public static final String REPO_FOLDER = System.getProperty("repoFolder", "/Users/tuanngokien/Desktop/Software_Analysis/code_completion/Flute/storage/repositories/git/JAVA_repos/");
-    public static final String INPUT_FOLDER = System.getProperty("inputFolder", "/Users/tuanngokien/Downloads/generated_test_cases");
+    public static final String REPO_FOLDER = System.getProperty("repoFolder", "storage/repositories/git/JAVA_repos/");
+    public static final String INPUT_FOLDER = System.getProperty("inputFolder", "storage/repositories/generated_test_cases");
     public static final String OUTPUT_FOLDER = System.getProperty("outputFolder", "storage/logs/out/");
 
-    public static final String PROJECT_NAME = System.getProperty("repoName", "3breadt_dd-plist");
+    public static final String PROJECT_NAME = System.getProperty("repoName", "yannrichet_jmathplot");
 
-    public static final boolean PARAM_TEST = true;
+    public static final boolean PARAM_TEST = false;
 
     public static void main(String[] args) throws IOException {
         if (PARAM_TEST) {
@@ -49,6 +49,7 @@ public class APITestGenerator {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         //read input
         AtomicInteger numberOfTest = new AtomicInteger();
+        AtomicInteger numberOfMatchedCandidate = new AtomicInteger();
         AtomicInteger numberOfErrorTest = new AtomicInteger();
         List<String> inputs = FileProcessor.readLineByLineToList(
                 Paths.get(INPUT_FOLDER, PROJECT_NAME, "method_invocation_test_cases.jsonl").toString());
@@ -73,7 +74,10 @@ public class APITestGenerator {
                 if (result.getSecond().isPresent()) {
                     List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
                         MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));
-                        if (method.isEqualTo(targetMethod)) methodCandidate.setTargetMatched(true);
+                        if (method.isEqualTo(targetMethod)) {
+                            methodCandidate.setTargetMatched(true);
+                            numberOfMatchedCandidate.getAndIncrement();
+                        }
                         return methodCandidate;
                     }).collect(Collectors.toList());
 
@@ -90,7 +94,8 @@ public class APITestGenerator {
             }
         });
         System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
-        System.out.println("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
+        System.out.print("--------------[Candidate_Matched " + numberOfMatchedCandidate + " tests]--------------");
+        System.out.println("         --------------[Ignored " + numberOfErrorTest + " tests]--------------");
         bw.close();
         fstream.close();
     }
@@ -99,6 +104,7 @@ public class APITestGenerator {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         //read input
         AtomicInteger numberOfTest = new AtomicInteger();
+        AtomicInteger numberOfMatchedCandidate = new AtomicInteger();
         AtomicInteger numberOfErrorTest = new AtomicInteger();
         List<String> inputs = FileProcessor.readLineByLineToList(
                 Paths.get(INPUT_FOLDER, PROJECT_NAME, "parameter_name_test_cases.jsonl").toString());
@@ -130,6 +136,7 @@ public class APITestGenerator {
                 for (Candidate candidate : candidates)
                     if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
                         candidate.setTargetMatched(true);
+                        numberOfMatchedCandidate.getAndIncrement();
                         break;
                     }
                 bw.write(gson.toJson(testCase));
@@ -141,7 +148,8 @@ public class APITestGenerator {
             }
         });
         System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
-        System.out.println("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
+        System.out.print("--------------[Candidate_Matched " + numberOfMatchedCandidate + " tests]--------------");
+        System.out.println("         --------------[Ignored " + numberOfErrorTest + " tests]--------------");
         bw.close();
     }
 }
