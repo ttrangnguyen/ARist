@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 public class APITestGenerator {
     public static final String REPO_FOLDER = System.getProperty("repoFolder", "/Users/tuanngokien/Desktop/Software_Analysis/code_completion/Flute/storage/repositories/git/JAVA_repos/");
-    public static final String INPUT_FOLDER = System.getProperty("inputFolder","/Users/tuanngokien/Downloads/generated_test_cases");
-    public static final String OUTPUT_FOLDER = System.getProperty("outputFolder","storage/logs/out/");
+    public static final String INPUT_FOLDER = System.getProperty("inputFolder", "/Users/tuanngokien/Downloads/generated_test_cases");
+    public static final String OUTPUT_FOLDER = System.getProperty("outputFolder", "storage/logs/out/");
 
     public static final String PROJECT_NAME = System.getProperty("repoName", "3breadt_dd-plist");
 
@@ -68,10 +68,13 @@ public class APITestGenerator {
             BaseTestCase testCase = gson.fromJson(input, BaseTestCase.class);
             try {
                 Pair<FileParser, Optional<List<IMethodBinding>>> result = APITest.methodTest(testCase);
-                testCase.setTargetId(Utils.nodeToString(result.getFirst().getCurMethodInvocation().resolveMethodBinding()));
+                IMethodBinding targetMethod = result.getFirst().getCurMethodInvocation().resolveMethodBinding();
+                testCase.setTargetId(Utils.nodeToString(targetMethod));
                 if (result.getSecond().isPresent()) {
                     List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
-                        return new MethodCandidate(method.getName(), Utils.nodeToString(method));
+                        MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));
+                        if (method.isEqualTo(targetMethod)) methodCandidate.setTargetMatched(true);
+                        return methodCandidate;
                     }).collect(Collectors.toList());
 
                     testCase.setMethod_candidates(methodResult);
@@ -133,7 +136,7 @@ public class APITestGenerator {
                 bw.newLine();
                 numberOfTest.getAndIncrement();
             } catch (Exception e) {
-                    e.printStackTrace();
+                e.printStackTrace();
                 numberOfErrorTest.getAndIncrement();
             }
         });
