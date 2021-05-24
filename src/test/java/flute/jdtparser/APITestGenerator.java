@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import flute.config.Config;
 import flute.data.MultiMap;
+import flute.data.exception.TestPathDetectException;
 import flute.data.testcase.BaseTestCase;
 import flute.data.testcase.Candidate;
 import flute.data.testcase.MethodCandidate;
@@ -25,12 +26,12 @@ import java.util.stream.Collectors;
 
 public class APITestGenerator {
     public static final String REPO_FOLDER = System.getProperty("repoFolder", "storage/repositories/git/JAVA_repos/");
-    public static final String INPUT_FOLDER = System.getProperty("inputFolder", "storage/repositories/generated_test_cases");
+    public static final String INPUT_FOLDER = System.getProperty("inputFolder", "/Users/maytinhdibo/Downloads/generated_test_cases/");
     public static final String OUTPUT_FOLDER = System.getProperty("outputFolder", "storage/logs/out/");
 
-    public static final String PROJECT_NAME = System.getProperty("repoName", "yannrichet_jmathplot");
+    public static final String PROJECT_NAME = System.getProperty("repoName", "3breadt_dd-plist");
 
-    public static final boolean PARAM_TEST = false;
+    public static final boolean PARAM_TEST = true;
 
     public static void main(String[] args) throws IOException {
         if (PARAM_TEST) {
@@ -42,14 +43,10 @@ public class APITestGenerator {
         }
     }
 
-    public APITestGenerator() {
-    }
-
     private static void methodTest() throws IOException {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         //read input
         AtomicInteger numberOfTest = new AtomicInteger();
-        AtomicInteger numberOfMatchedCandidate = new AtomicInteger();
         AtomicInteger numberOfErrorTest = new AtomicInteger();
         List<String> inputs = FileProcessor.readLineByLineToList(
                 Paths.get(INPUT_FOLDER, PROJECT_NAME, "method_invocation_test_cases.jsonl").toString());
@@ -74,10 +71,7 @@ public class APITestGenerator {
                 if (result.getSecond().isPresent()) {
                     List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
                         MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));
-                        if (method.isEqualTo(targetMethod)) {
-                            methodCandidate.setTargetMatched(true);
-                            numberOfMatchedCandidate.getAndIncrement();
-                        }
+                        if (method.isEqualTo(targetMethod)) methodCandidate.setTargetMatched(true);
                         return methodCandidate;
                     }).collect(Collectors.toList());
 
@@ -94,8 +88,7 @@ public class APITestGenerator {
             }
         });
         System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
-        System.out.print("--------------[Candidate_Matched " + numberOfMatchedCandidate + " tests]--------------");
-        System.out.println("         --------------[Ignored " + numberOfErrorTest + " tests]--------------");
+        System.out.println("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
         bw.close();
         fstream.close();
     }
@@ -104,8 +97,9 @@ public class APITestGenerator {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         //read input
         AtomicInteger numberOfTest = new AtomicInteger();
-        AtomicInteger numberOfMatchedCandidate = new AtomicInteger();
         AtomicInteger numberOfErrorTest = new AtomicInteger();
+        AtomicInteger numberOfTestFile = new AtomicInteger();
+
         List<String> inputs = FileProcessor.readLineByLineToList(
                 Paths.get(INPUT_FOLDER, PROJECT_NAME, "parameter_name_test_cases.jsonl").toString());
 
@@ -136,20 +130,21 @@ public class APITestGenerator {
                 for (Candidate candidate : candidates)
                     if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
                         candidate.setTargetMatched(true);
-                        numberOfMatchedCandidate.getAndIncrement();
                         break;
                     }
                 bw.write(gson.toJson(testCase));
                 bw.newLine();
                 numberOfTest.getAndIncrement();
+            } catch (TestPathDetectException e) {
+                numberOfTestFile.getAndIncrement();
             } catch (Exception e) {
                 e.printStackTrace();
                 numberOfErrorTest.getAndIncrement();
             }
         });
         System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
-        System.out.print("--------------[Candidate_Matched " + numberOfMatchedCandidate + " tests]--------------");
-        System.out.println("         --------------[Ignored " + numberOfErrorTest + " tests]--------------");
+        System.out.print("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
+        System.out.println("         --------------[Detect test file " + numberOfTestFile + " tests]--------------");
         bw.close();
     }
 }

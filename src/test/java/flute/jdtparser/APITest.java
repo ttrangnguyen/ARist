@@ -3,7 +3,9 @@ package flute.jdtparser;
 import com.github.javaparser.Position;
 import flute.config.Config;
 import flute.data.MultiMap;
+import flute.data.exception.TestPathDetectException;
 import flute.data.testcase.BaseTestCase;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.utils.Pair;
 import flute.utils.file_processing.DirProcessor;
 import org.apache.maven.shared.invoker.*;
@@ -62,25 +64,26 @@ public class APITest {
                 Config.SOURCE_PATH, Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
     }
 
-    public static MultiMap test(BaseTestCase testCase) throws Exception {
+    private static FileParser genFileParser(BaseTestCase testCase) throws TestPathDetectException {
         if (!curProject.equals(testCase.getProjectName())) {
             initProject(testCase.getProjectName());
         }
 
         File curFile = new File(APITestGenerator.REPO_FOLDER + testCase.getProjectName() + "/" + testCase.getRelativeFilePath());
+        if (Utils.checkTestFile(curFile)) throw new TestPathDetectException("");
         FileParser fileParser = new FileParser(curProjectParser, curFile, testCase.getBeginPosition().line, testCase.getBeginPosition().column);
+        return fileParser;
+    }
+
+    public static MultiMap test(BaseTestCase testCase) throws Exception {
+        FileParser fileParser = genFileParser(testCase);
 
         fileParser.parse();
         return fileParser.genCurParams();
     }
 
     public static Pair<FileParser, Optional<List<IMethodBinding>>> methodTest(BaseTestCase testCase) throws Exception {
-        if (!curProject.equals(testCase.getProjectName())) {
-            initProject(testCase.getProjectName());
-        }
-
-        File curFile = new File(APITestGenerator.REPO_FOLDER + testCase.getProjectName() + "/" + testCase.getRelativeFilePath());
-        FileParser fileParser = new FileParser(curProjectParser, curFile, testCase.getBeginPosition().line, testCase.getBeginPosition().column);
+        FileParser fileParser = genFileParser(testCase);
 
         fileParser.parse();
         return new Pair<>(fileParser, fileParser.genMethodCall());
