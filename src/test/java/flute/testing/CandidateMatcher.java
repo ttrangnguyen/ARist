@@ -9,9 +9,7 @@ public class CandidateMatcher {
 
     public static String preprocess(String target) {
         target = emptyStringLiteral(target);
-//        System.out.println(target);
         target = removeArrayAccessIndex(target);
-//        System.out.println(target);
         return target;
     }
 
@@ -92,6 +90,7 @@ public class CandidateMatcher {
         if (!candidate.getExcode().matches("^LIT\\([a-zA-Z]+\\)$")) return false;
         if (matchesStringLiteral(candidate, target)) return true;
         if (matchesNumLiteral(candidate, target)) return true;
+        if (matchesCharLiteral(candidate, target)) return true;
         return false;
     }
 
@@ -108,6 +107,12 @@ public class CandidateMatcher {
         } catch (NumberFormatException e) {
             return false;
         }
+        return candidate.getName().compareTo("0") == 0;
+    }
+
+    public static boolean matchesCharLiteral(Candidate candidate, String target) {
+        if (!target.matches("^'.*'$")) return false;
+        if (candidate.getExcode().compareTo("LIT(num)") != 0) return false;
         return candidate.getName().compareTo("0") == 0;
     }
 
