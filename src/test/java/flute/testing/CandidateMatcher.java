@@ -6,6 +6,7 @@ import java.util.Stack;
 
 public class CandidateMatcher {
     private static String identifieRegex = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*";
+    private static String stringLiteralRegex = "\"([^\"]|(\\\\\"))*\"";
 
     public static String preprocess(String target) {
         target = emptyStringLiteral(target);
@@ -95,7 +96,7 @@ public class CandidateMatcher {
     }
 
     public static boolean matchesStringLiteral(Candidate candidate, String target) {
-        if (!target.matches("^\".*\"$")) return false;
+        if (!target.matches("^" + stringLiteralRegex + "(\\s*\\+\\s*(" + stringLiteralRegex + "|'[^']+'))*$")) return false;
         if (candidate.getExcode().compareTo("LIT(String)") != 0) return false;
         return candidate.getName().compareTo("\"\"") == 0;
     }
@@ -105,13 +106,13 @@ public class CandidateMatcher {
         try {
             Double.parseDouble(target);
         } catch (NumberFormatException e) {
-            return false;
+            if (!target.matches("^((\\d+\\.\\d+)|(\\d+)|([+\\-*\\/^])|([\\(\\)]))+$")) return false;
         }
         return candidate.getName().compareTo("0") == 0;
     }
 
     public static boolean matchesCharLiteral(Candidate candidate, String target) {
-        if (!target.matches("^'.*'$")) return false;
+        if (!target.matches("^'.+'$")) return false;
         if (candidate.getExcode().compareTo("LIT(num)") != 0) return false;
         return candidate.getName().compareTo("0") == 0;
     }
