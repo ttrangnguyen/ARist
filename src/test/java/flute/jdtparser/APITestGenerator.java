@@ -97,6 +97,7 @@ public class APITestGenerator {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         //read input
         AtomicInteger numberOfTest = new AtomicInteger();
+        AtomicInteger numberOfMatchedCandidate = new AtomicInteger();
         AtomicInteger numberOfErrorTest = new AtomicInteger();
         AtomicInteger numberOfTestFile = new AtomicInteger();
 
@@ -130,6 +131,7 @@ public class APITestGenerator {
                 for (Candidate candidate : candidates)
                     if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
                         candidate.setTargetMatched(true);
+                        numberOfMatchedCandidate.getAndIncrement();
                         break;
                     }
                 bw.write(gson.toJson(testCase));
@@ -138,13 +140,14 @@ public class APITestGenerator {
             } catch (TestPathDetectException e) {
                 numberOfTestFile.getAndIncrement();
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 numberOfErrorTest.getAndIncrement();
             }
         });
-        System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
-        System.out.print("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
-        System.out.println("         --------------[Detect test file " + numberOfTestFile + " tests]--------------");
         bw.close();
+        System.out.println("[RESULT]---[" + PROJECT_NAME + "]---[Total_Valid_Test_Case " + numberOfTest + " tests]---"
+                + "---[Candidate_Matched_Test_Case " + numberOfMatchedCandidate + " tests]---"
+                + "---[Unknown_Ignored_Test_Case " + numberOfErrorTest + " tests]---"
+                + "---[Total_Invalid_Test_Case " + numberOfTestFile + " tests]");
     }
 }
