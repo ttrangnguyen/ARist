@@ -31,13 +31,17 @@ import flute.jdtparser.ProjectParser;
 import org.eclipse.core.internal.resources.Project;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+// usage: generate java/excode test file
+// if data is not separated into train/test/validate yet, set CREATE_DATA_PATH to true,
+// if want to create excode, uncomment createExcodeFile
+
 // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
 // netbeans stops = [0, 5000, 9759]
 
 public class Parser {
     public static int parseBegin = 0;
     public static int parseEnd = 23000;
-    public static final boolean CREATE_DATA_PATH = false;
+    public static final boolean CREATE_DATA_PATH = true;
     public static final int recursionMaxDepth = 1;
     public static final int threshPerDepth = 7;
 
@@ -201,9 +205,9 @@ public class Parser {
 
 
     private void createDataFilesPath() throws IOException {
-        FileWriter trainFilesPath = new FileWriter(new File(Config.trainFilesPath + projectName + ".txt"), true);
-        FileWriter validateFilesPath = new FileWriter(new File(Config.validateFilesPath + projectName + ".txt"), true);
-        FileWriter testFilesPath = new FileWriter(new File(Config.testFilesPath + projectName + ".txt"), true);
+        FileWriter trainFilesPath = new FileWriter(Config.trainFilesPath + projectName + ".txt", true);
+        FileWriter validateFilesPath = new FileWriter(Config.validateFilesPath + projectName + ".txt", true);
+        FileWriter testFilesPath = new FileWriter(Config.testFilesPath + projectName + ".txt", true);
 
         int testLOCThresh = (int) (LOC * 0.1);
         int validateLOCThresh = (int) (LOC * 0.9 * 0.15);
@@ -252,24 +256,30 @@ public class Parser {
 
             final String absolutePath = fileInfo.file.getAbsolutePath();
             final String relativePath = absolutePath.substring(absolutePath.indexOf(projectName));
-            if (testFilesPath.contains(relativePath)) {
-                javaFileTokenPath = javaTestPath +
-                        fileInfo.file.getName().replace(".java", ".txt");
-                excodeFilePath = excodeTestPath +
-                        filePath[filePath.length - 1].replace(".java", ".txt");
-            } else if (validateFilesPath.contains(relativePath)){
-                javaFileTokenPath = javaValidatePath +
-                        fileInfo.file.getName().replace(".java", ".txt");
-                excodeFilePath = excodeValidatePath +
-                        filePath[filePath.length - 1].replace(".java", ".txt");
-            } else {
-                javaFileTokenPath = javaTrainPath +
-                        fileInfo.file.getName().replace(".java", ".txt");
-                excodeFilePath = excodeTrainPath +
-                        filePath[filePath.length - 1].replace(".java", ".txt");
-            }
+            String oldRoot = "D:\\Research\\Flute\\storage\\repositories\\git\\";
+            String newRoot = "D:\\Research\\SLP-Modified\\storage\\gendata\\";
+            String name = fileInfo.file.getAbsolutePath();
+            String newPath = newRoot + name.substring(oldRoot.length());
+            javaFileTokenPath = newPath.substring(0, newPath.length() - 4) + "jlex";
+            excodeFilePath = newPath.substring(0, newPath.length() - 4) + "jexcode";
+//            if (testFilesPath.contains(relativePath)) {
+//                javaFileTokenPath = javaTestPath +
+//                        fileInfo.file.getName().replace(".java", ".txt");
+//                excodeFilePath = excodeTestPath +
+//                        filePath[filePath.length - 1].replace(".java", ".txt");
+//            } else if (validateFilesPath.contains(relativePath)){
+//                javaFileTokenPath = javaValidatePath +
+//                        fileInfo.file.getName().replace(".java", ".txt");
+//                excodeFilePath = excodeValidatePath +
+//                        filePath[filePath.length - 1].replace(".java", ".txt");
+//            } else {
+//                javaFileTokenPath = javaTrainPath +
+//                        fileInfo.file.getName().replace(".java", ".txt");
+//                excodeFilePath = excodeTrainPath +
+//                        filePath[filePath.length - 1].replace(".java", ".txt");
+//            }
 
-//            createExcodeFile(fileInfo, excodeFilePath);
+            createExcodeFile(fileInfo, excodeFilePath);
             createJavaFile(absolutePath, javaFileTokenPath);
         }
     }
@@ -282,6 +292,9 @@ public class Parser {
         }
 
         File fout = new File(excodeFilePath);
+        if (!fout.getParentFile().exists()) {
+            fout.getParentFile().mkdirs();
+        }
         FileOutputStream fos = new FileOutputStream(fout);
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
         bw.write(builder.toString());
@@ -298,6 +311,7 @@ public class Parser {
         File curFile = new File(absolutePath);
         FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
         ArrayList<String> classStack = new ArrayList<>();
+
         for (String line = reader.readLine(); line!=null; line=reader.readLine()) {
 //            FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
             ++curLineNum;
@@ -307,8 +321,6 @@ public class Parser {
             } catch (Exception e) {
 //                e.printStackTrace();
 //                System.out.println(curLineNum);  // always exception
-                insideMethod = false;
-                continue;
             }
             Optional<String> classScopeName = fileParser.getCurClassScopeName();
             Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
@@ -343,7 +355,12 @@ public class Parser {
                 insideMethod = false;
             }
         }
-        FileWriter writer = new FileWriter(javaFileTokenPath);
+
+        File file = new File(javaFileTokenPath);
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+        FileWriter writer = new FileWriter(file);
         String fileContent = fileContentBuilder.toString().replaceAll("[a-zA-Z0-9_]+.class", ".class")
                 .replaceAll("\\[.*?]", "[]");
         ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
@@ -566,24 +583,52 @@ public class Parser {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+//        flute.config.Config.loadConfig(flute.config.Config.STORAGE_DIR + "/json/" + "ant" + ".json");
+//        ProjectParser projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
+//                flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
+//        File curFile = new File("storage\\repositories\\git\\ant\\src\\main\\org\\apache\\tools\\ant\\taskdefs\\optional\\junit\\AggregateTransformer.java");
+//        FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+//        try {
+//            fileParser.setPosition(225, 1);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        Optional<String> classScopeName = fileParser.getCurClassScopeName();
+//        Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
+//        if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
+//            System.out.println("OK");
+//        }
+        Parser parser = new Parser("ant", "/src/main/", 0, 230000);
+        parser.run();
+//        parser = new Parser("batik", "/sources/", 0, 230000);
+//        parser.run();
+//        parser = new Parser("log4j", "/src/main/java/", 0, 230000);
+//        parser.run();
+//        parser = new Parser("lucene", "/lucene/src/java/", 0, 230000);
+//        parser.run();
+//        parser = new Parser("xalan", "/src/", 0, 230000);
+//        parser.run();
+//        parser = new Parser("xerces", "/src/", 0, 230000);
+//        parser.run();
         // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
         // netbeans stops = [0, 5000, 9759]
 //        Parser parser = new Parser("eclipse", "", 0, 23000);
 //        parser.run();
-//        parser = new Parser("eclipse", "", 23001, 28000);
+//        Parser parser = new Parser("eclipse", "", 23001, 28000);
 //        parser.run();
 //        Parser parser = new Parser("eclipse", "", 28001, 35000);
 //        parser.run();
-//        parser = new Parser("eclipse", "", 35001, 42000);
+//        Parser parser = new Parser("eclipse", "", 35001, 42000);
 //        parser.run();
 //        Parser parser = new Parser("eclipse", "", 42001, 46177);
 //        parser.run();
-//        Parser parser = new Parser("netbeans", "/ide", 0, 5000);
+//        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
 //        parser.run();
 //        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
 //        parser.run();
-
 
 //        File[] projects = new File(Config.projectsPath).listFiles(File::isDirectory);
 //        ProjectParser projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,

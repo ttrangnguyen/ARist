@@ -97,7 +97,7 @@ public class JavaTokenizer{
                             op = new StringBuilder();
                         }
                         double num = st.nval;
-                        if (String.valueOf(num).equals("0.0")) tokens.add(".");
+                        if (String.valueOf(num).equals("0.0")) tokens.add("0");
                         else tokens.add(String.valueOf(num));
                         break;
                     case StreamTokenizer.TT_WORD:
@@ -128,12 +128,6 @@ public class JavaTokenizer{
                             op = new StringBuilder();
                         }
                         break;
-                    case StreamTokenizer.TT_EOF:
-                        if (!op.toString().equals("")) {
-                            tokens.add(op.toString());
-                            op = new StringBuilder();
-                        }
-                        break;
                     default:
                         char ch = (char) st.ttype;
                         if (ch == '\n' || ch == ' ' || ch == '\r') {
@@ -155,7 +149,7 @@ public class JavaTokenizer{
                 }
                 token = st.nextToken();
             }
-            if (op.toString() != "") {
+            if (!op.toString().equals("")) {
                 tokens.add(op.toString());
             }
         } catch (IOException e) {
