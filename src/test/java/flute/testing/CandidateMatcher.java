@@ -76,13 +76,13 @@ public class CandidateMatcher {
     }
 
     public static boolean matchesMethodCall(Candidate candidate, String target) {
-        if (!candidate.getExcode().matches(".*M_ACCESS\\("+"\\w+"+","+"\\w+"+",\\d+\\) OPEN_PART")) return false;
+        if (!candidate.getExcode().matches(".*M_ACCESS\\("+"\\w+"+"(<.*>)?,"+"\\w+"+",\\d+\\) OPEN_PART")) return false;
         if (!target.matches(".*"+"\\w+"+"\\(.*\\)$")) return false;
         return target.startsWith(candidate.getName());
     }
 
     public static boolean matchesObjectCreation(Candidate candidate, String target) {
-        if (!candidate.getExcode().matches("^C_CALL\\("+"\\w+"+","+"\\w+\\) OPEN_PART")) return false;
+        if (!candidate.getExcode().matches("^C_CALL\\("+"\\w+"+"(<.*>)?,"+"\\w+"+"\\) OPEN_PART")) return false;
         if (!target.matches("^new "+"\\w+"+"\\(.*\\)$")) return false;
         return target.startsWith(candidate.getName());
     }
