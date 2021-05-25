@@ -48,6 +48,8 @@ public class APITestGenerator {
         //read input
         AtomicInteger numberOfTest = new AtomicInteger();
         AtomicInteger numberOfErrorTest = new AtomicInteger();
+        AtomicInteger numberOfTestFile = new AtomicInteger();
+
         List<String> inputs = FileProcessor.readLineByLineToList(
                 Paths.get(INPUT_FOLDER, PROJECT_NAME, "method_invocation_test_cases.jsonl").toString());
 
@@ -67,11 +69,15 @@ public class APITestGenerator {
             try {
                 Pair<FileParser, Optional<List<IMethodBinding>>> result = APITest.methodTest(testCase);
                 IMethodBinding targetMethod = result.getFirst().getCurMethodInvocation().resolveMethodBinding();
+
                 testCase.setTargetId(Utils.nodeToString(targetMethod));
                 if (result.getSecond().isPresent()) {
                     List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
                         MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));
-                        if (method.isEqualTo(targetMethod)) methodCandidate.setTargetMatched(true);
+                        if (method.getMethodDeclaration().isEqualTo(targetMethod.getMethodDeclaration())) {
+                            methodCandidate.setTargetMatched(true);
+                        }
+
                         return methodCandidate;
                     }).collect(Collectors.toList());
 
@@ -82,13 +88,17 @@ public class APITestGenerator {
                 } else {
                     throw new Exception("Not found");
                 }
+            } catch (TestPathDetectException e) {
+                numberOfTestFile.getAndIncrement();
             } catch (Exception e) {
 //                    e.printStackTrace();
                 numberOfErrorTest.getAndIncrement();
             }
         });
         System.out.print("[RESULT] " + PROJECT_NAME + "--------------[Generated " + numberOfTest + " tests]--------------");
-        System.out.println("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
+        System.out.print("         --------------[Ignore " + numberOfErrorTest + " tests]--------------");
+        System.out.println("         --------------[Unknown Ignored Test Case  " + numberOfTestFile + " tests]--------------");
+
         bw.close();
         fstream.close();
     }
