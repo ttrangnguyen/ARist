@@ -3,6 +3,8 @@ package flute.testing;
 import flute.data.testcase.Candidate;
 
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CandidateMatcher {
     private static String identifieRegex = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*";
@@ -17,36 +19,37 @@ public class CandidateMatcher {
     private static String emptyStringLiteral(String target) {
         StringBuilder sb = new StringBuilder();
         boolean insideStringLiteral = false;
-        while (target.contains("\"")) {
-            int pos = target.indexOf('"');
-            if (!insideStringLiteral) sb.append(target, 0, pos);
-            if (pos == 0 || target.charAt(pos - 1) != '\\') {
-                sb.append('"');
-                insideStringLiteral = !insideStringLiteral;
+        for (String s: target.split("\\\\\"", -1)) {
+            String[] t = s.split("\"", -1);
+            for (int i = 0; i < t.length; ++i) {
+                if (!insideStringLiteral) sb.append(t[i]);
+                if (i < t.length - 1) {
+                    sb.append('"');
+                    insideStringLiteral = !insideStringLiteral;
+                }
             }
-            target = target.substring(pos + 1);
         }
-        sb.append(target);
         return sb.toString();
     }
 
     private static String removeArrayAccessIndex(String target) {
-        Stack<Character> stack = new Stack<>();
-        for (int i = 0; i < target.length(); ++i) {
-            char c = target.charAt(i);
-            if (c == ']') {
+        Matcher m = Pattern.compile("\\[|\\]|[^\\[\\]]+").matcher(target);
+        Stack<String> stack = new Stack<>();
+        while (m.find()) {
+            String s = m.group();
+            if (s.compareTo("]") == 0) {
                 while (true) {
-                    if (stack.pop() == '[') break;
+                    if (stack.empty()|| stack.pop().compareTo("[") == 0) break;
                 }
             }
-            stack.add(c);
+            stack.add(s);
         }
         StringBuilder sb = new StringBuilder();
-        for (char c: stack) {
-            if (c == ']') {
+        for (String s: stack) {
+            if (s.compareTo("]") == 0) {
                 sb.append('[');
             }
-            sb.append(c);
+            sb.append(s);
         }
         return sb.toString();
     }
