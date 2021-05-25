@@ -360,6 +360,11 @@ public class FileParser {
                         nextVariableMap.put("LIT(String)", "\"\"");
                     }
 
+                    if (TypeConstraintKey.OBJECT_TYPE.equals(typeNeedCheck.getKey())) {
+                        nextVariableMap.put("LIT(num)", "0");
+                        nextVariableMap.put("LIT(String)", "\"\"");
+                    }
+
                     if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(boolean)", "true");
                         nextVariableMap.put("LIT(boolean)", "false");
