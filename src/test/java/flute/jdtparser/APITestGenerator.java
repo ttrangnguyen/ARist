@@ -34,12 +34,16 @@ public class APITestGenerator {
     public static final boolean PARAM_TEST = true;
 
     public static void main(String[] args) throws IOException {
-        if (PARAM_TEST) {
-            Config.TARGET_PARAM_POSITION = true;
-            paramTest();
+        if (APITest.initProject(PROJECT_NAME) == 0) {
+            if (PARAM_TEST) {
+                Config.TARGET_PARAM_POSITION = true;
+                paramTest();
+            } else {
+                Config.TARGET_PARAM_POSITION = false;
+                methodTest();
+            }
         } else {
-            Config.TARGET_PARAM_POSITION = false;
-            methodTest();
+            System.out.println("=======BUILD FAILED=======");
         }
     }
 
