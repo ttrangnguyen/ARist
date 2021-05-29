@@ -94,6 +94,7 @@ public abstract class RecClient {
         for (RecTest test: tests) dataFrame.insert("Ignored test", test.isIgnored());
 
         System.out.println("Generated " + dataFrame.getVariable("Ignored test").getCount() + " tests.");
+        System.out.println("Supported " + (dataFrame.getVariable("Ignored test").getCount() - dataFrame.getVariable("Ignored test").getSum()) + " tests.");
         System.out.println("Ignored " + dataFrame.getVariable("Ignored test").getSum() + " tests.");
 
         return tests;
@@ -290,6 +291,8 @@ public abstract class RecClient {
 
     private void queryAndTest(SocketClient socketClient, RecTest test, boolean verbose, boolean doPrintIncorrectPrediction) throws IOException {
         if (doSkipTest(test)) return;
+        dataFrame.insert("Predicted", 1);
+        if (!test.isIgnored()) dataFrame.insert("Predicted supported", 1);
 
         Response response = socketClient.write(gson.toJson(test));
         if (response instanceof PredictResponse) {
@@ -355,7 +358,11 @@ public abstract class RecClient {
 
     public void printTestResult() {
         System.out.println("==========================");
-        System.out.println("Number of tests: " + dataFrame.getVariable("Tested").getCount());
+        System.out.println("Ran " + dataFrame.getVariable("Tested").getCount() + " tests successfully.");
+        System.out.println("Predicted " + dataFrame.getVariable("Predicted").getCount() + " tests.");
+        System.out.println("Predicted " + dataFrame.getVariable("Predicted supported").getCount() + " tests that were supported.");
+        System.out.println("Skipped " + (dataFrame.getVariable("Tested").getCount() - dataFrame.getVariable("Predicted").getCount())
+                + " tests. They were not taken into account during evaluation.");
         System.out.println("Average parsing runtime: " + dataFrame.getVariable("averageGetTestsTime").getSum() + "s");
         if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
         if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");

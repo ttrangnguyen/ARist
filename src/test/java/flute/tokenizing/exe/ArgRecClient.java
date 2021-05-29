@@ -215,6 +215,11 @@ public class ArgRecClient extends MethodCallRecClient {
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
 
         CSVWritor.write(Config.LOG_DIR + this.projectName + "_arg_rec_acc.csv", accuracyPerNumArg);
+
+        for (int k: this.tops) {
+            System.out.println("Target showed up in top " + k + " recommendations in "
+                    + (int)dataFrame.getVariable(String.format("%sActualTop%d", bestModel, k)).getSum() + " tests.");
+        }
     }
 
     public static void main(String[] args) throws IOException {
