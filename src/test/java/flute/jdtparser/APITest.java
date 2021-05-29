@@ -7,6 +7,7 @@ import flute.data.exception.TestPathDetectException;
 import flute.data.testcase.BaseTestCase;
 import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.utils.Pair;
+import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 import org.apache.maven.shared.invoker.*;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -16,12 +17,22 @@ import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class APITest {
     private static String curProject = "";
     private static ProjectParser curProjectParser = null;
+    private final static List<String> LOGGING_QUALIFIER_NAME = Arrays.asList(
+            new String[]{"java.io.PrintStream", "java.util.logging.Logger", "org.apache.logging.log4j.Logger"}
+    );
 
-    private static void initProject(String projectName) {
+    public static boolean isLoggingMethod(IMethodBinding methodBinding) {
+        if (methodBinding == null) return false;
+        return LOGGING_QUALIFIER_NAME.contains(methodBinding.getDeclaringClass().getQualifiedName());
+    }
+
+    private static int initProject(String projectName) {
+        AtomicInteger exitCode = new AtomicInteger();
         curProject = projectName;
         Config.PROJECT_DIR = APITestGenerator.REPO_FOLDER + projectName;
 
@@ -49,7 +60,10 @@ public class APITest {
             Invoker invoker = new DefaultInvoker();
             invoker.setMavenHome(new File(Config.MVN_HOME));
             try {
-                invoker.execute(request);
+                int statusCode = invoker.execute(request).getExitCode();
+                if (statusCode > exitCode.get()) {
+                    exitCode.set(statusCode);
+                }
             } catch (MavenInvocationException e) {
                 e.printStackTrace();
             }
@@ -62,6 +76,7 @@ public class APITest {
         }
         curProjectParser = new ProjectParser(Config.PROJECT_DIR,
                 Config.SOURCE_PATH, Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+        return exitCode.get();
     }
 
     private static FileParser genFileParser(BaseTestCase testCase) throws TestPathDetectException {
@@ -90,17 +105,27 @@ public class APITest {
     }
 
     public static void main(String[] args) throws MavenInvocationException {
-        BaseTestCase testCase = new BaseTestCase(
-                "3breadt_dd-plist", "src/test/java/com/dd/plist/test/NSNumberTest.java",
-                new Position(81, 40), "context", "outer", "target"
-        );
-
-        try {
-            MultiMap result = test(testCase);
-            ProjectTest.printMap(result, "RESULT");
-        } catch (Exception e) {
-            ;
-            e.printStackTrace();
+//        BaseTestCase testCase = new BaseTestCase(
+//                "bloomreach_solrcloud-haft", "src/main/java/com/bloomreach/bstore/highavailability/actions/ReplicationManger.java",
+//                new Position(262, 80), "context", "outer", "target"
+//        );
+//
+//        try {
+//            MultiMap result = test(testCase);
+//            ProjectTest.printMap(result, "RESULT");
+//        } catch (Exception e) {
+//            ;
+//            e.printStackTrace();
+//        }
+        int zero = 0;
+        int count = 0;
+        ProgressBar progressBar = new ProgressBar();
+        File projectFolder = new File(APITestGenerator.REPO_FOLDER);
+        for (File project : projectFolder.listFiles()) {
+            if (initProject(project.getName()) == 0) zero++;
+            count++;
+            System.out.printf("======Success: %.2f%% - %d projects \n", zero * 100f / count, count);
+            progressBar.setProgress(count * 1f / projectFolder.listFiles().length, true);
         }
     }
 }
