@@ -71,6 +71,9 @@ public class APITestGenerator {
                 IMethodBinding targetMethod = result.getFirst().getCurMethodInvocation().resolveMethodBinding();
 
                 testCase.setTargetId(Utils.nodeToString(targetMethod));
+                testCase.setLoggingMethod(
+                        APITest.isLoggingMethod(targetMethod)
+                );
                 if (result.getSecond().isPresent()) {
                     List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
                         MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));

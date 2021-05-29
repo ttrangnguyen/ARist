@@ -31,7 +31,7 @@ public class APITest {
         return LOGGING_QUALIFIER_NAME.contains(methodBinding.getDeclaringClass().getQualifiedName());
     }
 
-    private static int initProject(String projectName) {
+    public static int initProject(String projectName) {
         AtomicInteger exitCode = new AtomicInteger();
         curProject = projectName;
         Config.PROJECT_DIR = APITestGenerator.REPO_FOLDER + projectName;

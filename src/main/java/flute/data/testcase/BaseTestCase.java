@@ -18,6 +18,7 @@ public class BaseTestCase {
     protected String target;
     protected String targetId;
 
+    protected boolean isLoggingMethod;
 
     protected List<Candidate> candidates;
     protected List<MethodCandidate> method_candidates;
@@ -54,7 +55,7 @@ public class BaseTestCase {
                 '}';
     }
 
-    public String dumpToJson(){
+    public String dumpToJson() {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         return gson.toJson(this);
     }
@@ -133,5 +134,13 @@ public class BaseTestCase {
 
     public void setMethod_candidates(List<MethodCandidate> method_candidates) {
         this.method_candidates = method_candidates;
+    }
+
+    public boolean isLoggingMethod() {
+        return isLoggingMethod;
+    }
+
+    public void setLoggingMethod(boolean loggingMethod) {
+        isLoggingMethod = loggingMethod;
     }
 }
