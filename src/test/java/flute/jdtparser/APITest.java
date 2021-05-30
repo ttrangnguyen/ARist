@@ -55,6 +55,13 @@ public class APITest {
 //            }
             InvocationRequest request = new DefaultInvocationRequest();
             request.setPomFile(pomFile);
+            System.out.println("=======MAVEN IS BUILDING=======");
+            request.setOutputHandler(new InvocationOutputHandler() {
+                @Override
+                public void consumeLine(String s) {
+                    //do nothing
+                }
+            });
             request.setGoals(Arrays.asList("dependency:copy-dependencies", "-DoutputDirectory=\"flute-mvn\""));
 
             Invoker invoker = new DefaultInvoker();
