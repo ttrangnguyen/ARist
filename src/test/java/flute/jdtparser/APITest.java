@@ -78,6 +78,7 @@ public class APITest {
 
         try {
             Config.loadJarPath(Config.PROJECT_DIR);
+            Config.loadJarPath(Config.JAVAFX_DIR);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

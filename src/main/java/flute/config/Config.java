@@ -18,6 +18,7 @@ public class Config {
     public static String STORAGE_DIR = "storage/";
 
     public static String LOG_DIR = STORAGE_DIR + "logs/";
+    public static String JAVAFX_DIR = STORAGE_DIR + "lib/JavaFX/";
 
     public final static int PARAM_SERVICE_PORT = 18007;
     public final static int METHOD_NAME_SERVICE_PORT = 17007;
