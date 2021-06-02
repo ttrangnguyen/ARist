@@ -13,6 +13,7 @@ import flute.data.typemodel.*;
 
 import flute.jdtparser.utils.ParserCompare;
 import flute.jdtparser.utils.ParserUtils;
+import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
@@ -27,6 +28,7 @@ import java.util.List;
 public class FileParser {
     private ProjectParser projectParser;
     private File curFile;
+    private String curFileContent;
     private int curPosition;
 
     private ITypeBinding curClass;
@@ -57,6 +59,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, File curFile, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = curFile;
+        this.curFileContent = FileProcessor.read(curFile);
         this.curPosition = curPosition;
         cu = projectParser.createCU(curFile);
     }
@@ -73,6 +76,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, String fileName, String fileContent, int curPosition) {
         this.projectParser = projectParser;
         this.curFile = null;
+        this.curFileContent = fileContent;
         this.curPosition = curPosition;
         cu = projectParser.createCU(fileName, fileContent);
     }
@@ -88,6 +92,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, File curFile, int curLine, int curColumn) {
         this.projectParser = projectParser;
         this.curFile = curFile;
+        this.curFileContent = FileProcessor.read(curFile);
         cu = projectParser.createCU(curFile);
         this.curPosition = this.getPosition(curLine, curColumn);
     }
@@ -105,6 +110,7 @@ public class FileParser {
     public FileParser(ProjectParser projectParser, String fileName, String fileContent, int curLine, int curColumn) {
         this.projectParser = projectParser;
         this.curFile = null;
+        this.curFileContent = fileContent;
         cu = projectParser.createCU(fileName, fileContent);
         this.curPosition = this.getPosition(curLine, curColumn);
     }
@@ -186,6 +192,7 @@ public class FileParser {
      * @throws Exception
      */
     public void parse() throws MethodInvocationNotFoundException, ClassScopeNotFoundException {
+        paramPosition = -1;
         try {
             ITypeBinding clazz = getClassScope(curPosition);
             if (clazz != curClass) {
@@ -229,6 +236,29 @@ public class FileParser {
      */
     public MultiMap genNextParams() {
         return genNextParams(-1, null);
+    }
+
+    public MultiMap genCurParams() {
+        if (paramPosition != -1) {
+            return genNextParams(paramPosition, null);
+        } else {
+            return null;
+        }
+    }
+
+    public String getCurContext() {
+        return getCurContext(paramPosition);
+    }
+
+    public String getCurContext(int paramPos) {
+        if (paramPos == 0) {
+            return curFileContent.substring(
+                    getCurMethodScope().getStartPosition(), getCurMethodInvocation().getParamStartPosition()
+            ).concat("(");
+        }
+        if (paramPos < 0) return "";
+        ASTNode curArg = (ASTNode) getCurMethodInvocation().arguments().get(paramPos);
+        return curFileContent.substring(getCurMethodScope().getStartPosition(), curArg.getStartPosition());
     }
 
     /**
@@ -327,6 +357,11 @@ public class FileParser {
                     if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                             || (methodBinding.getName().equals("equals")
                             && finalExpressionTypeKey != null && finalExpressionTypeKey.equals(TypeConstraintKey.STRING_TYPE))) {
+                        nextVariableMap.put("LIT(String)", "\"\"");
+                    }
+
+                    if (TypeConstraintKey.OBJECT_TYPE.equals(typeNeedCheck.getKey())) {
+                        nextVariableMap.put("LIT(num)", "0");
                         nextVariableMap.put("LIT(String)", "\"\"");
                     }
 
@@ -536,19 +571,69 @@ public class FileParser {
         return Optional.of(listMember);
     }
 
+    private int paramPosition = -1;
+
+    public int getParamPosition() {
+        return paramPosition;
+    }
+
     public void parseCurMethodInvocation() throws MethodInvocationNotFoundException {
         final ASTNode[] astNode = {null};
 
-        cu.accept(new ASTVisitor() {
-            public void preVisit(ASTNode node) {
-                if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
-                        && node.getStartPosition() <= curPosition
-                        && curPosition <= (node.getStartPosition() + node.getLength())) {
-                    astNode[0] = node;
-                }
-            }
-        });
+        if (Config.TARGET_PARAM_POSITION) {
+            cu.accept(new ASTVisitor() {
+                public void preVisit(ASTNode node) {
+                    if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
+                            && node.getStartPosition() <= curPosition
+                            && curPosition <= (node.getStartPosition() + node.getLength())) {
+                        int start = 0;
+                        int stop = 0;
+                        List arguments = null;
+                        if (node instanceof MethodInvocation) {
+                            MethodInvocation methodInvocation = (MethodInvocation) node;
+                            start = methodInvocation.getName().getStartPosition() + methodInvocation.getName().getLength();
+                            stop = methodInvocation.getStartPosition() + methodInvocation.getLength();
+                            arguments = methodInvocation.arguments();
+                        } else {
+                            SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) node;
+                            start = superMethodInvocation.getName().getStartPosition() + superMethodInvocation.getName().getLength();
+                            stop = superMethodInvocation.getStartPosition() + superMethodInvocation.getLength();
+                            arguments = superMethodInvocation.arguments();
+                        }
+                        if (curPosition > start + 1 && curPosition < stop + 1) {
+                            astNode[0] = node;
+                            int pos = 0;
 
+                            paramPosition = 0;
+                            for (Object arg : arguments) {
+                                ASTNode astNodeArg = (ASTNode) arg;
+                                if (astNodeArg.getStartPosition() <= curPosition
+                                        && curPosition - 1 <= (astNodeArg.getStartPosition() + astNodeArg.getLength())) {
+                                    paramPosition = pos;
+                                }
+
+                                if (astNodeArg.getStartPosition() + astNodeArg.getLength() < curPosition - 1
+                                        && arguments.size() > pos + 1) {
+                                    paramPosition = pos + 1;
+                                }
+
+                                pos++;
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            cu.accept(new ASTVisitor() {
+                public void preVisit(ASTNode node) {
+                    if ((node instanceof MethodInvocation || node instanceof SuperMethodInvocation)
+                            && node.getStartPosition() <= curPosition
+                            && curPosition <= (node.getStartPosition() + node.getLength())) {
+                        astNode[0] = node;
+                    }
+                }
+            });
+        }
         if (astNode[0] == null) {
             curMethodInvocation = null;
             throw new MethodInvocationNotFoundException("Method invocation not found!");

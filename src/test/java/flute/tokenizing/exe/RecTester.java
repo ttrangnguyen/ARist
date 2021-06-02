@@ -1,5 +1,6 @@
 package flute.tokenizing.exe;
 
+import flute.testing.CandidateMatcher;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
@@ -58,6 +59,9 @@ public class RecTester {
 
     public static boolean canAcceptGeneratedLexes(ArgRecTest test) {
         String expectedLex = test.getExpected_lex();
+
+        expectedLex = CandidateMatcher.preprocess(expectedLex);
+
         if (expectedLex.contains(".this")) {
             expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
         }
@@ -77,17 +81,6 @@ public class RecTester {
             return test.getNext_lexList().contains(test.getObjectCreationLex());
         }
 
-        if (expectedLex.contains("[")) {
-            StringBuilder sb = new StringBuilder();
-            while (expectedLex.contains("[")) {
-                sb.append(expectedLex.substring(0, expectedLex.indexOf('[') + 1));
-                expectedLex = expectedLex.substring(expectedLex.indexOf(']'));
-            }
-            sb.append(expectedLex);
-            expectedLex = sb.toString();
-            if (test.getNext_lexList().contains(expectedLex)) return true;
-        }
-
         return false;
     }
 
@@ -99,18 +92,11 @@ public class RecTester {
 
     public static boolean canAcceptResult(ArgRecTest test, String result) {
         String expectedLex = test.getExpected_lex();
+
+        expectedLex = CandidateMatcher.preprocess(expectedLex);
+
         if (expectedLex.contains(".this")) {
             expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
-        }
-
-        if (expectedLex.contains("[")) {
-            StringBuilder sb = new StringBuilder();
-            while (expectedLex.contains("[")) {
-                sb.append(expectedLex.substring(0, expectedLex.indexOf('[') + 1));
-                expectedLex = expectedLex.substring(expectedLex.indexOf(']'));
-            }
-            sb.append(expectedLex);
-            expectedLex = sb.toString();
         }
 
         if (result.equals(expectedLex)) return true;

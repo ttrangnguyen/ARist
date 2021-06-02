@@ -18,9 +18,13 @@ public class Config {
     public static String STORAGE_DIR = "storage/";
 
     public static String LOG_DIR = STORAGE_DIR + "logs/";
+    public static String JAVAFX_DIR = STORAGE_DIR + "lib/JavaFX/";
 
     public final static int PARAM_SERVICE_PORT = 18007;
     public final static int METHOD_NAME_SERVICE_PORT = 17007;
+
+    public final static String MVN_HOME = "/usr/local/Cellar/maven/3.6.3_1/libexec";
+    public static boolean TARGET_PARAM_POSITION = true;
 
     /***
      * Logging
@@ -49,7 +53,7 @@ public class Config {
      * Config for feature
      */
 
-    public final static boolean FEATURE_USER_CHOOSE_METHOD = true;
+    public static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
     public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false;
@@ -119,6 +123,11 @@ public class Config {
 //            "java.awt",         //Netbeans (AWT)
 //            "javax.swing",      //Netbeans (Swing)
     };
+
+    public static void enablePluginProcess() {
+        Config.FEATURE_USER_CHOOSE_METHOD = false;
+        Config.TARGET_PARAM_POSITION = true;
+    }
 
     public static void loadSrcPath(String path, String parentFolderName) throws FileNotFoundException {
         File parentFolder = new File(path);

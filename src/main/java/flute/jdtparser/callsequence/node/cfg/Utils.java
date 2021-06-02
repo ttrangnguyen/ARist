@@ -9,6 +9,7 @@ import flute.jdtparser.callsequence.expr.ThisExpressionCustom;
 import flute.jdtparser.callsequence.node.ast.CaseBlock;
 import org.eclipse.jdt.core.dom.*;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -186,7 +187,7 @@ public class Utils {
         Map<IBinding, List<MethodCallNode>> tracking2ListMap = new HashMap<>();
         groupMethodCallNodeByTrackingNode(node, tracking2ListMap);
 
-        for (IBinding id: tracking2ListMap.keySet()) {
+        for (IBinding id : tracking2ListMap.keySet()) {
             List<MethodCallNode> methodCallNodes = tracking2ListMap.get(id);
             Stack<MethodCallNode> stack = new Stack<>();
             // Add a virtual root node
@@ -194,7 +195,7 @@ public class Utils {
             stack.peek().setArriveId(Integer.MIN_VALUE);
             stack.peek().setLeaveId(Integer.MAX_VALUE);
 
-            for (MethodCallNode methodCallNode: methodCallNodes) {
+            for (MethodCallNode methodCallNode : methodCallNodes) {
                 while (!stack.peek().isAscendanceOf(methodCallNode)) {
                     stack.pop().uniqueChildNode();
                 }
@@ -235,6 +236,16 @@ public class Utils {
                     return true;
                 }
             }
+        }
+        return false;
+    }
+
+    public static boolean checkTestFile(File file) {
+        for (String blackName : Config.BLACKLIST_NAME_SRC) {
+            if (file.getName().toLowerCase().contains(blackName)) return true;
+        }
+        for (String blackFolderName : Config.BLACKLIST_FOLDER_SRC) {
+            if (file.getParentFile().getAbsolutePath().toLowerCase().contains(blackFolderName)) return true;
         }
         return false;
     }

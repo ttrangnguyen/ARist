@@ -33,6 +33,7 @@ public class DirProcessor {
     }
 
     public static List<File> getAllEntity(File file, boolean isFolder) {
+        if (file == null || file.getName().equals(".DS_Store")) return new ArrayList<File>();
         List<File> subdirs = Arrays.asList(file.listFiles(new FileFilter() {
             public boolean accept(File f) {
                 return f.isDirectory();
