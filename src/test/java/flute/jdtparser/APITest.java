@@ -87,6 +87,9 @@ public class APITest {
     }
 
     private static FileParser genFileParser(BaseTestCase testCase) throws TestPathDetectException {
+        if (!testCase.getRelativeFilePath().replace("\\", "/").contains("src/")) {
+            throw new TestPathDetectException("");
+        }
         if (!curProject.equals(testCase.getProjectName())) {
             initProject(testCase.getProjectName());
         }
@@ -112,27 +115,28 @@ public class APITest {
     }
 
     public static void main(String[] args) throws MavenInvocationException {
-//        BaseTestCase testCase = new BaseTestCase(
-//                "bloomreach_solrcloud-haft", "src/main/java/com/bloomreach/bstore/highavailability/actions/ReplicationManger.java",
-//                new Position(262, 80), "context", "outer", "target"
-//        );
-//
-//        try {
-//            MultiMap result = test(testCase);
+        BaseTestCase testCase = new BaseTestCase(
+                "mscharhag_ET"
+                , "src/main/java/com/mscharhag/et/impl/DefaultExceptionTranslator.java",
+                new Position(38, 95), "context", "outer", "target"
+        );
+
+        try {
+            Object result = methodTest(testCase);
 //            ProjectTest.printMap(result, "RESULT");
-//        } catch (Exception e) {
-//            ;
-//            e.printStackTrace();
-//        }
-        int zero = 0;
-        int count = 0;
-        ProgressBar progressBar = new ProgressBar();
-        File projectFolder = new File(APITestGenerator.REPO_FOLDER);
-        for (File project : projectFolder.listFiles()) {
-            if (initProject(project.getName()) == 0) zero++;
-            count++;
-            System.out.printf("======Success: %.2f%% - %d projects \n", zero * 100f / count, count);
-            progressBar.setProgress(count * 1f / projectFolder.listFiles().length, true);
+        } catch (Exception e) {
+            ;
+            e.printStackTrace();
         }
+//        int zero = 0;
+//        int count = 0;
+//        ProgressBar progressBar = new ProgressBar();
+//        File projectFolder = new File(APITestGenerator.REPO_FOLDER);
+//        for (File project : projectFolder.listFiles()) {
+//            if (initProject(project.getName()) == 0) zero++;
+//            count++;
+//            System.out.printf("======Success: %.2f%% - %d projects \n", zero * 100f / count, count);
+//            progressBar.setProgress(count * 1f / projectFolder.listFiles().length, true);
+//        }
     }
 }
