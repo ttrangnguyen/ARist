@@ -380,35 +380,35 @@ public abstract class RecClient {
         final List<Future<?>> futures = new ArrayList<>();
         while (sc.hasNextLine()) {
             String filePath = sc.nextLine();
-            Future<?> future = executor.submit(() -> {
-                createNewGenerator();
-                List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                for (RecTest test : oneFileTests) test.setFilePath(filePath);
-                for (RecTest test: oneFileTests) {
-                    Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
-                }
-            });
-            futures.add(future);
-//            List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-//            for (RecTest test : oneFileTests) test.setFilePath(filePath);
-//            for (RecTest test: oneFileTests) {
-//                Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
-//            }
-        }
-
-        if (Config.MULTIPROCESS) {
-            boolean isDone = false;
-            while (!isDone) {
-                boolean isProcessing = false;
-                for (Future<?> future : futures) {
-                    if (!future.isDone()) {
-                        isProcessing = true;
-                        break;
-                    }
-                }
-                if (!isProcessing) isDone = true;
+//            Future<?> future = executor.submit(() -> {
+//                createNewGenerator();
+//                List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+//                for (RecTest test : oneFileTests) test.setFilePath(filePath);
+//                for (RecTest test: oneFileTests) {
+//                    Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
+//                }
+//            });
+//            futures.add(future);
+            List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+            for (RecTest test : oneFileTests) test.setFilePath(filePath);
+            for (RecTest test: oneFileTests) {
+                Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
             }
         }
-        sc.close();
+//
+//        if (Config.MULTIPROCESS) {
+//            boolean isDone = false;
+//            while (!isDone) {
+//                boolean isProcessing = false;
+//                for (Future<?> future : futures) {
+//                    if (!future.isDone()) {
+//                        isProcessing = true;
+//                        break;
+//                    }
+//                }
+//                if (!isProcessing) isDone = true;
+//            }
+//        }
+//        sc.close();
     }
 }
