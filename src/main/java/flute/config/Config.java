@@ -24,7 +24,7 @@ public class Config {
     public final static int METHOD_NAME_SERVICE_PORT = 17007;
 
     public final static String MVN_HOME = "/usr/local/Cellar/maven/3.6.3_1/libexec";
-    public static boolean TARGET_PARAM_POSITION = true;
+    public static boolean TARGET_PARAM_POSITION = false;
 
     /***
      * Logging
@@ -47,7 +47,7 @@ public class Config {
      */
 
     public final static boolean MULTIPROCESS = true;
-    public final static int NUM_THREAD = 5;
+    public final static int NUM_THREAD = 1;
 
     /***
      * Config for feature
@@ -56,24 +56,26 @@ public class Config {
     public static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
-    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false;
+    public final static boolean FLAG_ALL = false;
+
+    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false|FLAG_ALL;
     /***
      *  Type feature
      */
 
-    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;
-    public final static boolean FEATURE_PARAM_TYPE_CAST = false;
+    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_CAST = false|FLAG_ALL;
 
-    public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false;
-    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false;
+    public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false|FLAG_ALL;
 
-    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false;
-    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false;
-    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false;
-    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
-    public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false;
+    public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false|FLAG_ALL;
 
     public final static boolean FEATURE_LIMIT_CANDIDATES = false;
 
