@@ -14,8 +14,7 @@ import flute.utils.ProgressBar;
 import flute.utils.logging.Logger;
 import flute.utils.logging.Timer;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.math.RoundingMode;
 import java.util.*;
@@ -370,5 +369,46 @@ public abstract class RecClient {
                 + (dataFrame.getVariable("NGram's runtime").getMean()
                 + dataFrame.getVariable("RNN's runtime").getMean()
                 + dataFrame.getVariable("averageGetTestsTime").getSum()) + "s");
+    }
+
+
+
+    public void generateTests() throws IOException {
+        setupGenerator();
+        Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
+        final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
+        final List<Future<?>> futures = new ArrayList<>();
+        while (sc.hasNextLine()) {
+            String filePath = sc.nextLine();
+            Future<?> future = executor.submit(() -> {
+                createNewGenerator();
+                List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+                for (RecTest test : oneFileTests) test.setFilePath(filePath);
+                for (RecTest test: oneFileTests) {
+                    Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
+                }
+            });
+            futures.add(future);
+//            List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+//            for (RecTest test : oneFileTests) test.setFilePath(filePath);
+//            for (RecTest test: oneFileTests) {
+//                Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
+//            }
+        }
+
+        if (Config.MULTIPROCESS) {
+            boolean isDone = false;
+            while (!isDone) {
+                boolean isProcessing = false;
+                for (Future<?> future : futures) {
+                    if (!future.isDone()) {
+                        isProcessing = true;
+                        break;
+                    }
+                }
+                if (!isProcessing) isDone = true;
+            }
+        }
+        sc.close();
     }
 }
