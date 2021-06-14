@@ -1059,7 +1059,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 			sb.append(' ');
 			sb.append(nodeSequenceInfo.toStringSimplest());
 		}
-		sb.deleteCharAt(0);
+		if (sb.length() > 0) sb.deleteCharAt(0);
 		return sb.toString();
 	}
 }

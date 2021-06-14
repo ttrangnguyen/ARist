@@ -2,6 +2,7 @@ package flute.tokenizing.exe;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
@@ -29,6 +30,12 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
             if (NodeSequenceInfo.isMethodAccess(excode)) stack.add(i);
             if (NodeSequenceInfo.isClosePart(excode)
                     && !stack.isEmpty() && excode.oriNode == excodes.get(stack.get(stack.size() - 1)).oriNode) {
+
+                // TODO: Handle ExplicitConstructorInvocationStmt such as this(), super()
+                if (excode.oriNode instanceof ExplicitConstructorInvocationStmt) {
+                    stack.remove(stack.size() - 1);
+                    continue;
+                }
 
                 MethodCallExpr methodCall = (MethodCallExpr) excode.oriNode;
                 String methodCallContent = methodCall.toString();
