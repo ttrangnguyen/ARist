@@ -70,6 +70,7 @@ public class CandidateMatcher {
         if (matchesLiteral(candidate, target)) return true;
         if (matchesMethodCall(candidate, target)) return true;
         if (matchesObjectCreation(candidate, target)) return true;
+        if (matchesArrayCreation(candidate, target)) return true;
         if (matchesClassExpr(candidate, target)) return true;
         return false;
     }
@@ -88,6 +89,13 @@ public class CandidateMatcher {
         if (!candidate.getExcode().matches("^C_CALL\\("+"\\w+"+"(<.*>)?,"+"\\w+"+"\\) OPEN_PART")) return false;
         if (!target.matches("^new "+"\\w+"+"\\(.*\\)$")) return false;
         return target.startsWith(candidate.getName());
+    }
+
+    public static boolean matchesArrayCreation(Candidate candidate, String target) {
+        if (!target.matches("^new \\w+\\[.*\\]$")) return false;
+        String className = target.substring(target.indexOf(' ') + 1, target.indexOf('['));
+        if (candidate.getExcode().compareTo("C_CALL(Array_"+className+","+className+") OPEN_PART LIT(num) CLOSE_PART") != 0) return false;
+        return candidate.getName().compareTo("new "+className+"[0]") == 0;
     }
 
     public static boolean matchesLiteral(Candidate candidate, String target) {
