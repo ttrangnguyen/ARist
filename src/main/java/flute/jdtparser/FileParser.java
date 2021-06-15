@@ -649,6 +649,14 @@ public class FileParser {
     }
 
     public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
+        if (methodBinding.isVarargs()
+                && methodBinding.getParameterTypes().length - 1 <= position
+                && methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].isArray()) {
+            if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getComponentType())) {
+                return ParserConstant.VARARGS_TRUE_VALUE;
+            }
+        }
+
         if (methodBinding.getParameterTypes().length > position) {
             if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
                 return ParserConstant.TRUE_VALUE;
@@ -657,14 +665,6 @@ public class FileParser {
             if (Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS && varType.isArray()
                     && varType.getComponentType().isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
                 return ParserConstant.IS_ARRAY_VALUE;
-        }
-
-        if (methodBinding.isVarargs()
-                && methodBinding.getParameterTypes().length - 1 <= position
-                && methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].isArray()) {
-            if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getComponentType())) {
-                return ParserConstant.VARARGS_TRUE_VALUE;
-            }
         }
 
         return compareWithGenericType(varType, methodBinding, position);
