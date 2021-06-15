@@ -660,6 +660,8 @@ public class FileParser {
         if (methodBinding.getParameterTypes().length > position) {
             if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
                 return ParserConstant.TRUE_VALUE;
+            if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position]))
+                return ParserConstant.TRUE_VALUE;
             if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[position]))
                 return ParserConstant.CAN_BE_CAST_VALUE;
             if (Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS && varType.isArray()

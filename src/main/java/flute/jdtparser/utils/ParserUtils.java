@@ -138,4 +138,12 @@ public class ParserUtils {
 
         return true;
     }
+
+    public static boolean compareSpecialCase(ITypeBinding type1, ITypeBinding type2) {
+        if ((type1.getQualifiedName().equals("java.util.concurrent.ExecutorService") || type1.getQualifiedName().equals("java.util.concurrent.Executor"))
+                && type2.getQualifiedName().startsWith("java.util.concurrent.Callable")) {
+            return true;
+        }
+        return false;
+    }
 }
