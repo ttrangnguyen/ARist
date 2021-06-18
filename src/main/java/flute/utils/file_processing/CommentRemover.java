@@ -1,5 +1,8 @@
 package flute.utils.file_processing;
 
+import com.github.javaparser.ParseProblemException;
+import com.github.javaparser.StaticJavaParser;
+
 import java.io.*;
 import java.util.Scanner;
 
@@ -24,6 +27,27 @@ public class CommentRemover {
     public static String removeCommentFromFileString(String fileString) {
         String removedCommentfileString = readLineByLine(fileString);
         removedCommentfileString = removedCommentfileString.replaceAll("/\\*[^*]*(?:\\*(?!/)[^*]*)*\\*/|//.*", "");
+        return removedCommentfileString;
+    }
+
+    public static String removeCommentFromFileAfterParsing(File file) {
+        String removedCommentfileString = null;
+        try {
+            StaticJavaParser.getConfiguration().setAttributeComments(false);
+            removedCommentfileString = StaticJavaParser.parse(file).toString();
+        } catch (FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+        } catch (ParseProblemException ppe) {
+            ppe.printStackTrace();
+            try {
+                removedCommentfileString = removeCommentFromFile(file);
+            } catch (StackOverflowError sofe) {
+                sofe.printStackTrace();
+                System.out.println("Can't remove comments from this file: " + file.getAbsolutePath());
+                //String fileString = readLineByLine(file);
+                //return fileString;
+            }
+        }
         return removedCommentfileString;
     }
 
