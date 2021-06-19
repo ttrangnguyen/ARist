@@ -408,7 +408,7 @@ public class FileParser {
                 if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
                     for (IMethodBinding innerMethod : curClassParser.getMethods()) {
                         ITypeBinding varMethodReturnType = innerMethod.getReturnType();
-                        int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                        ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
                         if (ParserCompare.isTrue(compareFieldValue)) {
                             String nextLex = innerMethod.getName() + "(";
                             String exCode = "M_ACCESS(" + curClass.getName() + "," + innerMethod.getName() + "," + innerMethod.getParameterTypes().length + ") "
@@ -430,7 +430,7 @@ public class FileParser {
                                 ClassParser classParser = new ClassParser(iTypeBinding);
                                 classParser.getFieldsFrom(curClass, true).forEach(staticField -> {
                                     ITypeBinding staticMemberType = staticField.getType();
-                                    int compareFieldValue = compareParam(staticMemberType, methodBinding, finalMethodArgLength);
+                                    ParserCompareValue compareFieldValue = compareParam(staticMemberType, methodBinding, finalMethodArgLength);
                                     if (ParserCompare.isTrue(compareFieldValue)) {
                                         String nextVar = importBinding.getName() + "." + staticField.getName();
                                         String exCode = "VAR(" + importBinding.getName() + ") "
@@ -448,7 +448,7 @@ public class FileParser {
 
                 ITypeBinding finalTypeNeedCheck = typeNeedCheck;
                 variables.forEach(variable -> {
-                    int compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
+                    ParserCompareValue compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
 
                     //Just add cast and array access for variable
                     if (ParserCompare.isTrue(compareValue)) {
@@ -457,10 +457,14 @@ public class FileParser {
                         if (!Config.FEATURE_LIMIT_CANDIDATES || ParserUtils.checkImportantVariable(variable.getName(), getParamName(position).orElse(null), getLocalVariableList())) {
                             nextVariableMap.put(exCode, variable.getName());
                         }
-                    } else if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
-                        String exCode = "CAST(" + finalTypeNeedCheck.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
-                        nextVariableMap.put(exCode, "(" + finalTypeNeedCheck.getName() + ") " + variable.getName());
-                    } else if (ParserCompare.isArrayType(compareValue)) {
+                    }
+                    if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
+                        compareValue.getCanBeCastType().forEach(type->{
+                            String exCode = "CAST(" + type.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
+                            nextVariableMap.put(exCode, "(" + type.getName() + ") " + variable.getName());
+                        });
+                    }
+                    if (ParserCompare.isArrayType(compareValue)) {
                         String exCode = "VAR(" + variable.getTypeBinding().getName() + ") OPEN_PART CLOSE_PART";
                         nextVariableMap.put(exCode, variable.getName() + "[]");
                     }
@@ -473,7 +477,7 @@ public class FileParser {
                         //gen candidate with field
                         for (IVariableBinding varField : varFields) {
                             ITypeBinding varMemberType = varField.getType();
-                            int compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
+                            ParserCompareValue compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
                             if (ParserCompare.isTrue(compareFieldValue)) {
                                 String nextVar = variable.getName() + "." + varField.getName();
                                 String exCode = "VAR(" + variableClass.getName() + ") "
@@ -486,7 +490,7 @@ public class FileParser {
                             List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
                             for (IMethodBinding varMethod : varMethods) {
                                 ITypeBinding varMethodReturnType = varMethod.getReturnType();
-                                int compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                                ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
                                 if (ParserCompare.isTrue(compareFieldValue)) {
                                     String nextLex = variable.getName() + "." + varMethod.getName() + "(";
                                     String exCode = "VAR(" + variableClass.getName() + ") "
@@ -648,28 +652,39 @@ public class FileParser {
         }
     }
 
-    public static int compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
+    public static ParserCompareValue compareParam(ITypeBinding varType, IMethodBinding methodBinding, int position) {
+        ParserCompareValue result = new ParserCompareValue();
+
+        if (methodBinding.getParameterTypes().length > position) {
+            if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
+                result.addValue(ParserConstant.TRUE_VALUE);
+            if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position]))
+                result.addValue(ParserConstant.TRUE_VALUE);
+            if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[position])) {
+                result.addValue(ParserConstant.CAN_BE_CAST_VALUE);
+                result.addCastType(methodBinding.getParameterTypes()[position]);
+            }
+            if (Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS && varType.isArray()
+                    && varType.getComponentType().isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
+                result.addValue(ParserConstant.IS_ARRAY_VALUE);
+
+        }
+
         if (methodBinding.isVarargs()
                 && methodBinding.getParameterTypes().length - 1 <= position
                 && methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].isArray()) {
             if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getComponentType())) {
-                return ParserConstant.VARARGS_TRUE_VALUE;
+                result.addValue(ParserConstant.VARARGS_TRUE_VALUE);
             }
+            if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getComponentType())) {
+                result.addValue(ParserConstant.CAN_BE_CAST_VALUE);
+                result.addCastType(methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getComponentType());
+            }
+
         }
 
-        if (methodBinding.getParameterTypes().length > position) {
-            if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
-                return ParserConstant.TRUE_VALUE;
-            if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position]))
-                return ParserConstant.TRUE_VALUE;
-            if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[position]))
-                return ParserConstant.CAN_BE_CAST_VALUE;
-            if (Config.FEATURE_PARAM_TYPE_ARRAY_ACCESS && varType.isArray()
-                    && varType.getComponentType().isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
-                return ParserConstant.IS_ARRAY_VALUE;
-        }
-
-        return compareWithGenericType(varType, methodBinding, position);
+        result.addValue(compareWithGenericType(varType, methodBinding, position));
+        return result;
     }
 
     public static int compareWithGenericType(ITypeBinding varType, IMethodBinding methodBinding, int position) {
@@ -817,7 +832,7 @@ public class FileParser {
                 continue;
             }
 
-            if (compareParam(argument.resolveType(), iMethodBinding, index++) == 0) {
+            if (ParserCompare.isFalse(compareParam(argument.resolveType(), iMethodBinding, index++))) {
                 return false;
             }
         }
@@ -836,7 +851,7 @@ public class FileParser {
             }
 //                ITypeBinding[] params = iMethodBinding.getParameterTypes();
             if (argument.resolveType() == null
-                    || compareParam(argument.resolveType(), iMethodBinding, index++) == 0) {
+                    || ParserCompare.isFalse(compareParam(argument.resolveType(), iMethodBinding, index++))) {
                 return false;
             }
         }
