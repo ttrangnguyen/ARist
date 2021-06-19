@@ -5,27 +5,25 @@ import java.util.Scanner;
 
 public class CommentRemover {
     public static void main(String[] args) throws FileNotFoundException {
-        String content = new Scanner(new File("D:/zzzz/CommentRemover.java")).useDelimiter("\\Z").next();
-        System.out.println(content);
-        String removed = CommentRemover.removeCommentFromFileString(content);
-        System.out.println(removed);
-        System.out.println("----------------------------------------------");
-        File file = new File("D:/zzzz/CommentRemover.java");
+//        String content = new Scanner(new File("D:/zzzzz/Toolbar.java")).useDelimiter("\\Z").next();
+//        System.out.println(content);
+//        String removed = CommentRemover.removeCommentFromFileString(content);
+//        System.out.println(removed);
+//        System.out.println("----------------------------------------------");
+        File file = new File("D:/zzzzz/GuidedActionsStylist.java");
         String removed2 = CommentRemover.removeCommentFromFile(file);
         System.out.println(removed2);
     }
 
     public static String removeCommentFromFile(File file) {
         String fileString = readLineByLine(file);
-        fileString = fileString.replaceAll(
-                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", " ");
+        fileString = fileString.replaceAll("/\\*[^*]*(?:\\*(?!/)[^*]*)*\\*/|//.*", "");
         return fileString;
     }
 
     public static String removeCommentFromFileString(String fileString) {
         String removedCommentfileString = readLineByLine(fileString);
-        removedCommentfileString = removedCommentfileString.replaceAll(
-                "(?:/\\*(?:[^*]|(?:\\*+[^*/]))*\\*+/)", " ");
+        removedCommentfileString = removedCommentfileString.replaceAll("/\\*[^*]*(?:\\*(?!/)[^*]*)*\\*/|//.*", "");
         return removedCommentfileString;
     }
 

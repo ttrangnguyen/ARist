@@ -77,24 +77,37 @@
         </dependency>
     </dependencies>
     <build>
-        <sourceDirectory>target/generated-sources/antlr4</sourceDirectory>
+<!--        <sourceDirectory>target/generated-sources/antlr4</sourceDirectory>-->
         <plugins>
+<!--            <plugin>-->
+<!--                <groupId>org.antlr</groupId>-->
+<!--                <artifactId>antlr4-maven-plugin</artifactId>-->
+<!--                <version>4.8-1</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <configuration>-->
+<!--                            <sourceDirectory>src/main/java/flute/antlr4/grammar/</sourceDirectory>-->
+<!--                            <outputDirectory>target/generated-sources/antlr4/flute/antlr4</outputDirectory>-->
+<!--                        </configuration>-->
+<!--                        <goals>-->
+<!--                            <goal>antlr4</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
-                <groupId>org.antlr</groupId>
-                <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.8-1</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <sourceDirectory>src/main/java/flute/antlr4/grammar/</sourceDirectory>
-                            <outputDirectory>target/generated-sources/antlr4/flute/antlr4</outputDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>antlr4</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>flute.tokenizing.exe.BatchTestGenerator</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
             </plugin>
         </plugins>
     </build>
