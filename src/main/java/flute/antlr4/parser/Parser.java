@@ -19,8 +19,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import flute.utils.logging.Logger;
 import flute.utils.StringUtils;
 import flute.tokenizing.visitors.MetricsVisitor;
-import flute.antlr4.ExcodeLexer;
-import flute.antlr4.ExcodeParser;
+//import flute.antlr4.ExcodeLexer;
+//import flute.antlr4.ExcodeParser;
 import java.io.*;
 import java.time.Duration;
 import java.time.Instant;
@@ -38,10 +38,14 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
 // netbeans stops = [0, 5000, 9759]
 
+// if I want to import //import flute.antlr4.ExcodeLexer;
+////import flute.antlr4.ExcodeParser;
+// then goto pom then uncomment
+
 public class Parser {
     public static int parseBegin = 0;
     public static int parseEnd = 23000;
-    public static final boolean CREATE_DATA_PATH = true;
+    public static final boolean CREATE_DATA_PATH = false;
     public static final int recursionMaxDepth = 1;
     public static final int threshPerDepth = 7;
 
@@ -89,6 +93,25 @@ public class Parser {
 
         projectParser = new ProjectParser(flute.config.Config.PROJECT_DIR, flute.config.Config.SOURCE_PATH,
                 flute.config.Config.ENCODE_SOURCE, flute.config.Config.CLASS_PATH, flute.config.Config.JDT_LEVEL, flute.config.Config.JAVA_VERSION);
+    }
+
+    public void visitFiles() {
+        Logger.initDebug("debugVisitor.txt");
+        List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectsPath + projectSrcPath);
+        try {
+            File fout = new File("storage/logs/srcpath/"+projectName+".txt");
+            FileOutputStream fos = new FileOutputStream(fout);
+
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+            for (File file : allSubFilesTmp) {
+                if (!canTest(file, projectName)) continue;
+                bw.write(file.getAbsolutePath().substring(file.getAbsolutePath().indexOf(projectName)));
+                bw.newLine();
+            }
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void run() {
@@ -495,13 +518,13 @@ public class Parser {
     }
 
     private void parseExcodeSequence(String statement) throws ParseCancellationException{
-        ExcodeLexer lexer = new ExcodeLexer(CharStreams.fromString(statement));
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
-        ExcodeParser parser = new ExcodeParser(new CommonTokenStream(lexer));
-        parser.removeErrorListeners();
-        parser.addErrorListener(ThrowingErrorListener.INSTANCE);
-        ParseTree tree = parser.blockStatement();  // start rule
+//        ExcodeLexer lexer = new ExcodeLexer(CharStreams.fromString(statement));
+//        lexer.removeErrorListeners();
+//        lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
+//        ExcodeParser parser = new ExcodeParser(new CommonTokenStream(lexer));
+//        parser.removeErrorListeners();
+//        parser.addErrorListener(ThrowingErrorListener.INSTANCE);
+//        ParseTree tree = parser.blockStatement();  // start rule
     }
 
     private ArrayList<String> rank(ArrayList<String> exSeq, ArrayList<String> validTokens) {
@@ -569,18 +592,18 @@ public class Parser {
     }
 
     public void parseExcodeSequence(String content, FileInfo fileInfo, BufferedWriter bw) throws IOException {
-        try{
-            ExcodeLexer lexer = new ExcodeLexer(CharStreams.fromString(content));
-            lexer.removeErrorListeners();
-            lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
-            ExcodeParser parser = new ExcodeParser(new CommonTokenStream(lexer));
-            parser.removeErrorListeners();
-            parser.addErrorListener(ThrowingErrorListener.INSTANCE);
-            ParseTree tree = parser.compilationUnit();  // start rule
-        } catch (ParseCancellationException e) {
-            bw.write(fileInfo.filePath + e.getMessage() + "\n");
-            bw.newLine();
-        }
+//        try{
+//            ExcodeLexer lexer = new ExcodeLexer(CharStreams.fromString(content));
+//            lexer.removeErrorListeners();
+//            lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
+//            ExcodeParser parser = new ExcodeParser(new CommonTokenStream(lexer));
+//            parser.removeErrorListeners();
+//            parser.addErrorListener(ThrowingErrorListener.INSTANCE);
+//            ParseTree tree = parser.compilationUnit();  // start rule
+//        } catch (ParseCancellationException e) {
+//            bw.write(fileInfo.filePath + e.getMessage() + "\n");
+//            bw.newLine();
+//        }
     }
 
     public static void main(String[] args) throws Exception {
@@ -601,8 +624,9 @@ public class Parser {
 //        if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
 //            System.out.println("OK");
 //        }
-        Parser parser = new Parser("ant", "/src/main/", 0, 230000);
-        parser.run();
+        Parser parser = new Parser("eclipse", "", 0, 230000);
+        parser.visitFiles();
+//        parser.run();
 //        parser = new Parser("batik", "/sources/", 0, 230000);
 //        parser.run();
 //        parser = new Parser("log4j", "/src/main/java/", 0, 230000);
