@@ -56,6 +56,15 @@ public class FileProcessor {
         return lines;
     }
 
+    public static void write(String text, String path) throws IOException {
+        File fout = new File(path);
+        fout.getParentFile().mkdirs();
+        FileOutputStream fos = new FileOutputStream(fout);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        bw.write(text);
+        bw.close();
+    }
+
     public static void writeListLineByLine(List<String> list, String path) throws IOException {
         File fout = new File(path);
         FileOutputStream fos = new FileOutputStream(fout);

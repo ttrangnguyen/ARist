@@ -51,6 +51,25 @@ public class CommentRemover {
         return removedCommentfileString;
     }
 
+    public static String removeCommentFromFileStringAfterParsing(String fileString) {
+        String removedCommentfileString = null;
+        try {
+            StaticJavaParser.getConfiguration().setAttributeComments(false);
+            removedCommentfileString = StaticJavaParser.parse(fileString).toString();
+        } catch (ParseProblemException ppe) {
+            ppe.printStackTrace();
+            try {
+                removedCommentfileString = removeCommentFromFileString(fileString);
+            } catch (StackOverflowError sofe) {
+                sofe.printStackTrace();
+                System.out.println("Can't remove comments");
+                //String fileString = readLineByLine(file);
+                //return fileString;
+            }
+        }
+        return removedCommentfileString;
+    }
+
     private static String readLineByLine(String fileString) {
         StringBuilder removedCommentfileString = new StringBuilder();
         for (String line: fileString.split("\n")) {

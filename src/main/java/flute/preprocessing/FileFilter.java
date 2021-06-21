@@ -1,4 +1,4 @@
-package flute.modeling.gpt;
+package flute.preprocessing;
 
 import flute.config.Config;
 

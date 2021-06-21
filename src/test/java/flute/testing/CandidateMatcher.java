@@ -1,57 +1,17 @@
 package flute.testing;
 
 import flute.data.testcase.Candidate;
-
-import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import flute.preprocessing.EmptyStringLiteralDecorator;
+import flute.preprocessing.RemoveArrayAccessIndexDecorator;
 
 public class CandidateMatcher {
     private static String identifieRegex = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*";
     private static String stringLiteralRegex = "\"([^\"]|(\\\\\"))*\"";
 
     public static String preprocess(String target) {
-        target = emptyStringLiteral(target);
-        target = removeArrayAccessIndex(target);
+        target = EmptyStringLiteralDecorator.preprocess(target);
+        target = RemoveArrayAccessIndexDecorator.preprocess(target);
         return target;
-    }
-
-    private static String emptyStringLiteral(String target) {
-        StringBuilder sb = new StringBuilder();
-        boolean insideStringLiteral = false;
-        for (String s: target.split("\\\\\"", -1)) {
-            String[] t = s.split("\"", -1);
-            for (int i = 0; i < t.length; ++i) {
-                if (!insideStringLiteral) sb.append(t[i]);
-                if (i < t.length - 1) {
-                    sb.append('"');
-                    insideStringLiteral = !insideStringLiteral;
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String removeArrayAccessIndex(String target) {
-        Matcher m = Pattern.compile("\\[|\\]|[^\\[\\]]+").matcher(target);
-        Stack<String> stack = new Stack<>();
-        while (m.find()) {
-            String s = m.group();
-            if (s.compareTo("]") == 0) {
-                while (true) {
-                    if (stack.empty()|| stack.pop().compareTo("[") == 0) break;
-                }
-            }
-            stack.add(s);
-        }
-        StringBuilder sb = new StringBuilder();
-        for (String s: stack) {
-            if (s.compareTo("]") == 0) {
-                sb.append('[');
-            }
-            sb.append(s);
-        }
-        return sb.toString();
     }
 
     public static boolean matches(Candidate candidate, String target) {
