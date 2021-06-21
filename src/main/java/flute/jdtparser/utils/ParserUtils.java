@@ -10,6 +10,7 @@ import flute.config.Config;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ParserUtils {
     private static ITypeBinding curType;
@@ -139,11 +140,23 @@ public class ParserUtils {
         return true;
     }
 
-    public static boolean compareSpecialCase(ITypeBinding type1, ITypeBinding type2) {
-        if ((type1.getQualifiedName().equals("java.util.concurrent.ExecutorService") || type1.getQualifiedName().equals("java.util.concurrent.Executor"))
-                && type2.getQualifiedName().startsWith("java.util.concurrent.Callable")) {
-            return true;
+    public static boolean compareSpecialCase(ITypeBinding type1, ITypeBinding type2, IMethodBinding methodBinding) {
+        //type2 is generic type
+        if (type1.getTypeDeclaration() != type2.getTypeDeclaration()
+                && type1.getTypeDeclaration().isAssignmentCompatible(type2.getTypeDeclaration())) return false;
+
+        if (type1.getTypeArguments().length != type2.getTypeArguments().length) return false;
+        for (int i = 0; i < type2.getTypeArguments().length; i++) {
+            if (!Arrays.stream(methodBinding.getTypeArguments()).collect(Collectors.toList()).contains(
+                    type2.getTypeArguments()[i]
+            )) {
+                if (type1.getTypeArguments()[i].isAssignmentCompatible(type2.getTypeArguments()[i])) {
+                    return false;
+                }
+            }
+            //next if it's generic type or compatible type
         }
-        return false;
+
+        return true;
     }
 }

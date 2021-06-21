@@ -459,7 +459,7 @@ public class FileParser {
                         }
                     }
                     if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
-                        compareValue.getCanBeCastType().forEach(type->{
+                        compareValue.getCanBeCastType().forEach(type -> {
                             String exCode = "CAST(" + type.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
                             nextVariableMap.put(exCode, "(" + type.getName() + ") " + variable.getName());
                         });
@@ -658,7 +658,8 @@ public class FileParser {
         if (methodBinding.getParameterTypes().length > position) {
             if (varType.isAssignmentCompatible(methodBinding.getParameterTypes()[position]))
                 result.addValue(ParserConstant.TRUE_VALUE);
-            if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position]))
+            if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position], methodBinding)
+                    && varType.getTypeArguments().length > 0 && methodBinding.getTypeArguments().length > 0)
                 result.addValue(ParserConstant.TRUE_VALUE);
             if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[position])) {
                 result.addValue(ParserConstant.CAN_BE_CAST_VALUE);
