@@ -142,8 +142,8 @@ public class ParserUtils {
 
     public static boolean compareSpecialCase(ITypeBinding type1, ITypeBinding type2, IMethodBinding methodBinding) {
         //type2 is generic type
-        if (type1.getTypeDeclaration() != type2.getTypeDeclaration()
-                && type1.getTypeDeclaration().isAssignmentCompatible(type2.getTypeDeclaration())) return false;
+        if ((type1 == null || type2 == null || type1.getTypeDeclaration() == null) || (type1.getTypeDeclaration() != type2.getTypeDeclaration()
+                && type1.getTypeDeclaration().isAssignmentCompatible(type2.getTypeDeclaration()))) return false;
 
         if (type1.getTypeArguments().length != type2.getTypeArguments().length) return false;
         for (int i = 0; i < type2.getTypeArguments().length; i++) {
