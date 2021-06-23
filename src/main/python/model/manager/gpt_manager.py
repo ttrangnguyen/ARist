@@ -10,8 +10,6 @@ from ..config import *
 class GPTManager(ModelManager):
     def __init__(self, top_k, project, train_len,
                  excode_model_path, java_model_path, method_call_model_path):
-        super().__init__(top_k, project, train_len,
-                         excode_model_path, java_model_path, method_call_model_path)
 
         os.environ["KMP_BLOCKTIME"] = "1"
         os.environ["KMP_SETTINGS"] = "1"
@@ -21,8 +19,11 @@ class GPTManager(ModelManager):
         config = tf.ConfigProto(intra_op_parallelism_threads=0, inter_op_parallelism_threads=0,
                                 allow_soft_placement=True, gpu_options=gpu_options)
 
-        self.sess = tf.Session(graph=tf.Graph(), config=config)
+        self.sess = tf.Session(config=config)
         self.encoder = None
+
+        super().__init__(top_k, project, train_len,
+                         excode_model_path, java_model_path, method_call_model_path)
 
     def __del__(self):
         self.sess.close()
@@ -55,8 +56,10 @@ class GPTManager(ModelManager):
             temperature=GPT_TEMPERATURE, top_k=GPT_TOP_K, top_p=GPT_TOP_P
         )
 
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(allow_empty=True)
+        self.sess.run(tf.global_variables_initializer())
         ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
+        print('Loading model', ckpt)
         saver.restore(self.sess, ckpt)
         return output
 
@@ -67,11 +70,16 @@ class GPTManager(ModelManager):
         return response + "}"
 
     def predict_param(self, data):
-        start_time = perf_counter()
+        if PARAM_LEXICAL_ONLY:
+            return self.predict_param_using_lex(data)
+        else:
+            return self.predict_param_using_lex(data)
 
+    def predict_param_using_lex(self, data):
+        start_time = perf_counter()
         n_param = len(data['next_lex'])
 
-        java_context_tokens = self.encoder.encode(data['lex_context'])
+        java_context_tokens = self.encoder.encode(data['lex_context'][0])
         java_suggestions_all = []
         for i in range(n_param):
             java_suggestions_all.append([])
@@ -80,6 +88,28 @@ class GPTManager(ModelManager):
                 for k in range(len(data['next_lex'][i][j])):
                     candidate_tokens = self.encoder.encode(data['next_lex'][i][j][k])
                     java_suggestions_all[i][j].append(candidate_tokens)
+        java_context_list = [(java_context_tokens, [])]
+        all_candidate_lex = []
+        for j in range(n_param):
+            java_suggestion_scores = []
+            for k in range(len(java_context_list)):
+                for jj in range(len(java_suggestions_all[j])):
+                    java_suggestions = java_suggestions_all[j][jj]
+                    for ii, java_suggestion in enumerate(java_suggestions):
+                        new_context = java_context_list[k][0] + java_suggestion
+                        if j < n_param - 1:
+                            new_context += [',']
+                        model_score = 0
+                        java_suggestion_scores.append((new_context, java_context_list[k][1]
+                                                       + [(jj, ii)], model_score))
+            sorted_scores = sorted(java_suggestion_scores, key=lambda x: -x[2])
+            if j < n_param - 1:
+                java_context_list = [(x[0], x[1]) for x in sorted_scores]
+            else:
+                java_context_list = sorted_scores
+        all_candidate_lex += java_context_list
+        if all_candidate_lex is not None:
+            return self.select_top_param_candidates(all_candidate_lex, data, start_time)
 
         generated = 0
         predictions = []
@@ -99,10 +129,10 @@ class GPTManager(ModelManager):
 
 
     def select_top_param_candidates(self, all_candidate_lex, data, start_time):
-        sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[1])[:self.top_k]
+        sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])[:self.top_k]
         result_gpt = []
         for i in range(min(self.top_k, len(sorted_scores))):
-            result_gpt.append(sorted_scores[i][3])
+            result_gpt.append(sorted_scores[i][1])
         runtime_gpt = perf_counter() - start_time
         self.logger.debug("Total gpt runtime: " + str(runtime_gpt))
         result_gpt = self.recreate(result_gpt, data)

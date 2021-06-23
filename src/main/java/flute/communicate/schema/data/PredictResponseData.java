@@ -12,4 +12,7 @@ public class PredictResponseData {
     @SerializedName("ngram")
     @Expose
     public PredictData ngram;
+    @SerializedName("gpt")
+    @Expose
+    public PredictData gpt;
 }

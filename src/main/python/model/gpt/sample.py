@@ -1,6 +1,6 @@
 import tensorflow as tf
 import random
-import model
+from . import model
 
 def top_k_logits(logits, k):
     if k == 0:
