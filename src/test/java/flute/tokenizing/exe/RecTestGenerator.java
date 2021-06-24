@@ -54,7 +54,7 @@ public abstract class RecTestGenerator {
                 fileTests.remove(fileTests.size() - 1);
             }
             tests.addAll(fileTests);
-            if (tests.size() >= threshold) break;
+            if (threshold >= 0 && tests.size() >= threshold) break;
         }
         return tests;
     }
