@@ -219,17 +219,17 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 oneArgTest.setParam_name("");
             } else {
                 String paramName = getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null);
-                try {
-                    if(paramName == null){
-                        paramName = APICrawler.paramNames(
-                                getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
-                        ).get(oneArgTest.getArgPos() - 1);
-//                        System.out.println(paramName);
-                    }
-                } catch (Exception e) {
-//                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
-                    e.printStackTrace();
-                }
+//                try {
+//                    if(paramName == null){
+//                        paramName = APICrawler.paramNames(
+//                                getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
+//                        ).get(oneArgTest.getArgPos() - 1);
+////                        System.out.println(paramName);
+//                    }
+//                } catch (Exception e) {
+////                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
+//                    e.printStackTrace();
+//                }
                 oneArgTest.setParam_name(paramName);
             }
 
