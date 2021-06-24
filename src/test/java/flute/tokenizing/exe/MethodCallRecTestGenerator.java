@@ -3,6 +3,7 @@ package flute.tokenizing.exe;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
+import flute.data.exception.ClassScopeNotFoundException;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
@@ -44,8 +45,9 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
                     getFileParser().setPosition(methodCall.getBegin().get().line, methodCall.getBegin().get().column);
                 } catch (Exception e) {
                     // TODO: Handle enums
-                    e.printStackTrace();
-
+                    if (!(e instanceof ClassScopeNotFoundException)) {
+                        e.printStackTrace();
+                    }
                     stack.remove(stack.size() - 1);
                     continue;
                 }
@@ -64,8 +66,9 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
                     getFileParser().setPosition(curPos);
                 } catch (Exception e) {
                     // TODO: Handle enums
-                    e.printStackTrace();
-
+                    if (!(e instanceof ClassScopeNotFoundException)) {
+                        e.printStackTrace();
+                    }
                     stack.remove(stack.size() - 1);
                     continue;
                 }
