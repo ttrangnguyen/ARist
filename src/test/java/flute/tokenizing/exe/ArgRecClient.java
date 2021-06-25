@@ -223,7 +223,7 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     public static void main(String[] args) throws IOException {
-        RecClient client = new ArgRecClient("demo");
+        RecClient client = new ArgRecClient("lucene");
         List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
         //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
 

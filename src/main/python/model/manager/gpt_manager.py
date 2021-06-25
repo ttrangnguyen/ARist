@@ -3,6 +3,7 @@ import os
 import numpy as np
 from time import perf_counter
 import tensorflow as tf
+from tensorflow.core.protobuf import rewriter_config_pb2
 from model.manager.model_manager import ModelManager
 from ..gpt import encoder, model, sample
 from ..config import *
@@ -14,24 +15,49 @@ class GPTManager(ModelManager):
         os.environ["KMP_BLOCKTIME"] = "1"
         os.environ["KMP_SETTINGS"] = "1"
         os.environ["KMP_AFFINITY"] = "granularity=fine,verbose,compact,1,0"
+        seed = 42
 
-        gpu_options = tf.GPUOptions(allow_growth=True)
-        config = tf.ConfigProto(intra_op_parallelism_threads=0, inter_op_parallelism_threads=0,
-                                allow_soft_placement=True, gpu_options=gpu_options)
+        np.random.seed(seed)
+        tf.compat.v1.set_random_seed(seed)
 
-        self.sess = tf.Session(config=config)
+        self.sess = self.start_tf_sess()
         self.encoder = None
 
         super().__init__(top_k, project, train_len,
                          excode_model_path, java_model_path, method_call_model_path)
 
     def __del__(self):
-        self.sess.close()
+        self.reset_session(self.sess)
+
+    def start_tf_sess(self, threads=-1, server=None):
+        """
+        Returns a tf.Session w/ config
+        """
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.graph_options.rewrite_options.layout_optimizer = rewriter_config_pb2.RewriterConfig.OFF
+        if threads > 0:
+            config.intra_op_parallelism_threads = threads
+            config.inter_op_parallelism_threads = threads
+
+        if server is not None:
+            return tf.compat.v1.Session(target=server.target, config=config)
+
+        return tf.compat.v1.Session(config=config)
+
+    def reset_session(self, sess, threads=-1, server=None):
+        """Resets the current TensorFlow session, to clear memory
+        or load another model.
+        """
+
+        tf.compat.v1.reset_default_graph()
+        sess.close()
+        sess = self.start_tf_sess(threads, server)
+        return sess
 
     def load_model(self, model_path):
         models_dir = os.path.expanduser(os.path.expandvars(model_path))
         model_name = 'latest'
-        seed = 42
         length = 7
 
         if self.encoder is None:
@@ -45,22 +71,24 @@ class GPTManager(ModelManager):
         elif length > hparams.n_ctx:
             raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
-        context = tf.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
-        np.random.seed(seed)
-        tf.set_random_seed(seed)
+        self.context = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
+        output = model.model(hparams=hparams, X=self.context)
+
+        saver = tf.compat.v1.train.Saver(allow_empty=True)
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+
+        ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
+        print('Loading model', ckpt)
+        saver.restore(self.sess, ckpt)
 
         output = sample.sample_sequence(
-            hparams=hparams, length=length,
-            context=context,
+            hparams=hparams,
+            length=length,
+            context=self.context,
             batch_size=GPT_BATCH_SIZE,
             temperature=GPT_TEMPERATURE, top_k=GPT_TOP_K, top_p=GPT_TOP_P
         )
 
-        saver = tf.train.Saver(allow_empty=True)
-        self.sess.run(tf.global_variables_initializer())
-        ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
-        print('Loading model', ckpt)
-        saver.restore(self.sess, ckpt)
         return output
 
     def process(self, data, service):
@@ -80,6 +108,7 @@ class GPTManager(ModelManager):
         n_param = len(data['next_lex'])
 
         java_context_tokens = self.encoder.encode(data['lex_context'][0])
+        """
         java_suggestions_all = []
         for i in range(n_param):
             java_suggestions_all.append([])
@@ -108,14 +137,11 @@ class GPTManager(ModelManager):
             else:
                 java_context_list = sorted_scores
         all_candidate_lex += java_context_list
-        if all_candidate_lex is not None:
-            return self.select_top_param_candidates(all_candidate_lex, data, start_time)
-
+        """
         generated = 0
         predictions = []
         for _ in range(self.top_k // GPT_BATCH_SIZE):
-            context = tf.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
-            feed_dict = {context: [java_context_tokens for _ in range(GPT_BATCH_SIZE)]}
+            feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_tokens]}
             out = self.sess.run(self.java_model, feed_dict=feed_dict)[:, len(java_context_tokens):]
 
             for i in range(GPT_BATCH_SIZE):
@@ -126,7 +152,6 @@ class GPTManager(ModelManager):
         response = 'result:' + json.dumps(predictions) \
                    + ',runtime:' + str(0)
         return response
-
 
     def select_top_param_candidates(self, all_candidate_lex, data, start_time):
         sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])[:self.top_k]
