@@ -147,6 +147,16 @@ class GPTManager(ModelManager):
             for i in range(GPT_BATCH_SIZE):
                 generated += 1
                 text = self.encoder.decode(out[i])
+                if ';' in text:
+                    text = text[:text.index(';')+1]
+
+                if '(' in text:
+                    text = text[:text.index('(')+1]
+                elif ',' in text:
+                    text = text[:text.index(',')]
+                elif ')' in text:
+                    if text.index(')') > 0:
+                        text = text[:text.index(')')]
                 predictions.append(str(text))
 
         response = 'result:' + json.dumps(predictions) \
