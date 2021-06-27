@@ -247,7 +247,7 @@ public class MethodExtractor extends Preprocessor {
 
     public static String preprocessCodeBlock(String codeBlock) {
         codeBlock = RemoveNewLineDecorator.preprocess(codeBlock);
-        codeBlock = RemoveIndentDecorator.preprocess(codeBlock);
+        codeBlock = RemoveRedundantSpaceDecorator.preprocess(codeBlock);
         codeBlock = EmptyStringLiteralDecorator.preprocess(codeBlock);
         return codeBlock;
     }

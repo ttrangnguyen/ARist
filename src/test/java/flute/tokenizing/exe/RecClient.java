@@ -395,6 +395,29 @@ public abstract class RecClient {
                 + dataFrame.getVariable("averageGetTestsTime").getSum()) + "s");
     }
 
+    String getBestModel(List<String> modelNames, String category) {
+        String bestModel = modelNames.get(0);
+        for (int k: this.tops) {
+            double bestAcc = dataFrame.getVariable(String.format(category, bestModel, k)).getMean();
+            double temp = bestAcc;
+            for (String modelName: modelNames) {
+                double curAcc = dataFrame.getVariable(String.format(category, modelName, k)).getMean();
+                if (Math.abs(bestAcc - curAcc) > 1e-7) {
+                    if (bestAcc < curAcc) {
+                        bestModel = modelName;
+                        bestAcc = curAcc;
+                    }
+                }
+            }
+            if (bestAcc > temp) {
+                System.out.println(String.format("%s has the best accuracy at top-%d.", bestModel, k));
+                break;
+            }
+        }
+        System.out.println(String.format("%s is chosen.", bestModel));
+        return bestModel;
+    }
+
 
 
     public void generateTests() throws IOException {

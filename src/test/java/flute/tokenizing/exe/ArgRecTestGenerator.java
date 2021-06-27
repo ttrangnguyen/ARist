@@ -119,7 +119,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                     }
 
                     contextIdx = k;
-                    contextArg += arg.toString() + ',';
+                    contextArg += arg.toString() + ",";
                     break;
                 }
                 ++k;

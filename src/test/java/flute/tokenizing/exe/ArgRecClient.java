@@ -13,6 +13,7 @@ import flute.utils.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ArgRecClient extends MethodCallRecClient {
@@ -153,9 +154,14 @@ public class ArgRecClient extends MethodCallRecClient {
         if (this.isRNNUsed) {
             for (int k: this.tops) row.add(String.format("RNN's top-%d accuracy", k));
         }
+        if (this.isGPTUsed) {
+            for (int k: this.tops) row.add(String.format("GPT's top-%d accuracy", k));
+        }
         for (int k: this.tops) row.add(String.format("Top-%d precision", k));
         for (int k: this.tops) row.add(String.format("Top-%d recall", k));
         accuracyPerNumArg.add(row.toArray(new String[row.size()]));
+
+        String bestModel = getBestModel(new ArrayList<>(Arrays.asList("nGram", "RNN", "GPT")), "%sOverallTop%d");
 
         if (!Config.TEST_ARG_ONE_BY_ONE) {
             DataFrame.Variable numArgVar = dataFrame.getVariable("NumArg");
@@ -169,8 +175,11 @@ public class ArgRecClient extends MethodCallRecClient {
                 if (this.isRNNUsed) {
                     for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%dArg%d", k, i)).getMean()));
                 }
-                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%dArg%d", k, i)).getMean()));
-                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%dArg%d", k, i)).getMean()));
+                if (this.isGPTUsed) {
+                    for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("GPTTop%dArg%d", k, i)).getMean()));
+                }
+                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format(bestModel + "OverallTop%dArg%d", k, i)).getMean()));
+                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format(bestModel + "ActualTop%dArg%d", k, i)).getMean()));
                 accuracyPerNumArg.add(row.toArray(new String[row.size()]));
             }
         } else {
@@ -184,8 +193,11 @@ public class ArgRecClient extends MethodCallRecClient {
                 if (this.isRNNUsed) {
                     for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d%s", k, argType)).getMean()));
                 }
-                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramOverallTop%d%s", k, argType)).getMean()));
-                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("nGramActualTop%d%s", k, argType)).getMean()));
+                if (this.isGPTUsed) {
+                    for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("GPTTop%d%s", k, argType)).getMean()));
+                }
+                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format(bestModel + "OverallTop%d%s", k, argType)).getMean()));
+                for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format(bestModel + "ActualTop%d%s", k, argType)).getMean()));
                 accuracyPerNumArg.add(row.toArray(new String[row.size()]));
             }
         }
@@ -199,16 +211,8 @@ public class ArgRecClient extends MethodCallRecClient {
         if (this.isRNNUsed) {
             for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("RNNTop%d", k)).getMean()));
         }
-        String bestModel = "nGram";
-        for (int k: this.tops) {
-            double nGramAcc = dataFrame.getVariable(String.format("nGramOverallTop%d", k)).getMean();
-            double RNNAcc = dataFrame.getVariable(String.format("RNNOverallTop%d", k)).getMean();
-            if (Math.abs(nGramAcc - RNNAcc) > 1e-7) {
-                if (nGramAcc < RNNAcc) {
-                    bestModel = "RNN";
-                }
-                break;
-            }
+        if (this.isGPTUsed) {
+            for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("GPTTop%d", k)).getMean()));
         }
         for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("%sOverallTop%d", bestModel, k)).getMean()));
         for (int k: this.tops) row.add(String.format("%f", dataFrame.getVariable(String.format("%sActualTop%d", bestModel, k)).getMean()));

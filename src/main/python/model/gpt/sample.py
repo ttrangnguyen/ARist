@@ -68,7 +68,14 @@ def sample_sequence(*, hparams, length, start_token=None,
 
         def body(past, prev, output):
             next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
-            logits = next_outputs['logits'][:, -1, :] / tf.cast(temperature, tf.float32)
+            if temperature == 0:
+                logits = tf.map_fn(fn=lambda logit_tensor: logit_tensor / tf.random.uniform((1,), minval=.69, maxval=.91, dtype=tf.dtypes.float32),
+                                   elems=next_outputs['logits'][:, -1, :],
+                                   back_prop=False,
+                                   dtype=tf.float32)
+            else:
+                logits = next_outputs['logits'][:, -1, :]  / tf.to_float(temperature)
+
             if top_p > 0.0:
                 logits = top_p_logits(logits, p=top_p)
             else:

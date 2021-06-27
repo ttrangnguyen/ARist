@@ -101,7 +101,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                     }
 
                     contextIdx = k;
-                    contextArg += arg.toString() + ',';
+                    contextArg += arg.toString() + ",";
                     break;
                 }
                 ++k;
