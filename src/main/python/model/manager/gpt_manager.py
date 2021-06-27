@@ -172,9 +172,175 @@ class GPTManager(ModelManager):
         if PARAM_LEXICAL_ONLY:
             return self.predict_param_using_lex(data)
         else:
-            return self.predict_param_using_lex(data)
+            return self.predict_param_all_features(data)
 
     def predict_param_using_lex(self, data):
+        start_time = perf_counter()
+        n_param = len(data['next_lex'])
+
+        java_context_tokens = self.encoder.encode(data['lex_context'][0])
+        java_suggestions_all = []
+        java_suggestions_all_ori = []
+        for i in range(n_param):
+            java_suggestions_param = []
+            java_suggestions_param_ori = []
+            for j in range(len(data['next_lex'][i])):
+                for k in range(len(data['next_lex'][i][j])):
+                    if data['next_lex'][i][j][k] not in java_suggestions_param_ori:
+                        candidate_tokens = self.encoder.encode(data['next_lex'][i][j][k])
+                        java_suggestions_param.append(candidate_tokens)
+                        java_suggestions_param_ori.append(data['next_lex'][i][j][k])
+            java_suggestions_all.append(java_suggestions_param)
+            java_suggestions_all_ori.append(java_suggestions_param_ori)
+        dot_tokens = self.encoder.encode(".")
+        comma_tokens = self.encoder.encode(",")
+        open_paren_tokens = self.encoder.encode("(")
+        close_paren_tokens = self.encoder.encode(")")
+        space_tokens = self.encoder.encode(" ")
+        quote_tokens = self.encoder.encode("\"\"")
+
+        java_context_list = [(java_context_tokens, [], 0)]
+        for j in range(n_param):
+            java_suggestion_scores = []
+
+            java_suggestions_param = [(ii, java_candidate) for ii, java_candidate in enumerate(java_suggestions_all[j])]
+            java_suggestions_param = sorted(java_suggestions_param, key=lambda x: -len(x[1]))
+            java_suggestions = []
+            java_suggestions_batch = []
+
+            # NAME
+            for ii, java_candidate in java_suggestions_param:
+                if java_candidate[-1] != open_paren_tokens[-1] and java_candidate[-1] != quote_tokens[-1]:
+                    if len(java_suggestions_batch) > 0 and len(java_suggestions_batch[-1][1]) != len(java_candidate):
+                        java_suggestions.append(java_suggestions_batch)
+                        java_suggestions_batch = []
+                    java_suggestions_batch.append((ii, java_candidate))
+                    if len(java_suggestions_batch) == GPT_BATCH_SIZE:
+                        java_suggestions.append(java_suggestions_batch)
+                        java_suggestions_batch = []
+            if len(java_suggestions_batch) > 0:
+                java_suggestions.append(java_suggestions_batch)
+                java_suggestions_batch = []
+
+            # METHOD_INVOC + STRING_LIT
+            for ii, java_candidate in java_suggestions_param:
+                if java_candidate[-1] == open_paren_tokens[-1] or java_candidate[-1] == quote_tokens[-1]:
+                    java_suggestions_batch.append((ii, java_candidate))
+                    if len(java_suggestions_batch) == GPT_BATCH_SIZE:
+                        java_suggestions.append(java_suggestions_batch)
+                        java_suggestions_batch = []
+            if len(java_suggestions_batch) > 0:
+                java_suggestions.append(java_suggestions_batch)
+                java_suggestions_batch = []
+
+            for k in range(len(java_context_list)):
+                context_data = None
+                batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
+
+                for java_suggestions_batch in java_suggestions:
+                    batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(java_suggestions_batch[0][1])])
+                    for ii in range(len(java_suggestions_batch)):
+                        java_candidate = java_suggestions_batch[ii][1]
+                        batch_suggestion[ii, 0: len(java_candidate)] = java_candidate
+
+                    if j > 0:
+                        batch_suggestion = np.hstack((np.tile(comma_tokens, (GPT_BATCH_SIZE, 1)),
+                                                      batch_suggestion,
+                                                      ))
+
+                    end_index = batch_suggestion.shape[1] - 1
+                    if java_suggestions_batch[0][1][-1] == open_paren_tokens[-1]:   # METHOD_INVOC
+                        pass
+                    elif java_suggestions_batch[0][1][-1] == quote_tokens[-1]:      # STRING_LIT
+                        pass
+                    else:
+                        # NAME
+                        # batch_suggestion = np.hstack((batch_suggestion,
+                        #                               np.tile(comma_tokens + close_paren_tokens, (GPT_BATCH_SIZE, 1)),
+                        #                               ))
+
+                        # NAME + COMPOUND
+                        batch_suggestion = np.hstack((batch_suggestion,
+                                                      np.tile(comma_tokens + close_paren_tokens + space_tokens, (GPT_BATCH_SIZE, 1)),
+                                                      ))
+
+                        # NOT (METHOD_INVOC + FIELD_ACCESS)
+                        # batch_suggestion = np.hstack((batch_suggestion,
+                        #                               np.tile(dot_tokens, (GPT_BATCH_SIZE, 1)),
+                        #                               ))
+
+                    if context_data is None:
+                        feed_dict = {self.context: batch_context,
+                                     self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
+                                     self.suggestion: batch_suggestion,
+                                     self.end_index: end_index,
+                                     }
+                        context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                    else:
+                        feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][-1:]],
+                                     self.context_output: context_data,
+                                     self.suggestion: batch_suggestion,
+                                     self.end_index: end_index,
+                                     }
+                        context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+
+                    smoothing_prob_batch = np.where(out > 0, out, 1e-7)
+                    for ii in range(len(java_suggestions_batch)):
+                        java_candidate = java_suggestions_batch[ii][1]
+                        if j == 0:
+                            java_suggestion = java_candidate
+                        else:
+                            java_suggestion = comma_tokens + java_candidate
+                        new_context = java_context_list[k][0] + java_suggestion
+
+                        smoothing_prob = smoothing_prob_batch[ii]
+                        if end_index < len(smoothing_prob) - 1:
+                            # NAME
+                            smoothing_prob = np.hstack((smoothing_prob[ :end_index+1], [np.sum(smoothing_prob[end_index+1:])]))
+
+                            # NOT (METHOD_INVOC + FIELD_ACCESS)
+                            # smoothing_prob = np.hstack((smoothing_prob[:-1], [1-smoothing_prob[-1]]))
+                        else:
+                            smoothing_prob = smoothing_prob[:len(java_suggestion)]
+
+                        log_prob = np.log(smoothing_prob)
+                        model_score = np.sum(log_prob)
+
+                        # Debug
+                        # for suggestion in java_candidate:
+                        #     print(self.encoder.decode([suggestion]), end=' ')
+                        # print()
+                        # print(model_score, " ", log_prob)
+
+                        java_suggestion_scores.append((new_context,
+                                                       java_context_list[k][1] + [java_suggestions_batch[ii][0]],
+                                                       java_context_list[k][2] + model_score))
+
+            java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
+        sorted_scores = java_context_list
+        result_gpt = []
+        for i in range(min(self.top_k, len(sorted_scores))):
+            result_gpt.append(sorted_scores[i][1])
+        runtime_gpt = perf_counter() - start_time
+        self.logger.debug("Total gpt runtime: " + str(runtime_gpt))
+        result_gpt = self.trace(result_gpt, java_suggestions_all_ori)
+        self.logger.debug("Result gpt:\n", result_gpt)
+        response = 'result:' + json.dumps(result_gpt) \
+                   + ',runtime:' + str(runtime_gpt)
+        return response
+
+    def trace(self, result, data):
+        origin = []
+        for candidate_ids in result:
+            candidate_text = ""
+            for i in range(len(candidate_ids)):
+                candidate_text += data[i][candidate_ids[i]]
+                if i < len(candidate_ids) - 1:
+                    candidate_text += ", "
+            origin.append(candidate_text)
+        return origin
+
+    def predict_param_all_features(self, data):
         start_time = perf_counter()
         n_param = len(data['next_lex'])
 
@@ -265,8 +431,9 @@ class GPTManager(ModelManager):
                         # print()
                         # print(model_score, " ", log_prob)
 
-                        java_suggestion_scores.append((new_context, java_context_list[k][1]
-                                                       + [(jj, ii)], java_context_list[k][2] + model_score))
+                        java_suggestion_scores.append((new_context,
+                                                       java_context_list[k][1] + [(jj, ii)],
+                                                       java_context_list[k][2] + model_score))
             java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
         all_candidate_lex += java_context_list
 
@@ -293,7 +460,7 @@ class GPTManager(ModelManager):
         return self.select_top_param_candidates(all_candidate_lex, data, start_time)
 
     def select_top_param_candidates(self, all_candidate_lex, data, start_time):
-        sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])[:self.top_k]
+        sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])
         result_gpt = []
         for i in range(min(self.top_k, len(sorted_scores))):
             result_gpt.append(sorted_scores[i][1])

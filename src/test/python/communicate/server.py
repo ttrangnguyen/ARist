@@ -59,7 +59,7 @@ class Server:
             if not data:
                 break
             data = data.decode("utf-8")
-            print(data)
+            #print(data)
             data = json.loads(data)
             if ('type' in data) and (data['type'] == "tokenize"):
                 conn.send(('{type:"tokenize", data:' + json.dumps(tokenize(data['data'])) + '}\n').encode())

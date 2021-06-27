@@ -17,13 +17,13 @@ public class ArgRecClientGPT extends ArgRecClient {
     }
 
     public static void main(String[] args) throws IOException {
-        RecClient client = new ArgRecClientGPT("demo");
-        List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, false);
+        RecClient client = new ArgRecClientGPT("lucene");
+        List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
         //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
 
         client.validateTests(tests, false);
         //RecClient.logTests(tests);
-        client.queryAndTest(tests, true, false);
+        client.queryAndTest(tests, false, false);
         client.printTestResult();
         System.exit(0);
     }
