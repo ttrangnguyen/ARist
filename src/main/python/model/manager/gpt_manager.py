@@ -72,6 +72,8 @@ class GPTManager(ModelManager):
         #     raise ValueError("Can't get samples longer than window size: %s" % self.hparams.n_ctx)
 
         self.context = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
+        self.context_shape = model.past_shape(hparams=hparams, batch_size=GPT_BATCH_SIZE)
+        self.context_output = tf.compat.v1.placeholder(tf.float32, self.context_shape)
         self.suggestion = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
         self.end_index = tf.compat.v1.placeholder(tf.int32, [])
         output = model.model(hparams=hparams, X=self.context)
@@ -94,13 +96,14 @@ class GPTManager(ModelManager):
         output = self.probability(
             hparams=hparams,
             context=self.context,
+            context_output=self.context_output,
             suggestion=self.suggestion,
             end_index=self.end_index,
             batch_size=GPT_BATCH_SIZE,
         )
         return output
 
-    def probability(self, hparams, context=None, suggestion=None, end_index=None, batch_size=None):
+    def probability(self, hparams, context=None, context_output=None, suggestion=None, end_index=None, batch_size=None):
         def step(hparams, tokens, past=None):
             lm_output = model.model(hparams=hparams, X=tokens,
                                     past=past, reuse=tf.compat.v1.AUTO_REUSE)
@@ -115,7 +118,10 @@ class GPTManager(ModelManager):
             }
 
         with tf.compat.v1.name_scope('probability'):
-            context_output = step(hparams, context[:, :-1])
+            context_presents = tf.cond(tf.shape(context_output)[-2] > 0,
+                                       lambda: context_output,
+                                       lambda: step(hparams, context[:, :-1])['presents'],
+                                       )
 
             def body(i, past, prev, output):
                 next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
@@ -140,7 +146,7 @@ class GPTManager(ModelManager):
                 maximum_iterations=tf.shape(suggestion)[1],
                 loop_vars=[
                     tf.constant(0, dtype=tf.int32),
-                    context_output['presents'],
+                    context_presents,
                     context[:, -1],
                     tf.zeros([batch_size, 0]),
                 ],
@@ -154,7 +160,7 @@ class GPTManager(ModelManager):
                 back_prop=False,
             )
 
-            return log_probs
+            return context_presents, log_probs
 
     def process(self, data, service):
         response = "gpt:{"
@@ -195,11 +201,11 @@ class GPTManager(ModelManager):
         for j in range(n_param):
             java_suggestion_scores = []
             for k in range(len(java_context_list)):
+                context_data = None
+                batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
                 for jj in range(len(java_suggestions_all[j])):
                     java_suggestions = java_suggestions_all[j][jj]
                     for ii, java_candidate in enumerate(java_suggestions):
-                        batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
-
                         if j == 0:
                             java_suggestion = java_candidate
                         else:
@@ -224,11 +230,20 @@ class GPTManager(ModelManager):
 
                         batch_suggestion = GPT_BATCH_SIZE * [java_suggestion]
 
-                        feed_dict = {self.context: batch_context,
-                                     self.suggestion: batch_suggestion,
-                                     self.end_index: end_index,
-                                     }
-                        out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                        if context_data is None:
+                            feed_dict = {self.context: batch_context,
+                                         self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
+                                         self.suggestion: batch_suggestion,
+                                         self.end_index: end_index,
+                                         }
+                            context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                        else:
+                            feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][-1:]],
+                                         self.context_output: context_data,
+                                         self.suggestion: batch_suggestion,
+                                         self.end_index: end_index,
+                                         }
+                            context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
 
                         smoothing_prob = np.where(out > 0, out, 1e-7)
                         if end_index != len(java_suggestion) - 1:
