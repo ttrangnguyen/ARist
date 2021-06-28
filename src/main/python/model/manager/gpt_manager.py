@@ -58,24 +58,20 @@ class GPTManager(ModelManager):
     def load_model(self, model_path):
         models_dir = os.path.expanduser(os.path.expandvars(model_path))
         model_name = 'latest'
-        length = 7
 
         if self.encoder is None:
             self.encoder = encoder.get_encoder(model_name, models_dir)
         hparams = model.default_hparams()
         with open(os.path.join(models_dir, model_name, 'hparams.json')) as f:
             hparams.override_from_dict(json.load(f))
-
-        # if length is None:
-        #     length = hparams.n_ctx // 2
-        # elif length > hparams.n_ctx:
-        #     raise ValueError("Can't get samples longer than window size: %s" % self.hparams.n_ctx)
+        self.list_end_tokens(hparams)
 
         self.context = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
         self.context_shape = model.past_shape(hparams=hparams, batch_size=GPT_BATCH_SIZE)
         self.context_output = tf.compat.v1.placeholder(tf.float32, self.context_shape)
         self.suggestion = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
         self.end_index = tf.compat.v1.placeholder(tf.int32, [])
+        self.end_tokens = tf.compat.v1.placeholder(tf.int32, [None])
         output = model.model(hparams=hparams, X=self.context)
 
         saver = tf.compat.v1.train.Saver(allow_empty=True)
@@ -85,15 +81,24 @@ class GPTManager(ModelManager):
         print('Loading model', ckpt)
         saver.restore(self.sess, ckpt)
 
-        # output = sample.sample_sequence(
-        #     hparams=hparams,
-        #     length=length,
-        #     context=self.context,
-        #     batch_size=GPT_BATCH_SIZE,
-        #     temperature=GPT_TEMPERATURE, top_k=GPT_TOP_K, top_p=GPT_TOP_P
-        # )
+        max_length = 20
+        if max_length is None:
+            max_length = hparams.n_ctx // 2
+        elif max_length > hparams.n_ctx:
+            raise ValueError("Can't get samples longer than window size: %s" % self.hparams.n_ctx)
+        output_autogen = sample.sample_sequence(
+            hparams=hparams,
+            max_length=max_length,
+            context=self.context,
+            context_output=self.context_output,
+            end_tokens=self.end_tokens,
+            batch_size=GPT_BATCH_SIZE,
+            temperature=GPT_TEMPERATURE,
+            top_k=GPT_TOP_K,
+            top_p=GPT_TOP_P
+        )
 
-        output = self.probability(
+        output_pa = sample.probability(
             hparams=hparams,
             context=self.context,
             context_output=self.context_output,
@@ -101,66 +106,21 @@ class GPTManager(ModelManager):
             end_index=self.end_index,
             batch_size=GPT_BATCH_SIZE,
         )
-        return output
+        return {
+            "autogen": output_autogen,
+            "pa": output_pa
+        }
 
-    def probability(self, hparams, context=None, context_output=None, suggestion=None, end_index=None, batch_size=None):
-        def step(hparams, tokens, past=None):
-            lm_output = model.model(hparams=hparams, X=tokens,
-                                    past=past, reuse=tf.compat.v1.AUTO_REUSE)
-
-            logits = lm_output['logits'][:, :, :hparams.n_vocab]
-            presents = lm_output['present']
-            presents.set_shape(model.past_shape(
-                hparams=hparams, batch_size=batch_size))
-            return {
-                'logits': logits,
-                'presents': presents,
-            }
-
-        with tf.compat.v1.name_scope('probability'):
-            context_presents = tf.cond(tf.shape(context_output)[-2] > 0,
-                                       lambda: context_output,
-                                       lambda: step(hparams, context[:, :-1])['presents'],
-                                       )
-
-            def body(i, past, prev, output):
-                next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
-                logits = next_outputs['logits'][:, -1, :]
-                probs = tf.nn.softmax(logits)
-
-                suggestion_token = suggestion[:, i]
-                token_id = tf.stack([tf.range(tf.shape(suggestion)[0]), suggestion_token], axis=1)
-                prob = tf.expand_dims(tf.gather_nd(probs, token_id), axis=1)
-                return [
-                    i + 1,
-                    tf.cond(tf.less(end_index, i), lambda: past, lambda: tf.concat([past, next_outputs['presents']], axis=-2)),
-                    tf.compat.v1.where(end_index < i, prev, suggestion_token),
-                    tf.concat([output, prob], axis=1),
-                ]
-
-            def cond(*args):
-                return True
-
-            _, _, _, log_probs = tf.while_loop(
-                cond=cond, body=body,
-                maximum_iterations=tf.shape(suggestion)[1],
-                loop_vars=[
-                    tf.constant(0, dtype=tf.int32),
-                    context_presents,
-                    context[:, -1],
-                    tf.zeros([batch_size, 0]),
-                ],
-                shape_invariants=[
-                    tf.TensorShape([]),
-                    tf.TensorShape(model.past_shape(
-                        hparams=hparams, batch_size=batch_size)),
-                    tf.TensorShape([batch_size]),
-                    tf.TensorShape([batch_size, None]),
-                ],
-                back_prop=False,
-            )
-
-            return context_presents, log_probs
+    def list_end_tokens(self, hparams):
+        self.end_token_list = []
+        for i in range(0, hparams.n_vocab):
+            token = self.encoder.decode([i])
+            for c in [";", "(", ",", ")"]:
+                if c in token:
+                    self.end_token_list.append(i)
+                    #print(token)
+                    break
+        print(len(self.end_token_list), "end tokens.")
 
     def process(self, data, service):
         response = "gpt:{"
@@ -169,10 +129,13 @@ class GPTManager(ModelManager):
         return response + "}"
 
     def predict_param(self, data):
-        if PARAM_LEXICAL_ONLY:
-            return self.predict_param_using_lex(data)
+        if USE_PROGRAM_ANALYSIS:
+            if PARAM_LEXICAL_ONLY:
+                return self.predict_param_using_lex(data)
+            else:
+                return self.predict_param_all_features(data)
         else:
-            return self.predict_param_all_features(data)
+            return self.generate_param(data)
 
     def predict_param_using_lex(self, data):
         start_time = perf_counter()
@@ -275,14 +238,14 @@ class GPTManager(ModelManager):
                                      self.suggestion: batch_suggestion,
                                      self.end_index: end_index,
                                      }
-                        context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                        context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
                     else:
                         feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][-1:]],
                                      self.context_output: context_data,
                                      self.suggestion: batch_suggestion,
                                      self.end_index: end_index,
                                      }
-                        context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                        context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
 
                     smoothing_prob_batch = np.where(out > 0, out, 1e-7)
                     for ii in range(len(java_suggestions_batch)):
@@ -402,14 +365,14 @@ class GPTManager(ModelManager):
                                          self.suggestion: batch_suggestion,
                                          self.end_index: end_index,
                                          }
-                            context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                            context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
                         else:
                             feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][-1:]],
                                          self.context_output: context_data,
                                          self.suggestion: batch_suggestion,
                                          self.end_index: end_index,
                                          }
-                            context_data, out = self.sess.run(self.java_model, feed_dict=feed_dict)
+                            context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
 
                         smoothing_prob = np.where(out > 0, out, 1e-7)
                         if end_index != len(java_suggestion) - 1:
@@ -436,27 +399,6 @@ class GPTManager(ModelManager):
                                                        java_context_list[k][2] + model_score))
             java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
         all_candidate_lex += java_context_list
-
-        """
-        for _ in range(self.top_k // GPT_BATCH_SIZE):
-            feed_dict = {self.context: batch_context}
-            out = self.sess.run(self.java_model, feed_dict=feed_dict)[:, len(java_context_tokens):]
-
-            for i in range(GPT_BATCH_SIZE):
-                text = self.encoder.decode(out[i])
-                if ';' in text:
-                    text = text[:text.index(';')+1]
-
-                if '(' in text:
-                    text = text[:text.index('(')+1]
-                elif ',' in text:
-                    text = text[:text.index(',')]
-                elif ')' in text:
-                    if text.index(')') > 0:
-                        text = text[:text.index(')')]
-                predictions.append(str(text))
-        """
-
         return self.select_top_param_candidates(all_candidate_lex, data, start_time)
 
     def select_top_param_candidates(self, all_candidate_lex, data, start_time):
@@ -467,6 +409,128 @@ class GPTManager(ModelManager):
         runtime_gpt = perf_counter() - start_time
         self.logger.debug("Total gpt runtime: " + str(runtime_gpt))
         result_gpt = self.recreate(result_gpt, data)
+        self.logger.debug("Result gpt:\n", result_gpt)
+        response = 'result:' + json.dumps(result_gpt) \
+                   + ',runtime:' + str(runtime_gpt)
+        return response
+
+    def generate_param(self, data):
+        start_time = perf_counter()
+        n_param = len(data['next_lex'])
+
+        java_context_tokens = self.encoder.encode(data['lex_context'][0])
+        java_suggestions_all = []
+        for i in range(n_param):
+            java_suggestions_param = set()
+            for j in range(len(data['next_lex'][i])):
+                for k in range(len(data['next_lex'][i][j])):
+                    java_suggestions_param.add(data['next_lex'][i][j][k])
+            java_suggestions_all.append(java_suggestions_param)
+        comma_tokens = self.encoder.encode(",")
+
+        java_context_list = [(java_context_tokens, [], 0)]
+        for j in range(n_param):
+            java_suggestion_scores = []
+            for k in range(len(java_context_list)):
+                context_data = None
+                batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
+
+                suggestion_set = set()
+                suggestion_retry_set = set()
+                retry_count = 0
+                break_while_flag = False
+                while True:
+                    if context_data is None:
+                        feed_dict = {self.context: batch_context,
+                                     self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
+                                     self.end_tokens: self.end_token_list,
+                                     }
+                        context_data, out, out_prob = self.sess.run(self.java_model['autogen'], feed_dict=feed_dict)
+                    else:
+                        feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][-1:]],
+                                     self.context_output: context_data,
+                                     self.end_tokens: self.end_token_list,
+                                     }
+                        context_data, out, out_prob = self.sess.run(self.java_model['autogen'], feed_dict=feed_dict)
+
+                    for i in range(GPT_BATCH_SIZE):
+                        suggestion_java = ""
+                        suggestion_tokens = []
+                        prob = out_prob[i]
+                        break_i_flag = False
+                        for t in range(len(out[i])):
+                            token = self.encoder.decode([out[i][t]])
+                            for c in range(len(token)):
+                                if token[c] == ";":
+                                    prob = prob[:t] + [LOG_ZERO]
+                                    suggestion_java += token[:c]
+                                    suggestion_tokens.append(comma_tokens[0])
+                                    break_i_flag = True
+                                if token[c] == "(":
+                                    prob = prob[:t + 1]
+                                    suggestion_java += token[:c + 1]
+                                    suggestion_tokens.append(out[i][t])
+                                    suggestion_tokens.append(comma_tokens[0])
+                                    break_i_flag = True
+                                if token[c] == ",":
+                                    prob = prob[:t + 1]
+                                    if j == n_param - 1:
+                                        suggestion_java += token[:c]
+                                        suggestion_tokens.append(comma_tokens[0])
+                                    else:
+                                        suggestion_java += token
+                                        suggestion_tokens.append(out[i][t])
+                                    break_i_flag = True
+                                if token[c] == ")":
+                                    prob = prob[:t + 1]
+                                    suggestion_java += token[:c]
+                                    suggestion_tokens.append(comma_tokens[0])
+                                    break_i_flag = True
+                                if break_i_flag:
+                                    break
+                            if break_i_flag:
+                                break
+                            suggestion_java += token
+                            suggestion_tokens.append(out[i][t])
+                        if not break_i_flag:
+                            suggestion_tokens.append(comma_tokens[0])
+                        log_prob = np.log(prob)
+                        model_score = np.sum(log_prob)
+
+                        # Debug
+                        # for t in range(len(out[i])):
+                        #     print(self.encoder.decode([out[i][t]]), end=' ')
+                        # print()
+                        # print(model_score, " ", log_prob)
+
+                        if suggestion_java not in suggestion_set:
+                            suggestion_set.add(suggestion_java)
+                            java_suggestion_scores.append((java_context_list[k][0] + suggestion_tokens,
+                                                           java_context_list[k][1] + [suggestion_java],
+                                                           java_context_list[k][2] + model_score))
+                        elif suggestion_java not in suggestion_retry_set:
+                            suggestion_retry_set.add(suggestion_java)
+                            retry_count = retry_count + 1
+                        else:
+                            retry_count = retry_count + 2
+                        if len(suggestion_set) >= TOP_K or retry_count >= TOP_K:
+                            break_while_flag = True
+                        if break_while_flag:
+                            break
+                    if break_while_flag:
+                        break
+
+            java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
+        sorted_scores = java_context_list
+        result_gpt = []
+        for i in range(min(self.top_k, len(sorted_scores))):
+            suggestion = ""
+            for j in range(len(sorted_scores[i][1]) - 1):
+                suggestion += sorted_scores[i][1][j] + ", "
+            suggestion += sorted_scores[i][1][-1]
+            result_gpt.append(suggestion)
+        runtime_gpt = perf_counter() - start_time
+        self.logger.debug("Total gpt runtime: " + str(runtime_gpt))
         self.logger.debug("Result gpt:\n", result_gpt)
         response = 'result:' + json.dumps(result_gpt) \
                    + ',runtime:' + str(runtime_gpt)

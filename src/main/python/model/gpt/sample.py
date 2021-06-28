@@ -38,9 +38,9 @@ def top_p_logits(logits, p):
         )
 
 
-def sample_sequence(*, hparams, length, start_token=None,
-                    batch_size=None, context=None, temperature=1,
-                    top_k=0, top_p=0.0):
+def sample_sequence(*, hparams, max_length, context=None, context_output=None,
+                    start_token=None, end_tokens=None, batch_size=None,
+                    temperature=1, top_k=0, top_p=0.0):
     if start_token is None:
         assert context is not None, 'Specify exactly one of start_token and context!'
     else:
@@ -64,17 +64,24 @@ def sample_sequence(*, hparams, length, start_token=None,
         # Don't feed the last context token -- leave that to the loop below
         # TODO: Would be slightly faster if we called step on the entire context,
         # rather than leaving the last token transformer calculation to the while loop.
-        context_output = step(hparams, context[:, :-1])
+        context_presents = tf.cond(tf.shape(context_output)[-2] > 0,
+                                   lambda: context_output,
+                                   lambda: step(hparams, context[:, :-1])['presents'],
+                                   )
+        end_tokens = tf.tile(tf.expand_dims(end_tokens, axis=0), [batch_size, 1])
 
-        def body(past, prev, output):
+        def body(end_mask, past, prev, output, output_prob):
             next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
+            logits = next_outputs['logits'][:, -1, :]
+            probs = tf.nn.softmax(logits)
+
             if temperature == 0:
                 logits = tf.map_fn(fn=lambda logit_tensor: logit_tensor / tf.random.uniform((1,), minval=.69, maxval=.91, dtype=tf.dtypes.float32),
-                                   elems=next_outputs['logits'][:, -1, :],
+                                   elems=logits,
                                    back_prop=False,
                                    dtype=tf.float32)
             else:
-                logits = next_outputs['logits'][:, -1, :]  / tf.to_float(temperature)
+                logits = logits / tf.to_float(temperature)
 
             if top_p > 0.0:
                 logits = top_p_logits(logits, p=top_p)
@@ -82,24 +89,91 @@ def sample_sequence(*, hparams, length, start_token=None,
                 logits = top_k_logits(logits, k=top_k)
             samples = tf.random.categorical(
                 logits, num_samples=1, dtype=tf.int32)
+            token_id = tf.stack([tf.range(tf.shape(samples)[0]), samples[:, 0]], axis=1)
+            prob = tf.expand_dims(tf.gather_nd(probs, token_id), axis=1)
             return [
+                tf.logical_or(end_mask, tf.reduce_any(tf.equal(samples, end_tokens), axis=1)),
                 tf.concat([past, next_outputs['presents']], axis=-2),
                 tf.squeeze(samples, axis=[1]),
                 tf.concat([output, samples], axis=1),
+                tf.concat([output_prob, prob], axis=1),
             ]
+
+        def cond(end_mask, past, prev, output, output_prob):
+            return tf.logical_not(tf.reduce_all(end_mask))
+
+        _, _, _, tokens, probs = tf.while_loop(
+            cond=cond, body=body,
+            maximum_iterations=max_length,
+            loop_vars=[
+                tf.repeat(tf.constant(False), repeats=batch_size),
+                context_presents,
+                context[:, -1],
+                tf.zeros([batch_size, 0], dtype=tf.int32),
+                tf.zeros([batch_size, 0]),
+            ],
+            shape_invariants=[
+                tf.TensorShape([batch_size]),
+                tf.TensorShape(model.past_shape(
+                    hparams=hparams, batch_size=batch_size)),
+                tf.TensorShape([batch_size]),
+                tf.TensorShape([batch_size, None]),
+                tf.TensorShape([batch_size, None]),
+            ],
+            back_prop=False,
+        )
+
+        return context_presents, tokens, probs
+
+def probability(hparams, context=None, context_output=None, suggestion=None, end_index=None, batch_size=None):
+    def step(hparams, tokens, past=None):
+        lm_output = model.model(hparams=hparams, X=tokens,
+                                past=past, reuse=tf.compat.v1.AUTO_REUSE)
+
+        logits = lm_output['logits'][:, :, :hparams.n_vocab]
+        presents = lm_output['present']
+        presents.set_shape(model.past_shape(
+            hparams=hparams, batch_size=batch_size))
+        return {
+            'logits': logits,
+            'presents': presents,
+        }
+
+    with tf.compat.v1.name_scope('probability'):
+        context_presents = tf.cond(tf.shape(context_output)[-2] > 0,
+                                   lambda: context_output,
+                                   lambda: step(hparams, context[:, :-1])['presents'],
+                                   )
+
+        def body(i, past, prev, output):
+            next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
+            logits = next_outputs['logits'][:, -1, :]
+            probs = tf.nn.softmax(logits)
+
+            suggestion_token = suggestion[:, i]
+            token_id = tf.stack([tf.range(tf.shape(suggestion)[0]), suggestion_token], axis=1)
+            prob = tf.expand_dims(tf.gather_nd(probs, token_id), axis=1)
+            return [
+                i + 1,
+                tf.cond(tf.less(end_index, i), lambda: past, lambda: tf.concat([past, next_outputs['presents']], axis=-2)),
+                tf.compat.v1.where(end_index < i, prev, suggestion_token),
+                tf.concat([output, prob], axis=1),
+                ]
 
         def cond(*args):
             return True
 
-        _, _, tokens = tf.while_loop(
+        _, _, _, probs = tf.while_loop(
             cond=cond, body=body,
-            maximum_iterations=length,
+            maximum_iterations=tf.shape(suggestion)[1],
             loop_vars=[
-                context_output['presents'],
+                tf.constant(0, dtype=tf.int32),
+                context_presents,
                 context[:, -1],
-                context,
+                tf.zeros([batch_size, 0]),
             ],
             shape_invariants=[
+                tf.TensorShape([]),
                 tf.TensorShape(model.past_shape(
                     hparams=hparams, batch_size=batch_size)),
                 tf.TensorShape([batch_size]),
@@ -108,4 +182,4 @@ def sample_sequence(*, hparams, length, start_token=None,
             back_prop=False,
         )
 
-        return tokens
+        return context_presents, probs

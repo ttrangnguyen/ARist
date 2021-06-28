@@ -85,14 +85,6 @@ public class ArgRecClient extends MethodCallRecClient {
 
         MultipleArgRecTest multipleArgRecTest = (MultipleArgRecTest) test;
 
-        if (test.isIgnored()) {
-            dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
-            dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
-            dataFrame.insert(String.format("%sActualTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
-                    .getArgType()), 0);
-            return;
-        }
-
         boolean isOverallCorrectTopK = false;
         for (int i = 0; i < Math.min(k, results.size()); ++i) {
             if (RecTester.canAcceptResult(multipleArgRecTest, results.get(i))) {
@@ -102,15 +94,18 @@ public class ArgRecClient extends MethodCallRecClient {
         }
 
         if (isOverallCorrectTopK) {
-            dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
-            dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
-            dataFrame.insert(String.format("%sOverallTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
-                    .getArgType()), 1);
-
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 1);
             dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
             dataFrame.insert(String.format("%sActualTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
                     .getArgType()), 1);
+
+            if (!test.isIgnored()) {
+                dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 1);
+                dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
+                dataFrame.insert(String.format("%sOverallTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                        .getArgType()), 1);
+            }
+
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 1);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 1);
@@ -118,15 +113,18 @@ public class ArgRecClient extends MethodCallRecClient {
                         .getArgType()), 1);
             }
         } else {
-            dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
-            dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
-            dataFrame.insert(String.format("%sOverallTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
-                    .getArgType()), 0);
-
             dataFrame.insert(String.format("%sActualTop%d", modelName, k), 0);
             dataFrame.insert(String.format("%sActualTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
             dataFrame.insert(String.format("%sActualTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
                     .getArgType()), 0);
+
+            if (!test.isIgnored()) {
+                dataFrame.insert(String.format("%sOverallTop%d", modelName, k), 0);
+                dataFrame.insert(String.format("%sOverallTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
+                dataFrame.insert(String.format("%sOverallTop%d%s", modelName, k, multipleArgRecTest.getArgRecTestList().get(0)
+                        .getArgType()), 0);
+            }
+
             if (adequateGeneratedCandidate) {
                 dataFrame.insert(String.format("%sTop%d", modelName, k), 0);
                 dataFrame.insert(String.format("%sTop%dArg%d", modelName, k, multipleArgRecTest.getNumArg()), 0);
