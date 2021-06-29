@@ -115,6 +115,13 @@ class GPTManager(ModelManager):
         self.end_token_list = []
         for i in range(0, hparams.n_vocab):
             token = self.encoder.decode([i])
+
+            # if token.find("(") == 0 or (token.find("(") > 0 and token[token.find("(") - 1] != " "):
+            #     print(token)
+
+            # if token[0] == "\"":
+            #     print(token)
+
             for c in [";", "(", ",", ")"]:
                 if c in token:
                     self.end_token_list.append(i)
@@ -161,6 +168,7 @@ class GPTManager(ModelManager):
         close_paren_tokens = self.encoder.encode(")")
         space_tokens = self.encoder.encode(" ")
         quote_tokens = self.encoder.encode("\"\"")
+        quote_first_param_tokens = self.encoder.encode("(\"")
 
         java_context_list = [(java_context_tokens, [], 0)]
         for j in range(n_param):
@@ -200,11 +208,20 @@ class GPTManager(ModelManager):
                 context_data = None
                 batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
 
+                string_lit_data = None
+
                 for java_suggestions_batch in java_suggestions:
-                    batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(java_suggestions_batch[0][1])])
+                    if java_suggestions_batch[0][1][-1] == open_paren_tokens[-1]:   # METHOD_INVOC
+                        batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(java_suggestions_batch[0][1]) - 1])
+                    else:
+                        batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(java_suggestions_batch[0][1])])
+
                     for ii in range(len(java_suggestions_batch)):
                         java_candidate = java_suggestions_batch[ii][1]
-                        batch_suggestion[ii, 0: len(java_candidate)] = java_candidate
+                        if java_candidate[-1] == open_paren_tokens[-1]:   # METHOD_INVOC:
+                            batch_suggestion[ii, 0: len(java_candidate) - 1] = java_candidate[:-1]
+                        else:
+                            batch_suggestion[ii, 0: len(java_candidate)] = java_candidate
 
                     if j > 0:
                         batch_suggestion = np.hstack((np.tile(comma_tokens, (GPT_BATCH_SIZE, 1)),
@@ -223,14 +240,14 @@ class GPTManager(ModelManager):
                         #                               ))
 
                         # NAME + COMPOUND
-                        batch_suggestion = np.hstack((batch_suggestion,
-                                                      np.tile(comma_tokens + close_paren_tokens + space_tokens, (GPT_BATCH_SIZE, 1)),
-                                                      ))
+                        # batch_suggestion = np.hstack((batch_suggestion,
+                        #                               np.tile(comma_tokens + close_paren_tokens + space_tokens, (GPT_BATCH_SIZE, 1)),
+                        #                               ))
 
                         # NOT (METHOD_INVOC + FIELD_ACCESS)
-                        # batch_suggestion = np.hstack((batch_suggestion,
-                        #                               np.tile(dot_tokens, (GPT_BATCH_SIZE, 1)),
-                        #                               ))
+                        batch_suggestion = np.hstack((batch_suggestion,
+                                                      np.tile(dot_tokens, (GPT_BATCH_SIZE, 1)),
+                                                      ))
 
                     if context_data is None:
                         feed_dict = {self.context: batch_context,
@@ -259,12 +276,15 @@ class GPTManager(ModelManager):
                         smoothing_prob = smoothing_prob_batch[ii]
                         if end_index < len(smoothing_prob) - 1:
                             # NAME
-                            smoothing_prob = np.hstack((smoothing_prob[ :end_index+1], [np.sum(smoothing_prob[end_index+1:])]))
+                            # smoothing_prob = np.hstack((smoothing_prob[ :end_index+1], [np.sum(smoothing_prob[end_index+1:])]))
 
                             # NOT (METHOD_INVOC + FIELD_ACCESS)
-                            # smoothing_prob = np.hstack((smoothing_prob[:-1], [1-smoothing_prob[-1]]))
+                            smoothing_prob = np.hstack((smoothing_prob[:-1], [1-smoothing_prob[-1]]))
                         else:
-                            smoothing_prob = smoothing_prob[:len(java_suggestion)]
+                            if java_suggestion[-1] == open_paren_tokens[-1]:   # METHOD_INVOC:
+                                smoothing_prob = smoothing_prob[:len(java_suggestion) - 1]
+                            else:
+                                smoothing_prob = smoothing_prob[:len(java_suggestion)]
 
                         log_prob = np.log(smoothing_prob)
                         model_score = np.sum(log_prob)
@@ -275,9 +295,34 @@ class GPTManager(ModelManager):
                         # print()
                         # print(model_score, " ", log_prob)
 
-                        java_suggestion_scores.append((new_context,
-                                                       java_context_list[k][1] + [java_suggestions_batch[ii][0]],
-                                                       java_context_list[k][2] + model_score))
+                        # Special case where string lit is the first param
+                        if java_candidate[-1] == quote_tokens[-1] and java_context_list[k][0][-1] == open_paren_tokens[-1]:
+                            string_lit_data = (new_context,
+                                               java_suggestions_batch[ii][0],
+                                               model_score)
+                        else:
+                            java_suggestion_scores.append((new_context,
+                                                           java_context_list[k][1] + [java_suggestions_batch[ii][0]],
+                                                           java_context_list[k][2] + model_score))
+
+                # Special case where string lit is the first param
+                if java_context_list[k][0][-1] == open_paren_tokens[-1] and string_lit_data is not None:
+                    feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][:-1]],
+                                 self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
+                                 self.suggestion: GPT_BATCH_SIZE * [quote_first_param_tokens],
+                                 self.end_index: len(quote_first_param_tokens),
+                                 }
+                    _, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
+                    log_prob = np.log(out[0])
+                    model_score = np.sum(log_prob)
+
+                    # Debug
+                    # print("string lit at first param")
+                    # print(model_score, " ", log_prob)
+
+                    java_suggestion_scores.append((string_lit_data[0],
+                                                   java_context_list[k][1] + [string_lit_data[1]],
+                                                   java_context_list[k][2] + max(string_lit_data[2], model_score)))
 
             java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
         sorted_scores = java_context_list
@@ -324,6 +369,7 @@ class GPTManager(ModelManager):
         close_paren_tokens = self.encoder.encode(")")
         space_tokens = self.encoder.encode(" ")
         quote_tokens = self.encoder.encode("\"\"")
+        quote_first_param_tokens = self.encoder.encode("(\"")
 
         java_context_list = [(java_context_tokens, [], 0)]
         all_candidate_lex = []
@@ -332,13 +378,20 @@ class GPTManager(ModelManager):
             for k in range(len(java_context_list)):
                 context_data = None
                 batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
+
+                string_lit_data = None
+
                 for jj in range(len(java_suggestions_all[j])):
                     java_suggestions = java_suggestions_all[j][jj]
                     for ii, java_candidate in enumerate(java_suggestions):
-                        if j == 0:
-                            java_suggestion = java_candidate
+                        if java_candidate[-1] == open_paren_tokens[-1]:   # METHOD_INVOC
+                            java_suggestion = java_candidate[:-1]
                         else:
-                            java_suggestion = comma_tokens + java_candidate
+                            java_suggestion = java_candidate
+
+                        if j > 0:
+                            java_suggestion = comma_tokens + java_suggestion
+
                         new_context = java_context_list[k][0] + java_suggestion
 
                         end_index = len(java_suggestion) - 1
@@ -351,10 +404,10 @@ class GPTManager(ModelManager):
                             #java_suggestion = java_suggestion + comma_tokens + close_paren_tokens
 
                             # NAME + COMPOUND
-                            java_suggestion = java_suggestion + comma_tokens + close_paren_tokens + space_tokens
+                            #java_suggestion = java_suggestion + comma_tokens + close_paren_tokens + space_tokens
 
                             # NOT (METHOD_INVOC + FIELD_ACCESS)
-                            #java_suggestion = java_suggestion + dot_tokens
+                            java_suggestion = java_suggestion + dot_tokens
 
 
                         batch_suggestion = GPT_BATCH_SIZE * [java_suggestion]
@@ -375,14 +428,14 @@ class GPTManager(ModelManager):
                             context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
 
                         smoothing_prob = np.where(out > 0, out, 1e-7)
-                        if end_index != len(java_suggestion) - 1:
+                        if end_index < len(java_suggestion) - 1:
                             # NAME
-                            smoothing_prob = np.hstack((smoothing_prob[:, :end_index+1],
-                                                        np.sum(smoothing_prob[:, end_index+1:],axis=1,keepdims=True),
-                                                        ))
+                            # smoothing_prob = np.hstack((smoothing_prob[:, :end_index+1],
+                            #                             np.sum(smoothing_prob[:, end_index+1:],axis=1,keepdims=True),
+                            #                             ))
 
                             # NOT (METHOD_INVOC + FIELD_ACCESS)
-                            # smoothing_prob = np.hstack((smoothing_prob[:,:-1],1-smoothing_prob[:,-1:]))
+                            smoothing_prob = np.hstack((smoothing_prob[:,:-1],1-smoothing_prob[:,-1:]))
 
 
                         log_prob = np.log(smoothing_prob)
@@ -394,9 +447,34 @@ class GPTManager(ModelManager):
                         # print()
                         # print(model_score, " ", log_prob)
 
-                        java_suggestion_scores.append((new_context,
-                                                       java_context_list[k][1] + [(jj, ii)],
-                                                       java_context_list[k][2] + model_score))
+                        # Special case where string lit is the first param
+                        if java_candidate[-1] == quote_tokens[-1] and java_context_list[k][0][-1] == open_paren_tokens[-1]:
+                            string_lit_data = (new_context,
+                                               (jj, ii),
+                                               model_score)
+                        else:
+                            java_suggestion_scores.append((new_context,
+                                                           java_context_list[k][1] + [(jj, ii)],
+                                                           java_context_list[k][2] + model_score))
+
+                # Special case where string lit is the first param
+                if java_context_list[k][0][-1] == open_paren_tokens[-1] and string_lit_data is not None:
+                    feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][:-1]],
+                                 self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
+                                 self.suggestion: GPT_BATCH_SIZE * [quote_first_param_tokens],
+                                 self.end_index: len(quote_first_param_tokens),
+                                 }
+                    _, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
+                    log_prob = np.log(out[0])
+                    model_score = np.sum(log_prob)
+
+                    # Debug
+                    # print("string lit at first param")
+                    # print(model_score, " ", log_prob)
+
+                    java_suggestion_scores.append((string_lit_data[0],
+                                                   java_context_list[k][1] + [string_lit_data[1]],
+                                                   java_context_list[k][2] + max(string_lit_data[2], model_score)))
             java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
         all_candidate_lex += java_context_list
         return self.select_top_param_candidates(all_candidate_lex, data, start_time)
