@@ -114,7 +114,9 @@ class GPTManager(ModelManager):
 
     def list_end_tokens(self, hparams):
         self.end_token_list = []
+        self.end_param_token_list = []
         self.method_invoc_token_list = []
+        self.array_access_token_list = []
         self.string_lit_token_list = []
         self.name_suffix_token_list = []
         for i in range(0, hparams.n_vocab):
@@ -126,20 +128,33 @@ class GPTManager(ModelManager):
                     #print(token)
                     break
 
+            if token in [")", ",", ",\"", ").", "),", ");", "):", "))", ",'", ",-", ")-", ")|", ",'\"", "));",
+                         ")?", ")/", ")))", "),\"", ")*", ")).", "))))", ")),", ")[", ")+"]:
+                self.end_param_token_list.append(i)
+
             if token in ["(", "()", "(\"", "('", "((", "().", "(),", "(_", "())", "(-"]:
                 self.method_invoc_token_list.append(i)
+
+            if token in ["[", "[\"", "['", "[]", "[_"]:
+                self.array_access_token_list.append(i)
 
             if token in ["\"", "\",", "\".", "\",\"", "\")", "\").", "\"),", "\"))", "\"\""]:
                 self.string_lit_token_list.append(i)
 
             if token in ["%", "&", ")", "*", "+", ",", "-", "/", "<", "=", ">", "?", "^", "|", " ", "\t", " -", ",\"",
-                         ").", " =", "),", " ,", "==", " |", " /", " &", " )", " <", " +", " *", "?\"", "->", "))",
-                         ",'", " %", ">>", " ->", "++", " ?", " ==", " ).", " ?'", " ||", " >>", " <<", " ^", " ),",
-                         " &&", ",-", ")-", " ))", "||", ",'\"", "<<", " >=", "-'", " ++", ")/", ")))", "&&", "),\"",
-                         ")*", "++)", ")).", "-(", "+(", ">(", "))))", ")),", ")[", " ,\"", ")--", " )))"]:
+                         ").", " =", "),", ");", "):", " ,", "==", " |", " /", " &", " )", " <", " +", " *", "?\"",
+                         "->", "))", ",'", " %", ">>", " ->", "++", " ?", " ==", " ).", " ?'", " ||", " >>", " <<",
+                         " ^", " ),", " &&", ",-", ")-", ")|", " ))", "||", ",'\"", "));", ")?", "<<", " >=", "-'",
+                         " ++", ")/", ")))", "&&", "),\"", ")*", "++)", ")).", "-(", "+(", ">(", "))))", ")),", ")[",
+                         ")+", " ,\"", ")--", " )))"]:
                 self.name_suffix_token_list.append(i)
 
+            # if token[0] in [",", ")"]:
+            #     print(token)
+
         print(len(self.end_token_list), "end tokens.")
+        # for token in self.encoder.encode("println(null)"):
+        #     print(self.encoder.decode([token]))
 
     def process(self, data, service):
         response = "gpt:{"
@@ -161,21 +176,35 @@ class GPTManager(ModelManager):
         suggestion = self.encoder.decode(suggestions_tokens[0])
         end_index = np.zeros(GPT_BATCH_SIZE, dtype=int)
 
-        if suggestion[-1] == "(":       # METHOD_INVOC
+        if suggestion[-1] == "(":           # METHOD_INVOC
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
                 end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.method_invoc_token_list
 
-        elif suggestion[-1] == "\"":    # STRING_LIT
+        elif suggestion[-1] in ["[", "]"]:  # ARRAY_ACCESS
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :len(suggestions_tokens[0])-1] = suggestions_tokens[i][:-1]
+                batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
+                end_index[i] = len(suggestions_tokens[i])-1
+            end_tokens = self.array_access_token_list
+
+        elif suggestion[-1] == "\"":        # STRING_LIT
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
+            for i in range(len(suggestions_tokens)):
+                batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
                 end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.string_lit_token_list
 
-        else:                           # NAME, FIELD_ACCESS, v.v..
+        elif suggestion == "null":          # NULL_LIT
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])])
+            for i in range(len(suggestions_tokens)):
+                batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
+                end_index[i] = len(suggestions_tokens[i])-1
+            end_tokens = self.end_param_token_list
+
+        else:                               # NAME, FIELD_ACCESS, v.v..
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
@@ -205,9 +234,16 @@ class GPTManager(ModelManager):
             suggestion = self.encoder.decode(suggestions_tokens[i])
             if suggestion[-1] == "(":       # METHOD_INVOC
                 suggestion_tokens = self.encoder.encode(suggestion+"),")
+            elif suggestion[-1] == "[":     # ARRAY_ACCESS
+                suggestion_tokens = self.encoder.encode(suggestion+"i],")
+            elif suggestion[-1] == "]":     # ARRAY_ACCESS
+                if suggestion[-2] == "[":
+                    suggestion_tokens = self.encoder.encode(suggestion[:-1]+"i],")
+                else:
+                    suggestion_tokens = self.encoder.encode(suggestion[:suggestion.find("[")+1]+"i],")
             elif suggestion[-1] == "\"":    # STRING_LIT
                 suggestion_tokens = self.encoder.encode(suggestion+",")
-            else:                           # NAME, FIELD_ACCESS, v.v..
+            else:                           # NULL_LIT, NAME, FIELD_ACCESS, v.v..
                 suggestion_tokens = self.encoder.encode(suggestion+",")
 
             log_prob = np.maximum(np.log(prob), LOG_ZERO)
@@ -250,10 +286,10 @@ class GPTManager(ModelManager):
 
                 suggestions_batches = []
                 suggestions_batch = []
-                # NAME
+                # NAME, FIELD_ACCESS, ...
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
-                    if candidate[-1] != "(" and candidate[-1] != "\"":
+                    if candidate[-1] not in ["(", "\"", "[", "]"]:
                         suggestions_batch.append((candidate_id, suggestion_tokens))
                         if len(suggestions_batch) == GPT_BATCH_SIZE:
                             suggestions_batches.append(suggestions_batch)
@@ -274,6 +310,18 @@ class GPTManager(ModelManager):
                     suggestions_batches.append(suggestions_batch)
                     suggestions_batch = []
 
+                # ARRAY_ACCESS
+                for candidate_id, suggestion_tokens in suggestions_data:
+                    candidate = candidates_all[i][candidate_id]
+                    if candidate[-1] in ["[", "]"]:
+                        suggestions_batch.append((candidate_id, suggestion_tokens))
+                        if len(suggestions_batch) == GPT_BATCH_SIZE:
+                            suggestions_batches.append(suggestions_batch)
+                            suggestions_batch = []
+                if len(suggestions_batch) > 0:
+                    suggestions_batches.append(suggestions_batch)
+                    suggestions_batch = []
+
                 # STRING_LIT
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
@@ -285,6 +333,14 @@ class GPTManager(ModelManager):
                 if len(suggestions_batch) > 0:
                     suggestions_batches.append(suggestions_batch)
                     suggestions_batch = []
+
+                # NULL_LIT
+                for candidate_id, suggestion_tokens in suggestions_data:
+                    candidate = candidates_all[i][candidate_id]
+                    if candidate == "null":
+                        suggestions_batch.append((candidate_id, suggestion_tokens))
+                        suggestions_batches.append(suggestions_batch)
+                        suggestions_batch = []
 
                 context_data = None
                 for suggestions_batch in suggestions_batches:

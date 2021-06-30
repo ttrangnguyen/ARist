@@ -28,6 +28,16 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     @Override
+    public List<? extends RecTest> generateTestsFromFile(String filePath) throws IOException {
+        List<ArgRecTest> tests = (List<ArgRecTest>) super.generateTestsFromFile(filePath);
+
+        MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
+                new SingleArgRecTestGenerator((ArgRecTestGenerator) generator): new AllArgRecTestGenerator((ArgRecTestGenerator) generator);
+
+        return multipleGenerator.generate(tests);
+    }
+
+    @Override
     public List<? extends RecTest> getTests(boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
         List<ArgRecTest> tests = (List<ArgRecTest>) super.getTests(fromSavefile, doSaveTestsAfterGen);
 

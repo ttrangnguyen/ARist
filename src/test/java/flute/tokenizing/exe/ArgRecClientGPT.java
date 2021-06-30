@@ -19,7 +19,7 @@ public class ArgRecClientGPT extends ArgRecClient {
     public static void main(String[] args) throws IOException {
         RecClient client = new ArgRecClientGPT("lucene");
         List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
-        //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
+        //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile(Config.REPO_DIR + "git\\lucene\\lucene\\src\\java\\org\\apache\\lucene\\search\\QueryTermVector.java");
 
         client.validateTests(tests, false);
         //RecClient.logTests(tests);
