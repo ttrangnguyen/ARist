@@ -125,7 +125,7 @@ def sample_sequence(*, hparams, max_length, context=None, context_output=None,
 
         return context_presents, tokens, probs
 
-def probability(hparams, context=None, context_output=None, suggestion=None, end_index=None, batch_size=None):
+def probability(hparams, context=None, context_output=None, suggestion=None, end_tokens=None, batch_size=None):
     def step(hparams, tokens, past=None):
         lm_output = model.model(hparams=hparams, X=tokens,
                                 past=past, reuse=tf.compat.v1.AUTO_REUSE)
@@ -150,13 +150,22 @@ def probability(hparams, context=None, context_output=None, suggestion=None, end
             logits = next_outputs['logits'][:, -1, :]
             probs = tf.nn.softmax(logits)
 
-            suggestion_token = suggestion[:, i]
-            token_id = tf.stack([tf.range(tf.shape(suggestion)[0]), suggestion_token], axis=1)
-            prob = tf.expand_dims(tf.gather_nd(probs, token_id), axis=1)
+            prob = tf.cond(
+                tf.less(i, tf.shape(suggestion)[1]),
+                lambda: tf.expand_dims(tf.gather_nd(
+                    probs,
+                    tf.stack([tf.range(tf.shape(suggestion)[0]), suggestion[:, i]], axis=1),    # Token id
+                ), axis=1),
+                lambda: tf.reduce_sum(tf.gather(probs, end_tokens, axis=1), axis=1, keepdims=True),
+            )
             return [
                 i + 1,
-                tf.cond(tf.less(end_index, i), lambda: past, lambda: tf.concat([past, next_outputs['presents']], axis=-2)),
-                tf.compat.v1.where(end_index < i, prev, suggestion_token),
+                tf.concat([past, next_outputs['presents']], axis=-2),
+                tf.cond(
+                    tf.less(i, tf.shape(suggestion)[1]),
+                    lambda: suggestion[:, i],   # Suggestion token
+                    lambda: tf.zeros([batch_size], dtype=tf.int32),
+                ),
                 tf.concat([output, prob], axis=1),
                 ]
 
@@ -165,7 +174,7 @@ def probability(hparams, context=None, context_output=None, suggestion=None, end
 
         _, _, _, probs = tf.while_loop(
             cond=cond, body=body,
-            maximum_iterations=tf.shape(suggestion)[1],
+            maximum_iterations=tf.shape(suggestion)[1] + 1,
             loop_vars=[
                 tf.constant(0, dtype=tf.int32),
                 context_presents,
