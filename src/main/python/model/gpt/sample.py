@@ -11,11 +11,12 @@ def top_k_logits(logits, k):
     def _top_k():
         values, _ = tf.nn.top_k(logits, k=k)
         min_values = values[:, -1, tf.newaxis]
-        return tf.compat.v1.where(
+        return tf.where(
             logits < min_values,
             tf.ones_like(logits, dtype=logits.dtype) * -1e10,
             logits,
         )
+
     return tf.cond(
         pred=tf.equal(k, 0),
         true_fn=lambda: logits,
@@ -28,10 +29,10 @@ def top_p_logits(logits, p):
         logits_sort = tf.sort(logits, direction='DESCENDING')
         probs_sort = tf.nn.softmax(logits_sort)
         probs_sums = tf.cumsum(probs_sort, axis=1, exclusive=True)
-        logits_masked = tf.compat.v1.where(probs_sums < p, logits_sort, tf.ones_like(
-            logits_sort)*1000)  # [batchsize, vocab]
+        logits_masked = tf.where(probs_sums < p, logits_sort, tf.ones_like(
+            logits_sort) * 1000)  # [batchsize, vocab]
         min_logits = tf.reduce_min(input_tensor=logits_masked, axis=1, keepdims=True)  # [batchsize, 1]
-        return tf.compat.v1.where(
+        return tf.where(
             logits < min_logits,
             tf.ones_like(logits, dtype=logits.dtype) * -1e10,
             logits,
@@ -76,12 +77,14 @@ def sample_sequence(*, hparams, max_length, context=None, context_output=None,
             probs = tf.nn.softmax(logits)
 
             if temperature == 0:
-                logits = tf.map_fn(fn=lambda logit_tensor: logit_tensor / tf.random.uniform((1,), minval=.69, maxval=.91, dtype=tf.dtypes.float32),
-                                   elems=logits,
-                                   back_prop=False,
-                                   dtype=tf.float32)
+                logits = tf.map_fn(
+                    fn=lambda logit_tensor: logit_tensor / tf.random.uniform((1,), minval=.69, maxval=.91,
+                                                                             dtype=tf.dtypes.float32),
+                    elems=logits,
+                    back_prop=False,
+                    dtype=tf.float32)
             else:
-                logits = logits / tf.to_float(temperature)
+                logits = logits / tf.cast(temperature, tf.float32)
 
             if top_p > 0.0:
                 logits = top_p_logits(logits, p=top_p)
@@ -125,7 +128,9 @@ def sample_sequence(*, hparams, max_length, context=None, context_output=None,
 
         return context_presents, tokens, probs
 
-def probability(hparams, context=None, context_output=None, suggestion=None, end_tokens=None, batch_size=None):
+
+def probability(hparams, context=None, context_output=None,
+                suggestion=None, end_tokens=None, end_index=None, batch_size=None):
     def step(hparams, tokens, past=None):
         lm_output = model.model(hparams=hparams, X=tokens,
                                 past=past, reuse=tf.compat.v1.AUTO_REUSE)
@@ -144,37 +149,33 @@ def probability(hparams, context=None, context_output=None, suggestion=None, end
                                    lambda: context_output,
                                    lambda: step(hparams, context[:, :-1])['presents'],
                                    )
+        suggestion = tf.pad(suggestion, [[0, 0], [0, 1]])
 
         def body(i, past, prev, output):
             next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
             logits = next_outputs['logits'][:, -1, :]
             probs = tf.nn.softmax(logits)
 
-            prob = tf.cond(
-                tf.less(i, tf.shape(suggestion)[1]),
-                lambda: tf.expand_dims(tf.gather_nd(
-                    probs,
-                    tf.stack([tf.range(tf.shape(suggestion)[0]), suggestion[:, i]], axis=1),    # Token id
-                ), axis=1),
-                lambda: tf.reduce_sum(tf.gather(probs, end_tokens, axis=1), axis=1, keepdims=True),
+            suggestion_token = suggestion[:, i]
+            token_id = tf.stack([tf.range(tf.shape(suggestion)[0]), suggestion_token], axis=1)
+            prob = tf.where(
+                tf.less(i, end_index),
+                tf.expand_dims(tf.gather_nd(probs, token_id), axis=1),
+                tf.reduce_sum(tf.gather(probs, end_tokens, axis=1), axis=1, keepdims=True),
             )
             return [
                 i + 1,
                 tf.concat([past, next_outputs['presents']], axis=-2),
-                tf.cond(
-                    tf.less(i, tf.shape(suggestion)[1]),
-                    lambda: suggestion[:, i],   # Suggestion token
-                    lambda: tf.zeros([batch_size], dtype=tf.int32),
-                ),
+                suggestion[:, i],
                 tf.concat([output, prob], axis=1),
-                ]
+            ]
 
         def cond(*args):
             return True
 
         _, _, _, probs = tf.while_loop(
             cond=cond, body=body,
-            maximum_iterations=tf.shape(suggestion)[1] + 1,
+            maximum_iterations=tf.shape(suggestion)[1],
             loop_vars=[
                 tf.constant(0, dtype=tf.int32),
                 context_presents,

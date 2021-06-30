@@ -71,6 +71,7 @@ class GPTManager(ModelManager):
         self.context_output = tf.compat.v1.placeholder(tf.float32, self.context_shape)
         self.suggestion = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE, None])
         self.end_tokens = tf.compat.v1.placeholder(tf.int32, [None])
+        self.end_index = tf.compat.v1.placeholder(tf.int32, [GPT_BATCH_SIZE])
         output = model.model(hparams=hparams, X=self.context)
 
         saver = tf.compat.v1.train.Saver(allow_empty=True)
@@ -103,6 +104,7 @@ class GPTManager(ModelManager):
             context_output=self.context_output,
             suggestion=self.suggestion,
             end_tokens=self.end_tokens,
+            end_index=self.end_index,
             batch_size=GPT_BATCH_SIZE,
         )
         return {
@@ -157,23 +159,27 @@ class GPTManager(ModelManager):
     def probability(self, context_tokens, suggestions_tokens, context_data=None):
         batch_context = GPT_BATCH_SIZE * [context_tokens]
         suggestion = self.encoder.decode(suggestions_tokens[0])
+        end_index = np.zeros(GPT_BATCH_SIZE, dtype=int)
 
         if suggestion[-1] == "(":       # METHOD_INVOC
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :] = suggestions_tokens[i][:-1]
+                batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
+                end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.method_invoc_token_list
 
         elif suggestion[-1] == "\"":    # STRING_LIT
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :] = suggestions_tokens[i][:-1]
+                batch_suggestion[i, :len(suggestions_tokens[0])-1] = suggestions_tokens[i][:-1]
+                end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.string_lit_token_list
 
         else:                           # NAME, FIELD_ACCESS, v.v..
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :] = suggestions_tokens[i]
+                batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
+                end_index[i] = len(suggestions_tokens[i])
             end_tokens = self.name_suffix_token_list
 
         if context_data is None:
@@ -181,6 +187,7 @@ class GPTManager(ModelManager):
                          self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
                          self.suggestion: batch_suggestion,
                          self.end_tokens: end_tokens,
+                         self.end_index: end_index,
                          }
             context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
         else:
@@ -188,12 +195,13 @@ class GPTManager(ModelManager):
                          self.context_output: context_data,
                          self.suggestion: batch_suggestion,
                          self.end_tokens: end_tokens,
+                         self.end_index: end_index,
                          }
             context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
 
         suggestions_result = []
         for i in range(len(suggestions_tokens)):
-            prob = out[i]
+            prob = out[i, :end_index[i] + 1]
             suggestion = self.encoder.decode(suggestions_tokens[i])
             if suggestion[-1] == "(":       # METHOD_INVOC
                 suggestion_tokens = self.encoder.encode(suggestion+"),")
@@ -246,9 +254,6 @@ class GPTManager(ModelManager):
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
                     if candidate[-1] != "(" and candidate[-1] != "\"":
-                        if len(suggestions_batch) > 0 and len(suggestions_batch[-1][1]) != len(suggestion_tokens):
-                            suggestions_batches.append(suggestions_batch)
-                            suggestions_batch = []
                         suggestions_batch.append((candidate_id, suggestion_tokens))
                         if len(suggestions_batch) == GPT_BATCH_SIZE:
                             suggestions_batches.append(suggestions_batch)
@@ -261,9 +266,6 @@ class GPTManager(ModelManager):
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
                     if candidate[-1] == "(":
-                        if len(suggestions_batch) > 0 and len(suggestions_batch[-1][1]) != len(suggestion_tokens):
-                            suggestions_batches.append(suggestions_batch)
-                            suggestions_batch = []
                         suggestions_batch.append((candidate_id, suggestion_tokens))
                         if len(suggestions_batch) == GPT_BATCH_SIZE:
                             suggestions_batches.append(suggestions_batch)
@@ -276,9 +278,6 @@ class GPTManager(ModelManager):
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
                     if candidate[-1] == "\"":
-                        if len(suggestions_batch) > 0 and len(suggestions_batch[-1][1]) != len(suggestion_tokens):
-                            suggestions_batches.append(suggestions_batch)
-                            suggestions_batch = []
                         suggestions_batch.append((candidate_id, suggestion_tokens))
                         if len(suggestions_batch) == GPT_BATCH_SIZE:
                             suggestions_batches.append(suggestions_batch)
@@ -327,132 +326,31 @@ class GPTManager(ModelManager):
         start_time = perf_counter()
         n_param = len(data['next_lex'])
 
-        java_context_tokens = self.encoder.encode(data['lex_context'][0])
-        java_suggestions_all = []
+        context_tokens = self.encoder.encode(data['lex_context'][0])
+
+        context_list = [(context_tokens, [], 0)]
         for i in range(n_param):
-            java_suggestions_param = []
-            for j in range(len(data['next_lex'][i])):
-                java_suggestions_param_excode = []
-                for k in range(len(data['next_lex'][i][j])):
-                    candidate_tokens = self.encoder.encode(data['next_lex'][i][j][k])
-                    java_suggestions_param_excode.append(candidate_tokens)
-                java_suggestions_param.append(java_suggestions_param_excode)
-            java_suggestions_all.append(java_suggestions_param)
-        dot_tokens = self.encoder.encode(".")
-        comma_tokens = self.encoder.encode(",")
-        open_paren_tokens = self.encoder.encode("(")
-        close_paren_tokens = self.encoder.encode(")")
-        space_tokens = self.encoder.encode(" ")
-        quote_tokens = self.encoder.encode("\"\"")
-        quote_first_param_tokens = self.encoder.encode("(\"")
+            suggestion_scores = []
+            for j in range(len(context_list)):
+                suggestions_data = []
+                for candidate_excode_id in range(len(data['next_lex'][i])):
+                    for candidate_lex_id in range(len(data['next_lex'][i][candidate_excode_id])):
+                        candidate = data['next_lex'][i][candidate_excode_id][candidate_lex_id]
+                        suggestion = self.encoder.decode([context_list[j][0][-1]]) + candidate
+                        suggestions_data.append(((candidate_excode_id, candidate_lex_id), self.encoder.encode(suggestion)))
 
-        java_context_list = [(java_context_tokens, [], 0)]
-        all_candidate_lex = []
-        for j in range(n_param):
-            java_suggestion_scores = []
-            for k in range(len(java_context_list)):
                 context_data = None
-                batch_context = GPT_BATCH_SIZE * [java_context_list[k][0]]
+                for candidate_id, suggestion_tokens in suggestions_data:
+                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], [suggestion_tokens], context_data)
+                    score, new_context_tokens = suggestions_result[0]
+                    suggestion_scores.append((
+                        new_context_tokens,
+                        context_list[j][1] + [candidate_id],
+                        context_list[j][2] + score,
+                    ))
 
-                string_lit_data = None
-
-                for jj in range(len(java_suggestions_all[j])):
-                    java_suggestions = java_suggestions_all[j][jj]
-                    for ii, java_candidate in enumerate(java_suggestions):
-                        if java_candidate[-1] == open_paren_tokens[-1]:   # METHOD_INVOC
-                            java_suggestion = java_candidate[:-1]
-                        else:
-                            java_suggestion = java_candidate
-
-                        if j > 0:
-                            java_suggestion = comma_tokens + java_suggestion
-
-                        new_context = java_context_list[k][0] + java_suggestion
-
-                        end_index = len(java_suggestion) - 1
-                        if java_candidate[-1] == open_paren_tokens[-1]: # method call
-                            pass
-                        elif java_candidate[-1] == quote_tokens[-1]:    # string literal
-                            pass
-                        else:
-                            # NAME
-                            #java_suggestion = java_suggestion + comma_tokens + close_paren_tokens
-
-                            # NAME + COMPOUND
-                            #java_suggestion = java_suggestion + comma_tokens + close_paren_tokens + space_tokens
-
-                            # NOT (METHOD_INVOC + FIELD_ACCESS)
-                            java_suggestion = java_suggestion + dot_tokens
-
-
-                        batch_suggestion = GPT_BATCH_SIZE * [java_suggestion]
-
-                        if context_data is None:
-                            feed_dict = {self.context: batch_context,
-                                         self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
-                                         self.suggestion: batch_suggestion,
-                                         self.end_index: end_index,
-                                         }
-                            context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
-                        else:
-                            feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][-1:]],
-                                         self.context_output: context_data,
-                                         self.suggestion: batch_suggestion,
-                                         self.end_index: end_index,
-                                         }
-                            context_data, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
-
-                        smoothing_prob = np.where(out > 0, out, 1e-7)
-                        if end_index < len(java_suggestion) - 1:
-                            # NAME
-                            # smoothing_prob = np.hstack((smoothing_prob[:, :end_index+1],
-                            #                             np.sum(smoothing_prob[:, end_index+1:],axis=1,keepdims=True),
-                            #                             ))
-
-                            # NOT (METHOD_INVOC + FIELD_ACCESS)
-                            smoothing_prob = np.hstack((smoothing_prob[:,:-1],1-smoothing_prob[:,-1:]))
-
-
-                        log_prob = np.log(smoothing_prob)
-                        model_score = np.sum(log_prob, axis=1)[0]
-
-                        # Debug
-                        # for suggestion in java_candidate:
-                        #     print(self.encoder.decode([suggestion]), end=' ')
-                        # print()
-                        # print(model_score, " ", log_prob)
-
-                        # Special case where string lit is the first param
-                        if java_candidate[-1] == quote_tokens[-1] and java_context_list[k][0][-1] == open_paren_tokens[-1]:
-                            string_lit_data = (new_context,
-                                               (jj, ii),
-                                               model_score)
-                        else:
-                            java_suggestion_scores.append((new_context,
-                                                           java_context_list[k][1] + [(jj, ii)],
-                                                           java_context_list[k][2] + model_score))
-
-                # Special case where string lit is the first param
-                if java_context_list[k][0][-1] == open_paren_tokens[-1] and string_lit_data is not None:
-                    feed_dict = {self.context: GPT_BATCH_SIZE * [java_context_list[k][0][:-1]],
-                                 self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
-                                 self.suggestion: GPT_BATCH_SIZE * [quote_first_param_tokens],
-                                 self.end_index: len(quote_first_param_tokens),
-                                 }
-                    _, out = self.sess.run(self.java_model['pa'], feed_dict=feed_dict)
-                    log_prob = np.log(out[0])
-                    model_score = np.sum(log_prob)
-
-                    # Debug
-                    # print("string lit at first param")
-                    # print(model_score, " ", log_prob)
-
-                    java_suggestion_scores.append((string_lit_data[0],
-                                                   java_context_list[k][1] + [string_lit_data[1]],
-                                                   java_context_list[k][2] + max(string_lit_data[2], model_score)))
-            java_context_list = sorted(java_suggestion_scores, key=lambda x: -x[2])
-        all_candidate_lex += java_context_list
-        return self.select_top_param_candidates(all_candidate_lex, data, start_time)
+            context_list = sorted(suggestion_scores, key=lambda x: -x[2])
+        return self.select_top_param_candidates(context_list, data, start_time)
 
     def select_top_param_candidates(self, all_candidate_lex, data, start_time):
         sorted_scores = sorted(all_candidate_lex, key=lambda x: -x[2])
