@@ -1,50 +1,47 @@
 package flute.tokenizing.exe;
 
 import com.github.javaparser.ParseException;
-import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.analysis.ExpressionType;
 import flute.crawling.APICrawler;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
-import flute.tokenizing.excode_data.*;
+import flute.preprocessing.MethodExtractor;
+import flute.tokenizing.excode_data.ArgRecTest;
+import flute.tokenizing.excode_data.ContextInfo;
+import flute.tokenizing.excode_data.NodeSequenceInfo;
+import flute.tokenizing.excode_data.RecTest;
 import flute.utils.StringUtils;
-import flute.utils.file_processing.JavaTokenizer;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Initializer;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
-    private int lengthLimit = -1;
+public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
+    private MethodExtractor methodExtractor;
 
-    public ArgRecTestGenerator(String projectPath, ProjectParser projectParser) {
+    public ArgRecTestGeneratorGPT(String projectPath, ProjectParser projectParser) {
         super(projectPath, projectParser);
-    }
-
-    public void setLengthLimit(int lengthLimit) {
-        this.lengthLimit = lengthLimit;
-    }
-
-    private <T> List<T> truncateList(List<T> list, boolean fromBegin) {
-        if (lengthLimit < 0 || list.size() <= lengthLimit) return list;
-        if (fromBegin) {
-            return list.subList(list.size() - lengthLimit, list.size());
-        } else {
-            return list.subList(0, lengthLimit);
-        }
-    }
-
-    private <T> List<T> truncateList(List<T> list) {
-        return truncateList(list, true);
+        methodExtractor = new MethodExtractor();
     }
 
     @Override
     List<? extends RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
                                                    MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
-
         List<RecTest> tests = new ArrayList<>();
 
-        String contextArg = contextMethodCall + methodScope + methodName + '(';
-        String classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
+        String contextArg;
+        ASTNode curMethodScope = getFileParser().getCurMethodScope();
+        if (curMethodScope instanceof MethodDeclaration) {
+            contextArg = this.methodExtractor.getMethodDeclarationContext((MethodDeclaration) curMethodScope, Collections.singleton(methodName));
+        } else {
+            contextArg = this.methodExtractor.getInitializerContext((Initializer) curMethodScope, Collections.singleton(methodName));
+        }
+        contextArg += MethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();
         int k = methodCallStartIdx + 1;
@@ -76,34 +73,22 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         for (String nextExcode : nextExcodeList) {
                             nextLexList.add(params.getValue().get(nextExcode));
                         }
-                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
                         ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
-                        try {
-                            List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextArg);
-                            while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
-                                tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
-                            }
-                            tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
 
                             List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                            excodeContext = truncateList(excodeContext);
 
                             ArgRecTest test = new ArgRecTest();
-                            test.setLex_context(tokenizedContextMethodCall);
+                            test.setLex_context(Collections.singletonList(contextArg));
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-                            test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
-                            test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                             test.setExpected_lex(arg.toString());
                             test.setArgType(ExpressionType.get(arg));
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
-                            test.setIs_local_var(isLocalVarList);
-                            test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
                             if (RecTestFilter.predictable(argExcodes)) {
                                 RecTestNormalizer.normalize(test);
@@ -111,9 +96,6 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                                 test.setIgnored(true);
                             }
                             oneArgTests.add(test);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
                     } else {
                         //System.out.println("No candidate generated: " + methodCall);
                     }
@@ -152,24 +134,14 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             for (String nextExcode : nextExcodeList) {
                 nextLexList.add(params.getValue().get(nextExcode));
             }
-            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
-            try {
-                List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextArg);
-                while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
-                    tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
-                }
-                tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
 
                 List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                excodeContext = truncateList(excodeContext);
 
                 ArgRecTest test = new ArgRecTest();
-                test.setLex_context(tokenizedContextMethodCall);
+                test.setLex_context(Collections.singletonList(contextArg));
                 test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-                test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
-                test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
                 boolean isClean = true;
                 if (methodCall.getArguments().isEmpty()) {
                     test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
@@ -192,17 +164,12 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 }
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
-                test.setIs_local_var(isLocalVarList);
-                test.setMethodInvocClassQualifiedName(classQualifiedName);
                 if (isClean) {
                     RecTestNormalizer.normalize(test);
                 } else {
                     test.setIgnored(true);
                 }
                 oneArgTests.add(test);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         } else {
             //System.out.println("No candidate generated: " + methodCall);
         }
@@ -263,10 +230,5 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
         tests.addAll(oneArgTests);
         return tests;
-    }
-
-    @Override
-    void postProcess(List<RecTest> tests) {
-
     }
 }

@@ -8,6 +8,7 @@ from _thread import *
 
 from model.manager.ngram_manager import NgramManager
 from model.manager.rnn_manager import RNNManager
+from model.manager.gpt_manager import GPTManager
 from name_stat.name_tokenizer import tokenize
 from name_stat.similarly import lexSim
 from model.config import *
@@ -32,6 +33,11 @@ class Server:
                                               EXCODE_MODEL_NGRAM_PATH,
                                               JAVA_MODEL_NGRAM_PATH,
                                               METHODCALL_MODEL_NGRAM_PATH)
+        if USE_GPT:
+            self.gpt_manager = GPTManager(TOP_K, PROJECT, TRAIN_LEN_RNN,
+                                          EXCODE_MODEL_GPT_PATH,
+                                          JAVA_MODEL_GPT_PATH,
+                                          METHODCALL_MODEL_GPT_PATH)
         self.service = service
 
     def recvall(self, sock):
@@ -53,7 +59,7 @@ class Server:
             if not data:
                 break
             data = data.decode("utf-8")
-            print(data)
+            #print(data)
             data = json.loads(data)
             if ('type' in data) and (data['type'] == "tokenize"):
                 conn.send(('{type:"tokenize", data:' + json.dumps(tokenize(data['data'])) + '}\n').encode())
@@ -69,6 +75,10 @@ class Server:
                 if USE_RNN:
                     response += ','
                 response += self.ngram_manager.process(data, self.service)
+            if USE_GPT:
+                if USE_RNN or USE_NGRAM:
+                    response += ','
+                response += self.gpt_manager.process(data, self.service)
             conn.send((response + '}}\n').encode())
         conn.close()
         print('Client disconnected')

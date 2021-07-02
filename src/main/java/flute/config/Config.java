@@ -46,7 +46,7 @@ public class Config {
      * Multiprocess
      */
 
-    public final static boolean MULTIPROCESS = true;
+    public final static boolean MULTIPROCESS = false;
     public final static int NUM_THREAD = 5;
 
     /***
@@ -61,19 +61,19 @@ public class Config {
      *  Type feature
      */
 
-    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false;
-    public final static boolean FEATURE_PARAM_TYPE_CAST = false;
+    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = true;
+    public final static boolean FEATURE_PARAM_TYPE_CAST = true;
 
     public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false;
     public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false;
 
-    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = true;
     public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false;
     public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false;
     public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
-    public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = false;
+    public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = true;
 
     public final static boolean FEATURE_LIMIT_CANDIDATES = false;
 

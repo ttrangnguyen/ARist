@@ -29,6 +29,7 @@ public abstract class RecClient {
 
     boolean isNGramUsed = false;
     boolean isRNNUsed = false;
+    boolean isGPTUsed = false;
     String projectName;
     ProjectParser projectParser;
     RecTestGenerator generator;
@@ -307,10 +308,14 @@ public abstract class RecClient {
         PredictResponse predictResponse = (PredictResponse) response;
         isNGramUsed = predictResponse.getData().ngram != null;
         isRNNUsed = predictResponse.getData().rnn != null;
+        isGPTUsed = predictResponse.getData().gpt != null;
+
         List<String> nGramResults = null;
         if (isNGramUsed) nGramResults = predictResponse.getData().ngram.getResult();
         List<String> RNNResults = null;
         if (isRNNUsed) RNNResults = predictResponse.getData().rnn.getResult();
+        List<String> gptResults = null;
+        if (isGPTUsed) gptResults = predictResponse.getData().gpt.getResult();
 
         if (verbose) {
             System.out.println("==========================");
@@ -334,6 +339,16 @@ public abstract class RecClient {
                 System.out.println("==========================");
                 System.out.println("RNN's runtime: " + predictResponse.getData().rnn.getRuntime() + "s");
             }
+
+            if (isGPTUsed) {
+                System.out.println("==========================");
+                System.out.println("GPT's results:");
+                gptResults.forEach(item -> {
+                    System.out.println(item);
+                });
+                System.out.println("==========================");
+                System.out.println("GPT's runtime: " + predictResponse.getData().gpt.getRuntime() + "s");
+            }
         }
 
         if (isNGramUsed) {
@@ -348,8 +363,15 @@ public abstract class RecClient {
                         "RNN", doPrintIncorrectPrediction);
         }
 
+        if (isGPTUsed) {
+            for (int k : this.tops)
+                updateTopKResult(test, gptResults, k, testMap.getOrDefault(test.getId(), false),
+                        "GPT", doPrintIncorrectPrediction);
+        }
+
         if (isNGramUsed) dataFrame.insert("NGram's runtime", predictResponse.getData().ngram.getRuntime());
         if (isRNNUsed) dataFrame.insert("RNN's runtime", predictResponse.getData().rnn.getRuntime());
+        if (isGPTUsed) dataFrame.insert("GPT's runtime", predictResponse.getData().gpt.getRuntime());
     }
 
     abstract void updateTopKResult(RecTest test, List<String> results, int k, boolean adequateGeneratedCandidate,
@@ -365,10 +387,35 @@ public abstract class RecClient {
         System.out.println("Average parsing runtime: " + dataFrame.getVariable("averageGetTestsTime").getSum() + "s");
         if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
         if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+        if (isGPTUsed) System.out.println("Average GPT's runtime: " + dataFrame.getVariable("GPT's runtime").getMean() + "s");
         System.out.println("Average overall runtime: "
                 + (dataFrame.getVariable("NGram's runtime").getMean()
                 + dataFrame.getVariable("RNN's runtime").getMean()
+                + dataFrame.getVariable("GPT's runtime").getMean()
                 + dataFrame.getVariable("averageGetTestsTime").getSum()) + "s");
+    }
+
+    String getBestModel(List<String> modelNames, String category) {
+        String bestModel = modelNames.get(0);
+        for (int k: this.tops) {
+            double bestAcc = dataFrame.getVariable(String.format(category, bestModel, k)).getMean();
+            double temp = bestAcc;
+            for (String modelName: modelNames) {
+                double curAcc = dataFrame.getVariable(String.format(category, modelName, k)).getMean();
+                if (Math.abs(bestAcc - curAcc) > 1e-7) {
+                    if (bestAcc < curAcc) {
+                        bestModel = modelName;
+                        bestAcc = curAcc;
+                    }
+                }
+            }
+            if (bestAcc > temp) {
+                System.out.println(String.format("%s has the best accuracy at top-%d.", bestModel, k));
+                break;
+            }
+        }
+        System.out.println(String.format("%s is chosen.", bestModel));
+        return bestModel;
     }
 
 
