@@ -71,7 +71,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         e.printStackTrace();
                     }
 
-                    if (params != null && !params.getValue().keySet().isEmpty()) {
+                    if (params != null) {
                         List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                         List<List<String>> nextLexList = new ArrayList<>();
                         for (String nextExcode : nextExcodeList) {
@@ -147,7 +147,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             e.printStackTrace();
         }
 
-        if (params != null && !params.getValue().keySet().isEmpty()) {
+        if (params != null) {
             List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
             List<List<String>> nextLexList = new ArrayList<>();
             for (String nextExcode : nextExcodeList) {
