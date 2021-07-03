@@ -172,40 +172,44 @@ class GPTManager(ModelManager):
             return self.generate_param(data)
 
     def probability(self, context_tokens, suggestions_tokens, context_data=None):
-        batch_context = GPT_BATCH_SIZE * [context_tokens]
+        batch_context = GPT_BATCH_SIZE * [context_tokens[-GPT_CONTEXT_LEN:]]
         suggestion = self.encoder.decode(suggestions_tokens[0])
         end_index = np.zeros(GPT_BATCH_SIZE, dtype=int)
 
+        len_max = 0
+        for i in range(len(suggestions_tokens)):
+            len_max = max(len_max, len(suggestions_tokens[i]))
+
         if suggestion[-1] == "(":           # METHOD_INVOC
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max-1])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
                 end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.method_invoc_token_list
 
         elif suggestion[-1] in ["[", "]"]:  # ARRAY_ACCESS
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max-1])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
                 end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.array_access_token_list
 
         elif suggestion[-1] == "\"":        # STRING_LIT
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])-1])
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max-1])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
                 end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.string_lit_token_list
 
         elif suggestion == "null":          # NULL_LIT
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])])
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
                 end_index[i] = len(suggestions_tokens[i])-1
             end_tokens = self.end_param_token_list
 
         else:                               # NAME, FIELD_ACCESS, v.v..
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len(suggestions_tokens[0])])
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
                 end_index[i] = len(suggestions_tokens[i])
@@ -286,26 +290,60 @@ class GPTManager(ModelManager):
 
                 suggestions_batches = []
                 suggestions_batch = []
+                field_in_context_dict = dict()
+                field_dict = dict()
                 # NAME, FIELD_ACCESS, ...
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
                     if candidate[-1] not in ["(", "\"", "[", "]"]:
-                        suggestions_batch.append((candidate_id, suggestion_tokens))
-                        if len(suggestions_batch) == GPT_BATCH_SIZE:
-                            suggestions_batches.append(suggestions_batch)
-                            suggestions_batch = []
+                        if "." not in candidate:
+                            suggestions_batch.append((candidate_id, suggestion_tokens))
+                            if len(suggestions_batch) == GPT_BATCH_SIZE:
+                                suggestions_batches.append(suggestions_batch)
+                                suggestions_batch = []
+                        else:
+                            field_name = candidate[candidate.rindex(".")+1:]
+                            if field_name not in field_in_context_dict:
+                                field_in_context_dict[field_name] = (field_name in data['lex_context'][0])
+                            if field_in_context_dict[field_name]:
+                                suggestions_batch.append((candidate_id, suggestion_tokens))
+                                if len(suggestions_batch) == GPT_BATCH_SIZE:
+                                    suggestions_batches.append(suggestions_batch)
+                                    suggestions_batch = []
+                            else:
+                                field_dict[field_name] = (candidate_id, suggestion_tokens)
+                for value in field_dict.values():
+                    suggestions_batch.append(value)
+                    if len(suggestions_batch) == GPT_BATCH_SIZE:
+                        suggestions_batches.append(suggestions_batch)
+                        suggestions_batch = []
                 if len(suggestions_batch) > 0:
                     suggestions_batches.append(suggestions_batch)
                     suggestions_batch = []
 
+                method_in_context_dict = dict()
+                method_dict = dict()
                 # METHOD_INVOC
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
                     if candidate[-1] == "(":
-                        suggestions_batch.append((candidate_id, suggestion_tokens))
-                        if len(suggestions_batch) == GPT_BATCH_SIZE:
-                            suggestions_batches.append(suggestions_batch)
-                            suggestions_batch = []
+                        method_name = candidate[:candidate.rindex("(")]
+                        if "." in method_name:
+                            method_name = method_name[method_name.rindex(".")+1:]
+                        if method_name not in method_in_context_dict:
+                            method_in_context_dict[method_name] = (method_name in data['lex_context'][0])
+                        if method_in_context_dict[method_name]:
+                            suggestions_batch.append((candidate_id, suggestion_tokens))
+                            if len(suggestions_batch) == GPT_BATCH_SIZE:
+                                suggestions_batches.append(suggestions_batch)
+                                suggestions_batch = []
+                        else:
+                            method_dict[method_name] = (candidate_id, suggestion_tokens)
+                for value in method_dict.values():
+                    suggestions_batch.append(value)
+                    if len(suggestions_batch) == GPT_BATCH_SIZE:
+                        suggestions_batches.append(suggestions_batch)
+                        suggestions_batch = []
                 if len(suggestions_batch) > 0:
                     suggestions_batches.append(suggestions_batch)
                     suggestions_batch = []
