@@ -66,11 +66,14 @@ public class RecTester {
             expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
         }
 
-        if (test.getNext_lexList().contains(expectedLex)) return true;
-        if (expectedLex.startsWith("this.")) {
-            if (test.getNext_lexList().contains(expectedLex.substring(5))) return true;
-        } else {
-            if (test.getNext_lexList().contains("this." + expectedLex)) return true;
+        for (String candidate : test.getNext_lexList()) {
+            candidate = CandidateMatcher.preprocess(candidate);
+            if (candidate.compareTo(expectedLex) == 0) return true;
+            if (expectedLex.startsWith("this.")) {
+                if (candidate.compareTo(expectedLex.substring(5)) == 0) return true;
+            } else {
+                if (candidate.compareTo("this." + expectedLex) == 0) return true;
+            }
         }
 
         if (test.getMethodAccessLex() != null) {
@@ -99,19 +102,20 @@ public class RecTester {
             expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
         }
 
-        if (result.equals(expectedLex)) return true;
+        result = CandidateMatcher.preprocess(result);
+        if (result.compareTo(expectedLex) == 0) return true;
         if (expectedLex.startsWith("this.")) {
-            if (result.equals(expectedLex.substring(5))) return true;
+            if (result.compareTo(expectedLex.substring(5)) == 0) return true;
         } else {
-            if (result.equals("this." + expectedLex)) return true;
+            if (result.compareTo("this." + expectedLex) == 0) return true;
         }
 
         if (test.getMethodAccessLex() != null) {
-            if (result.equals(test.getMethodAccessLex())) return true;
+            if (result.compareTo(test.getMethodAccessLex()) == 0) return true;
         }
 
         if (test.getObjectCreationLex() != null) {
-            return result.equals(test.getObjectCreationLex());
+            return result.compareTo(test.getObjectCreationLex()) == 0;
         }
 
         return false;
