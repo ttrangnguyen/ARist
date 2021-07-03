@@ -140,7 +140,7 @@ public class JavaFileParser {
 		try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
 			String line;
 			while ((line = br.readLine()) != null) {
-				if (!line.trim().startsWith("@")) {
+				if (/*!line.trim().startsWith("@")*/true) {
 					content += (line + "\n");
 				}
 			}
