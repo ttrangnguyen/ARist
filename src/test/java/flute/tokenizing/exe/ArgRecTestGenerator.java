@@ -3,6 +3,7 @@ package flute.tokenizing.exe;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.*;
 import flute.analysis.ExpressionType;
+import flute.analysis.config.Config;
 import flute.crawling.APICrawler;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
@@ -70,7 +71,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         e.printStackTrace();
                     }
 
-                    if (params != null && !params.getValue().keySet().isEmpty()) {
+                    if (params != null) {
                         List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
                         List<List<String>> nextLexList = new ArrayList<>();
                         for (String nextExcode : nextExcodeList) {
@@ -146,7 +147,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             e.printStackTrace();
         }
 
-        if (params != null && !params.getValue().keySet().isEmpty()) {
+        if (params != null) {
             List<String> nextExcodeList = new ArrayList<>(params.getValue().keySet());
             List<List<String>> nextLexList = new ArrayList<>();
             for (String nextExcode : nextExcodeList) {
@@ -219,23 +220,25 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 oneArgTest.setParam_name("");
             } else {
                 String paramName = getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null);
-//                try {
-//                    if(paramName == null){
-//                        paramName = APICrawler.paramNames(
-//                                getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
-//                        ).get(oneArgTest.getArgPos() - 1);
-////                        System.out.println(paramName);
-//                    }
-//                } catch (Exception e) {
-////                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
-//                    e.printStackTrace();
-//                }
-                oneArgTest.setParam_name(paramName);
+                if (Config.API_CRAWLER && paramName == null) {
+                    try {
+                        if (paramName == null) {
+                            paramName = APICrawler.paramNames(
+                                    getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
+                            ).get(oneArgTest.getArgPos() - 1);
+//                        System.out.println(paramName);
+                        }
+                    } catch (Exception e) {
+//                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
+                        e.printStackTrace();
+                    }
+                    oneArgTest.setParam_name(paramName);
+                }
             }
 
             String expectedExcode = oneArgTest.getExpected_excode();
             String expectedLex = oneArgTest.getExpected_lex();
-            for (NodeSequenceInfo argExcode: oneArgTest.getExpected_excode_ori()) {
+            for (NodeSequenceInfo argExcode : oneArgTest.getExpected_excode_ori()) {
                 if (NodeSequenceInfo.isMethodAccess(argExcode)) {
                     int tmp = StringUtils.indexOf(expectedExcode, "M_ACCESS(");
                     tmp = expectedExcode.indexOf("OPEN_PART", tmp);

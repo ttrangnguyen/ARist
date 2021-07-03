@@ -26,6 +26,8 @@ public class Config {
     public final static String MVN_HOME = "/usr/local/Cellar/maven/3.6.3_1/libexec";
     public static boolean TARGET_PARAM_POSITION = false;
 
+    public static boolean API_CRAWLER = false;
+
     /***
      * Logging
      */
