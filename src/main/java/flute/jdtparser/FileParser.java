@@ -1130,6 +1130,7 @@ public class FileParser {
 
     public Optional<String> getParamName(int pos) {
         Optional<String> result = Optional.empty();
+        if (!Config.TEST_LEX_SIM) return result;
         MethodDeclaration methodDeclaration = ParserUtils.findMethodDeclaration(getCurMethodInvocation().resolveMethodBinding(), cu, projectParser);
         Object param = null;
 
