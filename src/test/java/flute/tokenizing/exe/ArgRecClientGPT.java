@@ -4,6 +4,7 @@ import flute.config.Config;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 public class ArgRecClientGPT extends ArgRecClient {
@@ -23,6 +24,7 @@ public class ArgRecClientGPT extends ArgRecClient {
 
         client.validateTests(tests, false);
         //RecClient.logTests(tests);
+        Collections.shuffle(tests);
         client.queryAndTest(tests, false, false);
         client.printTestResult();
         System.exit(0);
