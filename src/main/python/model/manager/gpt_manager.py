@@ -295,7 +295,7 @@ class GPTManager(ModelManager):
                 # NAME, FIELD_ACCESS, ...
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
-                    if candidate[-1] not in ["(", "\"", "[", "]"]:
+                    if (candidate[-1] not in ["(", "\"", "[", "]"]) and (candidate != "null"):
                         if "." not in candidate:
                             suggestions_batch.append((candidate_id, suggestion_tokens))
                             if len(suggestions_batch) == GPT_BATCH_SIZE:
