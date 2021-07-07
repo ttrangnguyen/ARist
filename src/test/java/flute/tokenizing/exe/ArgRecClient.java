@@ -5,6 +5,7 @@ import flute.analysis.structure.DataFrame;
 import flute.communicate.SocketClient;
 import flute.communicate.schema.Response;
 import flute.config.Config;
+import flute.testing.PredictionDetail;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
@@ -94,6 +95,8 @@ public class ArgRecClient extends MethodCallRecClient {
                           String modelName, boolean doPrintIncorrectPrediction) {
 
         MultipleArgRecTest multipleArgRecTest = (MultipleArgRecTest) test;
+        PredictionDetail predictionDetail = new PredictionDetail();
+        predictionDetail.predictions_lex = results;
 
         boolean isOverallCorrectTopK = false;
         for (int i = 0; i < Math.min(k, results.size()); ++i) {
@@ -142,7 +145,10 @@ public class ArgRecClient extends MethodCallRecClient {
                         .getArgType()), 0);
 
                 if (doPrintIncorrectPrediction) {
-                    Logger.write(gson.toJson(test), projectName + "_incorrect_" + getTestClass().getSimpleName() + "s_top_" + k + ".txt");
+                    String outputFileName = projectName + "_incorrect_" + getTestClass().getSimpleName() + "s_top_" + k + ".txt";
+                    Logger.write(gson.toJson(test), outputFileName);
+                    Logger.write(gson.toJson(predictionDetail), outputFileName);
+
                 }
             }
         }
