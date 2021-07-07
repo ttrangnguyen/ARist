@@ -17,7 +17,7 @@ public class RecTestNormalizer {
             case "LIT(String)":
                 test.setExpected_lex("\"\"");
                 break;
-            case "VAR(Class)":
+            case "LIT(Class)":
                 test.setExpected_lex(".class");
         }
     }
