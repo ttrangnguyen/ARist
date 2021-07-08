@@ -272,8 +272,12 @@ class GPTManager(ModelManager):
             candidates_param = []
             for j in range(len(data['next_lex'][i])):
                 for k in range(len(data['next_lex'][i][j])):
-                    if data['next_lex'][i][j][k] not in candidates_param:
-                        candidates_param.append(data['next_lex'][i][j][k])
+                    if data['next_lex'][i][j][k].startswith("this."):
+                        if data['next_lex'][i][j][k][5:] in candidates_param:
+                            continue
+                    if data['next_lex'][i][j][k] in candidates_param:
+                        continue
+                    candidates_param.append(data['next_lex'][i][j][k])
             candidates_all.append(candidates_param)
         context_tokens = self.encoder.encode(data['lex_context'][0])
 
