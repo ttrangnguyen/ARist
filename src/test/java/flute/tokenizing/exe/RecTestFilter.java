@@ -41,6 +41,7 @@ public class RecTestFilter {
                 if (excode == nodeSequenceList.get(0) && NodeSequenceInfo.isOpenPart(excode)) return false;
             }
             if (NodeSequenceInfo.isClassExpr(excode) && !Config.FEATURE_PARAM_TYPE_TYPE_LIT) return false;
+            if (NodeSequenceInfo.isLambda(excode) && !Config.FEATURE_PARAM_TYPE_LAMBDA) return false;
 
             // For static field access
             if (NodeSequenceInfo.isFieldAccess(excode) && !Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {

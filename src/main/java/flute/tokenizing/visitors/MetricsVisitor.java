@@ -2393,17 +2393,27 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     public void visit(ClassExpr n, Object arg) {
         // Logger.log("ClassExpr:" + n + "\t\t" + n.getType() +"\t\t" +
         // n.getParentNode());
-        Node parentNode = n.getParentNode().orElse(null);
-        
-        String varName = n.getType().asString() + ".class";
-        addVariableToScope(getAscendantTypeMethod(n), "Class", varName);
-        
-        // AppenderTable.class ---> VAR(Class, AppenderTable.class)
-        NodeInfo nodeInfo = NodeVisitProcessing.addVarNode(curMethodInfo, parentNodeStack, previousControlFlowNodeStack,
-                curID, parentNode);
-        OldNodeSequenceVisitingProcessing.addVarNode(nodeInfo, varName, nodeSequenceStack, curMethodInfo, curTypeInfo,
-                nodeSequenceList);
-        
+//        Node parentNode = n.getParentNode().orElse(null);
+//
+//        String varName = n.getType().asString() + ".class";
+//        addVariableToScope(getAscendantTypeMethod(n), "Class", varName);
+//
+//        // AppenderTable.class ---> VAR(Class, AppenderTable.class)
+//        NodeInfo nodeInfo = NodeVisitProcessing.addVarNode(curMethodInfo, parentNodeStack, previousControlFlowNodeStack,
+//                curID, parentNode);
+//        OldNodeSequenceVisitingProcessing.addVarNode(nodeInfo, varName, nodeSequenceStack, curMethodInfo, curTypeInfo,
+//                nodeSequenceList);
+//
+//        curID++;
+
+        // AppenderTable.class ---> LIT(Class)
+        // Logger.log("ClassExpr:" + n + "\t\t" + n.getType() +"\t\t" +
+        // n.getParentNode());
+        String literalType = "Class";
+        NodeInfo nodeInfo = NodeVisitProcessing.addNewLiteralNode(curMethodInfo, parentNodeStack,
+                previousControlFlowNodeStack, curID, n);
+        OldNodeSequenceVisitingProcessing.addLiteralNode(nodeInfo, literalType, nodeSequenceStack, curMethodInfo,
+                curTypeInfo, nodeSequenceList, isParam);
         curID++;
     }
     

@@ -90,7 +90,7 @@ public class CandidateMatcher {
 
     public static boolean matchesClassExpr(Candidate candidate, String target) {
         if (!target.endsWith(".class")) return false;
-        if (candidate.getExcode().compareTo("VAR(Class)") != 0) return false;
+        if (candidate.getExcode().compareTo("LIT(Class)") != 0) return false;
         return candidate.getName().compareTo(".class") == 0;
     }
 

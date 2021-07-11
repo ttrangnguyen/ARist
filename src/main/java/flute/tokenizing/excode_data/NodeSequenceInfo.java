@@ -1026,7 +1026,7 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 	}
 
 	public synchronized static boolean isClassExpr(NodeSequenceInfo nodeSequenceInfo) {
-		return nodeSequenceInfo.nodeType == NodeSequenceConstant.VAR && "Class".equals(nodeSequenceInfo.getAttachedType());
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LITERAL && "Class".equals(nodeSequenceInfo.getAttachedType());
 	}
 
 	public synchronized static boolean isVar(NodeSequenceInfo nodeSequenceInfo) {
@@ -1051,6 +1051,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public synchronized static boolean isAssign(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ASSIGN;
+	}
+
+	public synchronized static boolean isLambda(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LAMBDA;
 	}
 
 	public synchronized static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {

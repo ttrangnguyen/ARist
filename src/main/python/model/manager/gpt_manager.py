@@ -272,8 +272,13 @@ class GPTManager(ModelManager):
             candidates_param = []
             for j in range(len(data['next_lex'][i])):
                 for k in range(len(data['next_lex'][i][j])):
-                    if data['next_lex'][i][j][k] not in candidates_param:
-                        candidates_param.append(data['next_lex'][i][j][k])
+                    candidate = data['next_lex'][i][j][k]
+                    if candidate.startswith("this."):
+                        candidate = candidate[5:]
+
+                    if candidate in candidates_param:
+                        continue
+                    candidates_param.append(candidate)
             candidates_all.append(candidates_param)
         context_tokens = self.encoder.encode(data['lex_context'][0])
 
@@ -295,7 +300,7 @@ class GPTManager(ModelManager):
                 # NAME, FIELD_ACCESS, ...
                 for candidate_id, suggestion_tokens in suggestions_data:
                     candidate = candidates_all[i][candidate_id]
-                    if candidate[-1] not in ["(", "\"", "[", "]"]:
+                    if (candidate[-1] not in ["(", "\"", "[", "]"]) and (candidate != "null"):
                         if "." not in candidate:
                             suggestions_batch.append((candidate_id, suggestion_tokens))
                             if len(suggestions_batch) == GPT_BATCH_SIZE:
