@@ -1053,6 +1053,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.ASSIGN;
 	}
 
+	public synchronized static boolean isLambda(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LAMBDA;
+	}
+
 	public synchronized static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {
 		StringBuilder sb = new StringBuilder();
 		for (NodeSequenceInfo nodeSequenceInfo: nodeSequenceList) {
