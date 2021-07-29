@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DevUtils {
-    public static List<String> getResolver(IMethodBinding methodBinding) throws Exception {
+    public static List<String> getParamNames(IMethodBinding methodBinding) throws Exception {
 
         Class myClass = methodBinding.getClass();
         Field binding = myClass.getDeclaredField("binding");
