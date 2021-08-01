@@ -4,10 +4,9 @@ import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.analysis.ExpressionType;
-import flute.crawling.APICrawler;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
-import flute.preprocessing.MethodExtractor;
+import flute.preprocessing.StaticMethodExtractor;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.ContextInfo;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
@@ -22,11 +21,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
-    private MethodExtractor methodExtractor;
+    private StaticMethodExtractor methodExtractor;
 
     public ArgRecTestGeneratorGPT(String projectPath, ProjectParser projectParser) {
         super(projectPath, projectParser);
-        methodExtractor = new MethodExtractor();
+        methodExtractor = new StaticMethodExtractor();
     }
 
     @Override
@@ -41,7 +40,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
         } else {
             contextArg = this.methodExtractor.getInitializerContext((Initializer) curMethodScope, Collections.singleton(methodName));
         }
-        contextArg += MethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
+        contextArg += StaticMethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();
         int k = methodCallStartIdx + 1;

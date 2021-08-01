@@ -16,9 +16,9 @@ public class EmptyStringLiteralDecorator extends Decorator {
         StringBuilder sb = new StringBuilder();
         boolean insideStringLiteral = false;
         for (String s: sourceCode.split("\\\\\"", -1)) {
-            String[] t = s.split("\"", -1);
+            String[] t = s.replace("'\"'", "''").split("\"", -1);
             for (int i = 0; i < t.length; ++i) {
-                if (!insideStringLiteral) sb.append(t[i]);
+                if (!insideStringLiteral) sb.append(t[i].replace("''", "'\"'"));
                 if (i < t.length - 1) {
                     sb.append('"');
                     insideStringLiteral = !insideStringLiteral;
