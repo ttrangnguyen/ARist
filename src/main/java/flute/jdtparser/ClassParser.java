@@ -16,10 +16,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static flute.jdtparser.utils.DevUtils.getSuperClass;
+
 public class ClassParser {
     private ITypeBinding orgType;
-    private List<IMethodBinding> methods;
-    private List<IVariableBinding> fields;
+    private final List<IMethodBinding> methods;
+    private final List<IVariableBinding> fields;
 
     private void parseSuperMethod(ITypeBinding superClass) {
         if (superClass == null) return;
@@ -52,7 +54,7 @@ public class ClassParser {
             if (!find) methods.add(superMethods[i]);
         }
 
-        parseSuperMethod(superClass.getSuperclass());
+        parseSuperMethod(getSuperClass(superClass));
     }
 
     boolean compareMethod(IMethodBinding method, IMethodBinding coMethod) {
@@ -66,9 +68,7 @@ public class ClassParser {
             return true;
         }
 
-        if (coMethod.getName().equals(method.getName())) return true;
-
-        return false;
+        return coMethod.getName().equals(method.getName());
     }
 
     public ClassParser(ITypeBinding orgType) {
@@ -83,7 +83,7 @@ public class ClassParser {
         }
 
         ParserUtils.addVariableToList(ParserUtils.getAllSuperFields(orgType), fields);
-        parseSuperMethod(orgType.getSuperclass());
+        parseSuperMethod(getSuperClass(orgType));
 
         if (Config.FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE) {
             for (ITypeBinding iType : orgType.getInterfaces()) {
@@ -153,9 +153,7 @@ public class ClassParser {
             }
 
             if (CommonUtils.checkVisibleMember(classModifier, fromPackage, toPackage, extended)) {
-                if (CommonUtils.checkVisibleMember(modifier, fromPackage, toPackage, extended)) {
-                    return true;
-                }
+                return CommonUtils.checkVisibleMember(modifier, fromPackage, toPackage, extended);
             }
         }
         return false;
