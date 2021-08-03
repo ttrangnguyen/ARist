@@ -419,30 +419,46 @@ public abstract class RecClient {
     }
 
 
-
-    public void generateTests() throws IOException {
+    public void generateTests(String fold, String setting) throws IOException {
         setupGenerator();
-        Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
-        final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
-        final List<Future<?>> futures = new ArrayList<>();
+        Scanner sc = new Scanner(new File("docs/testFilePath/" + "datapath/fold" + fold + "/" + projectName + ".txt"));
+        String testOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_" + setting + ".txt";
+        String badTestOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_" + setting + "_bad.txt";
+        File file = new File(Config.LOG_DIR + testOutputPath);
+        file.delete();
+        file = new File(Config.LOG_DIR + badTestOutputPath);
+        file.delete();
+//        final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
+//        final List<Future<?>> futures = new ArrayList<>();
         while (sc.hasNextLine()) {
             String filePath = sc.nextLine();
 //            Future<?> future = executor.submit(() -> {
-//                createNewGenerator();
-//                List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-//                for (RecTest test : oneFileTests) test.setFilePath(filePath);
-//                for (RecTest test: oneFileTests) {
-//                    Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
-//                }
-//            });
-//            futures.add(future);
+            createNewGenerator();
             List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
             for (RecTest test : oneFileTests) test.setFilePath(filePath);
             for (RecTest test: oneFileTests) {
-                Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
+                Logger.write(gson.toJson(this.testClass.cast(test)), testOutputPath);
             }
+            for (RecTest test: oneFileTests)
+                if (!test.isIgnored()) {
+                    boolean adequateGeneratedExcode = false;
+                    boolean adequateGeneratedLex = false;
+                    if (RecTester.canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
+                    if (RecTester.canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
+                    if (adequateGeneratedExcode && adequateGeneratedLex) {
+                    } else {
+                        Logger.write(gson.toJson(this.testClass.cast(test)), badTestOutputPath);
+                    }
+                }
+//            });
+//            futures.add(future);
+//            List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+//            for (RecTest test : oneFileTests) test.setFilePath(filePath);
+//            for (RecTest test: oneFileTests) {
+//                Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_off.txt");
+//            }
         }
-//
+
 //        if (Config.MULTIPROCESS) {
 //            boolean isDone = false;
 //            while (!isDone) {
@@ -456,6 +472,7 @@ public abstract class RecClient {
 //                if (!isProcessing) isDone = true;
 //            }
 //        }
-//        sc.close();
+
+        sc.close();
     }
 }

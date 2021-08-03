@@ -117,7 +117,12 @@ public class Parser {
     public void run() {
         translateJavaToExcode();
 //        checkExcodeGrammar();
-        createExcodeFiles();
+        try {
+            if (CREATE_DATA_PATH) createDataFilesPath();
+            createDataFiles();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void translateJavaToExcode() {
@@ -212,15 +217,6 @@ public class Parser {
         bw2.close();
     }
 
-    private void createExcodeFiles() {
-        try {
-            if (CREATE_DATA_PATH) createDataFilesPath();
-            createDataFiles();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private boolean trainTestSplited(String projectName) {
         File testPath = new File(Config.testFilesPath + projectName + ".txt");
         return testPath.exists();
@@ -279,10 +275,10 @@ public class Parser {
 
             final String absolutePath = fileInfo.file.getAbsolutePath();
             final String relativePath = absolutePath.substring(absolutePath.indexOf(projectName));
-            String oldRoot = "D:\\Research\\Flute\\storage\\repositories\\git\\";
-            String newRoot = "D:\\Research\\SLP-Modified\\storage\\gendata\\";
-            String name = fileInfo.file.getAbsolutePath();
-            String newPath = newRoot + name.substring(oldRoot.length());
+//            String oldRoot = "D:\\Research\\Flute\\storage\\repositories\\git\\";
+            String newRoot = "../SLP-Modified/storage/gendata/";
+            String newPath = newRoot + relativePath;
+            System.out.println(newPath);
             javaFileTokenPath = newPath.substring(0, newPath.length() - 4) + "jlex";
             excodeFilePath = newPath.substring(0, newPath.length() - 4) + "jexcode";
 //            if (testFilesPath.contains(relativePath)) {
@@ -384,7 +380,7 @@ public class Parser {
             file.getParentFile().mkdirs();
         }
         FileWriter writer = new FileWriter(file);
-        String fileContent = fileContentBuilder.toString().replaceAll("[a-zA-Z0-9_]+.class", ".class")
+        String fileContent = fileContentBuilder.toString().replaceAll("[a-zA-Z0-9_.]+\\.class", ".class")
                 .replaceAll("\\[.*?]", "[]");
         ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
         for (String token : tokens) {
@@ -624,8 +620,8 @@ public class Parser {
 //        if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
 //            System.out.println("OK");
 //        }
-        Parser parser = new Parser("eclipse", "", 0, 230000);
-        parser.visitFiles();
+//        Parser parser = new Parser("eclipse", "", 0, 230000);
+//        parser.visitFiles();
 //        parser.run();
 //        parser = new Parser("batik", "/sources/", 0, 230000);
 //        parser.run();
@@ -639,8 +635,11 @@ public class Parser {
 //        parser.run();
         // eclipse stops = [0, 23000, 28000, 35000, 42000, 46177]
         // netbeans stops = [0, 5000, 9759]
-//        Parser parser = new Parser("eclipse", "", 0, 23000);
+        Parser parser = new Parser("eclipse", "", 42001, 46177);
+        parser.run();
+//        Parser parser = new Parser("netbeans", "/ide", 5001, 9759);
 //        parser.run();
+
 //        Parser parser = new Parser("eclipse", "", 23001, 28000);
 //        parser.run();
 //        Parser parser = new Parser("eclipse", "", 28001, 35000);

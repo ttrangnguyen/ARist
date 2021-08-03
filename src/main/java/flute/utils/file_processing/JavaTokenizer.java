@@ -1,8 +1,5 @@
 package flute.utils.file_processing;
 
-
-import flute.antlr4.config.Config;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,15 +8,15 @@ public class JavaTokenizer{
     public static void main(String[] args) throws IOException {
         List<File> javaFileList = DirProcessor.walkJavaFile("D://zzzz");
         for (File file : javaFileList) {
-            String path = solvePath(file.getName().replace(".java", ".txt"));
-            FileWriter writer = new FileWriter(path);
+//            String path = solvePath(file.getName().replace(".java", ".txt"));
+//            FileWriter writer = new FileWriter(path);
             String fileContent = JavaTokenizer.removePackagesAndImports(file.getAbsolutePath());
             ArrayList<String> tokens = JavaTokenizer.tokenize(fileContent);
-            for (String token : tokens) {
-                writer.write(token + "\n");
-            }
+//            for (String token : tokens) {
+//                writer.write(token + "\n");
+//            }
             System.out.println(tokens);
-            writer.close();
+//            writer.close();
         }
 
 
@@ -85,6 +82,7 @@ public class JavaTokenizer{
             st.ordinaryChars(0, ' ');
             st.slashSlashComments(true);
             st.slashStarComments(true);
+            st.ordinaryChar('.');
 
             int token = st.nextToken();
             StringBuilder op = new StringBuilder();
@@ -96,9 +94,10 @@ public class JavaTokenizer{
                             tokens.add(op.toString());
                             op = new StringBuilder();
                         }
-                        double num = st.nval;
-                        if (String.valueOf(num).equals("0.0")) tokens.add("0");
-                        else tokens.add(String.valueOf(num));
+                        tokens.add("0");
+//                        double num = st.nval;
+//                        if (String.valueOf(num).equals("0.0")) tokens.add("0");
+//                        else tokens.add(String.valueOf(num));
                         break;
                     case StreamTokenizer.TT_WORD:
                         if (!op.toString().equals("")) {
