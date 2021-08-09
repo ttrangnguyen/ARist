@@ -136,6 +136,28 @@ public class ClassParser {
         return canSeenFields;
     }
 
+    public List<IVariableBinding> getPublicStaticFields() {
+        List<IVariableBinding> staticFields = new ArrayList<>();
+        fields.forEach(field -> {
+            int modifier = field.getModifiers();
+            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                staticFields.add(field);
+            }
+        });
+        return staticFields;
+    }
+
+    public List<IMethodBinding> getPublicStaticMethods() {
+        List<IMethodBinding> staticMethods = new ArrayList<>();
+        methods.forEach(method -> {
+            int modifier = method.getModifiers();
+            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                staticMethods.add(method);
+            }
+        });
+        return staticMethods;
+    }
+
     public boolean canSeenFrom(int modifier, ITypeBinding clientType) {
         ITypeBinding elementType = orgType.isArray() ? orgType.getElementType() : orgType;
         int classModifier = elementType.getModifiers();
@@ -151,7 +173,6 @@ public class ClassParser {
             if (elementType.getPackage() != null) {
                 toPackage = elementType.getPackage().getName();
             }
-
             if (CommonUtils.checkVisibleMember(classModifier, fromPackage, toPackage, extended)) {
                 return CommonUtils.checkVisibleMember(modifier, fromPackage, toPackage, extended);
             }

@@ -1,8 +1,10 @@
 package flute.jdtparser;
 
+import com.google.gson.Gson;
 import flute.config.Config;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
+import flute.utils.Pair;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -13,7 +15,7 @@ import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.FileProcessor;
 import flute.utils.parsing.CommonUtils;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,8 @@ public class ProjectParser {
     private String[] classPaths;
     private int jdtLevel = 13;
     private String javaVersion = "13";
+    private List<PublicStaticMember> publicStaticFieldList;
+    private List<PublicStaticMember> publicStaticMethodList;
 
     public ProjectParser(String projectDir, String[] sourcePaths, String[] encodeSources, String[] classPaths, int jdtLevel, String javaVersion) {
         this.projectDir = projectDir;
@@ -34,6 +38,8 @@ public class ProjectParser {
         this.encodeSources = encodeSources;
         this.jdtLevel = jdtLevel;
         this.javaVersion = javaVersion;
+        this.publicStaticFieldList = new ArrayList<>();
+        this.publicStaticMethodList = new ArrayList<>();
     }
 
     public HashMap<String, ClassModel> getListAccess(ITypeBinding clazz) {
@@ -137,7 +143,7 @@ public class ProjectParser {
         System.out.println("Number of source paths: " + sourcePaths.length);
         System.out.println("Number of jar files: " + classPaths.length);
         System.out.println("===============START BINDING==============");
-        
+
         ProgressBar progressBar = new ProgressBar();
 
         for (File file : javaFiles) {
@@ -176,9 +182,82 @@ public class ProjectParser {
         List<File> javaFiles = DirProcessor.walkJavaFile(projectDir);
 
         for (File file : javaFiles) {
+//            System.out.println(file.getAbsolutePath());
             CompilationUnit cu = createCU(file);
             // Now binding is activated. Do something else
             cu.accept(new TypeVisitor(this));
         }
+    }
+
+    public void addStaticMember(TypeDeclaration type, String hierachy) {
+        if (type.resolveBinding() == null) return;
+        ClassParser classParser = new ClassParser(type.resolveBinding());
+        String className = hierachy + type.getName();
+        String nextHierachy = className + ".";
+        List<IVariableBinding> fields = classParser.getPublicStaticFields();
+        fields.forEach(field -> {
+            String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
+            String lex = nextHierachy + field.getName();
+            publicStaticFieldList.add(new PublicStaticMember(field.getKey(), excode, lex));
+        });
+        List<IMethodBinding> methods = classParser.getPublicStaticMethods();
+        methods.forEach(method -> {
+            String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
+                    className, className, method.getName(), method.getParameterTypes().length);
+            String lex = nextHierachy + method.getName() + "(";
+            publicStaticMethodList.add(new PublicStaticMember(method.getKey(), excode, lex));
+        });
+
+        TypeDeclaration[] inner = type.getTypes();
+        for (TypeDeclaration t : inner) {
+            addStaticMember(t, nextHierachy);
+        }
+    }
+
+    public List<PublicStaticMember> getPublicStaticFieldList() {
+        return publicStaticFieldList;
+    }
+
+    public List<PublicStaticMember> getPublicStaticMethodList() {
+        return publicStaticMethodList;
+    }
+
+    public static void main(String[] args) throws IOException {
+        String project = args[0];
+        Timer timer = new Timer();
+        System.out.println("Starting parse...");
+
+        //auto load src and .jar file
+        Config.loadConfig(String.format("docs/json/%s.json", project));
+        System.out.print("Auto load binding time: ");
+        System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
+
+        //gen and parse project
+        ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
+                Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+//        projectParser.parse();
+//
+//        List<File> javaFiles = DirProcessor.walkJavaFile("storage/repositories/git/netbeans/ide");
+        List<File> javaFiles = DirProcessor.walkJavaFile(String.format("storage/repositories/git/%s", project));
+
+        for (File file : javaFiles) {
+            File curFile = new File(file.getAbsolutePath());
+            FileParser fileParser = new FileParser(projectParser, curFile, 6969669);
+            List<?> types = fileParser.getCu().types();
+            for (Object type : types) {
+                if (type instanceof TypeDeclaration) {
+                    projectParser.addStaticMember((TypeDeclaration) type, "");
+                }
+            }
+        }
+        BufferedWriter bw = new BufferedWriter(new FileWriter(String.format("storage/logs/%s_public_static_fields.txt", project)));
+        Gson gson = new Gson();
+        bw.write(gson.toJson(projectParser.getPublicStaticFieldList()));
+        bw.close();
+        bw = new BufferedWriter(new FileWriter(String.format("storage/logs/%s_public_static_methods.txt", project)));
+        bw.write(gson.toJson(projectParser.getPublicStaticMethodList()));
+        bw.close();
+        System.out.println("Project parse time: ");
+        System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
     }
 }
