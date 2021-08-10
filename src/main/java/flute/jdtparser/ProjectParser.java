@@ -1,10 +1,10 @@
 package flute.jdtparser;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import flute.config.Config;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
-import flute.utils.Pair;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -16,6 +16,7 @@ import flute.utils.file_processing.FileProcessor;
 import flute.utils.parsing.CommonUtils;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -222,6 +223,45 @@ public class ProjectParser {
         return publicStaticMethodList;
     }
 
+    public void initPublicStaticMembers() {
+        List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
+        for (File file : javaFiles) {
+            File curFile = new File(file.getAbsolutePath());
+            FileParser fileParser = new FileParser(this, curFile, 6969669);
+            List<?> types = fileParser.getCu().types();
+            for (Object type : types) {
+                if (type instanceof TypeDeclaration) {
+                    addStaticMember((TypeDeclaration) type, "");
+                }
+            }
+        }
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(
+                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME)));
+            Gson gson = new Gson();
+            bw.write(gson.toJson(getPublicStaticFieldList()));
+            bw.newLine();
+            bw.write(gson.toJson(getPublicStaticMethodList()));
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadPublicStaticMembers() {
+        try {
+            Gson gson = new Gson();
+            BufferedReader br = new BufferedReader(new FileReader(
+                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME)));
+            Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>(){}.getType();
+            publicStaticFieldList = gson.fromJson(br.readLine(), publicStaticMemberType);
+            publicStaticMethodList = gson.fromJson(br.readLine(), publicStaticMemberType);
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         String project = args[0];
         Timer timer = new Timer();
@@ -235,28 +275,9 @@ public class ProjectParser {
         //gen and parse project
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
-//        projectParser.parse();
-//
-//        List<File> javaFiles = DirProcessor.walkJavaFile("storage/repositories/git/netbeans/ide");
-        List<File> javaFiles = DirProcessor.walkJavaFile(String.format("storage/repositories/git/%s", project));
+        projectParser.initPublicStaticMembers();
+//        projectParser.loadPublicStaticMembers();
 
-        for (File file : javaFiles) {
-            File curFile = new File(file.getAbsolutePath());
-            FileParser fileParser = new FileParser(projectParser, curFile, 6969669);
-            List<?> types = fileParser.getCu().types();
-            for (Object type : types) {
-                if (type instanceof TypeDeclaration) {
-                    projectParser.addStaticMember((TypeDeclaration) type, "");
-                }
-            }
-        }
-        BufferedWriter bw = new BufferedWriter(new FileWriter(String.format("storage/logs/%s_public_static_fields.txt", project)));
-        Gson gson = new Gson();
-        bw.write(gson.toJson(projectParser.getPublicStaticFieldList()));
-        bw.close();
-        bw = new BufferedWriter(new FileWriter(String.format("storage/logs/%s_public_static_methods.txt", project)));
-        bw.write(gson.toJson(projectParser.getPublicStaticMethodList()));
-        bw.close();
         System.out.println("Project parse time: ");
         System.out.printf("%.5fs\n", timer.getTimeCounter() / 1000.0);
     }

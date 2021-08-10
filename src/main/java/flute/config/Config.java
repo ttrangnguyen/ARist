@@ -111,6 +111,7 @@ public class Config {
 
     public static String[] IGNORE_FILES = new String[]{};
 
+    public static String PUBLIC_STATIC_MEMBER_PATH = "storage/flute-ide/%s_public_static_members.txt";
     /***
      Config for test
      ***/
