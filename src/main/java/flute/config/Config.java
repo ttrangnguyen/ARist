@@ -58,21 +58,21 @@ public class Config {
     public static boolean FEATURE_USER_CHOOSE_METHOD = true;
     public final static boolean FEATURE_DFG_VARIABLE = true;
 
-    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false;
+    public final static boolean FLAG_ALL = true;
+    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false|FLAG_ALL;
     /***
      *  Type feature
      */
+    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_CAST = false|FLAG_ALL;
 
-    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = true;
-    public final static boolean FEATURE_PARAM_TYPE_CAST = true;
+    public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false|FLAG_ALL;
 
-    public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false;
-    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false;
-
-    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = true;
-    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false;
-    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false;
-    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = true;
@@ -111,6 +111,7 @@ public class Config {
 
     public static String[] IGNORE_FILES = new String[]{};
 
+    public static String PUBLIC_STATIC_MEMBER_PATH = "storage/flute-ide/%s_public_static_members.txt";
     /***
      Config for test
      ***/
