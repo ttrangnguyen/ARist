@@ -42,7 +42,7 @@ public class DevUtils {
                 Field binding = myClass.getDeclaredField("binding");
                 binding.setAccessible(true);
 
-                BinaryTypeBinding bindingField = (BinaryTypeBinding) binding.get(clazz);
+                Object bindingField = binding.get(clazz);
 
                 Class bindingClass = bindingField.getClass();
                 Field superclass = bindingClass.getDeclaredField("superclass");
@@ -51,7 +51,7 @@ public class DevUtils {
                 BinaryTypeBinding superField = (BinaryTypeBinding) superclass.get(bindingField);
                 return new BinType(superField);
             } catch (Exception e) {
-//                e.printStackTrace();
+                e.printStackTrace();
             }
         }
         return clazz.getSuperclass();
