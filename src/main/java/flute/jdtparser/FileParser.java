@@ -350,6 +350,19 @@ public class FileParser {
                 }
 
                 if (typeNeedCheck != null) {
+                    if (Config.FEATURE_STATIC_CONSTANT) {
+                        ITypeBinding finalTypeNeedCheckForConstant = typeNeedCheck;
+                        projectParser.getPublicStaticFieldList().forEach(fieldConstant -> {
+                            if (TypeConstraintKey.assignWith(fieldConstant.key, finalTypeNeedCheckForConstant.getKey())) {
+                                nextVariableMap.put(fieldConstant.excode, fieldConstant.lexical);
+                            }
+                        });
+                        projectParser.getPublicStaticMethodList().forEach(methodConstant -> {
+                            if (TypeConstraintKey.assignWith(methodConstant.key, finalTypeNeedCheckForConstant.getKey())) {
+                                nextVariableMap.put(methodConstant.excode, methodConstant.lexical);
+                            }
+                        });
+                    }
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(num)", "0");
                     }

@@ -75,6 +75,8 @@ public class Config {
     public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
+    public final static boolean FEATURE_STATIC_CONSTANT = true;
+
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = true;
 
     public final static boolean FEATURE_LIMIT_CANDIDATES = false;

@@ -20,4 +20,25 @@ public class TypeConstraintKey {
     final public static String CLASS_TYPE = "Ljava/lang/Class<>;";
 
     final public static List<String> WRAP_TYPES = Arrays.asList(new String[]{"Ljava/lang/Object;", "Ljava/io/Serializable;"});
+
+    public static boolean assignWith(String key, String assignToKey) {
+        if (assignToKey.equals(OBJECT_TYPE)) return true;
+        if (key.equals(assignToKey)) return true;
+        List<List<String>> typeConstraintKeys = Arrays.asList(NUM_WRAP_TYPES, NUM_PRIMITIVE_TYPES);
+
+        if (BOOL_TYPES.contains(key) && BOOL_TYPES.contains(assignToKey)) {
+            return true;
+        }
+
+        //upcasting number
+        for (List<String> typeConstraintKey :
+                typeConstraintKeys) {
+            if (typeConstraintKey.contains(key) && typeConstraintKey.contains(assignToKey)) {
+                if (typeConstraintKey.indexOf(key) < typeConstraintKey.indexOf(assignToKey)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
