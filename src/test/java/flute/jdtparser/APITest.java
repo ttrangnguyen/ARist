@@ -92,6 +92,10 @@ public class APITest {
         return exitCode.get();
     }
 
+    public static ProjectParser getCurProjectParser() {
+        return curProjectParser;
+    }
+
     private static FileParser genFileParser(BaseTestCase testCase) throws TestPathDetectException {
         if (!testCase.getRelativeFilePath().replace("\\", "/").contains("src/")) {
             throw new TestPathDetectException("");

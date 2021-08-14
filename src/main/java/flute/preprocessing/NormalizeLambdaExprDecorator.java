@@ -1,5 +1,7 @@
 package flute.preprocessing;
 
+import flute.config.Config;
+
 import java.io.File;
 
 public class NormalizeLambdaExprDecorator extends Decorator {
@@ -17,18 +19,24 @@ public class NormalizeLambdaExprDecorator extends Decorator {
         int lastIndex = 0;
         for (int i = sourceCode.indexOf("->"); i >= 0; i = sourceCode.indexOf("->", i + 1)) {
             int j = i;
+            boolean paramFlag = false;
             int balance = 0;
             while (j >= 0) {
                 --j;
-                if (sourceCode.charAt(j) == '(') {
-                    ++balance;
+                char c = sourceCode.charAt(j);
+                if (c == '(') ++balance;
+                if (c == ')') --balance;
+                if (c != ' ') paramFlag = true;
+                if (paramFlag) {
+                    boolean validFlag = false;
+                    if (c == '(' || c == ')') validFlag = true;
+                    if (c == ' ') validFlag = true;
+                    if ('a' <= c && c <= 'z') validFlag = true;
+                    if ('A' <= c && c <= 'Z') validFlag = true;
+                    if ('0' <= c && c <= '9') validFlag = true;
+                    if (balance == 1) validFlag = false;
+                    if (!validFlag) break;
                 }
-                if (sourceCode.charAt(j) == ')') --balance;
-                if (balance == 1) break;
-                if (sourceCode.charAt(j) == ',') break;
-                if (sourceCode.charAt(j) == ' ') break;
-                if (sourceCode.charAt(j) == '=') break;
-                if (sourceCode.charAt(j + 1) == '(') break;
             }
             newSourceCode.append(sourceCode.substring(lastIndex, j + 1));
             newSourceCode.append("<LAMBDA>");
@@ -37,5 +45,25 @@ public class NormalizeLambdaExprDecorator extends Decorator {
         }
         newSourceCode.append(sourceCode.substring(lastIndex));
         return newSourceCode.toString();
+    }
+
+    @Override
+    public String revertFile(File file) {
+        return NormalizeLambdaExprDecorator.revertPreprocessing(super.revertFile(file));
+    }
+
+    public static String revertPreprocessing(String sourceCode) {
+        return sourceCode.replace("<LAMBDA>", "");
+    }
+
+    public static void main(String[] args) {
+        String inputFolder = Config.LOG_DIR + "dataset-gpt-method/";
+        String outputFolder = Config.LOG_DIR + "backup/";
+
+        Preprocessor preprocessor = new Preprocessor();
+        preprocessor = new NormalizeLambdaExprDecorator(preprocessor);
+        //preprocessor.preprocessProjects(new File(outputFolder), new File(outputFolder), true);
+
+        preprocessor.preprocessProjects(new File(inputFolder), new File(inputFolder));
     }
 }

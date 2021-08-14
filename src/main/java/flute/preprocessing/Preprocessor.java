@@ -14,6 +14,10 @@ public class Preprocessor {
         return FileProcessor.read(file);
     }
 
+    public String revertFile(File file) {
+        return FileProcessor.read(file);
+    }
+
     protected void exportCode(String sourceCode, File outputFolder, File project, File file) {
         //System.out.println(sourceCode);
         String projectPath = project.getAbsolutePath();
@@ -27,25 +31,37 @@ public class Preprocessor {
         }
     }
 
-    public void preprocessProject(File project, File outputFolder) {
+    public void preprocessProject(File project, File outputFolder, boolean revert) {
         List<File> rawJavaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
         List<File> javaFiles = FileFilter.filter(rawJavaFiles);
 
+        boolean flag = true;
+        //if (project.getName().compareToIgnoreCase("amaembo_huntbugs") <= 0) flag = false;
         for (File javaFile: javaFiles) {
-            String sourceCode = preprocessFile(javaFile);
+            //if (javaFile.getName().compareTo("BackLinkAnnotator.java") == 0) flag = true;
+            if (!flag) continue;
+            String sourceCode = (!revert)? preprocessFile(javaFile): revertFile(javaFile);
             exportCode(sourceCode, outputFolder, project, javaFile);
         }
     }
 
-    public void preprocessProjects(File inputFolder, File outputFolder) {
+    public void preprocessProject(File project, File outputFolder) {
+        preprocessProjects(project, outputFolder, false);
+    }
+
+    public void preprocessProjects(File inputFolder, File outputFolder, boolean revert) {
         List<File> projects = DirProcessor.walkData(inputFolder.getAbsolutePath());
 
         ProgressBar progressBar = new ProgressBar();
         for (int i = 0; i < projects.size(); ++i) {
             System.out.println("Processing: " + projects.get(i).getAbsolutePath());
-            preprocessProject(projects.get(i), outputFolder);
+            preprocessProject(projects.get(i), outputFolder, revert);
             progressBar.setProgress(((float)i + 1) / projects.size(), true);
         }
+    }
+
+    public void preprocessProjects(File inputFolder, File outputFolder) {
+        preprocessProjects(inputFolder, outputFolder, false);
     }
 
     public static void main(String[] args) {

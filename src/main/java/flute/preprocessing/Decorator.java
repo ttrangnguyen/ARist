@@ -13,4 +13,9 @@ public abstract class Decorator extends Preprocessor {
     public String preprocessFile(File file) {
         return preprocessor.preprocessFile(file);
     }
+
+    @Override
+    public String revertFile(File file) {
+        return preprocessor.revertFile(file);
+    }
 }

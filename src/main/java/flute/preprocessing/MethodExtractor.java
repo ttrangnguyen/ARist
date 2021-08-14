@@ -222,6 +222,9 @@ public class MethodExtractor extends Preprocessor {
         } catch (IllegalArgumentException iae) {
             iae.printStackTrace();
             return;
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+            return;
         }
         String finalRelativeFilePath = relativeFilePath;
         cu.accept(new ASTVisitor() {
@@ -309,7 +312,7 @@ public class MethodExtractor extends Preprocessor {
     public static void main(String[] args) {
 //        String inputFolder = Config.REPO_DIR + "oneproj/";
 //        String outputFolder = Config.LOG_DIR + "dataset-sample-method/";
-        String inputFolder = "D:\\Flute\\storage\\repositories\\git\\JAVA_repos\\";
+        String inputFolder = "D:\\Flute\\storage\\repositories\\git\\tmp\\";
         String outputFolder = Config.LOG_DIR + "dataset-gpt-method/";
 
         Preprocessor preprocessor = new Preprocessor();
