@@ -2,6 +2,7 @@ package flute.jdtparser.utils;
 
 import flute.communicate.SocketClient;
 import flute.data.MultiMap;
+import flute.jdtparser.ClassParser;
 import flute.jdtparser.ProjectParser;
 import flute.utils.file_processing.FileProcessor;
 import org.eclipse.jdt.core.dom.*;
@@ -158,5 +159,34 @@ public class ParserUtils {
         }
 
         return true;
+    }
+
+    public static List<IMethodBinding> withOuterClassParserMethods(ClassParser classParser) {
+        List<IMethodBinding> outerMethods = classParser.getMethods();
+        return withOuterClassParserMethods(outerMethods, classParser);
+    }
+
+    private static List<IMethodBinding> withOuterClassParserMethods(List<IMethodBinding> methodInvocations, ClassParser classParser) {
+        ITypeBinding outerClass = classParser.getOrgType().getDeclaringClass();
+        if (outerClass == null) return methodInvocations;
+
+
+        ClassParser outerClassParser = new ClassParser(outerClass);
+        outerClassParser.getMethods().forEach(method -> {
+            if (!containMethod(method, methodInvocations)) {
+                methodInvocations.add(method);
+            }
+        });
+        return methodInvocations;
+    }
+
+    private static boolean containMethod(IMethodBinding method, List<IMethodBinding> methodBindings) {
+        for (IMethodBinding methodBinding :
+                methodBindings) {
+            if (method.getName().equals(methodBinding.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

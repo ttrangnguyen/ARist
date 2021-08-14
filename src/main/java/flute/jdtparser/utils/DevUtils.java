@@ -36,7 +36,6 @@ public class DevUtils {
 //        }
         if (clazz == null || clazz.getName() == null) return null;
         if (clazz.getSuperclass() == null && !clazz.getName().equals("Object")) {
-            System.out.println("a");
             try {
                 Class myClass = clazz.getClass();
                 Field binding = myClass.getDeclaredField("binding");
@@ -51,7 +50,7 @@ public class DevUtils {
                 BinaryTypeBinding superField = (BinaryTypeBinding) superclass.get(bindingField);
                 return new BinType(superField);
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
         return clazz.getSuperclass();
