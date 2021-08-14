@@ -419,14 +419,16 @@ public class FileParser {
 
                 if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
                     for (IMethodBinding innerAndOuterMethod : ParserUtils.withOuterClassParserMethods(curClassParser)) {
-                        ITypeBinding varMethodReturnType = innerAndOuterMethod.getReturnType();
-                        ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
-                        if (ParserCompare.isTrue(compareFieldValue)) {
-                            String nextLex = innerAndOuterMethod.getName() + "(";
-                            String exCode = "M_ACCESS(" + curClass.getName() + "," + innerAndOuterMethod.getName() + "," + innerAndOuterMethod.getParameterTypes().length + ") "
-                                    + "OPEN_PART";
-                            nextVariableMap.put(exCode, nextLex);
-                            methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(curClass, innerAndOuterMethod));
+                        if (!isStatic || Modifier.isStatic(innerAndOuterMethod.getModifiers())) {
+                            ITypeBinding varMethodReturnType = innerAndOuterMethod.getReturnType();
+                            ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                            if (ParserCompare.isTrue(compareFieldValue)) {
+                                String nextLex = innerAndOuterMethod.getName() + "(";
+                                String exCode = "M_ACCESS(" + curClass.getName() + "," + innerAndOuterMethod.getName() + "," + innerAndOuterMethod.getParameterTypes().length + ") "
+                                        + "OPEN_PART";
+                                nextVariableMap.put(exCode, nextLex);
+                                methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(curClass, innerAndOuterMethod));
+                            }
                         }
                     }
                 }
