@@ -17,6 +17,7 @@ import flute.utils.logging.Timer;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.math.RoundingMode;
+import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,8 +32,8 @@ public abstract class RecClient {
     boolean isRNNUsed = false;
     boolean isGPTUsed = false;
     String projectName;
-    ProjectParser projectParser;
-    RecTestGenerator generator;
+    ProjectParser projectParser = null;
+    RecTestGenerator generator = null;
     DataFrame dataFrame = new DataFrame();
 
     int[] tops = {1, 3, 5, 10};
@@ -51,10 +52,11 @@ public abstract class RecClient {
 
     private void setupGenerator() throws IOException {
         setupProjectParser();
-        createNewGenerator();
+        if (generator == null) createNewGenerator();
     }
 
     private void setupProjectParser() throws IOException {
+        if (projectParser != null) return;
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
@@ -116,6 +118,21 @@ public abstract class RecClient {
         return tests;
     }
 
+    private RecTest readLastTestFromFile(String filePath) throws IOException {
+        if (this.testClass == null) {
+            throw new NullPointerException("Field testClass has not been set!");
+        }
+
+        Scanner sc = new Scanner(new File(filePath));
+        String lastLine = null;
+        while (sc.hasNextLine()) {
+            lastLine = sc.nextLine();
+        }
+        sc.close();
+        if (lastLine == null) return null;
+        return gson.fromJson(lastLine, (Type) this.testClass);
+    }
+
     private List<RecTest> generateTestsFromDemoProject() {
         return (List<RecTest>) generator.generateAll();
     }
@@ -162,9 +179,58 @@ public abstract class RecClient {
         return tests;
     }
 
-    public List<? extends RecTest> generateTestsFromFile(String filePath) throws IOException {
+    public void generateTestsAndQuerySimultaneously(boolean verbose, boolean doPrintIncorrectPrediction) throws IOException {
         setupGenerator();
-        return generator.generate(filePath);
+        List<String> fileList = new ArrayList<>();
+        Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
+        while (sc.hasNextLine()) {
+            String filePath = sc.nextLine();
+            fileList.add(filePath);
+        }
+        sc.close();
+
+        RecTest lastTest = null;
+        try {
+            lastTest = readLastTestFromFile(Config.LOG_DIR + projectName + "_" + this.testClass.getSimpleName() + "s.txt");
+        } catch (IOException ioe) {
+
+        }
+        boolean isGenerated = false;
+        if (lastTest != null) isGenerated = true;
+        loadTestResult();
+        try {
+            SocketClient socketClient = getSocketClient();
+            for (int i = 0; i < fileList.size(); ++i) {
+                String filePath = fileList.get(i);
+                if (!isGenerated) {
+                    List<RecTest> tests = (List<RecTest>) generateTestsFromFile(filePath, true);
+
+                    for (RecTest test: tests) validateTest(test);
+
+                    for (RecTest test: tests) {
+                        dataFrame.insert("Tested", 1);
+                        queryAndTest(socketClient, test, verbose, doPrintIncorrectPrediction);
+                        saveTestResult();
+                    }
+                }
+                if (lastTest != null && filePath.compareTo(lastTest.getFilePath()) == 0) isGenerated = false;
+            }
+            socketClient.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<? extends RecTest> generateTestsFromFile(String filePath, boolean doSaveTestsAfterGen) throws IOException {
+        setupGenerator();
+        List<RecTest> tests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+        for (RecTest test : tests) test.setFilePath(filePath);
+        if (doSaveTestsAfterGen) saveTests(tests);
+        return tests;
+    }
+
+    public List<? extends RecTest> generateTestsFromFile(String filePath) throws IOException {
+        return generateTestsFromFile(filePath, false);
     }
 
     private void saveTests(List<RecTest> tests) {
@@ -179,22 +245,32 @@ public abstract class RecClient {
         }
     }
 
+    private void loadTestResult() {
+        try {
+            FileInputStream fileInputStream = new FileInputStream(Config.LOG_DIR + "checkpoint/" + this.getClass().getSimpleName() + ".ser");
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            dataFrame = (DataFrame) objectInputStream.readObject();
+            objectInputStream.close();
+            fileInputStream.close();
+        } catch (IOException ioe) {
+        } catch (ClassNotFoundException cnfe) {
+            cnfe.printStackTrace();
+        }
+    }
+
+    private void saveTestResult() throws IOException {
+        File outputFile = new File(Config.LOG_DIR + "checkpoint/" + this.getClass().getSimpleName() + ".ser");
+        outputFile.getParentFile().mkdirs();
+        FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+        objectOutputStream.writeObject(this.dataFrame);
+        objectOutputStream.close();
+        fileOutputStream.close();
+    }
+
     public void validateTests(List<? extends RecTest> tests, boolean doPrintInadequateTests) {
-        for (RecTest test: tests)
-            if (!test.isIgnored()) {
-                boolean adequateGeneratedExcode = false;
-                boolean adequateGeneratedLex = false;
-                if (RecTester.canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
-                if (RecTester.canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
-                dataFrame.insert("Adequate generated excodes", adequateGeneratedExcode);
-                dataFrame.insert("Adequate generated lexicals", adequateGeneratedLex);
-                dataFrame.insert("Adequate generated candidates", adequateGeneratedExcode && adequateGeneratedLex);
-                if (adequateGeneratedExcode && adequateGeneratedLex) {
-                    testMap.put(test.getId(), true);
-                } else if (doPrintInadequateTests) {
-                    Logger.write(gson.toJson(test), projectName + "_inadequate_" + this.testClass.getSimpleName() + "s.txt");
-                }
-            }
+        for (RecTest test: tests) validateTest(test, doPrintInadequateTests);
+
         System.out.printf("Adequate generated excodes: %.2f%%%n",
                 dataFrame.getVariable("Adequate generated excodes").getMean() * 100);
 
@@ -207,6 +283,27 @@ public abstract class RecClient {
 
     public void validateTests(List<? extends RecTest> tests) {
         validateTests(tests, false);
+    }
+
+    public void validateTest(RecTest test, boolean doPrintInadequateTests) {
+        if (!test.isIgnored()) {
+            boolean adequateGeneratedExcode = false;
+            boolean adequateGeneratedLex = false;
+            if (RecTester.canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
+            if (RecTester.canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
+            dataFrame.insert("Adequate generated excodes", adequateGeneratedExcode);
+            dataFrame.insert("Adequate generated lexicals", adequateGeneratedLex);
+            dataFrame.insert("Adequate generated candidates", adequateGeneratedExcode && adequateGeneratedLex);
+            if (adequateGeneratedExcode && adequateGeneratedLex) {
+                testMap.put(test.getId(), true);
+            } else if (doPrintInadequateTests) {
+                Logger.write(gson.toJson(test), projectName + "_inadequate_" + this.testClass.getSimpleName() + "s.txt");
+            }
+        }
+    }
+
+    public void validateTest(RecTest test) {
+        validateTest(test, false);
     }
 
     abstract SocketClient getSocketClient() throws Exception;

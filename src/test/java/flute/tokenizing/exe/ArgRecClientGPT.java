@@ -14,7 +14,7 @@ public class ArgRecClientGPT extends ArgRecClient {
 
     @Override
     void createNewGenerator() {
-        generator = new ArgRecTestGeneratorGPT(Config.PROJECT_DIR, projectParser);
+        generator = new StaticArgRecTestGeneratorGPT(Config.PROJECT_DIR, projectParser);
     }
 
     public static void main(String[] args) throws IOException {
