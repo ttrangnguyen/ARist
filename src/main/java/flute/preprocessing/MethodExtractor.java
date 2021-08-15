@@ -17,6 +17,7 @@ public class MethodExtractor extends Preprocessor {
         String context;
         Map<String, String> fieldMapByName;
         List<String> fieldList;
+        Map<String, List<String>> methodMapByName;
     }
 
     private ProjectParser parser;
@@ -52,15 +53,15 @@ public class MethodExtractor extends Preprocessor {
 
     public static String getTypeDeclarationContext(TypeDeclaration node) {
         StringBuilder simplifiedClass = new StringBuilder();
-        simplifiedClass.append(node.getName());
+        simplifiedClass.append(simplifyTypeName(node.getName()));
         if (node.getSuperclassType() != null) {
             simplifiedClass.append(" extends ");
-            simplifiedClass.append(node.getSuperclassType());
+            simplifiedClass.append(simplifyTypeName(node.getSuperclassType()));
         }
         if (!node.superInterfaceTypes().isEmpty()) {
             simplifiedClass.append(" implements ");
             node.superInterfaceTypes().forEach(superInterface -> {
-                simplifiedClass.append(superInterface);
+                simplifiedClass.append(simplifyTypeName(superInterface));
                 simplifiedClass.append(",");
             });
             simplifiedClass.delete(simplifiedClass.length() - 1, simplifiedClass.length());
@@ -77,6 +78,7 @@ public class MethodExtractor extends Preprocessor {
             data.context = getTypeDeclarationContext(node);
             data.fieldMapByName = new HashMap<>();
             data.fieldList = new ArrayList<>();
+            data.methodMapByName = new HashMap<>();
 
             for (FieldDeclaration fieldDeclaration: node.getFields()) {
                 StringBuilder simplifiedField = new StringBuilder();
@@ -100,6 +102,39 @@ public class MethodExtractor extends Preprocessor {
                     data.fieldMapByName.put(variableName, simplifiedField.toString());
                     data.fieldList.add(variableName);
                 });
+            }
+
+            for (MethodDeclaration methodDeclaration: node.getMethods()) {
+                String methodName = methodDeclaration.getName().toString();
+                StringBuilder methodSignature = new StringBuilder();
+                if (Modifier.isStatic(methodDeclaration.getModifiers())) {
+                    methodSignature.append("static ");
+                }
+                String returnType = simplifyTypeName(methodDeclaration.getReturnType2());
+
+                methodSignature.append(returnType);
+                methodSignature.append(' ');
+                methodSignature.append(methodName);
+                methodSignature.append('(');
+                List params = methodDeclaration.parameters();
+                for (int i = 0; i < params.size(); ++i) {
+                    SingleVariableDeclaration variable = (SingleVariableDeclaration) params.get(i);
+//                    String paramType = simplifyTypeName(variable.getType());
+//                    methodSignature.append(paramType);
+//                    methodSignature.append(' ');
+                    methodSignature.append(variable.getName());
+                    if (i < params.size() - 1) {
+                        methodSignature.append(",");
+                    }
+                }
+                methodSignature.append(");");
+                // Ignore methods which do not return a value
+                if (!(returnType.compareTo("void") == 0)) {
+                    if (data.methodMapByName.get(methodName) == null) {
+                        data.methodMapByName.put(methodName, new ArrayList<>());
+                    }
+                    data.methodMapByName.get(methodName).add(methodSignature.toString());
+                }
             }
             lastTypeDeclaration = data;
         }
@@ -207,6 +242,111 @@ public class MethodExtractor extends Preprocessor {
 
     public String getInitializerContext(Initializer initializer, Set<String> methodInvocSet) {
         return getTypeDeclarationContext(initializer, methodInvocSet);
+    }
+
+    private String getTypeDeclarationContextForTesting(BodyDeclaration bodyDeclaration, Set<String> fieldCandidateSet, Set<String> methodCandidateSet, String methodInvoc) {
+        ASTNode node = bodyDeclaration;
+        while (!(node == null || node instanceof TypeDeclaration)) node = node.getParent();
+        if (node == null) return null;
+
+        TypeDeclarationData data = getTypeDeclarationData((TypeDeclaration) node);
+        StringBuilder simplifiedCode = new StringBuilder();
+        simplifiedCode.append(data.context);
+
+        Set<String> fieldSet = new LinkedHashSet<>();
+        for (String field: data.fieldList) {
+            if (fieldCandidateSet.contains(field)) {
+                fieldSet.add(data.fieldMapByName.get(field));
+            }
+        }
+
+        for (String field: fieldSet) {
+            simplifiedCode.append(field);
+        }
+
+        Set<String> methodSet = new HashSet();
+        for (String methodCandidate: methodCandidateSet) {
+            methodSet.addAll(data.methodMapByName.getOrDefault(methodCandidate, new ArrayList<>()));
+        }
+
+        for (String method: methodSet) {
+            simplifiedCode.append(method);
+        }
+
+        Set<String> finalMethodSet = new HashSet<>();
+        TypeDeclaration finalNode = (TypeDeclaration) node;
+        bodyDeclaration.accept(new ASTVisitor() {
+            @Override
+            public boolean visit(MethodInvocation methodInvocation) {
+                String methodName = methodInvocation.getName().toString();
+                if (methodInvoc.compareTo(methodName) == 0) {
+                    IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
+                    if (methodBinding == null) {
+                        //System.out.println("    Couldn't resolve: " + methodInvocation.toString());
+                    } else {
+                        //System.out.println("    Successfully resolve: " + methodInvocation.toString());
+                        try {
+                            StringBuilder methodSignature = new StringBuilder();
+                            if (Modifier.isStatic(methodBinding.getModifiers())) {
+                                methodSignature.append("static ");
+                            }
+                            String returnType = simplifyTypeName(methodBinding.getReturnType());
+
+                            methodSignature.append(returnType);
+                            methodSignature.append(' ');
+                            String declaringClass = methodBinding.getDeclaringClass().getName();
+                            if (declaringClass.compareTo(finalNode.getName().toString()) != 0) {
+                                methodSignature.append(simplifyTypeName(declaringClass));
+                                methodSignature.append('#');
+                            }
+                            methodSignature.append(methodName);
+                            methodSignature.append('(');
+                            ITypeBinding[] paramTypes = methodBinding.getParameterTypes();
+                            List<String> paramNames = DevUtils.getParamNames(methodBinding.getMethodDeclaration());
+                            for (int i = 0; i < paramTypes.length; ++i) {
+//                                methodSignature.append(paramTypes[i].getName());
+//                                methodSignature.append(' ');
+                                if (i < paramNames.size()) {
+                                    methodSignature.append(paramNames.get(i));
+                                } else {
+                                    String alternateParamName = paramTypes[i].getName();
+                                    alternateParamName = alternateParamName.substring(0, 1).toLowerCase() + alternateParamName.substring(1);
+                                    alternateParamName = alternateParamName.replaceAll("[^a-zA-Z]", "");
+                                    methodSignature.append(alternateParamName);
+                                }
+                                if (i < paramTypes.length - 1) {
+                                    methodSignature.append(",");
+                                }
+                            }
+                            methodSignature.append(");");
+
+                            // Ignore methods which do not have any param or return a value
+                            if (!(paramTypes.length == 0 && returnType.compareTo("void") == 0)) {
+                                if (!methodSet.contains(methodSignature.toString())) {
+                                    finalMethodSet.add(methodSignature.toString());
+                                }
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+
+        for (String method: finalMethodSet) {
+            simplifiedCode.append(method);
+        }
+
+        return simplifiedCode.toString();
+    }
+
+    public String getMethodDeclarationContextForTesting(MethodDeclaration methodDeclaration, Set<String> fieldCandidateSet, Set<String> methodCandidateSet, String methodInvoc) {
+        return getTypeDeclarationContextForTesting(methodDeclaration, fieldCandidateSet, methodCandidateSet, methodInvoc);
+    }
+
+    public String getInitializerContextForTesting(Initializer initializer, Set<String> fieldCandidateSet, Set<String> methodCandidateSet, String methodInvoc) {
+        return getTypeDeclarationContextForTesting(initializer, fieldCandidateSet, methodCandidateSet, methodInvoc);
     }
 
     @Override
