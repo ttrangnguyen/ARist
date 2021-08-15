@@ -199,14 +199,14 @@ public class ProjectParser {
         fields.forEach(field -> {
             String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
             String lex = nextHierachy + field.getName();
-            publicStaticFieldList.add(new PublicStaticMember(field.getKey(), excode, lex));
+            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex));
         });
         List<IMethodBinding> methods = classParser.getPublicStaticMethods();
         methods.forEach(method -> {
             String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
                     className, className, method.getName(), method.getParameterTypes().length);
             String lex = nextHierachy + method.getName() + "(";
-            publicStaticMethodList.add(new PublicStaticMember(method.getKey(), excode, lex));
+            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex));
         });
 
         TypeDeclaration[] inner = type.getTypes();
