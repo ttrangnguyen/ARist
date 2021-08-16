@@ -58,6 +58,7 @@ public abstract class RecClient {
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+        projectParser.initPublicStaticMembers();
     }
 
     abstract void createNewGenerator();
@@ -439,17 +440,17 @@ public abstract class RecClient {
             for (RecTest test: oneFileTests) {
                 Logger.write(gson.toJson(this.testClass.cast(test)), testOutputPath);
             }
-            for (RecTest test: oneFileTests)
-                if (!test.isIgnored()) {
-                    boolean adequateGeneratedExcode = false;
-                    boolean adequateGeneratedLex = false;
-                    if (RecTester.canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
-                    if (RecTester.canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
-                    if (adequateGeneratedExcode && adequateGeneratedLex) {
-                    } else {
-                        Logger.write(gson.toJson(this.testClass.cast(test)), badTestOutputPath);
-                    }
-                }
+//            for (RecTest test: oneFileTests)
+//                if (!test.isIgnored()) {
+//                    boolean adequateGeneratedExcode = false;
+//                    boolean adequateGeneratedLex = false;
+//                    if (RecTester.canAcceptGeneratedExcodes(test)) adequateGeneratedExcode = true;
+//                    if (RecTester.canAcceptGeneratedLexes(test)) adequateGeneratedLex = true;
+//                    if (adequateGeneratedExcode && adequateGeneratedLex) {
+//                    } else {
+//                        Logger.write(gson.toJson(this.testClass.cast(test)), badTestOutputPath);
+//                    }
+//                }
 //            });
 //            futures.add(future);
 //            List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);

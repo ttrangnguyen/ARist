@@ -242,6 +242,7 @@ public class ProjectParser {
             bw.write(gson.toJson(getPublicStaticFieldList()));
             bw.newLine();
             bw.write(gson.toJson(getPublicStaticMethodList()));
+            bw.newLine();
             bw.close();
         } catch (IOException e) {
             e.printStackTrace();
