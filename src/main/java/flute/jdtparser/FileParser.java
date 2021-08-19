@@ -407,7 +407,9 @@ public class FileParser {
                     }
 
                     //feature 10
-                    if (Config.FEATURE_PARAM_TYPE_TYPE_LIT && typeNeedCheck.getKey().equals(TypeConstraintKey.CLASS_TYPE)) {
+                    if (Config.FEATURE_PARAM_TYPE_TYPE_LIT
+                            && (typeNeedCheck.getKey().replaceAll("\\<.*\\>", "<>").equals(TypeConstraintKey.CLASS_TYPE)
+                            || typeNeedCheck.getKey().equals(TypeConstraintKey.OBJECT_TYPE))) {
                         nextVariableMap.put("LIT(Class)", ".class");
                     }
 
@@ -492,7 +494,7 @@ public class FileParser {
                         for (IVariableBinding varField : varFields) {
                             ITypeBinding varMemberType = varField.getType();
                             ParserCompareValue compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
-                            if (ParserCompare.isTrue(compareFieldValue)) {
+                            if (ParserCompare.isTrue(compareFieldValue) && !Modifier.isStatic(varField.getModifiers())) {
                                 String nextVar = variable.getName() + "." + varField.getName();
                                 String exCode = "VAR(" + variableClass.getName() + ") "
                                         + "F_ACCESS(" + variableClass.getName() + "," + varField.getName() + ")";
@@ -519,7 +521,7 @@ public class FileParser {
                 });
                 if (Config.FEATURE_PARAM_TYPE_LAMBDA
                         && nextVariableMap.getValue().isEmpty() && typeNeedCheck.isInterface()) {
-                    nextVariableMap.put("LAMBDA", "");
+                    nextVariableMap.put("LAMBDA", "->{}");
                 }
             }
         });
