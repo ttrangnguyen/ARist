@@ -8,6 +8,8 @@ import java.util.Map;
 public class MultiMap {
     private HashMap<String, List<String>> multiMap;
 
+    private String paramTypeKey = null;
+
     public MultiMap() {
         multiMap = new HashMap<>();
     }
@@ -50,5 +52,13 @@ public class MultiMap {
         }
 
         return result;
+    }
+
+    public String getParamTypeKey() {
+        return paramTypeKey;
+    }
+
+    public void setParamTypeKey(String paramTypeKey) {
+        this.paramTypeKey = paramTypeKey;
     }
 }

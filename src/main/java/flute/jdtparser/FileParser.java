@@ -362,6 +362,8 @@ public class FileParser {
                                 nextVariableMap.put(methodConstant.excode, methodConstant.lexical);
                             }
                         });
+                    } else {
+                        nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
                     }
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(num)", "0");
