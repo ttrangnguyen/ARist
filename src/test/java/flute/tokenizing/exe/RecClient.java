@@ -188,6 +188,7 @@ public abstract class RecClient {
             fileList.add(filePath);
         }
         sc.close();
+//        Collections.reverse(fileList);
 
         RecTest lastTest = null;
         try {
@@ -247,7 +248,7 @@ public abstract class RecClient {
 
     private void loadTestResult() {
         try {
-            FileInputStream fileInputStream = new FileInputStream(Config.LOG_DIR + "checkpoint/" + this.getClass().getSimpleName() + ".ser");
+            FileInputStream fileInputStream = new FileInputStream(Config.LOG_DIR + "checkpoint/" + projectName + "_" + this.getClass().getSimpleName() + ".ser");
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
             dataFrame = (DataFrame) objectInputStream.readObject();
             objectInputStream.close();
@@ -259,7 +260,7 @@ public abstract class RecClient {
     }
 
     private void saveTestResult() throws IOException {
-        File outputFile = new File(Config.LOG_DIR + "checkpoint/" + this.getClass().getSimpleName() + ".ser");
+        File outputFile = new File(Config.LOG_DIR + "checkpoint/" + projectName + "_" + this.getClass().getSimpleName() + ".ser");
         outputFile.getParentFile().mkdirs();
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);

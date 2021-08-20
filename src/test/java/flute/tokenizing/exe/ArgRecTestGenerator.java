@@ -220,47 +220,20 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 oneArgTest.setParam_name("");
             } else {
                 String paramName = getFileParser().getParamName(oneArgTest.getArgPos() - 1).orElse(null);
-                if (Config.API_CRAWLER && paramName == null) {
-                    try {
-                        if (paramName == null) {
-                            paramName = APICrawler.paramNames(
-                                    getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
-                            ).get(oneArgTest.getArgPos() - 1);
-//                        System.out.println(paramName);
-                        }
-                    } catch (Exception e) {
-//                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
-                        e.printStackTrace();
-                    }
-                    oneArgTest.setParam_name(paramName);
-                }
-            }
-
-            String expectedExcode = oneArgTest.getExpected_excode();
-            String expectedLex = oneArgTest.getExpected_lex();
-            for (NodeSequenceInfo argExcode : oneArgTest.getExpected_excode_ori()) {
-                if (NodeSequenceInfo.isMethodAccess(argExcode)) {
-                    int tmp = StringUtils.indexOf(expectedExcode, "M_ACCESS(");
-                    tmp = expectedExcode.indexOf("OPEN_PART", tmp);
-                    oneArgTest.setMethodAccessExcode(expectedExcode.substring(0, tmp + 9));
-
-                    String methodNameArg = argExcode.getAttachedAccess();
-                    tmp = StringUtils.indexOf(expectedLex, methodNameArg + "(");
-                    oneArgTest.setMethodAccessLex(expectedLex.substring(0, tmp + methodNameArg.length() + 1));
-
-                    break;
-                }
-                if (NodeSequenceInfo.isObjectCreation(argExcode)) {
-                    int tmp = StringUtils.indexOf(expectedExcode, "C_CALL(");
-                    tmp = expectedExcode.indexOf("OPEN_PART", tmp);
-                    oneArgTest.setObjectCreationExcode(expectedExcode.substring(0, tmp + 9));
-
-                    String classNameArg = argExcode.getAttachedAccess();
-                    tmp = StringUtils.indexOf(expectedLex, classNameArg + "(");
-                    oneArgTest.setObjectCreationLex(expectedLex.substring(0, tmp + classNameArg.length() + 1));
-
-                    break;
-                }
+//                if (Config.API_CRAWLER && paramName == null) {
+//                    try {
+//                        if (paramName == null) {
+//                            paramName = APICrawler.paramNames(
+//                                    getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(""), getFileParser().getCurMethodInvocation().genMethodString()
+//                            ).get(oneArgTest.getArgPos() - 1);
+////                        System.out.println(paramName);
+//                        }
+//                    } catch (Exception e) {
+////                    System.out.println(getFileParser().getCurMethodInvocation().getClassQualifiedName());
+//                        e.printStackTrace();
+//                    }
+//                }
+                oneArgTest.setParam_name(paramName);
             }
         }
 
@@ -270,6 +243,34 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
     @Override
     void postProcess(List<RecTest> tests) {
+        for (int j = 0; j < tests.size(); ++j) {
+            ArgRecTest test = (ArgRecTest) tests.get(j);
+            String expectedExcode = test.getExpected_excode();
+            String expectedLex = test.getExpected_lex();
+            for (NodeSequenceInfo argExcode : test.getExpected_excode_ori()) {
+                if (NodeSequenceInfo.isMethodAccess(argExcode)) {
+                    int tmp = StringUtils.indexOf(expectedExcode, "M_ACCESS(");
+                    tmp = expectedExcode.indexOf("OPEN_PART", tmp);
+                    test.setMethodAccessExcode(expectedExcode.substring(0, tmp + 9));
 
+                    String methodNameArg = argExcode.getAttachedAccess();
+                    tmp = StringUtils.indexOf(expectedLex, methodNameArg + "(");
+                    test.setMethodAccessLex(expectedLex.substring(0, tmp + methodNameArg.length() + 1));
+
+                    break;
+                }
+                if (NodeSequenceInfo.isObjectCreation(argExcode)) {
+                    int tmp = StringUtils.indexOf(expectedExcode, "C_CALL(");
+                    tmp = expectedExcode.indexOf("OPEN_PART", tmp);
+                    test.setObjectCreationExcode(expectedExcode.substring(0, tmp + 9));
+
+                    String classNameArg = argExcode.getAttachedAccess();
+                    tmp = StringUtils.indexOf(expectedLex, classNameArg + "(");
+                    test.setObjectCreationLex(expectedLex.substring(0, tmp + classNameArg.length() + 1));
+
+                    break;
+                }
+            }
+        }
     }
 }

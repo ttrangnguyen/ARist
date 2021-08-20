@@ -93,30 +93,62 @@ public class RecTester {
         return true;
     }
 
+    public static boolean canAcceptArgResult(String expectedLex, String result) {
+        if (result.compareTo(expectedLex) == 0) return true;
+
+        if (expectedLex.contains(".this")) {
+            if (canAcceptArgResult(expectedLex.substring(expectedLex.indexOf("this")), result)) return true;
+        }
+
+        if (result.contains(".this")) {
+            if (canAcceptArgResult(expectedLex, result.substring(result.indexOf("this")))) return true;
+        }
+
+        if (expectedLex.startsWith("this.")) {
+            if (canAcceptArgResult(expectedLex.substring(5), result)) return true;
+        }
+
+        if (result.startsWith("this.")) {
+            if (canAcceptArgResult(expectedLex, result.substring(5))) return true;
+        }
+
+        return false;
+    }
+
+    private static String normalizeMethodInvocation(String s) {
+        StringBuilder sb = new StringBuilder(s);
+        int bal = 0;
+        for (int i = sb.length() - 1; i >= 0; --i) {
+            char c = sb.charAt(i);
+            if (c == '(') ++bal;
+            if (c == ')') --bal;
+            if (bal >= 0) break;
+            sb.deleteCharAt(i);
+        }
+        return sb.toString();
+    }
+
     public static boolean canAcceptResult(ArgRecTest test, String result) {
         String expectedLex = test.getExpected_lex();
 
         expectedLex = CandidateMatcher.preprocess(expectedLex);
-
-        if (expectedLex.contains(".this")) {
-            expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
-        }
-
         result = CandidateMatcher.preprocess(result);
-        if (result.compareTo(expectedLex) == 0) return true;
-        if (expectedLex.startsWith("this.")) {
-            if (result.compareTo(expectedLex.substring(5)) == 0) return true;
-        } else {
-            if (result.compareTo("this." + expectedLex) == 0) return true;
+        if (result.indexOf("(") > 0) {
+            result = normalizeMethodInvocation(result);
         }
 
+        if (canAcceptArgResult(expectedLex, result)) return true;
+
+        expectedLex = null;
         if (test.getMethodAccessLex() != null) {
-            if (result.compareTo(test.getMethodAccessLex()) == 0) return true;
+            expectedLex = test.getMethodAccessLex();
         }
 
         if (test.getObjectCreationLex() != null) {
-            return result.compareTo(test.getObjectCreationLex()) == 0;
+            expectedLex = test.getObjectCreationLex();
         }
+
+        if (expectedLex != null && canAcceptArgResult(expectedLex, result)) return true;
 
         return false;
     }
@@ -130,8 +162,16 @@ public class RecTester {
                 char c = result.charAt(i);
                 if (c == '(') ++bal;
                 if (c == ')') --bal;
-                if (bal == 0 && c == ' ') continue;
-                if (bal == 0 && c == ',') break;
+
+                // Leading spaces
+                if (bal == 0 && c == ' ' && sb.length() == 0) continue;
+
+                if (c == ',') {
+                    if (bal == 0) break;
+
+                    // Method call, object creation
+                    if (bal == 1 && sb.charAt(sb.length() - 1) == '(') break;
+                }
                 sb.append(c);
             }
             if (!canAcceptResult(oneArgTest, sb.toString())) return false;
