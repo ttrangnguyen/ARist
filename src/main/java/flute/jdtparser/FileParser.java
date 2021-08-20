@@ -529,6 +529,28 @@ public class FileParser {
         return nextVariableMap;
     }
 
+    public String getTargetPattern(int pos) {
+        try {
+            if (curMethodInvocation.arguments().size() <= pos) return null;
+            Expression arg = (Expression) curMethodInvocation.arguments().get(pos);
+            if (arg instanceof QualifiedName) {
+                QualifiedName fieldAccess = (QualifiedName) arg;
+                IBinding fieldBinding = fieldAccess.resolveBinding();
+                if (fieldBinding != null && fieldBinding instanceof IVariableBinding) {
+                    IVariableBinding fieldVariableBinding = (IVariableBinding) fieldBinding;
+                    if (Modifier.isStatic(fieldVariableBinding.getModifiers())) {
+                        return String.join(".",
+                                fieldVariableBinding.getDeclaringClass().getName(), fieldVariableBinding.getName());
+                    }
+                }
+
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public Optional<List<IMethodBinding>> genMethodCall() {
         if (curMethodInvocation == null) return Optional.empty();
 
