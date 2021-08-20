@@ -1,9 +1,10 @@
 package flute.analysis.structure;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class DataFrame {
-    public class Variable {
+public class DataFrame implements Serializable {
+    public class Variable implements Serializable {
         private Map<Double, Integer> counter = new TreeMap<Double, Integer>();
 
         private Integer count = 0;

@@ -6,7 +6,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.analysis.ExpressionType;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
-import flute.preprocessing.MethodExtractor;
+import flute.preprocessing.StaticMethodExtractor;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.ContextInfo;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
@@ -16,15 +16,16 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
-    private MethodExtractor methodExtractor;
+public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
+    private StaticMethodExtractor methodExtractor;
 
-    public ArgRecTestGeneratorGPT(String projectPath, ProjectParser projectParser) {
+    public StaticArgRecTestGeneratorGPT(String projectPath, ProjectParser projectParser) {
         super(projectPath, projectParser);
-        methodExtractor = new MethodExtractor();
+        methodExtractor = new StaticMethodExtractor();
     }
 
     @Override
@@ -32,8 +33,14 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                                                    MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
         List<RecTest> tests = new ArrayList<>();
 
+        String contextArg;
         ASTNode curMethodScope = getFileParser().getCurMethodScope();
-        String contextArg = MethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
+        if (curMethodScope instanceof MethodDeclaration) {
+            contextArg = this.methodExtractor.getMethodDeclarationContext((MethodDeclaration) curMethodScope, Collections.singleton(methodName));
+        } else {
+            contextArg = this.methodExtractor.getInitializerContext((Initializer) curMethodScope, Collections.singleton(methodName));
+        }
+        contextArg += StaticMethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();
         int k = methodCallStartIdx + 1;
@@ -72,29 +79,9 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
 
 
                             List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                            String lexContext = null;
-                            Set thisfieldSet = new HashSet();
-                            nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
-                                if (!candidate.endsWith("(") && !candidate.contains(".")) {
-                                    thisfieldSet.add(candidate.substring(candidate.lastIndexOf('.') + 1));
-                                }
-                            });
-
-                            Set thisMethodSet = new HashSet();
-                            nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
-                                if (candidate.endsWith("(") && !candidate.contains(".")) {
-                                    thisMethodSet.add(candidate.substring(candidate.lastIndexOf('.') + 1, candidate.length() - 1));
-                                }
-                            });
-                            if (curMethodScope instanceof MethodDeclaration) {
-                                lexContext = this.methodExtractor.getMethodDeclarationContextForTesting((MethodDeclaration) curMethodScope, thisfieldSet, thisMethodSet, methodName);
-                            } else {
-                                lexContext = this.methodExtractor.getInitializerContextForTesting((Initializer) curMethodScope, thisfieldSet, thisMethodSet, methodName);
-                            }
-                            lexContext += contextArg;
 
                             ArgRecTest test = new ArgRecTest();
-                            test.setLex_context(Collections.singletonList(lexContext));
+                            test.setLex_context(Collections.singletonList(contextArg));
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                             test.setExpected_lex(arg.toString());
@@ -150,29 +137,9 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
 
 
                 List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                String lexContext = null;
-                Set thisfieldSet = new HashSet();
-                nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
-                    if (!candidate.endsWith("(") && !candidate.contains(".")) {
-                        thisfieldSet.add(candidate.substring(candidate.lastIndexOf('.') + 1));
-                    }
-                });
-
-                Set thisMethodSet = new HashSet();
-                nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
-                    if (candidate.endsWith("(") && !candidate.contains(".")) {
-                        thisMethodSet.add(candidate.substring(candidate.lastIndexOf('.') + 1, candidate.length() - 1));
-                    }
-                });
-                if (curMethodScope instanceof MethodDeclaration) {
-                    lexContext = this.methodExtractor.getMethodDeclarationContextForTesting((MethodDeclaration) curMethodScope, thisfieldSet, thisMethodSet, methodName);
-                } else {
-                    lexContext = this.methodExtractor.getInitializerContextForTesting((Initializer) curMethodScope, thisfieldSet, thisMethodSet, methodName);
-                }
-                lexContext += contextArg;
 
                 ArgRecTest test = new ArgRecTest();
-                test.setLex_context(Collections.singletonList(lexContext));
+                test.setLex_context(Collections.singletonList(contextArg));
                 test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                 boolean isClean = true;
                 if (methodCall.getArguments().isEmpty()) {

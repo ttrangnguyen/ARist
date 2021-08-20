@@ -14,6 +14,8 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +48,7 @@ public class APITest {
 
         //download jar from pom.xml
         DirProcessor.getAllEntity(new File(Config.PROJECT_DIR), false).stream().filter(file -> {
-            return file.getAbsolutePath().endsWith("/pom.xml");
+            return file.getAbsolutePath().replace('\\','/').endsWith("/pom.xml");
         }).forEach(pomFile -> {
 //            try {
 //                MvnDownloader.download(Config.PROJECT_DIR, pomFile.getAbsolutePath());
@@ -62,10 +64,13 @@ public class APITest {
                     //do nothing
                 }
             });
-            request.setGoals(Arrays.asList("dependency:copy-dependencies", "-DoutputDirectory=\"flute-mvn\""));
+            request.setGoals(Arrays.asList("dependency:copy-dependencies", "-DoutputDirectory=\"" +
+                    Paths.get(pomFile.getParentFile().getAbsolutePath(), "flute-mvn")
+                    + "\""));
 
             Invoker invoker = new DefaultInvoker();
             invoker.setMavenHome(new File(Config.MVN_HOME));
+            invoker.setInputStream(InputStream.nullInputStream());
             try {
                 int statusCode = invoker.execute(request).getExitCode();
                 if (statusCode > exitCode.get()) {
@@ -85,6 +90,10 @@ public class APITest {
         curProjectParser = new ProjectParser(Config.PROJECT_DIR,
                 Config.SOURCE_PATH, Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         return exitCode.get();
+    }
+
+    public static ProjectParser getCurProjectParser() {
+        return curProjectParser;
     }
 
     private static FileParser genFileParser(BaseTestCase testCase) throws TestPathDetectException {

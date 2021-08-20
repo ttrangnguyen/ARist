@@ -3,6 +3,7 @@ package flute.testing;
 import flute.data.testcase.Candidate;
 import flute.preprocessing.EmptyStringLiteralDecorator;
 import flute.preprocessing.RemoveArrayAccessIndexDecorator;
+import flute.preprocessing.RemoveArrayInitializerDecorator;
 
 public class CandidateMatcher {
     private static String identifieRegex = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*";
@@ -11,6 +12,7 @@ public class CandidateMatcher {
     public static String preprocess(String target) {
         target = EmptyStringLiteralDecorator.preprocess(target);
         target = RemoveArrayAccessIndexDecorator.preprocess(target);
+        target = RemoveArrayInitializerDecorator.preprocess(target);
         return target;
     }
 

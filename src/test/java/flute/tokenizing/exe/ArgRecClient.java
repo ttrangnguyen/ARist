@@ -29,8 +29,8 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     @Override
-    public List<? extends RecTest> generateTestsFromFile(String filePath) throws IOException {
-        List<ArgRecTest> tests = (List<ArgRecTest>) super.generateTestsFromFile(filePath);
+    public List<? extends RecTest> generateTestsFromFile(String filePath, boolean doSaveTestsAfterGen) throws IOException {
+        List<ArgRecTest> tests = (List<ArgRecTest>) super.generateTestsFromFile(filePath, doSaveTestsAfterGen);
 
         MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
                 new SingleArgRecTestGenerator((ArgRecTestGenerator) generator): new AllArgRecTestGenerator((ArgRecTestGenerator) generator);

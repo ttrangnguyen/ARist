@@ -15,7 +15,7 @@ public abstract class Decorator extends Preprocessor {
     }
 
     @Override
-    protected void exportCode(String sourceCode, File outputFolder, File project, File file) {
-        preprocessor.exportCode(sourceCode, outputFolder, project, file);
+    public String revertFile(File file) {
+        return preprocessor.revertFile(file);
     }
 }
