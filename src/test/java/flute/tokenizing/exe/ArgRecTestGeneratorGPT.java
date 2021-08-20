@@ -98,6 +98,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                             test.setExpected_lex(arg.toString());
+                            test.setStaticMemberAccessLex(getFileParser().getTargetPattern(j));
                             test.setArgType(ExpressionType.get(arg));
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
@@ -194,6 +195,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                     test.setExpected_excode_ori(argExcodes);
                     if (!RecTestFilter.predictable(argExcodes)) isClean = false;
                 }
+                test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
                 if (isClean) {

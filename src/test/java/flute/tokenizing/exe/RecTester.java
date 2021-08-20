@@ -45,7 +45,7 @@ public class RecTester {
         }
 
         if (test.getObjectCreationExcode() != null) {
-            return test.getNext_excode().contains(test.getObjectCreationExcode());
+            if (test.getNext_excode().contains(test.getObjectCreationExcode())) return true;
         }
 
         return false;
@@ -57,31 +57,49 @@ public class RecTester {
         return true;
     }
 
+    public static boolean matchesArg(String expectedLex, String result) {
+        if (result.compareTo(expectedLex) == 0) return true;
+
+        if (expectedLex.contains(".this")) {
+            if (matchesArg(expectedLex.substring(expectedLex.indexOf("this")), result)) return true;
+        }
+
+        if (result.contains(".this")) {
+            if (matchesArg(expectedLex, result.substring(result.indexOf("this")))) return true;
+        }
+
+        if (expectedLex.startsWith("this.")) {
+            if (matchesArg(expectedLex.substring(5), result)) return true;
+        }
+
+        if (result.startsWith("this.")) {
+            if (matchesArg(expectedLex, result.substring(5))) return true;
+        }
+
+        return false;
+    }
+
     public static boolean canAcceptGeneratedLexes(ArgRecTest test) {
         String expectedLex = test.getExpected_lex();
 
         expectedLex = CandidateMatcher.preprocess(expectedLex);
 
-        if (expectedLex.contains(".this")) {
-            expectedLex = expectedLex.substring(expectedLex.indexOf("this"));
-        }
-
         for (String candidate : test.getNext_lexList()) {
             candidate = CandidateMatcher.preprocess(candidate);
-            if (candidate.compareTo(expectedLex) == 0) return true;
-            if (expectedLex.startsWith("this.")) {
-                if (candidate.compareTo(expectedLex.substring(5)) == 0) return true;
-            } else {
-                if (candidate.compareTo("this." + expectedLex) == 0) return true;
+            if (matchesArg(expectedLex, candidate)) return true;
+
+            String alternateLex = null;
+            if (test.getMethodAccessLex() != null) {
+                alternateLex = test.getMethodAccessLex();
             }
-        }
+            if (test.getObjectCreationLex() != null) {
+                alternateLex = test.getObjectCreationLex();
+            }
+            if (alternateLex != null && matchesArg(alternateLex, candidate)) return true;
 
-        if (test.getMethodAccessLex() != null) {
-            if (test.getNext_lexList().contains(test.getMethodAccessLex())) return true;
-        }
-
-        if (test.getObjectCreationLex() != null) {
-            return test.getNext_lexList().contains(test.getObjectCreationLex());
+            if (test.getStaticMemberAccessLex() != null) {
+                if (matchesArg(test.getStaticMemberAccessLex(), candidate)) return true;
+            }
         }
 
         return false;
@@ -91,28 +109,6 @@ public class RecTester {
         for (ArgRecTest oneArgTest: test.getArgRecTestList())
             if (!canAcceptGeneratedLexes(oneArgTest)) return false;
         return true;
-    }
-
-    public static boolean canAcceptArgResult(String expectedLex, String result) {
-        if (result.compareTo(expectedLex) == 0) return true;
-
-        if (expectedLex.contains(".this")) {
-            if (canAcceptArgResult(expectedLex.substring(expectedLex.indexOf("this")), result)) return true;
-        }
-
-        if (result.contains(".this")) {
-            if (canAcceptArgResult(expectedLex, result.substring(result.indexOf("this")))) return true;
-        }
-
-        if (expectedLex.startsWith("this.")) {
-            if (canAcceptArgResult(expectedLex.substring(5), result)) return true;
-        }
-
-        if (result.startsWith("this.")) {
-            if (canAcceptArgResult(expectedLex, result.substring(5))) return true;
-        }
-
-        return false;
     }
 
     private static String normalizeMethodInvocation(String s) {
@@ -137,18 +133,20 @@ public class RecTester {
             result = normalizeMethodInvocation(result);
         }
 
-        if (canAcceptArgResult(expectedLex, result)) return true;
+        if (matchesArg(expectedLex, result)) return true;
 
         expectedLex = null;
         if (test.getMethodAccessLex() != null) {
             expectedLex = test.getMethodAccessLex();
         }
-
         if (test.getObjectCreationLex() != null) {
             expectedLex = test.getObjectCreationLex();
         }
+        if (expectedLex != null && matchesArg(expectedLex, result)) return true;
 
-        if (expectedLex != null && canAcceptArgResult(expectedLex, result)) return true;
+        if (test.getStaticMemberAccessLex() != null) {
+            if (matchesArg(test.getStaticMemberAccessLex(), result)) return true;
+        }
 
         return false;
     }

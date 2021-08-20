@@ -22,13 +22,14 @@ public class ArgRecTest extends MethodCallRecTest {
     private List<List<String>> next_lex;
 
     /**
-     * Expected result (only the name is required)
+     * Expected result (alternate)
      */
     private ExpressionType argType;
     private String methodAccessExcode;
     private String methodAccessLex;
     private String objectCreationExcode;
     private String objectCreationLex;
+    private String staticMemberAccessLex;
 
     /**
      * References
@@ -121,6 +122,14 @@ public class ArgRecTest extends MethodCallRecTest {
 
     public void setObjectCreationLex(String objectCreationLex) {
         this.objectCreationLex = objectCreationLex;
+    }
+
+    public String getStaticMemberAccessLex() {
+        return staticMemberAccessLex;
+    }
+
+    public void setStaticMemberAccessLex(String staticMemberAccessLex) {
+        this.staticMemberAccessLex = staticMemberAccessLex;
     }
 
     public List<NodeSequenceInfo> getExpected_excode_ori() {
