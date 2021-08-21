@@ -295,6 +295,8 @@ class GPTManager(ModelManager):
             candidates_param = []
             if TEST_MODE and not data['ignored']:
                 expected_result = data['expected_lex']
+                if "{" in expected_result:
+                    expected_result = expected_result[:expected_result.index("{")].rstrip()
                 if "]" in expected_result and "[" in expected_result[:expected_result.rindex("]")]:
                     expected_result_right = expected_result[expected_result.rindex("]"):]
                     expected_result_left = expected_result[:expected_result[:expected_result.rindex("]")].index("[") + 1]

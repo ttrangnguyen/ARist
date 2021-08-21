@@ -18,6 +18,8 @@ public class RemoveArrayInitializerDecorator extends Decorator {
     public static String preprocess(String sourceCode) {
         sourceCode = sourceCode.replaceAll("]\\{[^,;]+,", "],");
         sourceCode = sourceCode.replaceAll("]\\{[^,;]+;", "];");
+        sourceCode = sourceCode.replaceAll("] \\{[^,;]+,", "],");
+        sourceCode = sourceCode.replaceAll("] \\{[^,;]+;", "];");
         return sourceCode;
     }
 }
