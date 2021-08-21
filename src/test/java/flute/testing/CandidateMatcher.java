@@ -12,7 +12,6 @@ public class CandidateMatcher {
     public static String preprocess(String target) {
         target = EmptyStringLiteralDecorator.preprocess(target);
         target = RemoveArrayAccessIndexDecorator.preprocess(target);
-        target = RemoveArrayInitializerDecorator.preprocess(target);
         return target;
     }
 

@@ -83,6 +83,9 @@ public class RecTester {
         String expectedLex = test.getExpected_lex();
 
         expectedLex = CandidateMatcher.preprocess(expectedLex);
+        if (expectedLex.contains("{")) {
+            expectedLex = expectedLex.substring(0, expectedLex.indexOf("{")).trim();
+        }
 
         for (String candidate : test.getNext_lexList()) {
             candidate = CandidateMatcher.preprocess(candidate);
@@ -128,7 +131,14 @@ public class RecTester {
         String expectedLex = test.getExpected_lex();
 
         expectedLex = CandidateMatcher.preprocess(expectedLex);
+        if (expectedLex.contains("{")) {
+            expectedLex = expectedLex.substring(0, expectedLex.indexOf("{")).trim();
+        }
+
         result = CandidateMatcher.preprocess(result);
+        if (result.contains("{")) {
+            result = result.substring(0, result.indexOf("{")).trim();
+        }
         if (result.indexOf("(") > 0) {
             result = normalizeMethodInvocation(result);
         }
