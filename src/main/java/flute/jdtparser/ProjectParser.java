@@ -253,11 +253,20 @@ public class ProjectParser {
     }
 
     public void loadPublicStaticMembers() {
+        loadPublicStaticMembers(Config.PROJECT_NAME);
+    }
+
+    public void loadPublicStaticRTMembers() {
+        loadPublicStaticMembers("rt");
+    }
+
+    public void loadPublicStaticMembers(String project) {
         try {
             Gson gson = new Gson();
             BufferedReader br = new BufferedReader(new FileReader(
-                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME)));
-            Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>(){}.getType();
+                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, project)));
+            Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>() {
+            }.getType();
             publicStaticFieldList = gson.fromJson(br.readLine(), publicStaticMemberType);
             publicStaticMethodList = gson.fromJson(br.readLine(), publicStaticMemberType);
             br.close();
