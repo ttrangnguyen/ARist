@@ -258,8 +258,9 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                     test.setMethodAccessExcode(expectedExcode.substring(0, tmp + 9));
 
                     String methodNameArg = argExcode.getAttachedAccess();
-                    tmp = StringUtils.indexOf(expectedLex, methodNameArg + "(");
-                    test.setMethodAccessLex(expectedLex.substring(0, tmp + methodNameArg.length() + 1));
+                    tmp = StringUtils.indexOf(expectedLex, methodNameArg);
+                    tmp = expectedLex.indexOf('(', tmp);
+                    test.setMethodAccessLex(expectedLex.substring(0, tmp + 1));
 
                     break;
                 }
@@ -269,8 +270,9 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                     test.setObjectCreationExcode(expectedExcode.substring(0, tmp + 9));
 
                     String classNameArg = argExcode.getAttachedAccess();
-                    tmp = StringUtils.indexOf(expectedLex, classNameArg + "(");
-                    test.setObjectCreationLex(expectedLex.substring(0, tmp + classNameArg.length() + 1));
+                    tmp = StringUtils.indexOf(expectedLex, classNameArg);
+                    tmp = expectedLex.indexOf('(', tmp);
+                    test.setObjectCreationLex(expectedLex.substring(0, tmp + 1));
 
                     break;
                 }
