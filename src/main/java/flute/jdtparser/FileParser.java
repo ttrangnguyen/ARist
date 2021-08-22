@@ -393,7 +393,7 @@ public class FileParser {
                             && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                             && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
                     ) {
-                        String lex = "new " + typeNeedCheck.getName() + "(";
+                        String lex = "new " + typeNeedCheck.getName().replace("? extends ", "") + "(";
                         String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
                                 + "OPEN_PART";
                         nextVariableMap.put(excode, lex);
@@ -402,9 +402,9 @@ public class FileParser {
                     //feature 14
                     if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
                             && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[]";
+                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
                         String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
-                                + "OPEN_PART CLOSE_PART";
+                                + "OPEN_PART LIT(num) CLOSE_PART";
                         nextVariableMap.put(excode, lex);
                     }
 
