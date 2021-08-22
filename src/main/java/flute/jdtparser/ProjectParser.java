@@ -224,6 +224,9 @@ public class ProjectParser {
     }
 
     public void initPublicStaticMembers() {
+        File publicStaticMembersFile = new File(String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME));
+        if (publicStaticMembersFile.isFile()) return;
+
         List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
         for (File file : javaFiles) {
             File curFile = new File(file.getAbsolutePath());
