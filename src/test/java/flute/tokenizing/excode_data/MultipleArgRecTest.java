@@ -17,6 +17,7 @@ public class MultipleArgRecTest extends MethodCallRecTest {
      */
     private List<List<String>> next_excode;
     private List<List<List<String>>> next_lex;
+    private List<String> paramTypeKeyList;
 
     /**
      * References
@@ -79,6 +80,14 @@ public class MultipleArgRecTest extends MethodCallRecTest {
 
     public void setNext_lex(List<List<List<String>>> next_lex) {
         this.next_lex = next_lex;
+    }
+
+    public List<String> getParamTypeKeyList() {
+        return paramTypeKeyList;
+    }
+
+    public void setParamTypeKeyList(List<String> paramTypeKeyList) {
+        this.paramTypeKeyList = paramTypeKeyList;
     }
 
     public List<ArgRecTest> getArgRecTestList() {

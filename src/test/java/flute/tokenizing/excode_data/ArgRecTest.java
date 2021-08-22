@@ -20,6 +20,7 @@ public class ArgRecTest extends MethodCallRecTest {
      */
     private List<String> next_excode;
     private List<List<String>> next_lex;
+    private String paramTypeKey;
 
     /**
      * Expected result (alternate)
@@ -82,6 +83,14 @@ public class ArgRecTest extends MethodCallRecTest {
 
     public void setNext_lex(List<List<String>> next_lex) {
         this.next_lex = next_lex;
+    }
+
+    public String getParamTypeKey() {
+        return paramTypeKey;
+    }
+
+    public void setParamTypeKey(String paramTypeKey) {
+        this.paramTypeKey = paramTypeKey;
     }
 
     public ExpressionType getArgType() {
@@ -155,6 +164,7 @@ public class ArgRecTest extends MethodCallRecTest {
         }
         test.setNext_excode(Collections.singletonList(this.getNext_excode()));
         test.setNext_lex(Collections.singletonList(this.getNext_lex()));
+        test.setParamTypeKeyList(Collections.singletonList(this.getParamTypeKey()));
         test.setIs_local_var(Collections.singletonList(this.getIs_local_var()));
         test.setExpected_excode(this.getExpected_excode());
         test.setExpected_lex(this.getExpected_lex());

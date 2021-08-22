@@ -104,6 +104,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setArgType(ExpressionType.get(arg));
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
+                            test.setParamTypeKey(params.getParamTypeKey());
                             test.setIs_local_var(isLocalVarList);
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
@@ -195,6 +196,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
+                test.setParamTypeKey(params.getParamTypeKey());
                 test.setIs_local_var(isLocalVarList);
                 test.setMethodInvocClassQualifiedName(classQualifiedName);
                 if (isClean) {
