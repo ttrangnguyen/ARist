@@ -546,6 +546,15 @@ public class FileParser {
                     }
                 }
 
+            } else if (arg instanceof MethodInvocation) {
+                MethodInvocation methodInvocation = (MethodInvocation) arg;
+                if (Modifier.isStatic(methodInvocation.resolveMethodBinding().getModifiers())) {
+                    return String.join(".",
+                            methodInvocation.resolveMethodBinding().getDeclaringClass().getName(), methodInvocation.resolveMethodBinding().getName()) + "(";
+                }
+            } else if (arg instanceof ClassInstanceCreation) {
+                ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) arg;
+                return "new " + classInstanceCreation.resolveTypeBinding().getName() + "(";
             }
             return null;
         } catch (Exception e) {
