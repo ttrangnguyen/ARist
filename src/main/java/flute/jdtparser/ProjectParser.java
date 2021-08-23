@@ -267,8 +267,8 @@ public class ProjectParser {
                     String.format(Config.PUBLIC_STATIC_MEMBER_PATH, project)));
             Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>() {
             }.getType();
-            publicStaticFieldList = gson.fromJson(br.readLine(), publicStaticMemberType);
-            publicStaticMethodList = gson.fromJson(br.readLine(), publicStaticMemberType);
+            publicStaticFieldList.addAll(gson.fromJson(br.readLine(), publicStaticMemberType));
+            publicStaticMethodList.addAll(gson.fromJson(br.readLine(), publicStaticMemberType));
             br.close();
         } catch (IOException e) {
             e.printStackTrace();
