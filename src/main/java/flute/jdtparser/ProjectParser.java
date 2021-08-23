@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import flute.config.Config;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
+import flute.data.type.TypeConstraintKey;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -273,6 +274,14 @@ public class ProjectParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<PublicStaticMember> getPublicStaticCandidates(String typeKey) {
+        List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
+        publicStaticMemberList.addAll(publicStaticMethodList);
+        return publicStaticMemberList.stream().filter(member -> {
+            return TypeConstraintKey.assignWith(member.key, typeKey);
+        }).collect(Collectors.toList());
     }
 
     public static void main(String[] args) throws IOException {
