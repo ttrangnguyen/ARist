@@ -67,6 +67,18 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     @Override
+    public void validateTest(RecTest test, boolean doPrintInadequateTests) {
+        List<ArgRecTest> oneArgTests = ((MultipleArgRecTest) test).getArgRecTestList();
+        for (ArgRecTest oneArgTest: oneArgTests) {
+            oneArgTest.setPublicStaticCandidateList(projectParser.getPublicStaticCandidates(oneArgTest.getParamTypeKey()));
+        }
+        super.validateTest(test, doPrintInadequateTests);
+        for (ArgRecTest oneArgTest: oneArgTests) {
+            oneArgTest.setPublicStaticCandidateList(null);
+        }
+    }
+
+    @Override
     SocketClient getSocketClient() throws Exception {
         return new SocketClient(getSocketPort());
     }

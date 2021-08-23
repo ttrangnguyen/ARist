@@ -1,10 +1,14 @@
 package flute.tokenizing.exe;
 
+import flute.jdtparser.PublicStaticMember;
 import flute.testing.CandidateMatcher;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RecTester {
     public static boolean canAcceptGeneratedExcodes(RecTest test) {
@@ -35,7 +39,13 @@ public class RecTester {
 
     public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
         String expectedExcode = test.getExpected_excode();
+
         if (test.getNext_excode().contains(expectedExcode)) return true;
+        List<String> candidates = new ArrayList<>();
+        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
+            candidates.add(publicStaticCandidate.excode);
+        }
+        if (candidates.contains(expectedExcode)) return true;
 
         //TODO: Handle unknown excode
         if (expectedExcode.contains("<unk>")) return true;
@@ -87,7 +97,12 @@ public class RecTester {
             expectedLex = expectedLex.substring(0, expectedLex.indexOf("{")).trim();
         }
 
-        for (String candidate : test.getNext_lexList()) {
+        List<String> candidates = test.getNext_lexList();
+        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
+            candidates.add(publicStaticCandidate.lexical);
+        }
+
+        for (String candidate : candidates) {
             candidate = CandidateMatcher.preprocess(candidate);
             if (matchesArg(expectedLex, candidate)) return true;
 
