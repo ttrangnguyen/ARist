@@ -47,3 +47,5 @@ docs/testFilePath
 backup
 /.idea/
 flute-mvn/
+out/artifacts/Flute_jar/Flute.jar
+Flute.iml
