@@ -27,12 +27,12 @@ public class MethodExtractor extends Preprocessor {
     }
 
     @Override
-    public void preprocessProject(File project, File outputFolder) {
+    public void preprocessProject(File project, File outputFolder, File fileList, boolean revert) {
         Config.autoConfigure(project.getName(), project.getAbsolutePath());
         parser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
                 Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 
-        super.preprocessProject(project, outputFolder);
+        super.preprocessProject(project, outputFolder, fileList, revert);
     }
 
     public static String getTypeDeclarationContext(TypeDeclaration node) {
@@ -452,5 +452,28 @@ public class MethodExtractor extends Preprocessor {
         System.out.println("\nExtracting methods...");
         preprocessor = new MethodExtractor();
         preprocessor.preprocessProjects(new File(inputFolder), new File(outputFolder));
+
+//        String inputFolder = "D:\\Flute\\storage\\repositories\\git\\eclipse\\";
+//        String outputFolder = Config.LOG_DIR + "dataset-gpt-method/";
+//
+//        Preprocessor preprocessor = new Preprocessor();
+//        System.out.println("\nBacking up project...");
+//        preprocessor.preprocessProject(new File(inputFolder),
+//                new File(Config.LOG_DIR + "backup/"),
+//                new File(Config.LOG_DIR + "eclipse/eclipse_train.txt"));
+//
+//        System.out.println("\nPreprocessing project...");
+//        preprocessor = new RemoveCommentDecorator(preprocessor);
+//        preprocessor = new RemoveNewLineDecorator(preprocessor);
+//        preprocessor = new RemoveIndentDecorator(preprocessor);
+//        preprocessor.preprocessProject(new File(inputFolder),
+//                (new File(inputFolder)).getParentFile(),
+//                new File(Config.LOG_DIR + "eclipse/eclipse_train.txt"));
+//
+//        System.out.println("\nExtracting methods...");
+//        preprocessor = new MethodExtractor();
+//        preprocessor.preprocessProject(new File(inputFolder),
+//                new File(outputFolder),
+//                new File(Config.LOG_DIR + "eclipse/eclipse_train.txt"));
     }
 }
