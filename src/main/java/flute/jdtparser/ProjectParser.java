@@ -6,6 +6,7 @@ import flute.config.Config;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.data.type.TypeConstraintKey;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -229,6 +230,11 @@ public class ProjectParser {
         if (publicStaticMembersFile.isFile()) return;
 
         List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
+        
+        javaFiles = javaFiles.stream().filter(file -> {
+            return !Utils.checkTestFile(file);
+        }).collect(Collectors.toList());
+
         for (File file : javaFiles) {
             File curFile = new File(file.getAbsolutePath());
             FileParser fileParser = new FileParser(this, curFile, 6969669);
@@ -277,6 +283,7 @@ public class ProjectParser {
     }
 
     public List<PublicStaticMember> getPublicStaticCandidates(String typeKey) {
+        if (typeKey == null) return new ArrayList<PublicStaticMember>();
         List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
         publicStaticMemberList.addAll(publicStaticMethodList);
         return publicStaticMemberList.stream().filter(member -> {
