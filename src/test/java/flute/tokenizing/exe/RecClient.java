@@ -60,7 +60,8 @@ public abstract class RecClient {
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
-        projectParser.initPublicStaticMembers();
+        projectParser.loadPublicStaticMembers();
+        projectParser.loadPublicStaticRTMembers();
     }
 
     abstract void createNewGenerator();
@@ -94,7 +95,7 @@ public abstract class RecClient {
         double averageGetTestsTime = timer.getTimeCounter() / 1000f / tests.size();
         dataFrame.insert("averageGetTestsTime", averageGetTestsTime);
 
-        for (RecTest test: tests) dataFrame.insert("Ignored test", test.isIgnored());
+        for (RecTest test : tests) dataFrame.insert("Ignored test", test.isIgnored());
 
         System.out.println("Generated " + dataFrame.getVariable("Ignored test").getCount() + " tests.");
         System.out.println("Supported " + (dataFrame.getVariable("Ignored test").getCount() - dataFrame.getVariable("Ignored test").getSum()) + " tests.");
@@ -206,9 +207,9 @@ public abstract class RecClient {
                 if (!isGenerated) {
                     List<RecTest> tests = (List<RecTest>) generateTestsFromFile(filePath, true);
 
-                    for (RecTest test: tests) validateTest(test);
+                    for (RecTest test : tests) validateTest(test);
 
-                    for (RecTest test: tests) {
+                    for (RecTest test : tests) {
                         dataFrame.insert("Tested", 1);
                         queryAndTest(socketClient, test, verbose, doPrintIncorrectPrediction);
                         saveTestResult();
@@ -235,13 +236,13 @@ public abstract class RecClient {
     }
 
     private void saveTests(List<RecTest> tests) {
-        for (RecTest test: tests) {
+        for (RecTest test : tests) {
             Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
         }
     }
 
     public static void logTests(List<? extends RecTest> tests) {
-        for (RecTest test: tests) {
+        for (RecTest test : tests) {
             System.out.println(gson.toJson(test));
         }
     }
@@ -270,7 +271,7 @@ public abstract class RecClient {
     }
 
     public void validateTests(List<? extends RecTest> tests, boolean doPrintInadequateTests) {
-        for (RecTest test: tests) validateTest(test, doPrintInadequateTests);
+        for (RecTest test : tests) validateTest(test, doPrintInadequateTests);
 
         System.out.printf("Adequate generated excodes: %.2f%%%n",
                 dataFrame.getVariable("Adequate generated excodes").getMean() * 100);
@@ -295,7 +296,7 @@ public abstract class RecClient {
             dataFrame.insert("Adequate generated excodes", adequateGeneratedExcode);
             dataFrame.insert("Adequate generated lexicals", adequateGeneratedLex);
             dataFrame.insert("Adequate generated candidates", adequateGeneratedExcode && adequateGeneratedLex);
-            if (adequateGeneratedExcode && adequateGeneratedLex) {
+            if (adequateGeneratedLex) {
                 testMap.put(test.getId(), true);
             } else if (doPrintInadequateTests) {
                 Logger.write(gson.toJson(test), projectName + "_inadequate_" + this.testClass.getSimpleName() + "s.txt");
@@ -308,6 +309,7 @@ public abstract class RecClient {
     }
 
     abstract SocketClient getSocketClient() throws Exception;
+
     abstract int getSocketPort();
 
     public void queryAndTest(List<? extends RecTest> tests, boolean verbose, boolean doPrintIncorrectPrediction) {
@@ -378,8 +380,7 @@ public abstract class RecClient {
             SocketClient socketClient = getSocketClient();
             queryAndTest(socketClient, test, verbose, doPrintIncorrectPrediction);
             socketClient.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -484,9 +485,12 @@ public abstract class RecClient {
         System.out.println("Skipped " + (dataFrame.getVariable("Tested").getCount() - dataFrame.getVariable("Predicted").getCount())
                 + " tests. They were not taken into account during evaluation.");
         System.out.println("Average parsing runtime: " + dataFrame.getVariable("averageGetTestsTime").getSum() + "s");
-        if (isNGramUsed) System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
-        if (isRNNUsed) System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
-        if (isGPTUsed) System.out.println("Average GPT's runtime: " + dataFrame.getVariable("GPT's runtime").getMean() + "s");
+        if (isNGramUsed)
+            System.out.println("Average NGram's runtime: " + dataFrame.getVariable("NGram's runtime").getMean() + "s");
+        if (isRNNUsed)
+            System.out.println("Average RNN's runtime: " + dataFrame.getVariable("RNN's runtime").getMean() + "s");
+        if (isGPTUsed)
+            System.out.println("Average GPT's runtime: " + dataFrame.getVariable("GPT's runtime").getMean() + "s");
         System.out.println("Average overall runtime: "
                 + (dataFrame.getVariable("NGram's runtime").getMean()
                 + dataFrame.getVariable("RNN's runtime").getMean()
@@ -496,10 +500,10 @@ public abstract class RecClient {
 
     String getBestModel(List<String> modelNames, String category) {
         String bestModel = modelNames.get(0);
-        for (int k: this.tops) {
+        for (int k : this.tops) {
             double bestAcc = dataFrame.getVariable(String.format(category, bestModel, k)).getMean();
             double temp = bestAcc;
-            for (String modelName: modelNames) {
+            for (String modelName : modelNames) {
                 double curAcc = dataFrame.getVariable(String.format(category, modelName, k)).getMean();
                 if (Math.abs(bestAcc - curAcc) > 1e-7) {
                     if (bestAcc < curAcc) {
@@ -535,7 +539,7 @@ public abstract class RecClient {
             createNewGenerator();
             List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
             for (RecTest test : oneFileTests) test.setFilePath(filePath);
-            for (RecTest test: oneFileTests) {
+            for (RecTest test : oneFileTests) {
                 Logger.write(gson.toJson(this.testClass.cast(test)), testOutputPath);
             }
 //            for (RecTest test: oneFileTests)

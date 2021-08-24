@@ -45,7 +45,14 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
         List<RecTest> tests = new ArrayList<>();
 
         String contextArg = contextMethodCall + methodScope + methodName + '(';
-        String classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
+
+        String classQualifiedName;
+
+        try {
+            classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
+        } catch (Exception e) {
+            classQualifiedName = null;
+        }
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();
         int k = methodCallStartIdx + 1;

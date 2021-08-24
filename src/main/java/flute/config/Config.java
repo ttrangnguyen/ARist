@@ -56,7 +56,7 @@ public class Config {
      */
 
     public static boolean FEATURE_USER_CHOOSE_METHOD = true;
-    public final static boolean FEATURE_DFG_VARIABLE = true;
+    public final static boolean FEATURE_DFG_VARIABLE = false;
 
     public final static boolean FLAG_ALL = true;
     public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false|FLAG_ALL;
@@ -75,7 +75,7 @@ public class Config {
     public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
-    public final static boolean FEATURE_STATIC_CONSTANT = true;
+    public final static boolean FEATURE_STATIC_CONSTANT = false;
 
     public final static boolean FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS = true;
 
