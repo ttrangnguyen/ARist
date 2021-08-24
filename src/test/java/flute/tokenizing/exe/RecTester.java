@@ -72,6 +72,8 @@ public class RecTester {
     public static boolean matchesArg(String expectedLex, String result) {
         if (result.compareTo(expectedLex) == 0) return true;
 
+        if (expectedLex.contains("->") && result.contains("->")) return true;
+
         if (expectedLex.contains(".this")) {
             if (matchesArg(expectedLex.substring(expectedLex.indexOf(".this") + 1), result)) return true;
         }

@@ -6,8 +6,10 @@ from time import perf_counter
 import tensorflow as tf
 from tensorflow.core.protobuf import rewriter_config_pb2
 from model.manager.model_manager import ModelManager
+from utils import preprocessor
 from ..gpt import encoder, model, sample
 from ..config import *
+
 
 class GPTManager(ModelManager):
     def __init__(self, top_k, project, train_len,
@@ -126,7 +128,7 @@ class GPTManager(ModelManager):
             for c in [";", "(", ",", ")"]:
                 if c in token:
                     self.end_token_list.append(i)
-                    #print(token)
+                    # print(token)
                     break
 
             if token in [")", ",", ",\"", ").", "),", ");", "):", "))", ",'", ",-", ")-", ")|", ",'\"", "));",
@@ -181,42 +183,42 @@ class GPTManager(ModelManager):
         for i in range(len(suggestions_tokens)):
             len_max = max(len_max, len(suggestions_tokens[i]))
 
-        if suggestion[-1] == "(":           # METHOD_INVOC, OBJECT_CREATION
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max-1])
+        if suggestion[-1] == "(":  # METHOD_INVOC, OBJECT_CREATION
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max - 1])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
-                end_index[i] = len(suggestions_tokens[i])-1
+                batch_suggestion[i, :len(suggestions_tokens[i]) - 1] = suggestions_tokens[i][:-1]
+                end_index[i] = len(suggestions_tokens[i]) - 1
             end_tokens = self.method_invoc_token_list
 
         elif suggestion[-1] in ["[", "]"]:  # ARRAY_ACCESS, ARRAY_CREATION
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max-1])
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max - 1])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
-                end_index[i] = len(suggestions_tokens[i])-1
+                batch_suggestion[i, :len(suggestions_tokens[i]) - 1] = suggestions_tokens[i][:-1]
+                end_index[i] = len(suggestions_tokens[i]) - 1
             end_tokens = self.array_access_token_list
 
-        elif suggestion[-1] == "\"":        # STRING_LIT
-            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max-1])
+        elif suggestion[-1] == "\"":  # STRING_LIT
+            batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max - 1])
             for i in range(len(suggestions_tokens)):
-                batch_suggestion[i, :len(suggestions_tokens[i])-1] = suggestions_tokens[i][:-1]
-                end_index[i] = len(suggestions_tokens[i])-1
+                batch_suggestion[i, :len(suggestions_tokens[i]) - 1] = suggestions_tokens[i][:-1]
+                end_index[i] = len(suggestions_tokens[i]) - 1
             end_tokens = self.string_lit_token_list
 
-        elif suggestion.endswith("null"):   # NULL_LIT
+        elif suggestion.endswith("null"):  # NULL_LIT
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
                 end_index[i] = len(suggestions_tokens[i])
             end_tokens = self.end_param_token_list
 
-        elif suggestion[-1] == ".":         # MEMBER_ACCESS
+        elif suggestion[-1] == ".":  # MEMBER_ACCESS
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i]) - 1] = suggestions_tokens[i][:-1]
-                end_index[i] = len(suggestions_tokens[i])-1
+                end_index[i] = len(suggestions_tokens[i]) - 1
             end_tokens = [suggestions_tokens[i][-1]]
 
-        else:                               # NAME, FIELD_ACCESS, TYPE_LIT, LAMBDA
+        else:  # NAME, FIELD_ACCESS, TYPE_LIT, LAMBDA
             batch_suggestion = np.empty(shape=[GPT_BATCH_SIZE, len_max])
             for i in range(len(suggestions_tokens)):
                 batch_suggestion[i, :len(suggestions_tokens[i])] = suggestions_tokens[i]
@@ -244,22 +246,22 @@ class GPTManager(ModelManager):
         for i in range(len(suggestions_tokens)):
             prob = out[i, :end_index[i] + 1]
             suggestion = self.encoder.decode(suggestions_tokens[i])
-            if suggestion[-1] == "(":       # METHOD_INVOC, OBJECT_CREATION
-                suggestion_tokens = self.encoder.encode(suggestion+"),")
-            elif suggestion[-1] == "[":     # ARRAY_ACCESS, ARRAY_CREATION
-                suggestion_tokens = self.encoder.encode(suggestion+"i],")
-            elif suggestion[-1] == "]":     # ARRAY_ACCESS, ARRAY_CREATION
+            if suggestion[-1] == "(":  # METHOD_INVOC, OBJECT_CREATION
+                suggestion_tokens = self.encoder.encode(suggestion + "),")
+            elif suggestion[-1] == "[":  # ARRAY_ACCESS, ARRAY_CREATION
+                suggestion_tokens = self.encoder.encode(suggestion + "i],")
+            elif suggestion[-1] == "]":  # ARRAY_ACCESS, ARRAY_CREATION
                 if suggestion[-2] == "[":
-                    suggestion_tokens = self.encoder.encode(suggestion[:-1]+"i],")
+                    suggestion_tokens = self.encoder.encode(suggestion[:-1] + "i],")
                 else:
-                    suggestion_tokens = self.encoder.encode(suggestion[:suggestion.find("[")+1]+"i],")
-            elif suggestion[-1] == "\"":    # STRING_LIT
-                suggestion_tokens = self.encoder.encode(suggestion+",")
-            elif suggestion.endswith("<LAMBDA>"):   # LAMBDA
+                    suggestion_tokens = self.encoder.encode(suggestion[:suggestion.find("[") + 1] + "i],")
+            elif suggestion[-1] == "\"":  # STRING_LIT
+                suggestion_tokens = self.encoder.encode(suggestion + ",")
+            elif suggestion.endswith("<LAMBDA>"):  # LAMBDA
                 prob = out[i, :end_index[i]]
                 suggestion_tokens = self.encoder.encode("x -> {},")
-            else:                           # NULL_LIT, NAME, FIELD_ACCESS, TYPE_LIT
-                suggestion_tokens = self.encoder.encode(suggestion+",")
+            else:  # NULL_LIT, NAME, FIELD_ACCESS, TYPE_LIT
+                suggestion_tokens = self.encoder.encode(suggestion + ",")
 
             log_prob = np.maximum(np.log(prob), LOG_ZERO)
             score = np.sum(log_prob)
@@ -274,18 +276,6 @@ class GPTManager(ModelManager):
             suggestions_result.append((score, new_context_tokens))
         return suggestions_result, context_data
 
-    def normalize_method_invocation(self, s):
-        bal = 0
-        for i in range(len(s) - 1, -1, -1):
-            if s[i] == '(':
-                bal = bal + 1
-            if s[i] == ')':
-                bal = bal - 1
-            if bal >= 0:
-                s = s[:i + 1]
-                break
-        return s
-
     def predict_param_using_lex(self, data):
         start_time = perf_counter()
         n_param = len(data['next_lex'])
@@ -293,41 +283,39 @@ class GPTManager(ModelManager):
         candidates_all = []
         for i in range(n_param):
             candidates_param = []
-            if TEST_MODE and not data['ignored']:
+            if TEST_MODE:
                 expected_result = data['expected_lex']
+                expected_result = preprocessor.empty_string_literal(expected_result)
                 if "{" in expected_result:
                     expected_result = expected_result[:expected_result.index("{")].rstrip()
-                if "]" in expected_result and "[" in expected_result[:expected_result.rindex("]")]:
-                    expected_result_right = expected_result[expected_result.rindex("]"):]
-                    expected_result_left = expected_result[:expected_result[:expected_result.rindex("]")].index("[") + 1]
-                    expected_result = expected_result_left + expected_result_right
+                if "]" in expected_result:
+                    expected_result = preprocessor.remove_array_access_index(expected_result)
                 if "(" in expected_result and expected_result.index("(") > 0:
-                    expected_result = self.normalize_method_invocation(expected_result)
+                    expected_result = preprocessor.normalize_method_invocation(expected_result)
                 candidates_param.append(expected_result)
             for j in range(len(data['next_lex'][i])):
                 for k in range(len(data['next_lex'][i][j])):
-                    candidate = data['next_lex'][i][j][k]
+                    candidates_param.append(data['next_lex'][i][j][k])
+            candidates_param_set = set()
+            for candidate in candidates_param:
+                # Lambda expression
+                if "->" in candidate:
+                    candidate = "x -> {}"
 
-                    # Lambda expression
-                    if "->" in candidate:
-                        candidate = "x -> {}"
+                # Exclude candidates starting with this if they are redundant
+                if candidate.startswith("this."):
+                    candidate = candidate[5:]
 
-                    # Exclude candidates starting with this if they are redundant
-                    if candidate.startswith("this."):
-                        candidate = candidate[5:]
+                # Exclude cast expressions
+                if candidate.startswith("("):
+                    continue
 
-                    # Exclude cast expressions
-                    if candidate.startswith("("):
-                        continue
+                # Exclude hashCode() and toString()
+                if candidate in ["hashCode(", "toString("]:
+                    continue
 
-                    # Exclude hashCode() and toString()
-                    if candidate in ["hashCode(", "toString("]:
-                        continue
-
-                    if candidate in candidates_param:
-                        continue
-                    candidates_param.append(candidate)
-            candidates_all.append(candidates_param)
+                candidates_param_set.add(candidate)
+            candidates_all.append(list(candidates_param_set))
         context_tokens = self.encoder.encode(data['lex_context'][0])
 
         context_list = [(context_tokens, [], 0)]
@@ -338,7 +326,7 @@ class GPTManager(ModelManager):
                 for candidate_id, candidate in enumerate(candidates_all[i]):
                     if "->" not in candidate:
                         suggestion = self.encoder.decode([context_list[i][0][-1]]) + candidate
-                    else:   # LAMBDA
+                    else:  # LAMBDA
                         suggestion = self.encoder.decode([context_list[i][0][-1]]) + "<LAMBDA>"
                     suggestions_data.append((candidate_id, self.encoder.encode(suggestion)))
 
@@ -409,7 +397,8 @@ class GPTManager(ModelManager):
                 scores = [LOG_ZERO]
                 for suggestions_batch in suggestions_batches:
                     suggestions_tokens = [v for _, v in suggestions_batch]
-                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], suggestions_tokens, context_data)
+                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], suggestions_tokens,
+                                                                        context_data)
                     for k in range(len(suggestions_batch)):
                         score, new_context_tokens = suggestions_result[k]
 
@@ -459,7 +448,8 @@ class GPTManager(ModelManager):
                 caller_dict = dict()
                 for suggestions_batch in suggestions_batches:
                     suggestions_tokens = [v for _, v in suggestions_batch]
-                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], suggestions_tokens, context_data)
+                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], suggestions_tokens,
+                                                                        context_data)
                     for k in range(len(suggestions_batch)):
                         score, _ = suggestions_result[k]
                         candidate = candidates_all[i][suggestions_batch[k][0]]
@@ -513,7 +503,8 @@ class GPTManager(ModelManager):
 
                 for suggestions_batch in suggestions_batches:
                     suggestions_tokens = [v for _, v in suggestions_batch]
-                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], suggestions_tokens, context_data)
+                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], suggestions_tokens,
+                                                                        context_data)
                     for k in range(len(suggestions_batch)):
                         score, new_context_tokens = suggestions_result[k]
                         suggestion_scores.append((
@@ -561,11 +552,13 @@ class GPTManager(ModelManager):
                     for candidate_lex_id in range(len(data['next_lex'][i][candidate_excode_id])):
                         candidate = data['next_lex'][i][candidate_excode_id][candidate_lex_id]
                         suggestion = self.encoder.decode([context_list[j][0][-1]]) + candidate
-                        suggestions_data.append(((candidate_excode_id, candidate_lex_id), self.encoder.encode(suggestion)))
+                        suggestions_data.append(
+                            ((candidate_excode_id, candidate_lex_id), self.encoder.encode(suggestion)))
 
                 context_data = None
                 for candidate_id, suggestion_tokens in suggestions_data:
-                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], [suggestion_tokens], context_data)
+                    suggestions_result, context_data = self.probability(context_list[j][0][:-1], [suggestion_tokens],
+                                                                        context_data)
                     score, new_context_tokens = suggestions_result[0]
                     suggestion_scores.append((
                         new_context_tokens,
@@ -617,7 +610,8 @@ class GPTManager(ModelManager):
                 while True:
                     if context_data is None:
                         feed_dict = {self.context: batch_context,
-                                     self.context_output: np.empty(shape=[0 if v is None else v for v in self.context_shape]),
+                                     self.context_output: np.empty(
+                                         shape=[0 if v is None else v for v in self.context_shape]),
                                      self.end_tokens: self.end_token_list,
                                      }
                         context_data, out, out_prob = self.sess.run(self.java_model['autogen'], feed_dict=feed_dict)
