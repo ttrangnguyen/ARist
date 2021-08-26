@@ -1,6 +1,7 @@
 package flute.data.type;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class TypeConstraintKey {
@@ -16,6 +17,7 @@ public class TypeConstraintKey {
 
     final public static String OBJECT_TYPE = "Ljava/lang/Object;";
     final public static String STRING_TYPE = "Ljava/lang/String;";
+    final public static String CHAR_SEQUE_TYPE = "Ljava/lang/CharSequence;";
 
     final public static String CLASS_TYPE = "Ljava/lang/Class<>;";
 
@@ -40,5 +42,24 @@ public class TypeConstraintKey {
             }
         }
         return false;
+    }
+
+    public static HashSet<String> assignWith(String key) {
+        HashSet<String> result = new HashSet<>();
+        if (BOOL_TYPES.contains(key)) {
+            for (String booleanType : BOOL_TYPES) {
+                result.add(booleanType);
+            }
+        } else {
+            List<List<String>> typeConstraintKeys = Arrays.asList(NUM_WRAP_TYPES, NUM_PRIMITIVE_TYPES);
+            for (List<String> typeConstraintKey :
+                    typeConstraintKeys) {
+                if (typeConstraintKey.contains(key))
+                    result.addAll(typeConstraintKey.subList(0, typeConstraintKey.indexOf(key)));
+            }
+        }
+
+        result.add(key);
+        return result;
     }
 }

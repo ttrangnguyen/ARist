@@ -231,7 +231,7 @@ public class ProjectParser {
         if (publicStaticMembersFile.isFile()) return;
 
         List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
-        
+
         javaFiles = javaFiles.stream().filter(file -> {
             return !Utils.checkTestFile(file);
         }).collect(Collectors.toList());
@@ -292,23 +292,39 @@ public class ProjectParser {
         }).collect(Collectors.toList());
     }
 
-    public HashMap<String, List<Pair<String, String>>> getHMPublicStaticCandidates(String typeKey) {
-        HashMap<String, List<Pair<String, String>>> result = new HashMap<>();
+    private HashMap<String, List<Pair<String, String>>> publicStaticMemberHM;
+    private List<Pair<String, String>> publicStaticMemberPairList = new ArrayList<>();
 
-        if (typeKey == null) return result;
+
+    public void initPublicStaticMemberHM() {
+        publicStaticMemberHM = new HashMap<>();
         List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
         publicStaticMemberList.addAll(publicStaticMethodList);
 
         for (PublicStaticMember member : publicStaticMemberList) {
-            if (TypeConstraintKey.assignWith(member.key, typeKey)) {
-                if (result.get(member.key) != null) {
-                    result.get(member.key).add(new Pair<>(member.excode, member.lexical));
-                } else {
-                    result.put(member.key, new ArrayList<>()).add(new Pair<>(member.excode, member.lexical));
+            if (publicStaticMemberHM.get(member.key) != null) {
+                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+            } else {
+                publicStaticMemberHM.put(member.key, new ArrayList<>()).add(new Pair<>(member.excode, member.lexical));
 
-                }
             }
+            publicStaticMemberPairList.add(new Pair<>(member.excode, member.lexical));
         }
+    }
+
+    public List<Pair<String, String>> getFasterPublicStaticCandidates(String typeKey) {
+        if (publicStaticMemberHM == null) initPublicStaticMemberHM();
+        List<Pair<String, String>> result = new ArrayList<>();
+
+        if (typeKey == null) return result;
+        if (typeKey.equals(TypeConstraintKey.OBJECT_TYPE)) {
+            return publicStaticMemberPairList;
+        }
+
+        TypeConstraintKey.assignWith(typeKey).forEach(type -> {
+            result.addAll(publicStaticMemberHM.get(type));
+        });
+
         return result;
     }
 

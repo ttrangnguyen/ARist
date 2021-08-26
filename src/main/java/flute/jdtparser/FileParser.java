@@ -367,9 +367,16 @@ public class FileParser {
                     }
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(num)", "0");
+
+                        visibleVariables.forEach(variable -> {
+                            if (variable.getTypeBinding().getDimensions() > 0) {
+                                nextVariableMap.put("F_ACCESS(" + variable.getName() + ".length", variable.getName() + ".length");
+                            }
+                        });
                     }
 
                     if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                            || TypeConstraintKey.CHAR_SEQUE_TYPE.equals(typeNeedCheck.getKey())
                             || (methodBinding.getName().equals("equals")
                             && finalExpressionTypeKey != null && finalExpressionTypeKey.equals(TypeConstraintKey.STRING_TYPE))) {
                         nextVariableMap.put("LIT(String)", "\"\"");
