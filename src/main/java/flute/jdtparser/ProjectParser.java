@@ -7,6 +7,7 @@ import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.data.type.TypeConstraintKey;
 import flute.jdtparser.callsequence.node.cfg.Utils;
+import flute.utils.Pair;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -289,6 +290,26 @@ public class ProjectParser {
         return publicStaticMemberList.stream().filter(member -> {
             return TypeConstraintKey.assignWith(member.key, typeKey);
         }).collect(Collectors.toList());
+    }
+
+    public HashMap<String, List<Pair<String, String>>> getHMPublicStaticCandidates(String typeKey) {
+        HashMap<String, List<Pair<String, String>>> result = new HashMap<>();
+
+        if (typeKey == null) return result;
+        List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
+        publicStaticMemberList.addAll(publicStaticMethodList);
+
+        for (PublicStaticMember member : publicStaticMemberList) {
+            if (TypeConstraintKey.assignWith(member.key, typeKey)) {
+                if (result.get(member.key) != null) {
+                    result.get(member.key).add(new Pair<>(member.excode, member.lexical));
+                } else {
+                    result.put(member.key, new ArrayList<>()).add(new Pair<>(member.excode, member.lexical));
+
+                }
+            }
+        }
+        return result;
     }
 
     public static void main(String[] args) throws IOException {
