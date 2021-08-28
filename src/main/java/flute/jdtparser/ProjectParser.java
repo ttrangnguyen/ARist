@@ -305,8 +305,8 @@ public class ProjectParser {
             if (publicStaticMemberHM.get(member.key) != null) {
                 publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
             } else {
-                publicStaticMemberHM.put(member.key, new ArrayList<>()).add(new Pair<>(member.excode, member.lexical));
-
+                publicStaticMemberHM.put(member.key, new ArrayList<>());
+                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
             }
             publicStaticMemberPairList.add(new Pair<>(member.excode, member.lexical));
         }
@@ -322,7 +322,8 @@ public class ProjectParser {
         }
 
         TypeConstraintKey.assignWith(typeKey).forEach(type -> {
-            result.addAll(publicStaticMemberHM.get(type));
+            if (publicStaticMemberHM.get(type) != null)
+                result.addAll(publicStaticMemberHM.get(type));
         });
 
         return result;
