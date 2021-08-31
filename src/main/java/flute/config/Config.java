@@ -73,6 +73,7 @@ public class Config {
     public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_REF = false|FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
     public final static boolean FEATURE_STATIC_CONSTANT = false;

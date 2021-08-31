@@ -189,4 +189,38 @@ public class ParserUtils {
         }
         return false;
     }
+
+    public static List<IMethodBinding> getConstructors(ITypeBinding iTypeBinding) {
+        if (iTypeBinding.isWildcardType()) {
+            iTypeBinding = iTypeBinding.getSuperclass();
+        }
+        return Arrays.stream(iTypeBinding.getDeclaredMethods()).filter(methodBinding -> {
+            return methodBinding.isConstructor();
+        }).collect(Collectors.toList());
+    }
+
+    public static boolean compareParamList(IMethodBinding method, IMethodBinding targetMethod) {
+        if (method.getParameterTypes().length != targetMethod.getParameterTypes().length) return false;
+        for (int i = 0; i < method.getParameterTypes().length; i++) {
+            ITypeBinding paramType = method.getParameterTypes()[i];
+            if (!paramType.isAssignmentCompatible(targetMethod.getParameterTypes()[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static ITypeBinding checkConstructorReference(ITypeBinding interfaceType) {
+        if (interfaceType.getDeclaredMethods().length != 0) {
+            for (IMethodBinding methodBinding : interfaceType.getDeclaredMethods()) {
+                if (Modifier.isAbstract(methodBinding.getModifiers())) {
+                    if (methodBinding.getParameterTypes().length == 0) return methodBinding.getReturnType();
+                    for (IMethodBinding constructors : getConstructors(methodBinding.getReturnType())) {
+                        if (compareParamList(constructors, methodBinding)) return methodBinding.getReturnType();
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }

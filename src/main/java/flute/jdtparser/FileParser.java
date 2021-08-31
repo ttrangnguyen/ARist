@@ -529,8 +529,18 @@ public class FileParser {
                     }
                 });
                 if (Config.FEATURE_PARAM_TYPE_LAMBDA
-                        && nextVariableMap.getValue().isEmpty() && typeNeedCheck.isInterface()) {
+//                        && nextVariableMap.getValue().isEmpty()
+                        && typeNeedCheck.isInterface()) {
                     nextVariableMap.put("LAMBDA", "->{}");
+                }
+                if (Config.FEATURE_PARAM_TYPE_METHOD_REF && typeNeedCheck.isInterface()) {
+                    nextVariableMap.put("M_REF(<unk>,<unk>)", "::");
+                    ITypeBinding constructorRef = ParserUtils.checkConstructorReference(typeNeedCheck);
+                    if (constructorRef != null) {
+                        String constructorRefName = constructorRef.getName().replace("? extends ", "");
+                        nextVariableMap.put("M_REF(" + constructorRefName + "," + constructorRefName + ")"
+                                , constructorRefName + "::" + "new");
+                    }
                 }
             }
         });
