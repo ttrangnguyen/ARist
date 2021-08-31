@@ -10,6 +10,7 @@ import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
 import flute.utils.StringUtils;
 import flute.utils.file_processing.JavaTokenizer;
+import flute.utils.logging.Logger;
 
 import java.io.IOException;
 import java.util.*;
@@ -115,6 +116,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setIs_local_var(isLocalVarList);
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
+                            Logger.testCount(test, getProjectParser());
                             if (RecTestFilter.predictable(argExcodes)) {
                                 RecTestNormalizer.normalize(test);
                             } else {
@@ -206,6 +208,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 test.setParamTypeKey(params.getParamTypeKey());
                 test.setIs_local_var(isLocalVarList);
                 test.setMethodInvocClassQualifiedName(classQualifiedName);
+                Logger.testCount(test, getProjectParser());
                 if (isClean) {
                     RecTestNormalizer.normalize(test);
                 } else {
