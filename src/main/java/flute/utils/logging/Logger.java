@@ -38,6 +38,7 @@ public class Logger {
     }
 
     public static void testCount(ArgRecTest test, ProjectParser projectParser) {
+        if (test.getExpected_lex().equals(")")) return;
         int publicStaticCount = projectParser.getFasterPublicStaticCandidates(
                 test.getParamTypeKey()
         ).size();
