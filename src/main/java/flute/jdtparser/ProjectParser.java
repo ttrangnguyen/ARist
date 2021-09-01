@@ -5,6 +5,9 @@ import com.google.gson.Gson;
 import flute.config.Config;
 import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
+import flute.data.type.TypeConstraintKey;
+import flute.jdtparser.callsequence.node.cfg.Utils;
+import flute.utils.Pair;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -228,6 +231,11 @@ public class ProjectParser {
         if (publicStaticMembersFile.isFile()) return;
 
         List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
+
+        javaFiles = javaFiles.stream().filter(file -> {
+            return !Utils.checkTestFile(file);
+        }).collect(Collectors.toList());
+
         for (File file : javaFiles) {
             File curFile = new File(file.getAbsolutePath());
             FileParser fileParser = new FileParser(this, curFile, 6969669);
@@ -253,17 +261,72 @@ public class ProjectParser {
     }
 
     public void loadPublicStaticMembers() {
+        loadPublicStaticMembers(Config.PROJECT_NAME);
+    }
+
+    public void loadPublicStaticRTMembers() {
+        loadPublicStaticMembers("rt");
+    }
+
+    public void loadPublicStaticMembers(String project) {
         try {
             Gson gson = new Gson();
             BufferedReader br = new BufferedReader(new FileReader(
-                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME)));
-            Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>(){}.getType();
-            publicStaticFieldList = gson.fromJson(br.readLine(), publicStaticMemberType);
-            publicStaticMethodList = gson.fromJson(br.readLine(), publicStaticMemberType);
+                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, project)));
+            Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>() {
+            }.getType();
+            publicStaticFieldList.addAll(gson.fromJson(br.readLine(), publicStaticMemberType));
+            publicStaticMethodList.addAll(gson.fromJson(br.readLine(), publicStaticMemberType));
             br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<PublicStaticMember> getPublicStaticCandidates(String typeKey) {
+        if (typeKey == null) return new ArrayList<PublicStaticMember>();
+        List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
+        publicStaticMemberList.addAll(publicStaticMethodList);
+        return publicStaticMemberList.stream().filter(member -> {
+            return TypeConstraintKey.assignWith(member.key, typeKey);
+        }).collect(Collectors.toList());
+    }
+
+    private HashMap<String, List<Pair<String, String>>> publicStaticMemberHM;
+    private List<Pair<String, String>> publicStaticMemberPairList = new ArrayList<>();
+
+
+    public void initPublicStaticMemberHM() {
+        publicStaticMemberHM = new HashMap<>();
+        List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
+        publicStaticMemberList.addAll(publicStaticMethodList);
+
+        for (PublicStaticMember member : publicStaticMemberList) {
+            if (publicStaticMemberHM.get(member.key) != null) {
+                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+            } else {
+                publicStaticMemberHM.put(member.key, new ArrayList<>());
+                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+            }
+            publicStaticMemberPairList.add(new Pair<>(member.excode, member.lexical));
+        }
+    }
+
+    public List<Pair<String, String>> getFasterPublicStaticCandidates(String typeKey) {
+        if (publicStaticMemberHM == null) initPublicStaticMemberHM();
+        List<Pair<String, String>> result = new ArrayList<>();
+
+        if (typeKey == null) return result;
+        if (typeKey.equals(TypeConstraintKey.OBJECT_TYPE)) {
+            return publicStaticMemberPairList;
+        }
+
+        TypeConstraintKey.assignWith(typeKey).forEach(type -> {
+            if (publicStaticMemberHM.get(type) != null)
+                result.addAll(publicStaticMemberHM.get(type));
+        });
+
+        return result;
     }
 
     public static void main(String[] args) throws IOException {

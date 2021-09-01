@@ -367,9 +367,16 @@ public class FileParser {
                     }
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(num)", "0");
+
+                        visibleVariables.forEach(variable -> {
+                            if (variable.getTypeBinding().getDimensions() > 0) {
+                                nextVariableMap.put("F_ACCESS(" + variable.getName() + ".length", variable.getName() + ".length");
+                            }
+                        });
                     }
 
                     if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                            || TypeConstraintKey.CHAR_SEQUE_TYPE.equals(typeNeedCheck.getKey())
                             || (methodBinding.getName().equals("equals")
                             && finalExpressionTypeKey != null && finalExpressionTypeKey.equals(TypeConstraintKey.STRING_TYPE))) {
                         nextVariableMap.put("LIT(String)", "\"\"");
@@ -393,7 +400,7 @@ public class FileParser {
                             && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                             && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
                     ) {
-                        String lex = "new " + typeNeedCheck.getName() + "(";
+                        String lex = "new " + typeNeedCheck.getName().replace("? extends ", "") + "(";
                         String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
                                 + "OPEN_PART";
                         nextVariableMap.put(excode, lex);
@@ -402,9 +409,9 @@ public class FileParser {
                     //feature 14
                     if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
                             && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[]";
+                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
                         String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
-                                + "OPEN_PART CLOSE_PART";
+                                + "OPEN_PART LIT(num) CLOSE_PART";
                         nextVariableMap.put(excode, lex);
                     }
 
@@ -522,8 +529,18 @@ public class FileParser {
                     }
                 });
                 if (Config.FEATURE_PARAM_TYPE_LAMBDA
-                        && nextVariableMap.getValue().isEmpty() && typeNeedCheck.isInterface()) {
+//                        && nextVariableMap.getValue().isEmpty()
+                        && typeNeedCheck.isInterface()) {
                     nextVariableMap.put("LAMBDA", "->{}");
+                }
+                if (Config.FEATURE_PARAM_TYPE_METHOD_REF && typeNeedCheck.isInterface()) {
+                    nextVariableMap.put("M_REF(<unk>,<unk>)", "::");
+                    ITypeBinding constructorRef = ParserUtils.checkConstructorReference(typeNeedCheck);
+                    if (constructorRef != null) {
+                        String constructorRefName = constructorRef.getName().replace("? extends ", "");
+                        nextVariableMap.put("M_REF(" + constructorRefName + "," + constructorRefName + ")"
+                                , constructorRefName + "::" + "new");
+                    }
                 }
             }
         });
@@ -546,6 +563,15 @@ public class FileParser {
                     }
                 }
 
+            } else if (arg instanceof MethodInvocation) {
+                MethodInvocation methodInvocation = (MethodInvocation) arg;
+                if (Modifier.isStatic(methodInvocation.resolveMethodBinding().getModifiers())) {
+                    return String.join(".",
+                            methodInvocation.resolveMethodBinding().getDeclaringClass().getName(), methodInvocation.resolveMethodBinding().getName()) + "(";
+                }
+            } else if (arg instanceof ClassInstanceCreation) {
+                ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) arg;
+                return "new " + classInstanceCreation.resolveTypeBinding().getName() + "(";
             }
             return null;
         } catch (Exception e) {

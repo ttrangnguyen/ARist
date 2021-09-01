@@ -67,6 +67,18 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     @Override
+    public void validateTest(RecTest test, boolean doPrintInadequateTests) {
+        List<ArgRecTest> oneArgTests = ((MultipleArgRecTest) test).getArgRecTestList();
+        for (ArgRecTest oneArgTest: oneArgTests) {
+            oneArgTest.setPublicStaticCandidateList(projectParser.getPublicStaticCandidates(oneArgTest.getParamTypeKey()));
+        }
+        super.validateTest(test, doPrintInadequateTests);
+        for (ArgRecTest oneArgTest: oneArgTests) {
+            oneArgTest.setPublicStaticCandidateList(null);
+        }
+    }
+
+    @Override
     SocketClient getSocketClient() throws Exception {
         return new SocketClient(getSocketPort());
     }
@@ -241,11 +253,11 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     public static void main(String[] args) throws IOException {
-        RecClient client = new ArgRecClient("lucene");
+        RecClient client = new ArgRecClient("netbeans");
         List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
         //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
 
-        client.validateTests(tests, false);
+        client.validateTests(tests, true);
         //RecClient.logTests(tests);
         client.queryAndTest(tests, false, false);
         client.printTestResult();

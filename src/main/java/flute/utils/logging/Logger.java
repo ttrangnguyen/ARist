@@ -1,6 +1,8 @@
 package flute.utils.logging;
 
 import flute.config.Config;
+import flute.jdtparser.ProjectParser;
+import flute.tokenizing.excode_data.ArgRecTest;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -33,6 +35,14 @@ public class Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void testCount(ArgRecTest test, ProjectParser projectParser) {
+        int publicStaticCount = projectParser.getFasterPublicStaticCandidates(
+                test.getParamTypeKey()
+        ).size();
+        write(String.valueOf(test.getNext_lexList().size()), "test_count_raw.txt");
+        write(String.valueOf(test.getNext_lexList().size() + publicStaticCount), "test_count.txt");
     }
 
     public static void delete(String filename) {
