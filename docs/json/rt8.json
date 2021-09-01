@@ -1,0 +1,21 @@
+{
+  "name": "rt8",
+  "project-dir": "storage/repositories/rt8/",
+  "source-paths": [
+  ],
+  "encode-sources": [
+  ],
+  "class-paths": [
+  ],
+  "source-folder": "storage/repositories/rt8/",
+  "prefix-source-folders": [
+  ],
+  "package-source-folders": [],
+  "jar-folders": [
+  ],
+  "jdt-level": 8,
+  "java-version": "8",
+  "ignore-files": [],
+  "test-file-path": "",
+  "test-position": 4007
+}

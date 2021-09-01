@@ -151,8 +151,11 @@ public class ClassParser {
         List<IMethodBinding> staticMethods = new ArrayList<>();
         methods.forEach(method -> {
             int modifier = method.getModifiers();
-            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
-                staticMethods.add(method);
+            if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
+                if (!method.isConstructor()
+                        && Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                    staticMethods.add(method);
+                }
             }
         });
         return staticMethods;
