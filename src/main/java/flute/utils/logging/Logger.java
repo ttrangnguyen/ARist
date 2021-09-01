@@ -41,6 +41,7 @@ public class Logger {
         int publicStaticCount = projectParser.getFasterPublicStaticCandidates(
                 test.getParamTypeKey()
         ).size();
+        write(String.valueOf(test.getNext_lexList().size()), "test_count_raw.txt");
         write(String.valueOf(test.getNext_lexList().size() + publicStaticCount), "test_count.txt");
     }
 
