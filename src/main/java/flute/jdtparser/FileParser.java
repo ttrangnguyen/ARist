@@ -538,7 +538,7 @@ public class FileParser {
                     ITypeBinding constructorRef = ParserUtils.checkConstructorReference(typeNeedCheck);
                     if (constructorRef != null) {
                         String constructorRefName = constructorRef.getName().replace("? extends ", "");
-                        nextVariableMap.put("M_REF(" + constructorRefName + "," + constructorRefName + ")"
+                        nextVariableMap.put("VAR(" + constructorRefName + ") M_REF(" + constructorRefName + ",new)"
                                 , constructorRefName + "::" + "new");
                     }
                 }
