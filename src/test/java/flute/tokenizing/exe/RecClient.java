@@ -528,6 +528,8 @@ public abstract class RecClient {
 
 
     public void generateTests(String fold, String setting) throws IOException {
+        Timer timer = new Timer();
+        timer.startCounter();
         setupGenerator();
         Scanner sc = new Scanner(new File("docs/testFilePath/" + "datapath/fold" + fold + "/" + projectName + ".txt"));
         String testOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_" + setting + ".txt";
@@ -538,15 +540,19 @@ public abstract class RecClient {
         file.delete();
 //        final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
 //        final List<Future<?>> futures = new ArrayList<>();
+        MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
+                new SingleArgRecTestGenerator((ArgRecTestGenerator) generator): new AllArgRecTestGenerator((ArgRecTestGenerator) generator);
+        List<ArgRecTest> tests = new ArrayList<>();
         while (sc.hasNextLine()) {
             String filePath = sc.nextLine();
 //            Future<?> future = executor.submit(() -> {
             createNewGenerator();
-            List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+            List<? extends RecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
             for (RecTest test : oneFileTests) test.setFilePath(filePath);
             for (RecTest test : oneFileTests) {
                 Logger.write(gson.toJson(this.testClass.cast(test)), testOutputPath);
             }
+            tests.addAll((List<ArgRecTest>) oneFileTests);
 //            for (RecTest test: oneFileTests)
 //                if (!test.isIgnored()) {
 //                    boolean adequateGeneratedExcode = false;
@@ -566,6 +572,21 @@ public abstract class RecClient {
 //                Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_off.txt");
 //            }
         }
+        double averageGetTestsTime = timer.getTimeCounter() / 1000f / tests.size();
+        dataFrame.insert("averageGetTestsTime", averageGetTestsTime);
+
+        for (RecTest test : tests) dataFrame.insert("Ignored test", test.isIgnored());
+
+        System.out.println("Generated " + dataFrame.getVariable("Ignored test").getCount() + " tests.");
+        System.out.println("Supported " + (dataFrame.getVariable("Ignored test").getCount() - dataFrame.getVariable("Ignored test").getSum()) + " tests.");
+        System.out.println("Ignored " + dataFrame.getVariable("Ignored test").getSum() + " tests.");
+        List<MultipleArgRecTest> multiArgRecTests = multipleGenerator.generate(tests);
+        this.validateTests(multiArgRecTests, true);
+        //RecClient.logTests(tests);
+        this.queryAndTest(multiArgRecTests, false, false);
+        this.printTestResult();
+        System.exit(0);
+        sc.close();
 
 //        if (Config.MULTIPROCESS) {
 //            boolean isDone = false;
