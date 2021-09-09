@@ -7,6 +7,7 @@ import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MethodCallNameRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
+import flute.utils.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +44,8 @@ public class RecTester {
 
         if (test.getNext_excode().contains(expectedExcode)) return true;
         List<String> candidates = new ArrayList<>();
-        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
-            candidates.add(publicStaticCandidate.excode);
+        for (Pair<String, String> publicStaticCandidate: test.getPublicStaticCandidateList()) {
+            candidates.add(publicStaticCandidate.getFirst());
         }
         if (candidates.contains(expectedExcode)) return true;
 
@@ -99,8 +100,8 @@ public class RecTester {
         }
 
         List<String> candidates = test.getNext_lexList();
-        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
-            candidates.add(publicStaticCandidate.lexical);
+        for (Pair<String, String> publicStaticCandidate: test.getPublicStaticCandidateList()) {
+            candidates.add(publicStaticCandidate.getSecond());
         }
 
         for (String candidate : candidates) {

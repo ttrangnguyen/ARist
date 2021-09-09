@@ -70,7 +70,7 @@ public class ArgRecClient extends MethodCallRecClient {
     public void validateTest(RecTest test, boolean doPrintInadequateTests) {
         List<ArgRecTest> oneArgTests = ((MultipleArgRecTest) test).getArgRecTestList();
         for (ArgRecTest oneArgTest: oneArgTests) {
-            oneArgTest.setPublicStaticCandidateList(projectParser.getPublicStaticCandidates(oneArgTest.getParamTypeKey()));
+            oneArgTest.setPublicStaticCandidateList(projectParser.getFasterPublicStaticCandidates(oneArgTest.getParamTypeKey()));
         }
         super.validateTest(test, doPrintInadequateTests);
         for (ArgRecTest oneArgTest: oneArgTests) {

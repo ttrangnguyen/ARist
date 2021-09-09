@@ -60,6 +60,7 @@ public abstract class RecClient {
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+        projectParser.initPublicStaticMembers();
         projectParser.loadPublicStaticMembers();
         projectParser.loadPublicStaticRTMembers();
     }
