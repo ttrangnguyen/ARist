@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 public enum ExpressionType {
     NAME, METHOD_INVOC, FIELD_ACCESS, ARRAY_ACCESS, CAST, STRING_LIT, NUM_LIT, CHAR_LIT, TYPE_LIT, BOOL_LIT,
-    NULL_LIT, OBJ_CREATION, ARR_CREATION, THIS, SUPER, COMPOUND, LAMBDA, OTHERS;
+    NULL_LIT, OBJ_CREATION, ARR_CREATION, THIS, SUPER, COMPOUND, LAMBDA, METHOD_REF, OTHERS;
 
     private static HashMap<Class, ExpressionType> classMap;
 
@@ -37,6 +37,7 @@ public enum ExpressionType {
         classMap.put(InstanceOfExpr.class, COMPOUND);
         classMap.put(UnaryExpr.class, COMPOUND);
         classMap.put(LambdaExpr.class, LAMBDA);
+        classMap.put(MethodReferenceExpr.class, METHOD_REF);
     }
 
     public static ExpressionType get(Expression expr) {

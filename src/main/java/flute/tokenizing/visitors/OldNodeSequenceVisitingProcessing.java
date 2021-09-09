@@ -301,6 +301,29 @@ public class OldNodeSequenceVisitingProcessing {
 		return nodeSequenceInfo;
 	}
 
+	public synchronized static NodeSequenceInfo addMethodReferenceNode(NodeInfo nodeInfo, String varName, String fieldName,
+																	   Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
+																	   ArrayList<NodeSequenceInfo> nodeSequenceList) {
+		NodeSequenceInfo previousNode = null;
+		if (nodeSequenceStack.size() > 0) {
+			previousNode = nodeSequenceStack.pop();
+		}
+		short nodeType = NodeSequenceConstant.METHODREFERENCE;
+		short startEnd = NodeSequenceConstant.UNKNOWN;
+		short controlType = NodeSequenceConstant.UNKNOWN;
+		String attachedType = null;
+		String attachedVar = varName;
+
+		NodeSequenceInfo nodeSequenceInfo = new NodeSequenceInfo(curNodeID, curNodeID, previousNode, nodeType, startEnd,
+				controlType, attachedType, attachedVar, fieldName, methodInfo, typeInfo, nodeInfo);
+
+		nodeSequenceStack.push(nodeSequenceInfo);
+		nodeSequenceList.add(nodeSequenceInfo);
+
+		curNodeID++;
+		return nodeSequenceInfo;
+	}
+
 	public synchronized static NodeSequenceInfo addAssignmentNode(NodeInfo nodeInfo, String assignType,
 			Stack<NodeSequenceInfo> nodeSequenceStack, MethodInfo methodInfo, TypeInfo typeInfo,
 			ArrayList<NodeSequenceInfo> nodeSequenceList) {

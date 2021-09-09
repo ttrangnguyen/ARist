@@ -2562,7 +2562,6 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
         // Start arguments
     }
 
-    //TODO: make its tokens different from method call's
     // Eg: getNames()[15*15]
     @Override
     public void visit(ArrayAccessExpr n, Object arg) {
@@ -2686,8 +2685,7 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     public void visit(MemberValuePair n, Object arg) {
         Logger.log("MemberValuePair: " + n);
     }
-	
-	// TODO: handle this
+
 	// Eg: (a, b) -> { println(a + b); }
     @Override
     public void visit(LambdaExpr n, Object arg) {
@@ -2700,19 +2698,44 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
     @Override
     public void visit(UnknownType n, Object arg) {
     }
-	
-	// TODO: handle Lambda expressions and this
+
 	// Eg: Bar<String>::<Integer>new
     @Override
     public void visit(MethodReferenceExpr n, Object arg) {
-        //super.visit(n, arg);
+
+        if (typeStack.size() > 0) {
+            curTypeInfo = typeStack.peek();
+        }
+
+        NodeInfo nodeInfo = NodeVisitProcessing.addNewFieldAccessNode(curMethodInfo, parentNodeStack,
+                previousControlFlowNodeStack, curID, n);
+        curID++;
+
+        String methodName = n.getIdentifier();
+        String varName = n.getScope().toString();
+        varName = varName.replace("this", "this");
+        varName = varName.replace("super", "super");
+
+        doVisitExpression(n.getScope(), arg);
+
+        // Bar<String>::<Integer>new ---> VAR(Bar) M_REF(BAR,new)
+        // person::get ---> VAR(Person,person) M_REF(Person,get)
+        OldNodeSequenceVisitingProcessing.addMethodReferenceNode(nodeInfo, varName, methodName, nodeSequenceStack,
+                curMethodInfo, curTypeInfo, nodeSequenceList).oriNode = n;
     }
-	
-	// TODO: handle Lambda expressions and this
+
 	// Eg: World """in""" World::greet
     @Override
     public void visit(TypeExpr n, Object arg) {
-        //super.visit(n, arg);
+        Node parentNode = n.getParentNode().orElse(null);
+
+        // World ---> VAR(World,World)
+        NodeInfo nodeInfo = NodeVisitProcessing.addVarNode(curMethodInfo, parentNodeStack,
+                previousControlFlowNodeStack, curID, parentNode);
+        String typeName = n.getTypeAsString();
+        OldNodeSequenceVisitingProcessing.addVarNode(nodeInfo, typeName, nodeSequenceStack, curMethodInfo,
+                curTypeInfo, nodeSequenceList).setPosition(n.getBegin(), n.getEnd());
+        curID++;
     }
     
     @Override

@@ -1,5 +1,6 @@
 package flute.tokenizing.exe;
 
+import flute.analysis.ExpressionType;
 import flute.jdtparser.PublicStaticMember;
 import flute.testing.CandidateMatcher;
 import flute.tokenizing.excode_data.ArgRecTest;
@@ -106,6 +107,13 @@ public class RecTester {
             candidate = CandidateMatcher.preprocess(candidate);
             if (matchesArg(expectedLex, candidate)) return true;
 
+            if (test.getArgType() == ExpressionType.METHOD_REF) {
+                if (!expectedLex.endsWith("::new")) {
+                    if (candidate.equals("::")) return true;
+                }
+                continue;
+            }
+
             String alternateLex = null;
             if (test.getMethodAccessLex() != null) {
                 alternateLex = test.getMethodAccessLex();
@@ -159,6 +167,13 @@ public class RecTester {
         }
 
         if (matchesArg(expectedLex, result)) return true;
+
+        if (test.getArgType() == ExpressionType.METHOD_REF) {
+            if (!expectedLex.endsWith("::new")) {
+                return result.equals("::");
+            }
+            return false;
+        }
 
         expectedLex = null;
         if (test.getMethodAccessLex() != null) {

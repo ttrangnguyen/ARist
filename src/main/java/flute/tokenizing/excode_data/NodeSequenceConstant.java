@@ -38,6 +38,7 @@ public class NodeSequenceConstant {
 	public static final short CAST = 17;
 	public static final short FIELD = 18;
 	public static final short LAMBDA = 19;
+	public static final short METHODREFERENCE = 20;
 	
 	public static final short IF = 100;
 	public static final short ELSE = 101;
