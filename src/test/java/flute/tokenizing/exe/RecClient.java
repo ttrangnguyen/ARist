@@ -9,6 +9,8 @@ import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
+import flute.tokenizing.excode_data.ArgRecTest;
+import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.ProgressBar;
 import flute.utils.logging.Logger;
@@ -289,6 +291,8 @@ public abstract class RecClient {
     }
 
     public void validateTest(RecTest test, boolean doPrintInadequateTests) {
+        if (test instanceof ArgRecTest && ((ArgRecTest) test).getArgPos() == 0 && !Config.TEST_ZERO_ARG) return;
+        if (test instanceof MultipleArgRecTest && ((MultipleArgRecTest)test).getNumArg() == 0 && !Config.TEST_ZERO_ARG) return;
         if (!test.isIgnored()) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;
