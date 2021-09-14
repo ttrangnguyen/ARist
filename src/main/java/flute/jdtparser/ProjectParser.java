@@ -294,8 +294,8 @@ public class ProjectParser {
         }).collect(Collectors.toList());
     }
 
-    private HashMap<String, List<Pair<String, String>>> publicStaticMemberHM;
-    private List<Pair<String, String>> publicStaticMemberPairList = new ArrayList<>();
+    private HashMap<String, List<PublicStaticMember>> publicStaticMemberHM;
+    private List<PublicStaticMember> publicStaticMemberPairList = new ArrayList<>();
 
 
     public void initPublicStaticMemberHM() {
@@ -305,18 +305,22 @@ public class ProjectParser {
 
         for (PublicStaticMember member : publicStaticMemberList) {
             if (publicStaticMemberHM.get(member.key) != null) {
-                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+                publicStaticMemberHM.get(member.key).add(member);
             } else {
                 publicStaticMemberHM.put(member.key, new ArrayList<>());
-                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+                publicStaticMemberHM.get(member.key).add(member);
             }
-            publicStaticMemberPairList.add(new Pair<>(member.excode, member.lexical));
+            publicStaticMemberPairList.add(member);
         }
     }
 
-    public List<Pair<String, String>> getFasterPublicStaticCandidates(String typeKey) {
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey){
+        return getFasterPublicStaticCandidates(typeKey, null);
+    }
+
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, List<String> dependencies) {
         if (publicStaticMemberHM == null) initPublicStaticMemberHM();
-        List<Pair<String, String>> result = new ArrayList<>();
+        List<PublicStaticMember> result = new ArrayList<>();
 
         if (typeKey == null) return result;
         if (typeKey.equals(TypeConstraintKey.OBJECT_TYPE)) {
