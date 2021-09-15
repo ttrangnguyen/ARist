@@ -2,7 +2,6 @@ package flute.tokenizing.excode_data;
 
 import flute.analysis.ExpressionType;
 import flute.jdtparser.PublicStaticMember;
-import flute.utils.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +22,7 @@ public class ArgRecTest extends MethodCallRecTest {
     private List<String> next_excode;
     private List<List<String>> next_lex;
     private String paramTypeKey;
-    private transient List<Pair<String, String>> publicStaticCandidateList;
+    private transient List<PublicStaticMember> publicStaticCandidateList;
 
     /**
      * Expected result (alternate)
@@ -96,11 +95,11 @@ public class ArgRecTest extends MethodCallRecTest {
         this.paramTypeKey = paramTypeKey;
     }
 
-    public List<Pair<String, String>> getPublicStaticCandidateList() {
+    public List<PublicStaticMember> getPublicStaticCandidateList() {
         return publicStaticCandidateList;
     }
 
-    public void setPublicStaticCandidateList(List<Pair<String, String>> publicStaticCandidateList) {
+    public void setPublicStaticCandidateList(List<PublicStaticMember> publicStaticCandidateList) {
         this.publicStaticCandidateList = publicStaticCandidateList;
     }
 
