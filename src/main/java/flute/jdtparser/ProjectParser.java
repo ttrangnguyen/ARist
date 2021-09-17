@@ -7,8 +7,8 @@ import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.data.type.TypeConstraintKey;
 import flute.jdtparser.callsequence.node.cfg.Utils;
-import flute.utils.Pair;
 import flute.utils.ProgressBar;
+import flute.utils.XMLReader;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
@@ -236,7 +236,10 @@ public class ProjectParser {
             return !Utils.checkTestFile(file);
         }).collect(Collectors.toList());
 
+        ProgressBar progressBar = new ProgressBar();
+        int count = 0;
         for (File file : javaFiles) {
+            progressBar.setProgress(count++ * 1f / javaFiles.size(), true);
             File curFile = new File(file.getAbsolutePath());
             FileParser fileParser = new FileParser(this, curFile, 6969669);
             List<?> types = fileParser.getCu().types();
@@ -314,8 +317,13 @@ public class ProjectParser {
         }
     }
 
-    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey){
-        return getFasterPublicStaticCandidates(typeKey, null);
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey) {
+        return getFasterPublicStaticCandidates(typeKey, new ArrayList<>());
+    }
+
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, String filePath) {
+        List<String> dependencies = XMLReader.read(new File(XMLReader.parseConfigPath(new File(filePath))));
+        return getFasterPublicStaticCandidates(typeKey, dependencies);
     }
 
     public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, List<String> dependencies) {
@@ -332,7 +340,16 @@ public class ProjectParser {
                 result.addAll(publicStaticMemberHM.get(type));
         });
 
-        return result;
+        List<PublicStaticMember> lastResult = result;
+
+        if (dependencies != null && dependencies.size() > 0) {
+            List<String> finalDependencies = dependencies;
+            lastResult = lastResult.stream().filter(item -> {
+                return item.packageName == null || finalDependencies.contains(item.packageName);
+            }).collect(Collectors.toList());
+        }
+
+        return lastResult;
     }
 
     public static void main(String[] args) throws IOException {
