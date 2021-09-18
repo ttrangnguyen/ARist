@@ -6,9 +6,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,7 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
 
         List<RecTest> tests = new ArrayList<>();
 
-        ASTNode curMethodScope = getFileParser().getCurMethodScope();
+        IMethodBinding methodBinding = getFileParser().getCurMethodInvocation().resolveMethodBinding();
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();
         int k = methodCallStartIdx + 1;
@@ -56,11 +54,6 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
-
-                        IMethodBinding methodBinding = null;
-                        if (curMethodScope instanceof MethodDeclaration) {
-                            methodBinding = ((MethodDeclaration) curMethodScope).resolveBinding();
-                        }
 
                         ArgRecTest test = new ArgRecTest();
                         test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
@@ -112,10 +105,6 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
 
         if (params != null) {
             List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
-            IMethodBinding methodBinding = null;
-            if (curMethodScope instanceof MethodDeclaration) {
-                methodBinding = ((MethodDeclaration) curMethodScope).resolveBinding();
-            }
 
             ArgRecTest test = new ArgRecTest();
             boolean isClean = true;
