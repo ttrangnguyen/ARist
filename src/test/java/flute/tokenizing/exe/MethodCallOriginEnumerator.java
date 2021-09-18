@@ -50,15 +50,12 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
                     }
 
                     if (params != null) {
-                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
-
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
                         ArgRecTest test = new ArgRecTest();
                         test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                         test.setExpected_lex(arg.toString());
-                        test.setIs_local_var(isLocalVarList);
                         if (methodBinding == null) {
                             test.setMethodInvocOrigin("lib");
                         } else if (methodBinding.getDeclaringClass().getPackage().getName().startsWith("java.")) {
@@ -104,8 +101,6 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
         }
 
         if (params != null) {
-            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
-
             ArgRecTest test = new ArgRecTest();
             boolean isClean = true;
             if (methodCall.getArguments().isEmpty()) {
@@ -124,7 +119,6 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
                 test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
                 if (!RecTestFilter.predictable(argExcodes)) isClean = false;
             }
-            test.setIs_local_var(isLocalVarList);
             if (methodBinding == null) {
                 test.setMethodInvocOrigin("lib");
             } else if (methodBinding.getDeclaringClass().getPackage().getName().startsWith("java.")) {

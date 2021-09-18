@@ -32,6 +32,12 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                                                    MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
         List<RecTest> tests = new ArrayList<>();
 
+        // Lack of libraries
+        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
+            System.err.println("Cannot resolve: " + methodCall);
+            return tests;
+        }
+
         ASTNode curMethodScope = getFileParser().getCurMethodScope();
         String contextArg = MethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
 
@@ -65,6 +71,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                         for (String nextExcode : nextExcodeList) {
                             nextLexList.add(params.getValue().get(nextExcode));
                         }
+                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
                         ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -102,6 +109,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             test.setArgType(ExpressionType.get(arg));
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
+                            test.setIs_local_var(isLocalVarList);
                             test.setExpected_excode_ori(argExcodes);
                             if (RecTestFilter.predictable(argExcodes)) {
                                 RecTestNormalizer.normalize(test);
@@ -147,6 +155,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
             for (String nextExcode : nextExcodeList) {
                 nextLexList.add(params.getValue().get(nextExcode));
             }
+            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
 
@@ -198,6 +207,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                 test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
+                test.setIs_local_var(isLocalVarList);
                 if (isClean) {
                     RecTestNormalizer.normalize(test);
                 } else {

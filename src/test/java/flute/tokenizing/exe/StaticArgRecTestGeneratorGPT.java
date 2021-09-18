@@ -33,6 +33,12 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                                                    MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
         List<RecTest> tests = new ArrayList<>();
 
+        // Lack of libraries
+        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
+            System.err.println("Cannot resolve: " + methodCall);
+            return tests;
+        }
+
         String contextArg;
         ASTNode curMethodScope = getFileParser().getCurMethodScope();
         if (curMethodScope instanceof MethodDeclaration) {

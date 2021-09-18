@@ -45,6 +45,12 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
         List<RecTest> tests = new ArrayList<>();
 
+        // Lack of libraries
+        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
+            System.err.println("Cannot resolve: " + methodCall);
+            return tests;
+        }
+
         String contextArg = contextMethodCall + methodScope + methodName + '(';
 
         String classQualifiedName;
