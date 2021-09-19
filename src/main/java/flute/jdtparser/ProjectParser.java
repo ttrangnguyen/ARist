@@ -195,27 +195,29 @@ public class ProjectParser {
 
     public void addStaticMember(TypeDeclaration type, String hierachy, String packageName) {
         if (type.resolveBinding() == null) return;
-        ClassParser classParser = new ClassParser(type.resolveBinding());
+//        ClassParser classParser = new ClassParser(type.resolveBinding());
         String className = hierachy + type.getName();
         String nextHierachy = className + ".";
-        List<IVariableBinding> fields = classParser.getPublicStaticFields();
-        fields.forEach(field -> {
+//        List<IVariableBinding> fields = classParser.getPublicStaticFields();
+        for (FieldDeclaration f : type.getFields()) {
+            IVariableBinding field = (IVariableBinding) f.getType().resolveBinding();
             String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
             String lex = nextHierachy + field.getName();
             publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, packageName));
-        });
-        List<IMethodBinding> methods = classParser.getPublicStaticMethods();
-        methods.forEach(method -> {
+        }
+//        List<IMethodBinding> methods = classParser.getPublicStaticMethods();
+        for (MethodDeclaration m : type.getMethods()) {
+            IMethodBinding method = m.resolveBinding();
             String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
                     className, className, method.getName(), method.getParameterTypes().length);
             String lex = nextHierachy + method.getName() + "(";
             publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex, packageName));
-        });
-
-        TypeDeclaration[] inner = type.getTypes();
-        for (TypeDeclaration t : inner) {
-            addStaticMember(t, nextHierachy, packageName);
         }
+
+//        TypeDeclaration[] inner = type.getTypes();
+//        for (TypeDeclaration t : inner) {
+//            addStaticMember(t, nextHierachy, packageName);
+//        }
     }
 
     public List<PublicStaticMember> getPublicStaticFieldList() {
