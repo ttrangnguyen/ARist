@@ -1376,10 +1376,14 @@ public class FileParser {
         return visibleVariables;
     }
 
-    public List<Variable> getVisibleLocalVariables() {
-        return visibleVariables.stream().filter(variable -> {
-            return variable.isLocalVariable();
-        }).collect(Collectors.toList());
+    public HashMap<String, Variable> getVisibleLocalVariables() {
+        HashMap<String, Variable> result = new HashMap<>();
+        visibleVariables.forEach(variable -> {
+            if (variable.isLocalVariable()) {
+                result.put(variable.getName(), variable);
+            }
+        });
+        return result;
     }
 
     public HashMap<String, ClassModel> getVisibleClass() {
