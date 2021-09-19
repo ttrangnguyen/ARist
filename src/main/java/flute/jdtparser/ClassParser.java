@@ -136,30 +136,30 @@ public class ClassParser {
         return canSeenFields;
     }
 
-    public List<IVariableBinding> getPublicStaticFields() {
-        List<IVariableBinding> staticFields = new ArrayList<>();
-        fields.forEach(field -> {
-            int modifier = field.getModifiers();
-            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
-                staticFields.add(field);
-            }
-        });
-        return staticFields;
-    }
-
-    public List<IMethodBinding> getPublicStaticMethods() {
-        List<IMethodBinding> staticMethods = new ArrayList<>();
-        methods.forEach(method -> {
-            int modifier = method.getModifiers();
-            if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
-                if (!method.isConstructor()
-                        && Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
-                    staticMethods.add(method);
-                }
-            }
-        });
-        return staticMethods;
-    }
+//    public List<IVariableBinding> getPublicStaticFields() {
+//        List<IVariableBinding> staticFields = new ArrayList<>();
+//        fields.forEach(field -> {
+//            int modifier = field.getModifiers();
+//            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+//                staticFields.add(field);
+//            }
+//        });
+//        return staticFields;
+//    }
+//
+//    public List<IMethodBinding> getPublicStaticMethods() {
+//        List<IMethodBinding> staticMethods = new ArrayList<>();
+//        methods.forEach(method -> {
+//            int modifier = method.getModifiers();
+//            if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
+//                if (!method.isConstructor()
+//                        && Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+//                    staticMethods.add(method);
+//                }
+//            }
+//        });
+//        return staticMethods;
+//    }
 
     public boolean canSeenFrom(int modifier, ITypeBinding clientType) {
         ITypeBinding elementType = orgType.isArray() ? orgType.getElementType() : orgType;

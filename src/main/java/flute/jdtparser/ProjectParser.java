@@ -198,16 +198,15 @@ public class ProjectParser {
 //        ClassParser classParser = new ClassParser(type.resolveBinding());
         String className = hierachy + type.getName();
         String nextHierachy = className + ".";
-//        List<IVariableBinding> fields = classParser.getPublicStaticFields();
-        for (FieldDeclaration f : type.getFields()) {
-            IVariableBinding field = (IVariableBinding) f.getType().resolveBinding();
+        ITypeBinding binding = type.resolveBinding();
+        List<IVariableBinding> fields = extractPublicStaticFields(binding.getDeclaredFields());
+        for (IVariableBinding field : fields) {
             String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
             String lex = nextHierachy + field.getName();
             publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, packageName));
         }
-//        List<IMethodBinding> methods = classParser.getPublicStaticMethods();
-        for (MethodDeclaration m : type.getMethods()) {
-            IMethodBinding method = m.resolveBinding();
+        List<IMethodBinding> methods = extractPublicStaticMethods(binding.getDeclaredMethods());
+        for (IMethodBinding method : methods) {
             String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
                     className, className, method.getName(), method.getParameterTypes().length);
             String lex = nextHierachy + method.getName() + "(";
@@ -218,6 +217,31 @@ public class ProjectParser {
 //        for (TypeDeclaration t : inner) {
 //            addStaticMember(t, nextHierachy, packageName);
 //        }
+    }
+
+    public List<IVariableBinding> extractPublicStaticFields(IVariableBinding[] fields) {
+        List<IVariableBinding> staticFields = new ArrayList<>();
+        for (IVariableBinding field : fields) {
+            int modifier = field.getModifiers();
+            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                staticFields.add(field);
+            }
+        }
+        return staticFields;
+    }
+
+    public List<IMethodBinding> extractPublicStaticMethods(IMethodBinding[] methods) {
+        List<IMethodBinding> staticMethods = new ArrayList<>();
+        for (IMethodBinding method : methods) {
+            int modifier = method.getModifiers();
+            if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
+                if (!method.isConstructor()
+                        && Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                    staticMethods.add(method);
+                }
+            }
+        }
+        return staticMethods;
     }
 
     public List<PublicStaticMember> getPublicStaticFieldList() {
