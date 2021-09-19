@@ -268,7 +268,10 @@ public class FileParser {
         return genNextParams(position, null, keys);
     }
 
+    public static int paramPos;
+
     private MultiMap genNextParams(int position, IMethodBinding method, String... keys) {
+        paramPos = position;
         if (curMethodInvocation == null) return null;
 
         String methodName = curMethodInvocation.getName().getIdentifier();
@@ -349,6 +352,11 @@ public class FileParser {
                     typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
                 }
 
+                if (curMethodInvocation.getName().toString().equals("equals")
+                        && curMethodInvocation.arguments().size() == 1) {
+                    typeNeedCheck = curMethodInvocation.getExpressionType();
+                }
+
                 if (typeNeedCheck != null) {
                     if (Config.FEATURE_STATIC_CONSTANT) {
                         ITypeBinding finalTypeNeedCheckForConstant = typeNeedCheck;
@@ -363,12 +371,7 @@ public class FileParser {
                             }
                         });
                     } else {
-                        if (curMethodInvocation.getName().toString().equals("equals")
-                                && curMethodInvocation.arguments().size() == 1) {
-                            nextVariableMap.setParamTypeKey(finalExpressionTypeKey);
-                        } else {
-                            nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
-                        }
+                        nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
                     }
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(num)", "0");
@@ -1040,6 +1043,7 @@ public class FileParser {
 
                         boolean isStatic = Modifier.isStatic(variableBinding.getModifiers());
                         Variable variable = addVariableToList(position, variableBinding, isStatic, true);
+                        variable.setField(true);
                         if (variable != null) {
                             variable.setLocalVariable(true);
                         }
@@ -1370,6 +1374,12 @@ public class FileParser {
 
     public List<Variable> getVisibleVariables() {
         return visibleVariables;
+    }
+
+    public List<Variable> getVisibleLocalVariables() {
+        return visibleVariables.stream().filter(variable -> {
+            return variable.isLocalVariable();
+        }).collect(Collectors.toList());
     }
 
     public HashMap<String, ClassModel> getVisibleClass() {

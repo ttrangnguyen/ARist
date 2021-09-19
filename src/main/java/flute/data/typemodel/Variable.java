@@ -6,6 +6,7 @@ public class Variable {
     private boolean isStatic = false;
     private ITypeBinding typeBinding;
     private String name;
+    private boolean isField = false;
     private boolean isInitialized = false;
     private boolean isLocalVariable = false;
 
@@ -52,6 +53,14 @@ public class Variable {
 
     public void setLocalVariable(boolean localVariable) {
         isLocalVariable = localVariable;
+    }
+
+    public boolean isField() {
+        return isField;
+    }
+
+    public void setField(boolean field) {
+        isField = field;
     }
 
     @Override
