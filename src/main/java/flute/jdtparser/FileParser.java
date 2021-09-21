@@ -1043,8 +1043,8 @@ public class FileParser {
 
                         boolean isStatic = Modifier.isStatic(variableBinding.getModifiers());
                         Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-                        variable.setField(true);
                         if (variable != null) {
+                            variable.setField(true);
                             variable.setLocalVariable(true);
                         }
                     }
