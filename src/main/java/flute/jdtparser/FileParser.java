@@ -1013,6 +1013,7 @@ public class FileParser {
                     Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                     if (variable != null) {
                         variable.setLocalVariable(true);
+                        variable.setLocalVariableLevel(4);
                     }
                 }
             });
@@ -1021,6 +1022,7 @@ public class FileParser {
                 Variable variable = new Variable(curClass, "this");
                 variable.setStatic(false);
                 variable.setInitialized(true);
+                variable.setLocalVariableLevel(3);
                 visibleVariables.add(variable);
             }
 
@@ -1045,6 +1047,7 @@ public class FileParser {
                         Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                         if (variable != null) {
                             variable.setField(true);
+                            variable.setLocalVariableLevel(3);
                             variable.setLocalVariable(true);
                         }
                     }
@@ -1053,7 +1056,7 @@ public class FileParser {
                 //super field as variable
                 ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
                     boolean isStatic = Modifier.isStatic(variable.getModifiers());
-                    addVariableToList(-1, variable, isStatic, true);
+                    addVariableToList(-1, variable, isStatic, true).setLocalVariableLevel(2);
                 });
             }
 
@@ -1069,6 +1072,7 @@ public class FileParser {
                     Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                     if (variable != null && astNode == curBlockScope.getParent()) {
                         variable.setLocalVariable(true);
+                        variable.setLocalVariableLevel(4);
                     }
                 }
             });
@@ -1078,6 +1082,7 @@ public class FileParser {
             Variable variable = addVariableToList(catchClause.getException().getStartPosition(), variableBinding, isStatic, true);
             if (variable != null && astNode == curBlockScope.getParent()) {
                 variable.setLocalVariable(true);
+                variable.setLocalVariableLevel(4);
             }
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
@@ -1094,6 +1099,7 @@ public class FileParser {
                             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                             if (variable != null && astNode == curBlockScope.getParent()) {
                                 variable.setLocalVariable(true);
+                                variable.setLocalVariableLevel(4);
                             }
                         }
                     });
@@ -1110,6 +1116,7 @@ public class FileParser {
             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
             if (variable != null && astNode == curBlockScope.getParent()) {
                 variable.setLocalVariable(true);
+                variable.setLocalVariableLevel(4);
             }
         } else if (astNode instanceof SwitchStatement) {
             SwitchStatement switchStatement = (SwitchStatement) astNode;
@@ -1135,6 +1142,7 @@ public class FileParser {
                             );
                             if (variable != null && astNode == curBlockScope.getParent()) {
                                 variable.setLocalVariable(true);
+                                variable.setLocalVariableLevel(6);
                             }
                         }
                     });
@@ -1159,6 +1167,7 @@ public class FileParser {
                             );
                             if (variable != null && astNode == curBlockScope) {
                                 variable.setLocalVariable(true);
+                                variable.setLocalVariableLevel(6);
                             }
                         }
                     });
