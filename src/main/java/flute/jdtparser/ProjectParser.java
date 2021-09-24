@@ -357,14 +357,13 @@ public class ProjectParser {
 
         if (typeKey == null) return result;
         if (typeKey.equals(TypeConstraintKey.OBJECT_TYPE)) {
-            return publicStaticMemberPairList;
+            result.addAll(publicStaticMemberPairList);
+        } else {
+            TypeConstraintKey.assignWith(typeKey).forEach(type -> {
+                if (publicStaticMemberHM.get(type) != null)
+                    result.addAll(publicStaticMemberHM.get(type));
+            });
         }
-
-        TypeConstraintKey.assignWith(typeKey).forEach(type -> {
-            if (publicStaticMemberHM.get(type) != null)
-                result.addAll(publicStaticMemberHM.get(type));
-        });
-
         List<PublicStaticMember> lastResult = result;
 
         if (dependencies != null && dependencies.size() > 0) {
