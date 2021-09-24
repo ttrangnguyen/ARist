@@ -1056,7 +1056,10 @@ public class FileParser {
                 //super field as variable
                 ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
                     boolean isStatic = Modifier.isStatic(variable.getModifiers());
-                    addVariableToList(-1, variable, isStatic, true).setLocalVariableLevel(2);
+                    Variable variable1 = addVariableToList(-1, variable, isStatic, true);
+                    if (variable1 != null) {
+                        variable1.setLocalVariableLevel(2);
+                    }
                 });
             }
 
