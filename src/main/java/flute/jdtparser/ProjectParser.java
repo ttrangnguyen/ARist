@@ -370,6 +370,7 @@ public class ProjectParser {
             List<String> finalDependencies = dependencies;
             lastResult = lastResult.stream().filter(item -> {
                 return item.packageName == null
+                        || item.project == null
                         || item.project.startsWith("rt")
                         || finalDependencies.contains(item.packageName);
             }).collect(Collectors.toList());
