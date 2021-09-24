@@ -369,7 +369,9 @@ public class ProjectParser {
         if (dependencies != null && dependencies.size() > 0) {
             List<String> finalDependencies = dependencies;
             lastResult = lastResult.stream().filter(item -> {
-                return item.packageName == null || finalDependencies.contains(item.packageName);
+                return item.packageName == null
+                        || item.project.startsWith("rt")
+                        || finalDependencies.contains(item.packageName);
             }).collect(Collectors.toList());
         }
 
