@@ -5,11 +5,13 @@ public class PublicStaticMember {
     public String excode;
     public String lexical;
     public String packageName;
+    public String project;
 
-    public PublicStaticMember(String key, String excode, String lexical, String packageName) {
+    public PublicStaticMember(String key, String excode, String lexical, String packageName, String project) {
         this.key = key;
         this.excode = excode;
         this.lexical = lexical;
         this.packageName = packageName;
+        this.project = project;
     }
 }

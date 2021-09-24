@@ -203,14 +203,14 @@ public class ProjectParser {
         for (IVariableBinding field : fields) {
             String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
             String lex = nextHierachy + field.getName();
-            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, packageName));
+            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, packageName, Config.PROJECT_NAME));
         }
         List<IMethodBinding> methods = extractPublicStaticMethods(binding.getDeclaredMethods());
         for (IMethodBinding method : methods) {
             String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
                     className, className, method.getName(), method.getParameterTypes().length);
             String lex = nextHierachy + method.getName() + "(";
-            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex, packageName));
+            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex, packageName, Config.PROJECT_NAME));
         }
 
 //        TypeDeclaration[] inner = type.getTypes();
@@ -269,8 +269,7 @@ public class ProjectParser {
             File curFile = new File(file.getAbsolutePath());
             FileParser fileParser = new FileParser(this, curFile, 6969669);
             List<?> types = fileParser.getCu().types();
-            String packageName = Config.PROJECT_NAME.startsWith("rt") ? null
-                    : fileParser.getCu().getPackage() == null ? null : fileParser.getCu().getPackage().getName().getFullyQualifiedName();
+            String packageName = fileParser.getCu().getPackage() == null ? null : fileParser.getCu().getPackage().getName().getFullyQualifiedName();
             for (Object type : types) {
                 if (type instanceof TypeDeclaration) {
                     addStaticMember((TypeDeclaration) type, "", packageName);
