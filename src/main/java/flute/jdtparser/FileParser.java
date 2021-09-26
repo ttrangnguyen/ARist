@@ -993,6 +993,22 @@ public class FileParser {
         }
     }
 
+    public int getScopeDistance(ASTNode variableNode) {
+        ASTNode parentBlock = getParentBlock(variableNode);
+        ASTNode curBlock = getParentBlock(curMethodInvocation.getOrgASTNode());
+        if (parentBlock == curBlock) return 0;
+        int distance = 0;
+        while (true) {
+            distance++;
+            curBlock = getParentBlock(curBlock);
+            if (curBlock == null || curBlock instanceof CompilationUnit) break;
+            if (parentBlock == curBlock) {
+                return distance;
+            }
+        }
+        return -1;
+    }
+
     private void getVariableScope(ASTNode astNode) {
         if (astNode == null) return;
         Block block = null;
@@ -1014,6 +1030,7 @@ public class FileParser {
                     if (variable != null) {
                         variable.setLocalVariable(true);
                         variable.setLocalVariableLevel(4);
+                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration));
                     }
                 }
             });
@@ -1049,6 +1066,7 @@ public class FileParser {
                             variable.setField(true);
                             variable.setLocalVariableLevel(3);
                             variable.setLocalVariable(true);
+                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
                         }
                     }
                 });
@@ -1076,6 +1094,7 @@ public class FileParser {
                     if (variable != null && astNode == curBlockScope.getParent()) {
                         variable.setLocalVariable(true);
                         variable.setLocalVariableLevel(4);
+                        variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
                     }
                 }
             });
@@ -1086,6 +1105,7 @@ public class FileParser {
             if (variable != null && astNode == curBlockScope.getParent()) {
                 variable.setLocalVariable(true);
                 variable.setLocalVariableLevel(4);
+                variable.setScopeDistance(getScopeDistance(catchClause.getException()) - 1);
             }
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
@@ -1103,6 +1123,7 @@ public class FileParser {
                             if (variable != null && astNode == curBlockScope.getParent()) {
                                 variable.setLocalVariable(true);
                                 variable.setLocalVariableLevel(4);
+                                variable.setScopeDistance(getScopeDistance(variableDeclarationExpression) - 1);
                             }
                         }
                     });
@@ -1120,6 +1141,7 @@ public class FileParser {
             if (variable != null && astNode == curBlockScope.getParent()) {
                 variable.setLocalVariable(true);
                 variable.setLocalVariableLevel(4);
+                variable.setScopeDistance(getScopeDistance(enhancedForStatement) - 1);
             }
         } else if (astNode instanceof SwitchStatement) {
             SwitchStatement switchStatement = (SwitchStatement) astNode;
@@ -1146,6 +1168,8 @@ public class FileParser {
                             if (variable != null && astNode == curBlockScope.getParent()) {
                                 variable.setLocalVariable(true);
                                 variable.setLocalVariableLevel(6);
+                                variable.setScopeDistance(getScopeDistance(declareStmt));
+                                variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
                             }
                         }
                     });
@@ -1171,6 +1195,7 @@ public class FileParser {
                             if (variable != null && astNode == curBlockScope) {
                                 variable.setLocalVariable(true);
                                 variable.setLocalVariableLevel(6);
+                                variable.setScopeDistance(getScopeDistance(declareStmt));
                             }
                         }
                     });

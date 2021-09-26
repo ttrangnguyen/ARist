@@ -10,6 +10,8 @@ public class Variable {
     private boolean isInitialized = false;
     private boolean isLocalVariable = false;
     private int localVariableLevel = 0;
+    private int scopeDistance = -1;
+
 
     public Variable(ITypeBinding typeBinding, String name) {
         this.typeBinding = typeBinding;
@@ -70,6 +72,14 @@ public class Variable {
 
     public void setLocalVariableLevel(int localVariableLevel) {
         this.localVariableLevel = localVariableLevel;
+    }
+
+    public int getScopeDistance() {
+        return scopeDistance;
+    }
+
+    public void setScopeDistance(int scopeDistance) {
+        this.scopeDistance = scopeDistance;
     }
 
     @Override
