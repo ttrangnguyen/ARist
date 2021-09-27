@@ -1030,7 +1030,7 @@ public class FileParser {
                     if (variable != null) {
                         variable.setLocalVariable(true);
                         variable.setLocalVariableLevel(4);
-                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration));
+                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration) - 1);
                     }
                 }
             });
@@ -1066,7 +1066,7 @@ public class FileParser {
                             variable.setField(true);
                             variable.setLocalVariableLevel(3);
                             variable.setLocalVariable(true);
-                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
+                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment) - 1);
                         }
                     }
                 });
