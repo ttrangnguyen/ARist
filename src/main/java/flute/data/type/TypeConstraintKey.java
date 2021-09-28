@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import flute.data.MethodInvocationModel;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+
 public class TypeConstraintKey {
     final public static List<String> NUM_TYPES = Arrays.asList(new String[]{"Ljava/lang/Byte;", "Ljava/lang/Char;", "Ljava/lang/Short;", "Ljava/lang/Integer;",
             "Ljava/lang/Long;", "Ljava/lang/Float;", "Ljava/lang/Double;", "B", "S", "C", "I", "J", "F", "D"});
@@ -14,6 +17,9 @@ public class TypeConstraintKey {
             "Ljava/lang/Long;", "Ljava/lang/Float;", "Ljava/lang/Double;"});
 
     final public static List<String> BOOL_TYPES = Arrays.asList(new String[]{"Ljava/lang/Boolean;", "Z"});
+
+    final public static String MAP_TYPES = "Ljava/util/Map<";
+    final public static String HASHMAP_TYPES = "Ljava/util/HashMap<";
 
     final public static String OBJECT_TYPE = "Ljava/lang/Object;";
     final public static String STRING_TYPE = "Ljava/lang/String;";
@@ -61,5 +67,16 @@ public class TypeConstraintKey {
 
         result.add(key);
         return result;
+    }
+
+    public static ITypeBinding getSpecialParam(MethodInvocationModel methodInvocationModel, int pos) {
+        ITypeBinding exprType = methodInvocationModel.getExpression().resolveTypeBinding();
+        if (exprType.getKey().startsWith(TypeConstraintKey.MAP_TYPES)
+                || exprType.getKey().startsWith(TypeConstraintKey.HASHMAP_TYPES)) {
+            if (methodInvocationModel.getName().toString().equals("get")) {
+                return exprType.getTypeArguments()[0];
+            }
+        }
+        return null;
     }
 }
