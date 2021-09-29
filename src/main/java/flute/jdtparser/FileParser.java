@@ -1000,6 +1000,7 @@ public class FileParser {
     }
 
     public int getScopeDistance(ASTNode variableNode) {
+        if (variableNode == null) return -1;
         ASTNode parentBlock = getParentBlock(variableNode);
         ASTNode curBlock = getParentBlock(curMethodInvocation.getOrgASTNode());
         if (parentBlock == curBlock) return 0;
@@ -1076,17 +1077,16 @@ public class FileParser {
                         }
                     }
                 });
-
-                //super field as variable
-                ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
-                    boolean isStatic = Modifier.isStatic(variable.getModifiers());
-                    Variable variable1 = addVariableToList(-1, variable, isStatic, true);
-                    if (variable1 != null) {
-                        variable1.setLocalVariableLevel(2);
-                    }
-                });
             }
-
+            //super field as variable
+            ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
+                boolean isStatic = Modifier.isStatic(variable.getModifiers());
+                Variable variable1 = addVariableToList(-1, variable, isStatic, true);
+                if (variable1 != null) {
+                    variable1.setLocalVariableLevel(2);
+                    variable1.setScopeDistance(getScopeDistance(curMethodInvocation.getOrgASTNode()) + 2);
+                }
+            });
         } else if (astNode instanceof LambdaExpression) {
             LambdaExpression lambdaExpression = (LambdaExpression) astNode;
             List params = lambdaExpression.parameters();
