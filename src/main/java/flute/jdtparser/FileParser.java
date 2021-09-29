@@ -1198,10 +1198,12 @@ public class FileParser {
                                     //initVariables.get(variableBinding.getName()) != null
                                     //|| (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition)
                             );
-                            if (variable != null && astNode == curBlockScope) {
-                                variable.setLocalVariable(true);
-                                variable.setLocalVariableLevel(6);
+                            if (variable != null) {
                                 variable.setScopeDistance(getScopeDistance(declareStmt));
+                                if (astNode == curBlockScope) {
+                                    variable.setLocalVariable(true);
+                                    variable.setLocalVariableLevel(6);
+                                }
                             }
                         }
                     });
