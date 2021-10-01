@@ -1421,6 +1421,14 @@ public class FileParser {
         return visibleVariables;
     }
 
+    public HashMap<String, Variable> getVisibleVariablesHM() {
+        HashMap<String, Variable> result = new HashMap<>();
+        visibleVariables.forEach(variable -> {
+            result.put(variable.getName(), variable);
+        });
+        return result;
+    }
+
     public HashMap<String, Variable> getVisibleLocalVariables() {
         HashMap<String, Variable> result = new HashMap<>();
         visibleVariables.forEach(variable -> {
