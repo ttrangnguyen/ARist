@@ -1037,7 +1037,7 @@ public class FileParser {
                     if (variable != null) {
                         variable.setLocalVariable(true);
                         variable.setLocalVariableLevel(4);
-                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration) - 1);
+                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration) - 2);
                     }
                 }
             });
@@ -1073,7 +1073,7 @@ public class FileParser {
                             variable.setField(true);
                             variable.setLocalVariableLevel(3);
                             variable.setLocalVariable(true);
-                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment) - 1);
+                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment) - 2);
                         }
                     }
                 });
@@ -1084,7 +1084,7 @@ public class FileParser {
                 Variable variable1 = addVariableToList(-1, variable, isStatic, true);
                 if (variable1 != null) {
                     variable1.setLocalVariableLevel(2);
-                    variable1.setScopeDistance(getScopeDistance(curMethodInvocation.getOrgASTNode()) + 2);
+                    variable1.setScopeDistance(getScopeDistance(getCurMethodScope()) - 1);
                 }
             });
         } else if (astNode instanceof LambdaExpression) {
@@ -1199,7 +1199,7 @@ public class FileParser {
                                     //|| (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition)
                             );
                             if (variable != null) {
-                                variable.setScopeDistance(getScopeDistance(declareStmt));
+                                variable.setScopeDistance(getScopeDistance(declareStmt) + 1);
                                 if (astNode == curBlockScope) {
                                     variable.setLocalVariable(true);
                                     variable.setLocalVariableLevel(6);
