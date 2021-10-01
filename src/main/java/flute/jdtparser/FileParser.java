@@ -1001,17 +1001,17 @@ public class FileParser {
 
     public int getScopeDistance(ASTNode variableNode) {
         if (variableNode == null) return -1;
-        ASTNode parentBlock = getParentBlock(variableNode);
-        ASTNode curBlock = getParentBlock(curMethodInvocation.getOrgASTNode());
-        if (parentBlock == curBlock) return 0;
-        int distance = 0;
+        ASTNode parentBlock = getParentBlockDistanceNode(variableNode);
+        ASTNode curBlockPointer = getParentBlockDistanceNode(curMethodInvocation.getOrgASTNode());
+        if (parentBlock == curBlockPointer) return 0;
+        int distance = 1;
         while (true) {
-            distance++;
-            curBlock = getParentBlock(curBlock);
-            if (curBlock == null || curBlock instanceof CompilationUnit) break;
-            if (parentBlock == curBlock) {
+            curBlockPointer = getParentBlockDistanceNode(curBlockPointer);
+            if (curBlockPointer == null || curBlockPointer instanceof CompilationUnit) break;
+            if (parentBlock == curBlockPointer) {
                 return distance;
             }
+            distance++;
         }
         return -1;
     }
@@ -1073,7 +1073,7 @@ public class FileParser {
                             variable.setField(true);
                             variable.setLocalVariableLevel(3);
                             variable.setLocalVariable(true);
-                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment) - 2);
+                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment) - 1);
                         }
                     }
                 });
@@ -1084,7 +1084,7 @@ public class FileParser {
                 Variable variable1 = addVariableToList(-1, variable, isStatic, true);
                 if (variable1 != null) {
                     variable1.setLocalVariableLevel(2);
-                    variable1.setScopeDistance(getScopeDistance(getCurMethodScope()) - 1);
+                    variable1.setScopeDistance(getScopeDistance(getCurMethodScope()));
                 }
             });
         } else if (astNode instanceof LambdaExpression) {
@@ -1199,7 +1199,7 @@ public class FileParser {
                                     //|| (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition)
                             );
                             if (variable != null) {
-                                variable.setScopeDistance(getScopeDistance(declareStmt) + 1);
+                                variable.setScopeDistance(getScopeDistance(declareStmt));
                                 if (astNode == curBlockScope) {
                                     variable.setLocalVariable(true);
                                     variable.setLocalVariableLevel(6);
@@ -1326,6 +1326,19 @@ public class FileParser {
         } else if (parentNode instanceof SwitchStatement) {
             return parentNode;
         } else return getParentBlock(parentNode);
+    }
+
+    public static ASTNode getParentBlockDistanceNode(ASTNode astNode) {
+        if (astNode == null) return null;
+        ASTNode parentNode = astNode.getParent();
+        if (parentNode instanceof Block) {
+//            if (parentNode.getParent() instanceof MethodDeclaration) return parentNode.getParent();
+            return parentNode; //block object
+        } else if (parentNode instanceof MethodDeclaration || parentNode instanceof Initializer) {
+            return parentNode;
+        } else if (parentNode instanceof TypeDeclaration) {
+            return parentNode;
+        } else return getParentBlockDistanceNode(parentNode);
     }
 
     /**
