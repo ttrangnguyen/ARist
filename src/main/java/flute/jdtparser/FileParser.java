@@ -1097,10 +1097,12 @@ public class FileParser {
                     IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
 
                     Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-                    if (variable != null && astNode == curBlockScope.getParent()) {
-                        variable.setLocalVariable(true);
-                        variable.setLocalVariableLevel(4);
+                    if (variable != null) {
                         variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
+                        if (astNode == curBlockScope.getParent()) {
+                            variable.setLocalVariable(true);
+                            variable.setLocalVariableLevel(4);
+                        }
                     }
                 }
             });
@@ -1108,10 +1110,12 @@ public class FileParser {
             CatchClause catchClause = (CatchClause) astNode;
             IVariableBinding variableBinding = catchClause.getException().resolveBinding();
             Variable variable = addVariableToList(catchClause.getException().getStartPosition(), variableBinding, isStatic, true);
-            if (variable != null && astNode == curBlockScope.getParent()) {
-                variable.setLocalVariable(true);
-                variable.setLocalVariableLevel(4);
-                variable.setScopeDistance(getScopeDistance(catchClause.getException()) - 1);
+            if (variable != null) {
+                variable.setScopeDistance(getScopeDistance(catchClause) - 1);
+                if (astNode == curBlockScope.getParent()) {
+                    variable.setLocalVariableLevel(4);
+                    variable.setLocalVariable(true);
+                }
             }
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
@@ -1126,10 +1130,12 @@ public class FileParser {
                             IVariableBinding variableBinding = ((VariableDeclarationFragment) variableDeclarationItem).resolveBinding();
 
                             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-                            if (variable != null && astNode == curBlockScope.getParent()) {
+                            if (variable != null) {
+                                variable.setScopeDistance(getScopeDistance(variableDeclarationExpression) - 1);
+                            }
+                            if (astNode == curBlockScope.getParent()) {
                                 variable.setLocalVariable(true);
                                 variable.setLocalVariableLevel(4);
-                                variable.setScopeDistance(getScopeDistance(variableDeclarationExpression) - 1);
                             }
                         }
                     });
@@ -1144,10 +1150,12 @@ public class FileParser {
             IVariableBinding variableBinding = singleVariableDeclaration.resolveBinding();
 
             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-            if (variable != null && astNode == curBlockScope.getParent()) {
-                variable.setLocalVariable(true);
-                variable.setLocalVariableLevel(4);
+            if (variable != null) {
                 variable.setScopeDistance(getScopeDistance(enhancedForStatement) - 1);
+                if (astNode == curBlockScope.getParent()) {
+                    variable.setLocalVariable(true);
+                    variable.setLocalVariableLevel(4);
+                }
             }
         } else if (astNode instanceof SwitchStatement) {
             SwitchStatement switchStatement = (SwitchStatement) astNode;
@@ -1171,11 +1179,12 @@ public class FileParser {
                             Variable variable = addVariableToList(position, variableBinding, isStatic,
                                     DFGParser.checkVariable(variableDeclarationFragment, getScope(curPosition), curPosition)
                             );
-                            if (variable != null && astNode == curBlockScope.getParent()) {
-                                variable.setLocalVariable(true);
-                                variable.setLocalVariableLevel(6);
-                                variable.setScopeDistance(getScopeDistance(declareStmt));
+                            if (variable != null) {
                                 variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
+                                if (astNode == curBlockScope.getParent()) {
+                                    variable.setLocalVariable(true);
+                                    variable.setLocalVariableLevel(6);
+                                }
                             }
                         }
                     });
