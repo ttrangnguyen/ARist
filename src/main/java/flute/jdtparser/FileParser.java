@@ -1461,6 +1461,21 @@ public class FileParser {
         return result;
     }
 
+    public List<String> getParentType() {
+        ITypeBinding classPointer = null;
+        List<String> result = new ArrayList<>();
+        try {
+            classPointer = getCurClassScope();
+            while (true) {
+                classPointer = classPointer.getSuperclass();
+                if (classPointer == null) break;
+                result.add(classPointer.getQualifiedName());
+            }
+        } catch (ClassScopeNotFoundException e) {
+        }
+        return result;
+    }
+
     public HashMap<String, ClassModel> getVisibleClass() {
         return visibleClass;
     }
