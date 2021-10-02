@@ -120,6 +120,12 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setNext_lex(nextLexList);
                             test.setParamTypeKey(params.getParamTypeKey());
                             test.setIs_local_var(isLocalVarList);
+                            test.setMethodInvoc(methodName);
+                            if (methodCall.getScope().isPresent()) {
+                                test.setMethodInvocCaller(methodCall.getScope().get().toString());
+                            } else {
+                                test.setMethodInvocCaller("this");
+                            }
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
                             Logger.testCount(test, getProjectParser());
@@ -213,6 +219,12 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 test.setNext_lex(nextLexList);
                 test.setParamTypeKey(params.getParamTypeKey());
                 test.setIs_local_var(isLocalVarList);
+                test.setMethodInvoc(methodName);
+                if (methodCall.getScope().isPresent()) {
+                    test.setMethodInvocCaller(methodCall.getScope().get().toString());
+                } else {
+                    test.setMethodInvocCaller("this");
+                }
                 test.setMethodInvocClassQualifiedName(classQualifiedName);
                 Logger.testCount(test, getProjectParser());
                 if (isClean) {
