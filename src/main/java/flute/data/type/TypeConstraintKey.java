@@ -70,8 +70,10 @@ public class TypeConstraintKey {
     }
 
     public static ITypeBinding getSpecialParam(MethodInvocationModel methodInvocationModel, int pos) {
-        if (methodInvocationModel.getExpression() == null) return null;
-        ITypeBinding exprType = methodInvocationModel.getExpression().resolveTypeBinding();
+        if (methodInvocationModel.getExpression() == null || methodInvocationModel.getExpressionType() == null) {
+            return null;
+        }
+        ITypeBinding exprType = methodInvocationModel.getExpressionType();
         if (exprType.getKey().startsWith(TypeConstraintKey.MAP_TYPES)
                 || exprType.getKey().startsWith(TypeConstraintKey.HASHMAP_TYPES)) {
             if (methodInvocationModel.getName().toString().equals("get")) {
