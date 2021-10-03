@@ -354,7 +354,8 @@ public class FileParser {
 
                 if (curMethodInvocation.getName().toString().equals("equals")
                         && curMethodInvocation.arguments().size() == 1) {
-                    typeNeedCheck = curMethodInvocation.getExpressionType();
+                    typeNeedCheck = curMethodInvocation.getExpressionType() == null ?
+                            curClassParser.getOrgType() : curMethodInvocation.getExpressionType();
                 } else {
                     ITypeBinding paramSpecialType =
                             TypeConstraintKey.getSpecialParam(curMethodInvocation, position);
