@@ -358,7 +358,7 @@ public class FileParser {
                             curClassParser.getOrgType() : curMethodInvocation.getExpressionType();
                 } else {
                     ITypeBinding paramSpecialType =
-                            TypeConstraintKey.getSpecialParam(curMethodInvocation, position);
+                            TypeConstraintKey.getSpecialParam(this, projectParser, position);
                     if (paramSpecialType != null) {
                         typeNeedCheck = paramSpecialType;
                     }

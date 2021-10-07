@@ -313,6 +313,23 @@ public class ProjectParser {
         }
     }
 
+    List<ObjectMappingMember> objectMappingList = new ArrayList<>();
+
+    public List<ObjectMappingMember> getObjectMappingList() {
+        return objectMappingList;
+    }
+
+    public void loadObjectMapping() {
+        objectMappingList = new ArrayList<>();
+        List<String> lines = FileProcessor.readLineByLineToList(Config.STORAGE_DIR + "/flute-ide/object_mapping.txt");
+        for (String line : lines) {
+            String[] data = line.split("\\|\\|");
+            objectMappingList.add(
+                    new ObjectMappingMember(data[0], Integer.valueOf(data[1]), Integer.valueOf(data[2]))
+            );
+        }
+    }
+
     public List<PublicStaticMember> getPublicStaticCandidates(String typeKey) {
         if (typeKey == null) return new ArrayList<PublicStaticMember>();
         List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);

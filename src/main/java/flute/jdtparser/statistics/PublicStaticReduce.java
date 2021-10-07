@@ -35,6 +35,8 @@ public class PublicStaticReduce {
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         projectParser.loadPublicStaticMembers();
         projectParser.loadPublicStaticRTMembers();
+        projectParser.loadObjectMapping();
+
         AtomicInteger id = new AtomicInteger();
         testCases.forEach(testCase -> {
             id.getAndIncrement();
