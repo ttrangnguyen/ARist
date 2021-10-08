@@ -1038,7 +1038,7 @@ public class FileParser {
                     if (variable != null) {
                         variable.setLocalVariable(true);
                         variable.setLocalVariableLevel(4);
-                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration) - 2);
+                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration) - 1);
                     }
                 }
             });
@@ -1288,6 +1288,7 @@ public class FileParser {
     }
 
     private Variable addVariableToList(int startPosition, IVariableBinding variableBinding, boolean isStatic, boolean isInitialized) {
+        if (variableBinding == null) return null;
         ITypeBinding typeBinding = variableBinding.getType();
         String varName = variableBinding.getName();
 
@@ -1347,6 +1348,10 @@ public class FileParser {
         } else if (parentNode instanceof MethodDeclaration || parentNode instanceof Initializer) {
             return parentNode;
         } else if (parentNode instanceof TypeDeclaration) {
+            return parentNode;
+        } else if (parentNode instanceof SwitchStatement) {
+            return parentNode;
+        } else if (parentNode instanceof LambdaExpression) {
             return parentNode;
         } else return getParentBlockDistanceNode(parentNode);
     }
