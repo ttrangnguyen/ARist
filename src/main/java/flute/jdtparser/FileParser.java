@@ -1349,10 +1349,6 @@ public class FileParser {
             return parentNode;
         } else if (parentNode instanceof TypeDeclaration) {
             return parentNode;
-        } else if (parentNode instanceof SwitchStatement) {
-            return parentNode;
-        } else if (parentNode instanceof LambdaExpression) {
-            return parentNode;
         } else return getParentBlockDistanceNode(parentNode);
     }
 
