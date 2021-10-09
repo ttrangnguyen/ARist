@@ -6,6 +6,7 @@ import flute.analysis.ExpressionType;
 import flute.analysis.config.Config;
 import flute.crawling.APICrawler;
 import flute.data.MultiMap;
+import flute.data.typemodel.Variable;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
 import flute.utils.StringUtils;
@@ -37,6 +38,62 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
     private <T> List<T> truncateList(List<T> list) {
         return truncateList(list, true);
+    }
+
+    List<List<Integer>> getCandidatesLocality(List<List<String>> nextLexList) {
+        HashMap<String, Variable> localVariableMap = getFileParser().getVisibleVariablesHM();
+        List<List<Integer>> candidatesLocality = new ArrayList<>();
+        nextLexList.forEach(lexemes -> {
+            List<Integer> locality = new ArrayList<>();
+            for (String nextLex: lexemes) {
+                if (localVariableMap.containsKey(nextLex)) {
+                    Variable localVar = localVariableMap.get(nextLex);
+//                    if (!localVar.isField()) {
+//                        // local variable
+//                        locality.add(2);
+//                    } else {
+//                        // a field of current class
+//                        locality.add(1);
+//                    }
+                    locality.add(localVar.getLocalVariableLevel());
+                } else {
+                    // a field of different class
+//                    if (nextLex.matches("[a-zA-Z_$][a-zA-Z\\d_$]*")) {
+//                        if (!(nextLex.equals("true") || (nextLex.equals("false")))) {
+//                            if (!(nextLex.equals("null"))) {
+//                                if (!(nextLex.equals("this") || (nextLex.equals("super")))) {
+//                                    locality.add(0);
+//                                    continue;
+//                                }
+//                            }
+//                        }
+//                    }
+                    // otherwise
+                    locality.add(-1);
+                }
+            };
+            candidatesLocality.add(locality);
+        });
+        return candidatesLocality;
+    }
+
+    List<List<Integer>> getCandidatesScopeDistance(List<List<String>> nextLexList) {
+        HashMap<String, Variable> localVariableMap = getFileParser().getVisibleVariablesHM();
+        List<List<Integer>> candidatesSD = new ArrayList<>();
+        nextLexList.forEach(lexemes -> {
+            List<Integer> scope_distance = new ArrayList<>();
+            for (String nextLex: lexemes) {
+                if (localVariableMap.containsKey(nextLex)) {
+                    Variable localVar = localVariableMap.get(nextLex);
+                    scope_distance.add(localVar.getScopeDistance());
+                } else {
+                    // otherwise
+                    scope_distance.add(-1);
+                }
+            };
+            candidatesSD.add(scope_distance);
+        });
+        return candidatesSD;
     }
 
     @Override
@@ -91,7 +148,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         for (String nextExcode : nextExcodeList) {
                             nextLexList.add(params.getValue().get(nextExcode));
                         }
-                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
+
                         ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -119,7 +176,8 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
                             test.setParamTypeKey(params.getParamTypeKey());
-                            test.setIs_local_var(isLocalVarList);
+                            test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                            test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
                             test.setMethodInvoc(methodName);
                             if (methodCall.getScope().isPresent()) {
                                 test.setMethodInvocCaller(methodCall.getScope().get().toString());
@@ -176,7 +234,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             for (String nextExcode : nextExcodeList) {
                 nextLexList.add(params.getValue().get(nextExcode));
             }
-            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
+
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
             try {
@@ -218,7 +276,8 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
                 test.setParamTypeKey(params.getParamTypeKey());
-                test.setIs_local_var(isLocalVarList);
+                test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
                 test.setMethodInvoc(methodName);
                 if (methodCall.getScope().isPresent()) {
                     test.setMethodInvocCaller(methodCall.getScope().get().toString());

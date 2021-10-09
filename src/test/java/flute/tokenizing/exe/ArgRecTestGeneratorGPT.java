@@ -71,7 +71,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                         for (String nextExcode : nextExcodeList) {
                             nextLexList.add(params.getValue().get(nextExcode));
                         }
-                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
+
                         ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -109,7 +109,8 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             test.setArgType(ExpressionType.get(arg));
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
-                            test.setIs_local_var(isLocalVarList);
+                            test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                            test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
                             test.setExpected_excode_ori(argExcodes);
                             if (RecTestFilter.predictable(argExcodes)) {
                                 RecTestNormalizer.normalize(test);
@@ -155,7 +156,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
             for (String nextExcode : nextExcodeList) {
                 nextLexList.add(params.getValue().get(nextExcode));
             }
-            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
+
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
 
@@ -207,7 +208,8 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                 test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
-                test.setIs_local_var(isLocalVarList);
+                test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
                 if (isClean) {
                     RecTestNormalizer.normalize(test);
                 } else {
