@@ -6,6 +6,7 @@ import flute.analysis.ExpressionType;
 import flute.analysis.config.Config;
 import flute.crawling.APICrawler;
 import flute.data.MultiMap;
+import flute.data.typemodel.Variable;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
 import flute.utils.StringUtils;
@@ -39,11 +40,63 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
         return truncateList(list, true);
     }
 
+    List<List<Integer>> getCandidatesLocality(List<List<String>> nextLexList) {
+        HashMap<String, Variable> localVariableMap = getFileParser().getVisibleVariablesHM();
+        List<List<Integer>> candidatesLocality = new ArrayList<>();
+        nextLexList.forEach(lexemes -> {
+            List<Integer> locality = new ArrayList<>();
+            for (String nextLex: lexemes) {
+                if (localVariableMap.containsKey(nextLex)) {
+                    Variable localVar = localVariableMap.get(nextLex);
+                    if (localVar.getScopeDistance() == 0) {
+                        locality.add(6);
+                    } else {
+                        if (localVar.getLocalVariableLevel() == 0) {
+                            locality.add(5);
+                        } else {
+                            locality.add(localVar.getLocalVariableLevel());
+                        }
+                    }
+                } else {
+                    // otherwise
+                    locality.add(-1);
+                }
+            };
+            candidatesLocality.add(locality);
+        });
+        return candidatesLocality;
+    }
+
+    List<List<Integer>> getCandidatesScopeDistance(List<List<String>> nextLexList) {
+        HashMap<String, Variable> localVariableMap = getFileParser().getVisibleVariablesHM();
+        List<List<Integer>> candidatesSD = new ArrayList<>();
+        nextLexList.forEach(lexemes -> {
+            List<Integer> scope_distance = new ArrayList<>();
+            for (String nextLex: lexemes) {
+                if (localVariableMap.containsKey(nextLex)) {
+                    Variable localVar = localVariableMap.get(nextLex);
+                    scope_distance.add(localVar.getScopeDistance());
+                } else {
+                    // otherwise
+                    scope_distance.add(-1);
+                }
+            };
+            candidatesSD.add(scope_distance);
+        });
+        return candidatesSD;
+    }
+
     @Override
     List<? extends RecTest> generateFromMethodCall(List<NodeSequenceInfo> excodes, int methodCallStartIdx, int methodCallEndIdx,
                                                    MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
 
         List<RecTest> tests = new ArrayList<>();
+
+        // Lack of libraries
+        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
+            System.err.println("Cannot resolve: " + methodCall);
+            return tests;
+        }
 
         String contextArg = contextMethodCall + methodScope + methodName + '(';
 
@@ -85,7 +138,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         for (String nextExcode : nextExcodeList) {
                             nextLexList.add(params.getValue().get(nextExcode));
                         }
-                        List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
+
                         ContextInfo context = new ContextInfo(excodes, contextIdx);
 
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -113,7 +166,14 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
                             test.setParamTypeKey(params.getParamTypeKey());
-                            test.setIs_local_var(isLocalVarList);
+                            test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                            test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+                            test.setMethodInvoc(methodName);
+                            if (methodCall.getScope().isPresent()) {
+                                test.setMethodInvocCaller(methodCall.getScope().get().toString());
+                            } else {
+                                test.setMethodInvocCaller("this");
+                            }
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
                             Logger.testCount(test, getProjectParser());
@@ -164,7 +224,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             for (String nextExcode : nextExcodeList) {
                 nextLexList.add(params.getValue().get(nextExcode));
             }
-            List<List<Boolean>> isLocalVarList = params.convertLocalVariableMap(getFileParser().getLocalVariableList());
+
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
             try {
@@ -206,7 +266,14 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
                 test.setParamTypeKey(params.getParamTypeKey());
-                test.setIs_local_var(isLocalVarList);
+                test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+                test.setMethodInvoc(methodName);
+                if (methodCall.getScope().isPresent()) {
+                    test.setMethodInvocCaller(methodCall.getScope().get().toString());
+                } else {
+                    test.setMethodInvocCaller("this");
+                }
                 test.setMethodInvocClassQualifiedName(classQualifiedName);
                 Logger.testCount(test, getProjectParser());
                 if (isClean) {

@@ -57,11 +57,12 @@ public abstract class RecClient {
         if (generator == null) createNewGenerator();
     }
 
-    private void setupProjectParser() throws IOException {
+    void setupProjectParser() throws IOException {
         if (projectParser != null) return;
         Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+        projectParser.initPublicStaticMembers();
         projectParser.loadPublicStaticMembers();
         projectParser.loadPublicStaticRTMembers();
     }
@@ -237,7 +238,7 @@ public abstract class RecClient {
         return generateTestsFromFile(filePath, false);
     }
 
-    private void saveTests(List<RecTest> tests) {
+    void saveTests(List<RecTest> tests) {
         for (RecTest test : tests) {
             Logger.write(gson.toJson(this.testClass.cast(test)), projectName + "_" + this.testClass.getSimpleName() + "s.txt");
         }
@@ -290,6 +291,8 @@ public abstract class RecClient {
     }
 
     public void validateTest(RecTest test, boolean doPrintInadequateTests) {
+        if (test instanceof ArgRecTest && ((ArgRecTest) test).getArgPos() == 0 && !Config.TEST_ZERO_ARG) return;
+        if (test instanceof MultipleArgRecTest && ((MultipleArgRecTest)test).getNumArg() == 0 && !Config.TEST_ZERO_ARG) return;
         if (!test.isIgnored()) {
             boolean adequateGeneratedExcode = false;
             boolean adequateGeneratedLex = false;

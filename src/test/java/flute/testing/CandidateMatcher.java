@@ -12,6 +12,9 @@ public class CandidateMatcher {
     public static String preprocess(String target) {
         target = EmptyStringLiteralDecorator.preprocess(target);
         target = RemoveArrayAccessIndexDecorator.preprocess(target);
+        if (target.contains("{")) {
+            target = target.substring(0, target.indexOf("{")).trim();
+        }
         return target;
     }
 
@@ -33,6 +36,7 @@ public class CandidateMatcher {
         if (matchesObjectCreation(candidate, target)) return true;
         if (matchesArrayCreation(candidate, target)) return true;
         if (matchesClassExpr(candidate, target)) return true;
+        if (matchesMethodReference(candidate, target)) return true;
         return false;
     }
 
@@ -95,8 +99,19 @@ public class CandidateMatcher {
         return candidate.getName().compareTo(".class") == 0;
     }
 
+    public static boolean matchesMethodReference(Candidate candidate, String target) {
+        if (!target.contains("::")) return false;
+        if (target.endsWith("::new")) {
+            if (!candidate.getExcode().matches("^M_REF\\("+"\\w+"+"(<.*>)?,new\\)$")) return false;
+            return candidate.getName().compareTo(target) == 0;
+        } else {
+            if (!candidate.getExcode().matches("^M_REF\\([^,]*,[^,]*\\)$")) return false;
+            return candidate.getName().compareTo("::") == 0;
+        }
+    }
+
     public static void main(String[] args) {
-        Candidate candidate = new Candidate("VAR(Animal,this) M_ACCESS(Animal,moveTo,2) OPEN_PART", "this.moveTo(");
-        System.out.println(CandidateMatcher.matches(candidate, "a.get[b.go[\"\\\"<![CDATA[\\\"\"]]"));
+        Candidate candidate = new Candidate("M_REF(<unk>,<unk>)", "::");
+        System.out.println(CandidateMatcher.matches(candidate, "Student::get"));
     }
 }

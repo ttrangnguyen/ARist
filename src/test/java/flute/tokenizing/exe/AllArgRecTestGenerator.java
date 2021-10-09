@@ -62,13 +62,15 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                 List<List<String>> allNextExcodeList = new ArrayList<>();
                 List<List<List<String>>> allNextLexList = new ArrayList<>();
                 List<String> allParamTypeKeyList = new ArrayList<>();
-                List<List<List<Boolean>>> allIsLocalVarList = new ArrayList<>();
+                List<List<List<Integer>>> allCandidatesLocality = new ArrayList<>();
+                List<List<List<Integer>>> allCandidatesScopeDistance = new ArrayList<>();
                 test.setIgnored(false);
                 for (int j = 0; j < pile.size(); ++j) {
                     allNextExcodeList.add(pile.get(j).getNext_excode());
                     allNextLexList.add(pile.get(j).getNext_lex());
                     allParamTypeKeyList.add(pile.get(j).getParamTypeKey());
-                    allIsLocalVarList.add(pile.get(j).getIs_local_var());
+                    allCandidatesLocality.add(pile.get(j).getCandidates_locality());
+                    allCandidatesScopeDistance.add(pile.get(j).getCandidates_scope_distance());
                     if (pile.get(j).isIgnored()) {
                         test.setIgnored(true);
                     }
@@ -76,7 +78,8 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                 test.setNext_excode(allNextExcodeList);
                 test.setNext_lex(allNextLexList);
                 test.setParamTypeKeyList(allParamTypeKeyList);
-                test.setIs_local_var(allIsLocalVarList);
+                test.setCandidates_locality(allCandidatesLocality);
+                test.setCandidates_scope_distance(allCandidatesScopeDistance);
                 test.setArgRecTestList(pile);
                 test.setNumArg(pile.get(pile.size() - 1).getArgPos());
 

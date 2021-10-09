@@ -7,8 +7,8 @@ import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.data.type.TypeConstraintKey;
 import flute.jdtparser.callsequence.node.cfg.Utils;
-import flute.utils.Pair;
 import flute.utils.ProgressBar;
+import flute.utils.XMLReader;
 import flute.utils.logging.Timer;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
@@ -193,29 +193,55 @@ public class ProjectParser {
         }
     }
 
-    public void addStaticMember(TypeDeclaration type, String hierachy) {
+    public void addStaticMember(TypeDeclaration type, String hierachy, String packageName) {
         if (type.resolveBinding() == null) return;
-        ClassParser classParser = new ClassParser(type.resolveBinding());
+//        ClassParser classParser = new ClassParser(type.resolveBinding());
         String className = hierachy + type.getName();
         String nextHierachy = className + ".";
-        List<IVariableBinding> fields = classParser.getPublicStaticFields();
-        fields.forEach(field -> {
+        ITypeBinding binding = type.resolveBinding();
+        List<IVariableBinding> fields = extractPublicStaticFields(binding.getDeclaredFields());
+        for (IVariableBinding field : fields) {
             String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
             String lex = nextHierachy + field.getName();
-            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex));
-        });
-        List<IMethodBinding> methods = classParser.getPublicStaticMethods();
-        methods.forEach(method -> {
+            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, field.getModifiers(), packageName, Config.PROJECT_NAME));
+        }
+        List<IMethodBinding> methods = extractPublicStaticMethods(binding.getDeclaredMethods());
+        for (IMethodBinding method : methods) {
             String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
                     className, className, method.getName(), method.getParameterTypes().length);
             String lex = nextHierachy + method.getName() + "(";
-            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex));
-        });
-
-        TypeDeclaration[] inner = type.getTypes();
-        for (TypeDeclaration t : inner) {
-            addStaticMember(t, nextHierachy);
+            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex, method.getModifiers(), packageName, Config.PROJECT_NAME));
         }
+
+//        TypeDeclaration[] inner = type.getTypes();
+//        for (TypeDeclaration t : inner) {
+//            addStaticMember(t, nextHierachy, packageName);
+//        }
+    }
+
+    public List<IVariableBinding> extractPublicStaticFields(IVariableBinding[] fields) {
+        List<IVariableBinding> staticFields = new ArrayList<>();
+        for (IVariableBinding field : fields) {
+            int modifier = field.getModifiers();
+            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                staticFields.add(field);
+            }
+        }
+        return staticFields;
+    }
+
+    public List<IMethodBinding> extractPublicStaticMethods(IMethodBinding[] methods) {
+        List<IMethodBinding> staticMethods = new ArrayList<>();
+        for (IMethodBinding method : methods) {
+            int modifier = method.getModifiers();
+            if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
+                if (!method.isConstructor()
+                        && Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                    staticMethods.add(method);
+                }
+            }
+        }
+        return staticMethods;
     }
 
     public List<PublicStaticMember> getPublicStaticFieldList() {
@@ -236,13 +262,17 @@ public class ProjectParser {
             return !Utils.checkTestFile(file);
         }).collect(Collectors.toList());
 
+        ProgressBar progressBar = new ProgressBar();
+        int count = 0;
         for (File file : javaFiles) {
+            progressBar.setProgress(count++ * 1f / javaFiles.size(), true);
             File curFile = new File(file.getAbsolutePath());
             FileParser fileParser = new FileParser(this, curFile, 6969669);
             List<?> types = fileParser.getCu().types();
+            String packageName = fileParser.getCu().getPackage() == null ? null : fileParser.getCu().getPackage().getName().getFullyQualifiedName();
             for (Object type : types) {
                 if (type instanceof TypeDeclaration) {
-                    addStaticMember((TypeDeclaration) type, "");
+                    addStaticMember((TypeDeclaration) type, "", packageName);
                 }
             }
         }
@@ -283,6 +313,23 @@ public class ProjectParser {
         }
     }
 
+    List<ObjectMappingMember> objectMappingList = new ArrayList<>();
+
+    public List<ObjectMappingMember> getObjectMappingList() {
+        return objectMappingList;
+    }
+
+    public void loadObjectMapping() {
+        objectMappingList = new ArrayList<>();
+        List<String> lines = FileProcessor.readLineByLineToList(Config.STORAGE_DIR + "/flute-ide/object_mapping.txt");
+        for (String line : lines) {
+            String[] data = line.split("\\|\\|");
+            objectMappingList.add(
+                    new ObjectMappingMember(data[0], Integer.valueOf(data[1]), Integer.valueOf(data[2]))
+            );
+        }
+    }
+
     public List<PublicStaticMember> getPublicStaticCandidates(String typeKey) {
         if (typeKey == null) return new ArrayList<PublicStaticMember>();
         List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
@@ -292,8 +339,8 @@ public class ProjectParser {
         }).collect(Collectors.toList());
     }
 
-    private HashMap<String, List<Pair<String, String>>> publicStaticMemberHM;
-    private List<Pair<String, String>> publicStaticMemberPairList = new ArrayList<>();
+    private HashMap<String, List<PublicStaticMember>> publicStaticMemberHM;
+    private List<PublicStaticMember> publicStaticMemberPairList = new ArrayList<>();
 
 
     public void initPublicStaticMemberHM() {
@@ -303,30 +350,49 @@ public class ProjectParser {
 
         for (PublicStaticMember member : publicStaticMemberList) {
             if (publicStaticMemberHM.get(member.key) != null) {
-                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+                publicStaticMemberHM.get(member.key).add(member);
             } else {
                 publicStaticMemberHM.put(member.key, new ArrayList<>());
-                publicStaticMemberHM.get(member.key).add(new Pair<>(member.excode, member.lexical));
+                publicStaticMemberHM.get(member.key).add(member);
             }
-            publicStaticMemberPairList.add(new Pair<>(member.excode, member.lexical));
+            publicStaticMemberPairList.add(member);
         }
     }
 
-    public List<Pair<String, String>> getFasterPublicStaticCandidates(String typeKey) {
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey) {
+        return getFasterPublicStaticCandidates(typeKey, new ArrayList<>());
+    }
+
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, String filePath) {
+        List<String> dependencies = XMLReader.read(new File(XMLReader.parseConfigPath(new File(filePath))));
+        return getFasterPublicStaticCandidates(typeKey, dependencies);
+    }
+
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, List<String> dependencies) {
         if (publicStaticMemberHM == null) initPublicStaticMemberHM();
-        List<Pair<String, String>> result = new ArrayList<>();
+        List<PublicStaticMember> result = new ArrayList<>();
 
         if (typeKey == null) return result;
         if (typeKey.equals(TypeConstraintKey.OBJECT_TYPE)) {
-            return publicStaticMemberPairList;
+            result.addAll(publicStaticMemberPairList);
+        } else {
+            TypeConstraintKey.assignWith(typeKey).forEach(type -> {
+                if (publicStaticMemberHM.get(type) != null)
+                    result.addAll(publicStaticMemberHM.get(type));
+            });
+        }
+        List<PublicStaticMember> lastResult = result;
+
+        if (dependencies != null && dependencies.size() > 0) {
+            List<String> finalDependencies = dependencies;
+            lastResult = lastResult.stream().filter(item -> {
+                return item.packageName == null
+                        || (item.project != null && item.project.startsWith("rt"))
+                        || finalDependencies.contains(item.packageName);
+            }).collect(Collectors.toList());
         }
 
-        TypeConstraintKey.assignWith(typeKey).forEach(type -> {
-            if (publicStaticMemberHM.get(type) != null)
-                result.addAll(publicStaticMemberHM.get(type));
-        });
-
-        return result;
+        return lastResult;
     }
 
     public static void main(String[] args) throws IOException {

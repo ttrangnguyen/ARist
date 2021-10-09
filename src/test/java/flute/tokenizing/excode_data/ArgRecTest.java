@@ -14,7 +14,8 @@ public class ArgRecTest extends MethodCallRecTest {
      * Additional features
      */
     private String param_name = "";
-    private List<List<Boolean>> is_local_var;
+    private List<List<Integer>> candidates_locality;
+    private List<List<Integer>> candidates_scope_distance;
 
     /**
      * Recommendations
@@ -55,12 +56,29 @@ public class ArgRecTest extends MethodCallRecTest {
         this.param_name = param_name;
     }
 
-    public List<List<Boolean>> getIs_local_var() {
-        return is_local_var;
+    /**
+     * @return 6 if a candidate is a local variable in the same block,
+     * 5 if it is a local variable in the same method declaration scope,
+     * 4 if it is a param,
+     * 3 if it is a (static) field of current class,
+     * 2 if it is a field of different class,
+     * 1 if it is a static field of different class,
+     * -1 otherwise.
+     */
+    public List<List<Integer>> getCandidates_locality() {
+        return candidates_locality;
     }
 
-    public void setIs_local_var(List<List<Boolean>> is_local_var) {
-        this.is_local_var = is_local_var;
+    public void setCandidates_locality(List<List<Integer>> candidates_locality) {
+        this.candidates_locality = candidates_locality;
+    }
+
+    public List<List<Integer>> getCandidates_scope_distance() {
+        return candidates_scope_distance;
+    }
+
+    public void setCandidates_scope_distance(List<List<Integer>> candidates_scope_distance) {
+        this.candidates_scope_distance = candidates_scope_distance;
     }
 
     public List<String> getNext_excode() {
@@ -175,10 +193,13 @@ public class ArgRecTest extends MethodCallRecTest {
         test.setNext_excode(Collections.singletonList(this.getNext_excode()));
         test.setNext_lex(Collections.singletonList(this.getNext_lex()));
         test.setParamTypeKeyList(Collections.singletonList(this.getParamTypeKey()));
-        test.setIs_local_var(Collections.singletonList(this.getIs_local_var()));
+        test.setCandidates_locality(Collections.singletonList(this.getCandidates_locality()));
+        test.setCandidates_scope_distance(Collections.singletonList(this.getCandidates_scope_distance()));
         test.setExpected_excode(this.getExpected_excode());
         test.setExpected_lex(this.getExpected_lex());
         test.setIgnored(this.isIgnored());
+        test.setMethodInvoc(this.getMethodInvoc());
+        test.setMethodInvocCaller(this.getMethodInvocCaller());
         test.setMethodInvocClassQualifiedName(this.getMethodInvocClassQualifiedName());
         test.setArgRecTestList(Collections.singletonList(this));
         return test;

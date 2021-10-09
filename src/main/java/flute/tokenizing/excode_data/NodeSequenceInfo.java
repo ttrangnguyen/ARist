@@ -252,6 +252,9 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		case NodeSequenceConstant.LAMBDA:
 			tmp = "LAMBDA";
 			break;
+		case NodeSequenceConstant.METHODREFERENCE:
+			tmp = "M_REF";
+			break;
 		case NodeSequenceConstant.IF:
 			tmp = "IF";
 			break;
@@ -486,6 +489,15 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 		return builder.toString();
 	}
 
+	private String toStringMethodReference() {
+		StringBuilder builder = new StringBuilder();
+		String type = getAttachedType();
+		if (type == null) type = "<unk>";
+
+		builder.append(alignToken + "M_REF(" + type + "," + getAttachedAccess() + ")");
+		return builder.toString();
+	}
+
 	private String toStringAssign() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(alignToken + "ASSIGN(" + getAttachedType() + ")");
@@ -629,6 +641,8 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 			tmp = toStringConExpr();
 		} else if ((nodeType == NodeSequenceConstant.LAMBDA)) {
 			tmp = toStringLambdaExpr();
+		} else if ((nodeType == NodeSequenceConstant.METHODREFERENCE)) {
+			tmp = toStringMethodReference();
 		}
 		return tmp;
 	}
@@ -706,6 +720,8 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 			tmp = toStringConExpr();
 		} else if ((nodeType == NodeSequenceConstant.LAMBDA)) {
 			tmp = toStringLambdaExpr();
+		} else if ((nodeType == NodeSequenceConstant.METHODREFERENCE)) {
+			tmp = toStringMethodReference();
 		}
 		return tmp;
 	}
@@ -1055,6 +1071,10 @@ public class NodeSequenceInfo implements Comparable<NodeSequenceInfo> {
 
 	public synchronized static boolean isLambda(NodeSequenceInfo nodeSequenceInfo) {
 		return nodeSequenceInfo.nodeType == NodeSequenceConstant.LAMBDA;
+	}
+
+	public synchronized static boolean isMethodReference(NodeSequenceInfo nodeSequenceInfo) {
+		return nodeSequenceInfo.nodeType == NodeSequenceConstant.METHODREFERENCE;
 	}
 
 	public synchronized static String convertListToString(List<NodeSequenceInfo> nodeSequenceList) {

@@ -10,7 +10,8 @@ public class MultipleArgRecTest extends MethodCallRecTest {
      * Additional features
      */
     private List<String> param_list;
-    private List<List<List<Boolean>>> is_local_var;
+    private List<List<List<Integer>>> candidates_locality;
+    private List<List<List<Integer>>> candidates_scope_distance;
 
     /**
      * Recommendations
@@ -40,12 +41,20 @@ public class MultipleArgRecTest extends MethodCallRecTest {
         this.param_list = param_list;
     }
 
-    public List<List<List<Boolean>>> getIs_local_var() {
-        return is_local_var;
+    public List<List<List<Integer>>> getCandidates_locality() {
+        return candidates_locality;
     }
 
-    public void setIs_local_var(List<List<List<Boolean>>> is_local_var) {
-        this.is_local_var = is_local_var;
+    public void setCandidates_locality(List<List<List<Integer>>> candidates_locality) {
+        this.candidates_locality = candidates_locality;
+    }
+
+    public List<List<List<Integer>>> getCandidates_scope_distance() {
+        return candidates_scope_distance;
+    }
+
+    public void setCandidates_scope_distance(List<List<List<Integer>>> candidates_scope_distance) {
+        this.candidates_scope_distance = candidates_scope_distance;
     }
 
     public List<List<String>> getNext_excode() {

@@ -31,6 +31,12 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
 
         List<RecTest> tests = new ArrayList<>();
 
+        // Lack of libraries
+        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
+            System.err.println("Cannot resolve: " + methodCall);
+            return tests;
+        }
+
         String classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
         int contextIdx = methodCallStartIdx - 1;
 

@@ -268,7 +268,10 @@ public class FileParser {
         return genNextParams(position, null, keys);
     }
 
+    public static int paramPos;
+
     private MultiMap genNextParams(int position, IMethodBinding method, String... keys) {
+        paramPos = position;
         if (curMethodInvocation == null) return null;
 
         String methodName = curMethodInvocation.getName().getIdentifier();
@@ -349,6 +352,18 @@ public class FileParser {
                     typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
                 }
 
+                if (curMethodInvocation.getName().toString().equals("equals")
+                        && curMethodInvocation.arguments().size() == 1) {
+                    typeNeedCheck = curMethodInvocation.getExpressionType() == null ?
+                            curClassParser.getOrgType() : curMethodInvocation.getExpressionType();
+                } else {
+                    ITypeBinding paramSpecialType =
+                            TypeConstraintKey.getSpecialParam(this, projectParser, position);
+                    if (paramSpecialType != null) {
+                        typeNeedCheck = paramSpecialType;
+                    }
+                }
+
                 if (typeNeedCheck != null) {
                     if (Config.FEATURE_STATIC_CONSTANT) {
                         ITypeBinding finalTypeNeedCheckForConstant = typeNeedCheck;
@@ -363,12 +378,7 @@ public class FileParser {
                             }
                         });
                     } else {
-                        if (curMethodInvocation.getName().toString().equals("equals")
-                                && curMethodInvocation.arguments().size() == 1) {
-                            nextVariableMap.setParamTypeKey(finalExpressionTypeKey);
-                        } else {
-                            nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
-                        }
+                        nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
                     }
                     if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
                         nextVariableMap.put("LIT(num)", "0");
@@ -990,6 +1000,23 @@ public class FileParser {
         }
     }
 
+    public int getScopeDistance(ASTNode variableNode) {
+        if (variableNode == null) return -1;
+        ASTNode parentBlock = getParentBlockDistanceNode(variableNode);
+        ASTNode curBlockPointer = getParentBlockDistanceNode(curMethodInvocation.getOrgASTNode());
+        if (parentBlock == curBlockPointer) return 0;
+        int distance = 1;
+        while (true) {
+            curBlockPointer = getParentBlockDistanceNode(curBlockPointer);
+            if (curBlockPointer == null || curBlockPointer instanceof CompilationUnit) break;
+            if (parentBlock == curBlockPointer) {
+                return distance;
+            }
+            distance++;
+        }
+        return -1;
+    }
+
     private void getVariableScope(ASTNode astNode) {
         if (astNode == null) return;
         Block block = null;
@@ -1010,6 +1037,8 @@ public class FileParser {
                     Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                     if (variable != null) {
                         variable.setLocalVariable(true);
+                        variable.setLocalVariableLevel(4);
+                        variable.setScopeDistance(getScopeDistance(singleVariableDeclaration) - 1);
                     }
                 }
             });
@@ -1018,6 +1047,7 @@ public class FileParser {
                 Variable variable = new Variable(curClass, "this");
                 variable.setStatic(false);
                 variable.setInitialized(true);
+                variable.setLocalVariableLevel(3);
                 visibleVariables.add(variable);
             }
 
@@ -1041,18 +1071,27 @@ public class FileParser {
                         boolean isStatic = Modifier.isStatic(variableBinding.getModifiers());
                         Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                         if (variable != null) {
+                            variable.setField(true);
+                            variable.setLocalVariableLevel(3);
                             variable.setLocalVariable(true);
+                            variable.setScopeDistance(getScopeDistance(variableDeclarationFragment) - 1);
                         }
                     }
                 });
-
-                //super field as variable
-                ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
-                    boolean isStatic = Modifier.isStatic(variable.getModifiers());
-                    addVariableToList(-1, variable, isStatic, true);
-                });
             }
-
+            //super field as variable
+            ParserUtils.getAllSuperFields(typeDeclaration.resolveBinding()).forEach(variable -> {
+                boolean isStatic = Modifier.isStatic(variable.getModifiers());
+                Variable variable1 = addVariableToList(-1, variable, isStatic, true);
+                if (variable1 != null) {
+                    if (!isStatic) {
+                        variable1.setLocalVariableLevel(2);
+                    } else {
+                        variable1.setLocalVariableLevel(1);
+                    }
+                    variable1.setScopeDistance(getScopeDistance(getCurMethodScope()));
+                }
+            });
         } else if (astNode instanceof LambdaExpression) {
             LambdaExpression lambdaExpression = (LambdaExpression) astNode;
             List params = lambdaExpression.parameters();
@@ -1063,8 +1102,12 @@ public class FileParser {
                     IVariableBinding variableBinding = variableDeclarationFragment.resolveBinding();
 
                     Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-                    if (variable != null && astNode == curBlockScope.getParent()) {
-                        variable.setLocalVariable(true);
+                    if (variable != null) {
+                        variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
+                        if (astNode == curBlockScope.getParent()) {
+                            variable.setLocalVariable(true);
+                            variable.setLocalVariableLevel(4);
+                        }
                     }
                 }
             });
@@ -1072,8 +1115,12 @@ public class FileParser {
             CatchClause catchClause = (CatchClause) astNode;
             IVariableBinding variableBinding = catchClause.getException().resolveBinding();
             Variable variable = addVariableToList(catchClause.getException().getStartPosition(), variableBinding, isStatic, true);
-            if (variable != null && astNode == curBlockScope.getParent()) {
-                variable.setLocalVariable(true);
+            if (variable != null) {
+                variable.setScopeDistance(getScopeDistance(catchClause) - 1);
+                if (astNode == curBlockScope.getParent()) {
+                    variable.setLocalVariableLevel(4);
+                    variable.setLocalVariable(true);
+                }
             }
         } else if (astNode instanceof ForStatement) {
             ForStatement forStatement = (ForStatement) astNode;
@@ -1088,8 +1135,12 @@ public class FileParser {
                             IVariableBinding variableBinding = ((VariableDeclarationFragment) variableDeclarationItem).resolveBinding();
 
                             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-                            if (variable != null && astNode == curBlockScope.getParent()) {
+                            if (variable != null) {
+                                variable.setScopeDistance(getScopeDistance(variableDeclarationExpression) - 1);
+                            }
+                            if (astNode == curBlockScope.getParent()) {
                                 variable.setLocalVariable(true);
+                                variable.setLocalVariableLevel(4);
                             }
                         }
                     });
@@ -1104,8 +1155,12 @@ public class FileParser {
             IVariableBinding variableBinding = singleVariableDeclaration.resolveBinding();
 
             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
-            if (variable != null && astNode == curBlockScope.getParent()) {
-                variable.setLocalVariable(true);
+            if (variable != null) {
+                variable.setScopeDistance(getScopeDistance(enhancedForStatement) - 1);
+                if (astNode == curBlockScope.getParent()) {
+                    variable.setLocalVariable(true);
+                    variable.setLocalVariableLevel(4);
+                }
             }
         } else if (astNode instanceof SwitchStatement) {
             SwitchStatement switchStatement = (SwitchStatement) astNode;
@@ -1129,8 +1184,12 @@ public class FileParser {
                             Variable variable = addVariableToList(position, variableBinding, isStatic,
                                     DFGParser.checkVariable(variableDeclarationFragment, getScope(curPosition), curPosition)
                             );
-                            if (variable != null && astNode == curBlockScope.getParent()) {
-                                variable.setLocalVariable(true);
+                            if (variable != null) {
+                                variable.setScopeDistance(getScopeDistance(variableDeclarationFragment));
+                                if (astNode == curBlockScope.getParent()) {
+                                    variable.setLocalVariable(true);
+                                    variable.setLocalVariableLevel(6);
+                                }
                             }
                         }
                     });
@@ -1153,8 +1212,12 @@ public class FileParser {
                                     //initVariables.get(variableBinding.getName()) != null
                                     //|| (variableDeclarationFragment.getInitializer() != null && (variableDeclarationFragment.getStartPosition() + variableDeclarationFragment.getLength()) < curPosition)
                             );
-                            if (variable != null && astNode == curBlockScope) {
-                                variable.setLocalVariable(true);
+                            if (variable != null) {
+                                variable.setScopeDistance(getScopeDistance(declareStmt));
+                                if (astNode == curBlockScope) {
+                                    variable.setLocalVariable(true);
+                                    variable.setLocalVariableLevel(6);
+                                }
                             }
                         }
                     });
@@ -1229,6 +1292,7 @@ public class FileParser {
     }
 
     private Variable addVariableToList(int startPosition, IVariableBinding variableBinding, boolean isStatic, boolean isInitialized) {
+        if (variableBinding == null) return null;
         ITypeBinding typeBinding = variableBinding.getType();
         String varName = variableBinding.getName();
 
@@ -1277,6 +1341,19 @@ public class FileParser {
         } else if (parentNode instanceof SwitchStatement) {
             return parentNode;
         } else return getParentBlock(parentNode);
+    }
+
+    public static ASTNode getParentBlockDistanceNode(ASTNode astNode) {
+        if (astNode == null) return null;
+        ASTNode parentNode = astNode.getParent();
+        if (parentNode instanceof Block) {
+//            if (parentNode.getParent() instanceof MethodDeclaration) return parentNode.getParent();
+            return parentNode; //block object
+        } else if (parentNode instanceof MethodDeclaration || parentNode instanceof Initializer) {
+            return parentNode;
+        } else if (parentNode instanceof TypeDeclaration) {
+            return parentNode;
+        } else return getParentBlockDistanceNode(parentNode);
     }
 
     /**
@@ -1370,6 +1447,39 @@ public class FileParser {
 
     public List<Variable> getVisibleVariables() {
         return visibleVariables;
+    }
+
+    public HashMap<String, Variable> getVisibleVariablesHM() {
+        HashMap<String, Variable> result = new HashMap<>();
+        visibleVariables.forEach(variable -> {
+            result.put(variable.getName(), variable);
+        });
+        return result;
+    }
+
+    public HashMap<String, Variable> getVisibleLocalVariables() {
+        HashMap<String, Variable> result = new HashMap<>();
+        visibleVariables.forEach(variable -> {
+            if (variable.isLocalVariable()) {
+                result.put(variable.getName(), variable);
+            }
+        });
+        return result;
+    }
+
+    public List<String> getParentType() {
+        ITypeBinding classPointer = null;
+        List<String> result = new ArrayList<>();
+        try {
+            classPointer = getCurClassScope();
+            while (true) {
+                classPointer = classPointer.getSuperclass();
+                if (classPointer == null) break;
+                result.add(classPointer.getQualifiedName());
+            }
+        } catch (ClassScopeNotFoundException e) {
+        }
+        return result;
     }
 
     public HashMap<String, ClassModel> getVisibleClass() {
