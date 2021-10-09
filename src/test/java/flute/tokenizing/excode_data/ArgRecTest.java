@@ -57,9 +57,12 @@ public class ArgRecTest extends MethodCallRecTest {
     }
 
     /**
-     * @return 2 if a candidate is a local variable,
-     * 1 if a candidate is a field of current class,
-     * 0 if a candidate is a field of different class,
+     * @return 6 if a candidate is a local variable in the same block,
+     * 5 if it is a local variable in the same method declaration scope,
+     * 4 if it is a param,
+     * 3 if it is a (static) field of current class,
+     * 2 if it is a field of different class,
+     * 1 if it is a static field of different class,
      * -1 otherwise.
      */
     public List<List<Integer>> getCandidates_locality() {

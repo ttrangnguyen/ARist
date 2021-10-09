@@ -48,26 +48,16 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             for (String nextLex: lexemes) {
                 if (localVariableMap.containsKey(nextLex)) {
                     Variable localVar = localVariableMap.get(nextLex);
-//                    if (!localVar.isField()) {
-//                        // local variable
-//                        locality.add(2);
-//                    } else {
-//                        // a field of current class
-//                        locality.add(1);
-//                    }
-                    locality.add(localVar.getLocalVariableLevel());
+                    if (localVar.getScopeDistance() == 0) {
+                        locality.add(6);
+                    } else {
+                        if (localVar.getLocalVariableLevel() == 0) {
+                            locality.add(5);
+                        } else {
+                            locality.add(localVar.getLocalVariableLevel());
+                        }
+                    }
                 } else {
-                    // a field of different class
-//                    if (nextLex.matches("[a-zA-Z_$][a-zA-Z\\d_$]*")) {
-//                        if (!(nextLex.equals("true") || (nextLex.equals("false")))) {
-//                            if (!(nextLex.equals("null"))) {
-//                                if (!(nextLex.equals("this") || (nextLex.equals("super")))) {
-//                                    locality.add(0);
-//                                    continue;
-//                                }
-//                            }
-//                        }
-//                    }
                     // otherwise
                     locality.add(-1);
                 }

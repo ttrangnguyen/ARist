@@ -1084,7 +1084,11 @@ public class FileParser {
                 boolean isStatic = Modifier.isStatic(variable.getModifiers());
                 Variable variable1 = addVariableToList(-1, variable, isStatic, true);
                 if (variable1 != null) {
-                    variable1.setLocalVariableLevel(2);
+                    if (!isStatic) {
+                        variable1.setLocalVariableLevel(2);
+                    } else {
+                        variable1.setLocalVariableLevel(1);
+                    }
                     variable1.setScopeDistance(getScopeDistance(getCurMethodScope()));
                 }
             });
