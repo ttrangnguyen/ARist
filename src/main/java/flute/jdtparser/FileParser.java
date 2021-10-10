@@ -1472,15 +1472,14 @@ public class FileParser {
         return result;
     }
 
-    public List<String> getParentType() {
-        ITypeBinding classPointer = null;
+    public List<String> getHierarchy() {
+        ITypeBinding classPointer;
         List<String> result = new ArrayList<>();
         try {
             classPointer = getCurClassScope();
-            while (true) {
-                classPointer = classPointer.getSuperclass();
-                if (classPointer == null) break;
+            while (classPointer != null) {
                 result.add(classPointer.getQualifiedName());
+                classPointer = classPointer.getSuperclass();
             }
         } catch (ClassScopeNotFoundException e) {
         }

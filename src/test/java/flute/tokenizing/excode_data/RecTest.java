@@ -13,6 +13,7 @@ public abstract class RecTest {
     /**
      * Features
      */
+    private List<String> classHierarchy;
     private List<String> lex_context;
     private String excode_context;
     private String method_name = "";
@@ -43,6 +44,14 @@ public abstract class RecTest {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public List<String> getClassHierarchy() {
+        return classHierarchy;
+    }
+
+    public void setClassHierarchy(List<String> classHierarchy) {
+        this.classHierarchy = classHierarchy;
     }
 
     public List<String> getLex_context() {
