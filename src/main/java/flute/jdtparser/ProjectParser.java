@@ -237,7 +237,8 @@ public class ProjectParser {
             int modifier = method.getModifiers();
             if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
                 if (!method.isConstructor()
-                        && Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+                        && (Modifier.isPublic(modifier) || Modifier.isDefault(modifier) || Modifier.isProtected(modifier))
+                        && Modifier.isStatic(modifier)) {
                     staticMethods.add(method);
                 }
             }
