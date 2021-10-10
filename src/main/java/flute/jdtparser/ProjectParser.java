@@ -223,7 +223,8 @@ public class ProjectParser {
         List<IVariableBinding> staticFields = new ArrayList<>();
         for (IVariableBinding field : fields) {
             int modifier = field.getModifiers();
-            if (Modifier.isPublic(modifier) && Modifier.isStatic(modifier)) {
+            if ((Modifier.isPublic(modifier) || Modifier.isDefault(modifier) || Modifier.isProtected(modifier))
+                    && Modifier.isStatic(modifier)) {
                 staticFields.add(field);
             }
         }
