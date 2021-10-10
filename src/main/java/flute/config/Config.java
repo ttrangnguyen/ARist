@@ -59,21 +59,21 @@ public class Config {
     public final static boolean FEATURE_DFG_VARIABLE = false;
 
     public final static boolean FLAG_ALL = true;
-    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = false|FLAG_ALL;
+    public final static boolean FEATURE_ADD_FIELD_AND_METHOD_FROM_SUPER_INTERFACE = FLAG_ALL;
     /***
      *  Type feature
      */
-    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = false|FLAG_ALL;
-    public final static boolean FEATURE_PARAM_TYPE_CAST = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_ARRAY_ACCESS = FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_CAST = FLAG_ALL;
 
-    public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = false|FLAG_ALL;
-    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = FLAG_ALL;
 
-    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = false|FLAG_ALL;
-    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = false|FLAG_ALL;
-    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = false|FLAG_ALL;
-    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = false|FLAG_ALL;
-    public final static boolean FEATURE_PARAM_TYPE_METHOD_REF = false|FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_LAMBDA = FLAG_ALL;
+    public final static boolean FEATURE_PARAM_TYPE_METHOD_REF = FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_COMPOUND = false;
 
     public final static boolean FEATURE_STATIC_CONSTANT = false;
