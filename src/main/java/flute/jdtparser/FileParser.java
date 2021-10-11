@@ -363,11 +363,6 @@ public class FileParser {
                         typeNeedCheck = paramSpecialType;
                     }
                 }
-                
-                if (curMethodInvocation.getName().toString().equals("equals")
-                        && curMethodInvocation.arguments().size() == 1) {
-                    typeNeedCheck = curMethodInvocation.getExpressionType();
-                }
 
                 if (typeNeedCheck != null) {
                     if (Config.FEATURE_STATIC_CONSTANT) {
