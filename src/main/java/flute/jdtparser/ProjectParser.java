@@ -223,7 +223,7 @@ public class ProjectParser {
         List<IVariableBinding> staticFields = new ArrayList<>();
         for (IVariableBinding field : fields) {
             int modifier = field.getModifiers();
-            if ((Modifier.isPublic(modifier) || Modifier.isDefault(modifier) || Modifier.isProtected(modifier))
+            if (!Modifier.isPrivate(modifier)
                     && Modifier.isStatic(modifier)) {
                 staticFields.add(field);
             }
@@ -237,7 +237,7 @@ public class ProjectParser {
             int modifier = method.getModifiers();
             if (!(method.getReturnType().getKey() == null || method.getReturnType().getKey().equals("V"))) {
                 if (!method.isConstructor()
-                        && (Modifier.isPublic(modifier) || Modifier.isDefault(modifier) || Modifier.isProtected(modifier))
+                        && !Modifier.isPrivate(modifier)
                         && Modifier.isStatic(modifier)) {
                     staticMethods.add(method);
                 }
