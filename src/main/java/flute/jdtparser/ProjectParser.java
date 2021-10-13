@@ -261,7 +261,7 @@ public class ProjectParser {
         List<File> javaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
 
         javaFiles = javaFiles.stream().filter(file -> {
-            return !Utils.checkTestFile(file);
+            return !Utils.checkTestFileWithoutLib(file);
         }).collect(Collectors.toList());
 
         ProgressBar progressBar = new ProgressBar();

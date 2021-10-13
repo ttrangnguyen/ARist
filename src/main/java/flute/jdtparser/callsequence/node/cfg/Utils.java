@@ -249,4 +249,15 @@ public class Utils {
         }
         return false;
     }
+
+    public static boolean checkTestFileWithoutLib(File file) {
+        for (String blackName : Config.BLACKLIST_NAME_WOUTLIB_SRC) {
+            if (file.getName().toLowerCase().contains(blackName)) return true;
+        }
+        for (String blackFolderName : Config.BLACKLIST_FOLDER_WOUTLIB_SRC) {
+            if (file.getParentFile().getAbsolutePath().toLowerCase().replace("\\", "/").contains("/" + blackFolderName))
+                return true;
+        }
+        return false;
+    }
 }

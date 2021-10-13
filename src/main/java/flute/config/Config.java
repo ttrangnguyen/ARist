@@ -44,6 +44,9 @@ public class Config {
     public final static List<String> BLACKLIST_FOLDER_SRC = Arrays.asList(new String[]{"lib", ".idea", "out", "test", "demo", "example", "examples"}); //for filter project folder
     public final static List<String> BLACKLIST_NAME_SRC = Arrays.asList(new String[]{"test", "demo", "example"}); //for filter file path
 
+    public final static List<String> BLACKLIST_FOLDER_WOUTLIB_SRC = Arrays.asList(new String[]{".idea", "out", "test", "demo", "example", "examples"}); //for filter project folder
+    public final static List<String> BLACKLIST_NAME_WOUTLIB_SRC = Arrays.asList(new String[]{"test", "demo", "example"}); //for filter file path
+
     /***
      * Multiprocess
      */
