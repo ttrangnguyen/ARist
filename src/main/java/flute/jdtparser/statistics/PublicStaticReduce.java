@@ -71,8 +71,8 @@ public class PublicStaticReduce {
                 });
             }
             int origin = projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey()).size();
-            int reduce = projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey(), file.getPath()).size();
-            projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey(), file.getPath()).forEach(item -> {
+            int reduce = projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey(), file.getPath(), fileParser.getCu().getPackage().getName().toString()).size();
+            projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey(), file.getPath(), fileParser.getCu().getPackage().getName().toString()).forEach(item -> {
                 Logger.write(item.lexical, "testcase/testcase_" + id + ".txt");
                 if (!isMatched.get() && CandidateMatcher.matches(new Candidate(item.excode, item.lexical), finalTarget)) {
                     isMatched.set(true);

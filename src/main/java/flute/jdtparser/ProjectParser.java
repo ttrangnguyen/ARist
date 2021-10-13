@@ -343,7 +343,7 @@ public class ProjectParser {
 
     private HashMap<String, List<PublicStaticMember>> publicStaticMemberHM;
     private List<PublicStaticMember> publicStaticMemberPairList = new ArrayList<>();
-
+    private List<PublicStaticMember> protectedDefaultStaticMemberList = new ArrayList<>();
 
     public void initPublicStaticMemberHM() {
         publicStaticMemberHM = new HashMap<>();
@@ -352,25 +352,44 @@ public class ProjectParser {
 
         for (PublicStaticMember member : publicStaticMemberList) {
             if (publicStaticMemberHM.get(member.key) != null) {
-                publicStaticMemberHM.get(member.key).add(member);
+                if (Modifier.isPublic(member.modifier))
+                    publicStaticMemberHM.get(member.key).add(member);
             } else {
                 publicStaticMemberHM.put(member.key, new ArrayList<>());
-                publicStaticMemberHM.get(member.key).add(member);
+                if (Modifier.isPublic(member.modifier))
+                    publicStaticMemberHM.get(member.key).add(member);
             }
             publicStaticMemberPairList.add(member);
+        }
+        initProtectedDefaultStaticMemberList();
+    }
+
+    public void initProtectedDefaultStaticMemberList() {
+        List<PublicStaticMember> publicStaticMemberList = new ArrayList<>(publicStaticFieldList);
+        publicStaticMemberList.addAll(publicStaticMethodList);
+        for (PublicStaticMember member : publicStaticMemberList) {
+            if (!Modifier.isPublic(member.modifier)
+                    && !Modifier.isPrivate(member.modifier)) {
+                protectedDefaultStaticMemberList.add(member);
+            }
         }
     }
 
     public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey) {
-        return getFasterPublicStaticCandidates(typeKey, new ArrayList<>());
+        return getFasterPublicStaticCandidates(typeKey, new ArrayList<>(), null);
     }
 
     public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, String filePath) {
         List<String> dependencies = XMLReader.read(new File(XMLReader.parseConfigPath(new File(filePath))));
-        return getFasterPublicStaticCandidates(typeKey, dependencies);
+        return getFasterPublicStaticCandidates(typeKey, dependencies, null);
     }
 
-    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, List<String> dependencies) {
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, String filePath, String packageName) {
+        List<String> dependencies = XMLReader.read(new File(XMLReader.parseConfigPath(new File(filePath))));
+        return getFasterPublicStaticCandidates(typeKey, dependencies, packageName);
+    }
+
+    public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, List<String> dependencies, String packageName) {
         if (publicStaticMemberHM == null) initPublicStaticMemberHM();
         List<PublicStaticMember> result = new ArrayList<>();
 
@@ -378,23 +397,36 @@ public class ProjectParser {
         if (typeKey.equals(TypeConstraintKey.OBJECT_TYPE)) {
             result.addAll(publicStaticMemberPairList);
         } else {
-            TypeConstraintKey.assignWith(typeKey).forEach(type -> {
+            for (String type : TypeConstraintKey.assignWith(typeKey)) {
                 if (publicStaticMemberHM.get(type) != null)
                     result.addAll(publicStaticMemberHM.get(type));
-            });
+            }
         }
-        List<PublicStaticMember> lastResult = result;
 
         if (dependencies != null && dependencies.size() > 0) {
             List<String> finalDependencies = dependencies;
-            lastResult = lastResult.stream().filter(item -> {
+            result = result.stream().filter(item -> {
                 return item.packageName == null
                         || (item.project != null && item.project.startsWith("rt"))
                         || finalDependencies.contains(item.packageName);
             }).collect(Collectors.toList());
         }
 
-        return lastResult;
+        if (packageName != null) {
+            for (PublicStaticMember member : protectedDefaultStaticMemberList) {
+                if (member.packageName != null && member.packageName.equals(packageName)
+                        && !Modifier.isPublic(member.modifier) && !Modifier.isPrivate(member.modifier) && !Modifier.isProtected(member.modifier)) //default
+                {
+                    result.add(member);
+                } else if (member.packageName != null && packageName.startsWith(member.packageName + ".")
+                        && Modifier.isProtected(member.modifier)) //protected
+                {
+                    result.add(member);
+                }
+            }
+        }
+
+        return result;
     }
 
     public static void main(String[] args) throws IOException {
