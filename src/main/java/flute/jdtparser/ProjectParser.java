@@ -7,6 +7,7 @@ import flute.data.typemodel.Member;
 import flute.data.typemodel.ClassModel;
 import flute.data.type.TypeConstraintKey;
 import flute.jdtparser.callsequence.node.cfg.Utils;
+import flute.jdtparser.data.TypeNode;
 import flute.utils.ProgressBar;
 import flute.utils.XMLReader;
 import flute.utils.logging.Timer;
@@ -264,6 +265,11 @@ public class ProjectParser {
             return !Utils.checkTestFileWithoutLib(file);
         }).collect(Collectors.toList());
 
+//        javaFiles.forEach(file->{
+//            if(file.getAbsolutePath().endsWith("lib2/document/ReadWriteUtils.java")){
+//                System.out.println("a");
+//            }
+//        });
         ProgressBar progressBar = new ProgressBar();
         int count = 0;
         for (File file : javaFiles) {
@@ -330,6 +336,47 @@ public class ProjectParser {
                     new ObjectMappingMember(data[0], Integer.valueOf(data[1]), Integer.valueOf(data[2]))
             );
         }
+    }
+
+    public void loadTypeTree() {
+        typeTree = loadTypeTree(Config.PROJECT_NAME);
+    }
+
+    static List<List<TypeNode>> typeTree;
+
+    public Set<String> findSubType(String key) {
+        Set<String> result = new HashSet<>();
+        for (List<TypeNode> line : typeTree) {
+            int index = -1;
+            for (int i = 0; i < line.size(); i++) {
+                TypeNode node = line.get(i);
+                if (node.getKey().equals(key)) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index != -1) {
+                line.subList(0, index).forEach(node -> {
+                    result.add(node.getName());
+                });
+            }
+        }
+        return result;
+    }
+
+    public static List<List<TypeNode>> loadTypeTree(String projectName) {
+        List<List<TypeNode>> typeTree = new ArrayList();
+        List<String> lines = FileProcessor.readLineByLineToList(Config.STORAGE_DIR + "/flute-ide/" + projectName + "_class_tree.txt");
+        for (String line : lines) {
+            List<TypeNode> lineNode = new ArrayList<>();
+            String[] nodes = line.split("=->");
+            for (String node : nodes) {
+                String[] typeNodes = node.split("\\|\\|");
+                lineNode.add(new TypeNode(typeNodes[0], typeNodes[1]));
+            }
+            typeTree.add(lineNode);
+        }
+        return typeTree;
     }
 
     public List<PublicStaticMember> getPublicStaticCandidates(String typeKey) {

@@ -18,12 +18,9 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class FileParser {
     private ProjectParser projectParser;
@@ -419,6 +416,14 @@ public class FileParser {
                         String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
                                 + "OPEN_PART";
                         nextVariableMap.put(excode, lex);
+
+                        Set<String> subTypes = projectParser.findSubType(typeNeedCheck.getKey());
+                        subTypes.forEach(type -> {
+                            String su_lex = "new " + type.replace("? extends ", "") + "(";
+                            String su_excode = "C_CALL(" + type + "," + type + ") "
+                                    + "OPEN_PART";
+                            nextVariableMap.put(su_excode, su_lex);
+                        });
                     }
 
                     //feature 14
