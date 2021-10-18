@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class TypeDiagram {
     public static void main(String[] args) throws IOException {
-        Config.loadConfig(Config.STORAGE_DIR + "/json/netbeans.json");
+        Config.loadConfig(Config.STORAGE_DIR + "/json/eclipse.json");
 
         ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
@@ -70,6 +70,7 @@ public class TypeDiagram {
 
     private static List<List<ITypeBinding>> typeGraph(ITypeBinding iTypeBinding) {
         List<List<ITypeBinding>> result = new ArrayList<>();
+        if(iTypeBinding == null) return result;
         List<ITypeBinding> firstLine = new ArrayList<>();
         firstLine.add(iTypeBinding);
         result.add(firstLine);
@@ -88,7 +89,6 @@ public class TypeDiagram {
                     line.add(nextTypes.get(0));
                 }
             }
-            break;
         }
 
         return result;
