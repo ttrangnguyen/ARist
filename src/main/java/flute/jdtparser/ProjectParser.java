@@ -340,6 +340,7 @@ public class ProjectParser {
 
     public void loadTypeTree() {
         typeTree = loadTypeTree(Config.PROJECT_NAME);
+        typeTree.addAll(loadTypeTree("rt"));
     }
 
     static List<List<TypeNode>> typeTree;

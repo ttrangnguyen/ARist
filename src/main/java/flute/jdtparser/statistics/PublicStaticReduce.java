@@ -36,6 +36,7 @@ public class PublicStaticReduce {
         projectParser.loadPublicStaticMembers();
         projectParser.loadPublicStaticRTMembers();
         projectParser.loadObjectMapping();
+        projectParser.loadTypeTree();
 
         AtomicInteger id = new AtomicInteger();
         testCases.forEach(testCase -> {
