@@ -65,6 +65,8 @@ public abstract class RecClient {
         projectParser.initPublicStaticMembers();
         projectParser.loadPublicStaticMembers();
         projectParser.loadPublicStaticRTMembers();
+        projectParser.loadObjectMapping();
+        projectParser.loadTypeTree();
     }
 
     abstract void createNewGenerator();

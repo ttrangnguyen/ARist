@@ -124,7 +124,7 @@ public class Config {
 
     public final static boolean TEST_ARG_ONE_BY_ONE = true;
     public final static boolean TEST_ZERO_ARG = false;
-    public final static boolean TEST_LEX_SIM = false;
+    public final static boolean TEST_LEX_SIM = true;
 
     public static String TEST_FILE_PATH = "";
     public static int TEST_POSITION = 1662;
