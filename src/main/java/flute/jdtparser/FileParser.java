@@ -1277,7 +1277,7 @@ public class FileParser {
             return result;
         }
 
-        if (methodDeclaration.isVarargs() && pos > methodDeclaration.parameters().size()) {
+        if (methodDeclaration.isVarargs() && pos >= methodDeclaration.parameters().size()) {
             param = methodDeclaration.parameters().get(methodDeclaration.parameters().size() - 1);
         } else {
             param = methodDeclaration.parameters().get(pos);

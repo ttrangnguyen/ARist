@@ -78,6 +78,7 @@ public class TypeConstraintKey {
             if (member.getMethodKey().equals(fileParser.getCurMethodInvocation().resolveMethodBinding().getMethodDeclaration().getKey())
                     && member.getParam() == pos) {
                 ITypeBinding exprType = fileParser.getCurMethodInvocation().getExpressionType();
+                if (exprType == null) return null;
                 if (exprType.getTypeArguments().length > member.getMappingId()) {
                     return exprType.getTypeArguments()[member.getMappingId()];
                 }
