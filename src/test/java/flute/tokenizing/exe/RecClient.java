@@ -20,6 +20,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.math.RoundingMode;
 import java.net.SocketException;
+import java.nio.file.NoSuchFileException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,7 +60,14 @@ public abstract class RecClient {
 
     void setupProjectParser() throws IOException {
         if (projectParser != null) return;
-        Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        try {
+            Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        } catch (NoSuchFileException nsfe) {
+            System.err.println("WARNING: Config file does not exist: " + nsfe.getFile());
+            System.err.println("Project Parser is now configured automatically.");
+            Config.autoConfigure(projectName, Config.REPO_DIR + "git/" + projectName);
+        }
+
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         projectParser.initPublicStaticMembers();
