@@ -427,12 +427,19 @@ public class FileParser {
                     }
 
                     //feature 14
-                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION
-                            && typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                        String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
-                        String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
-                                + "OPEN_PART LIT(num) CLOSE_PART";
-                        nextVariableMap.put(excode, lex);
+                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION){
+                        if(typeNeedCheck.getKey().equals(TypeConstraintKey.OBJECT_TYPE)){
+                            String lex = "new Object[0]";
+                            String excode = "C_CALL(Array_Object,Object) "
+                                    + "OPEN_PART LIT(num) CLOSE_PART";
+                            nextVariableMap.put(excode, lex);
+                        }
+                        if(typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
+                            String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
+                            String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
+                                    + "OPEN_PART LIT(num) CLOSE_PART";
+                            nextVariableMap.put(excode, lex);
+                        }
                     }
 
                     //feature 10
