@@ -9,6 +9,7 @@ import flute.jdtparser.callsequence.FileNode;
 import flute.jdtparser.callsequence.MethodCallNode;
 import flute.jdtparser.callsequence.node.cfg.MinimalNode;
 import flute.jdtparser.callsequence.node.cfg.Utils;
+import flute.preprocessing.FileFilter;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
 import flute.utils.file_processing.DirProcessor;
@@ -47,6 +48,8 @@ public abstract class RecTestGenerator {
 
     public List<? extends RecTest> generateAll(int threshold) {
         List<File> javaFiles = DirProcessor.walkJavaFile(tokenizer.getProject().getAbsolutePath());
+        javaFiles = FileFilter.filter(javaFiles);
+
         List<RecTest> tests = new ArrayList<>();
         for (File file: javaFiles) {
             List<? extends RecTest> fileTests = generate(file.getAbsolutePath());

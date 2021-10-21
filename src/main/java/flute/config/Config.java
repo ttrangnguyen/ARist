@@ -245,7 +245,9 @@ public class Config {
         PROJECT_NAME = projectName;
         PROJECT_DIR = projectDir;
 
-        String[] prefixSrc = new String[]{"/src", "/demosrc", "/testsrc", "/src/java", "/src/main/java", "/antsrc", "/src_ant",};
+        String[] prefixSrc = new String[] {"/src", "/demosrc", "/testsrc", "/sources",
+                "/src/java", "/src/main", "/src/main/java",
+                "/antsrc", "/src_ant",};
         for (String str : prefixSrc) {
             try {
                 Config.loadSrcPath(PROJECT_DIR, str);
@@ -262,5 +264,6 @@ public class Config {
 
 //        System.out.println(Arrays.asList(Config.SOURCE_PATH));
 //        System.out.println(Arrays.asList(Config.ENCODE_SOURCE));
+//        System.out.println(Arrays.asList(Config.CLASS_PATH));
     }
 }

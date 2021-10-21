@@ -23,6 +23,11 @@ public class ArgRecClient extends MethodCallRecClient {
         setTestClass(ArgRecTest.class);
     }
 
+    public ArgRecClient(String projectName, String projectDir) {
+        super(projectName, projectDir);
+        setTestClass(ArgRecTest.class);
+    }
+
     @Override
     void createNewGenerator() {
         generator = new ArgRecTestGenerator(Config.PROJECT_DIR, projectParser);
@@ -253,7 +258,7 @@ public class ArgRecClient extends MethodCallRecClient {
     }
 
     public static void main(String[] args) throws IOException {
-        RecClient client = new ArgRecClient("netbeans");
+        RecClient client = new ArgRecClient("demo", "storage/repositories/sampleproj/");
         List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
         //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile(Config.REPO_DIR + "sampleproj/src/Main.java");
 
