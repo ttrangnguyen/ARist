@@ -23,6 +23,7 @@ public class ArgRecTest extends MethodCallRecTest {
     private List<String> next_excode;
     private List<List<String>> next_lex;
     private String paramTypeKey;
+    private String packageName;
     private transient List<PublicStaticMember> publicStaticCandidateList;
 
     /**
@@ -113,6 +114,14 @@ public class ArgRecTest extends MethodCallRecTest {
         this.paramTypeKey = paramTypeKey;
     }
 
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
     public List<PublicStaticMember> getPublicStaticCandidateList() {
         return publicStaticCandidateList;
     }
@@ -193,6 +202,7 @@ public class ArgRecTest extends MethodCallRecTest {
         test.setNext_excode(Collections.singletonList(this.getNext_excode()));
         test.setNext_lex(Collections.singletonList(this.getNext_lex()));
         test.setParamTypeKeyList(Collections.singletonList(this.getParamTypeKey()));
+        test.setPackageName(this.getPackageName());
         test.setCandidates_locality(Collections.singletonList(this.getCandidates_locality()));
         test.setCandidates_scope_distance(Collections.singletonList(this.getCandidates_scope_distance()));
         test.setExpected_excode(this.getExpected_excode());

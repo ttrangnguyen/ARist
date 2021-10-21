@@ -31,6 +31,7 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                     test.setClass_name(pile.get(0).getClass_name());
                     test.setMethodInvocClassQualifiedName(pile.get(0).getMethodInvocClassQualifiedName());
                     test.setFilePath(pile.get(0).getFilePath());
+                    test.setPackageName(pile.get(0).getPackageName());
                 }
 
                 List<String> paramList = new ArrayList<>();

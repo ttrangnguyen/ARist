@@ -20,6 +20,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.math.RoundingMode;
 import java.net.SocketException;
+import java.nio.file.NoSuchFileException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +35,7 @@ public abstract class RecClient {
     boolean isRNNUsed = false;
     boolean isGPTUsed = false;
     String projectName;
+    String projectDir = null;
     ProjectParser projectParser = null;
     RecTestGenerator generator = null;
     DataFrame dataFrame = new DataFrame();
@@ -42,6 +44,11 @@ public abstract class RecClient {
 
     public RecClient(String projectName) {
         this.projectName = projectName;
+    }
+
+    public RecClient(String projectName, String projectDir) {
+        this(projectName);
+        this.projectDir = projectDir;
     }
 
     Class getTestClass() {
@@ -59,7 +66,23 @@ public abstract class RecClient {
 
     void setupProjectParser() throws IOException {
         if (projectParser != null) return;
-        Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        try {
+            Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        } catch (NoSuchFileException nsfe) {
+            System.err.println("WARNING: Config file does not exist: " + nsfe.getFile());
+            System.err.println("Project Parser is now configured automatically.");
+
+            if (projectDir == null) {
+                if (projectName.equals("demo")) {
+                    Config.autoConfigure(projectName, Config.REPO_DIR + "sampleproj");
+                } else {
+                    Config.autoConfigure(projectName, Config.REPO_DIR + "git/" + projectName);
+                }
+            } else {
+                Config.autoConfigure(projectName, projectDir);
+            }
+        }
+
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
         projectParser.initPublicStaticMembers();
@@ -77,10 +100,10 @@ public abstract class RecClient {
         if (fromSavefile) {
             tests = readTestsFromFile(Config.LOG_DIR + projectName + "_" + this.testClass.getSimpleName() + "s.txt");
         } else {
-            if (projectName.equals("demo")) {
-                tests = generateTestsFromDemoProject();
-            } else {
+            if (projectDir == null && !projectName.equals("demo")) {
                 tests = generateTestsFromGitProject();
+            } else {
+                tests = generateTestsRecursively();
             }
 
             if (doSaveTestsAfterGen) saveTests(tests);
@@ -139,10 +162,6 @@ public abstract class RecClient {
         return gson.fromJson(lastLine, (Type) this.testClass);
     }
 
-    private List<RecTest> generateTestsFromDemoProject() {
-        return (List<RecTest>) generator.generateAll();
-    }
-
     private List<RecTest> generateTestsFromGitProject() throws IOException {
         List<RecTest> tests = new ArrayList<>();
         Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
@@ -183,6 +202,10 @@ public abstract class RecClient {
         }
 
         return tests;
+    }
+
+    private List<RecTest> generateTestsRecursively() {
+        return (List<RecTest>) generator.generateAll();
     }
 
     public void generateTestsAndQuerySimultaneously(boolean verbose, boolean doPrintIncorrectPrediction) throws IOException {
@@ -228,16 +251,16 @@ public abstract class RecClient {
         }
     }
 
-    public List<? extends RecTest> generateTestsFromFile(String filePath, boolean doSaveTestsAfterGen) throws IOException {
+    public List<? extends RecTest> generateTestsFromFile(String fileRelativePath, boolean doSaveTestsAfterGen) throws IOException {
         setupGenerator();
-        List<RecTest> tests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-        for (RecTest test : tests) test.setFilePath(filePath);
+        List<RecTest> tests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + fileRelativePath);
+        for (RecTest test : tests) test.setFilePath(fileRelativePath);
         if (doSaveTestsAfterGen) saveTests(tests);
         return tests;
     }
 
-    public List<? extends RecTest> generateTestsFromFile(String filePath) throws IOException {
-        return generateTestsFromFile(filePath, false);
+    public List<? extends RecTest> generateTestsFromFile(String fileRelativePath) throws IOException {
+        return generateTestsFromFile(fileRelativePath, false);
     }
 
     void saveTests(List<RecTest> tests) {

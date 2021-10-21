@@ -13,6 +13,10 @@ public abstract class MethodCallRecClient extends RecClient {
         super(projectName);
     }
 
+    public MethodCallRecClient(String projectName, String projectDir) {
+        super(projectName, projectDir);
+    }
+
     @Override
     public List<? extends RecTest> getTests(boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
         List<MethodCallRecTest> tests = (List<MethodCallRecTest>) super.getTests(fromSavefile, doSaveTestsAfterGen);

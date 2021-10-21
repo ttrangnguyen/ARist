@@ -1,14 +1,18 @@
 package flute.preprocessing;
 
 import flute.config.Config;
+import flute.jdtparser.callsequence.node.cfg.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FileFilter {
     public static List<File> filter(List<File> files) {
-        files = filterTestFolders(files);
+        files = files.stream().filter(file -> {
+            return !Utils.checkTestFileWithoutLib(file);
+        }).collect(Collectors.toList());
         return files;
     }
 

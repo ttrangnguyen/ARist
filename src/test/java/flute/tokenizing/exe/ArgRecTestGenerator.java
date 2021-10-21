@@ -94,7 +94,8 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
         // Lack of libraries
         if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
-            System.err.println("Cannot resolve: " + methodCall);
+            System.err.println("ERROR: Cannot resolve: " + methodCall + ". This may be due to the absence of required libraries.");
+            System.err.println("WARNING: Corresponding tests will not be generated.");
             return tests;
         }
 
@@ -167,6 +168,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
                             test.setParamTypeKey(params.getParamTypeKey());
+                            test.setPackageName(getFileParser().getCu().getPackage().getName().toString());
                             test.setCandidates_locality(getCandidatesLocality(nextLexList));
                             test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
                             test.setMethodInvoc(methodName);

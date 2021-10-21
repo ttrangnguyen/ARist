@@ -9,6 +9,7 @@ import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RecTester {
@@ -96,8 +97,10 @@ public class RecTester {
         expectedLex = CandidateMatcher.preprocess(expectedLex);
 
         List<String> candidates = test.getNext_lexList();
-        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
-            candidates.add(publicStaticCandidate.lexical);
+        if (test.getPublicStaticCandidateList() != null) {
+            for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
+                candidates.add(publicStaticCandidate.lexical);
+            }
         }
 
         for (String candidate : candidates) {
@@ -250,5 +253,12 @@ public class RecTester {
         if (result.contains(expectedLex)) return true;
 
         return false;
+    }
+
+    public static void main(String[] args) {
+        ArgRecTest test = new ArgRecTest();
+        test.setExpected_lex("new Object[]{i,order[i]}");
+        test.setNext_lex(Collections.singletonList(Collections.singletonList("new Object[0]")));
+        System.out.println(RecTester.canAcceptGeneratedLexes(test));
     }
 }

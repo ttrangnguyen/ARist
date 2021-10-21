@@ -241,4 +241,29 @@ public class Config {
         TEST_POSITION = config.getTestPosition();
     }
 
+    public static void autoConfigure(String projectName, String projectDir) {
+        PROJECT_NAME = projectName;
+        PROJECT_DIR = projectDir;
+
+        String[] prefixSrc = new String[] {"/src", "/demosrc", "/testsrc", "/sources",
+                "/src/java", "/src/main", "/src/main/java",
+                "/antsrc", "/src_ant",};
+        for (String str : prefixSrc) {
+            try {
+                Config.loadSrcPath(PROJECT_DIR, str);
+            } catch (Exception e) {
+            }
+        }
+
+        try {
+            Config.loadJarPath(PROJECT_DIR);
+            Config.loadJarPath(JAVAFX_DIR);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+//        System.out.println(Arrays.asList(Config.SOURCE_PATH));
+//        System.out.println(Arrays.asList(Config.ENCODE_SOURCE));
+//        System.out.println(Arrays.asList(Config.CLASS_PATH));
+    }
 }
