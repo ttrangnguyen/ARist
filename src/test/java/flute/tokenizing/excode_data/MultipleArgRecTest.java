@@ -3,6 +3,9 @@ package flute.tokenizing.excode_data;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class should only contain fields which are used for predicting
+ */
 public class MultipleArgRecTest extends MethodCallRecTest {
     private transient int numArg;
 
@@ -19,6 +22,7 @@ public class MultipleArgRecTest extends MethodCallRecTest {
     private List<List<String>> next_excode;
     private List<List<List<String>>> next_lex;
     private List<String> paramTypeKeyList;
+    private String packageName;
 
     /**
      * References
@@ -97,6 +101,14 @@ public class MultipleArgRecTest extends MethodCallRecTest {
 
     public void setParamTypeKeyList(List<String> paramTypeKeyList) {
         this.paramTypeKeyList = paramTypeKeyList;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
     }
 
     public List<ArgRecTest> getArgRecTestList() {
