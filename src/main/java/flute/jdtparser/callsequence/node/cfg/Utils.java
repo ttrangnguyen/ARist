@@ -180,6 +180,15 @@ public class Utils {
         return typeBinding.getPackage().getName();
     }
 
+    public static boolean checkSubPackage(String packageName, List<String> list) {
+        for (String item : list) {
+            if (packageName.equals(item) || packageName.startsWith(item + ".")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Map<IBinding, MethodCallNode> groupMethodCallNodeByTrackingNode(MethodCallNode node) {
         Map<IBinding, MethodCallNode> tracking2TreeMap = new HashMap<>();
         if (node == null) return tracking2TreeMap;

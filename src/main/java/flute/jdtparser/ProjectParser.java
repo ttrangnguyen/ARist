@@ -452,11 +452,10 @@ public class ProjectParser {
         }
 
         if (dependencies != null && dependencies.size() > 0) {
-            List<String> finalDependencies = dependencies;
             result = result.stream().filter(item -> {
                 return item.packageName == null
                         || (item.project != null && item.project.startsWith("rt"))
-                        || finalDependencies.contains(item.packageName);
+                        || Utils.checkSubPackage(item.packageName, dependencies);
             }).collect(Collectors.toList());
         }
 
