@@ -1297,6 +1297,25 @@ public class FileParser {
         return result;
     }
 
+    public Optional<String> getParamTypeName(int pos) {
+        Optional<String> result = Optional.empty();
+        if (!Config.TEST_LEX_SIM) return result;
+
+        IMethodBinding methodDeclaration = getCurMethodInvocation().resolveMethodBinding();
+
+        if (methodDeclaration == null) {
+            return result;
+        }
+
+        if (methodDeclaration.isVarargs() && pos >= methodDeclaration.getParameterTypes().length) {
+            result = Optional.of(methodDeclaration.getParameterTypes()[(methodDeclaration.getParameterTypes().length - 1)].getName());
+        } else {
+            result = Optional.of(methodDeclaration.getParameterTypes()[pos].getName());
+        }
+
+        return result;
+    }
+
     private void addInitVariable(String variableName, int endPosition) {
         if (endPosition < curPosition) {
             initVariables.put(variableName, endPosition);
