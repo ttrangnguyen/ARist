@@ -53,6 +53,34 @@ public class TypeDiagram {
         }
     }
 
+    public static void init(ProjectParser projectParser){
+        List<File> allJavaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
+
+        List<File> javaFiles = allJavaFiles.stream().filter(file -> {
+            if (!file.getAbsolutePath().contains("src")) return false;
+
+            for (String blackName : Config.BLACKLIST_NAME_SRC) {
+                if (file.getAbsolutePath().contains(blackName)) return false;
+            }
+
+            return true;
+        }).collect(Collectors.toList());
+        float countFile = 0;
+
+        System.out.println("Init type tree...");
+        //visit astnode
+        for (File file : javaFiles) {
+            CompilationUnit cu = projectParser.createCU(file);
+            cu.accept(new ASTVisitor() {
+                @Override
+                public boolean visit(TypeDeclaration typeDeclaration) {
+                    typeProcess(typeDeclaration);
+                    return true;
+                }
+            });
+        }
+    }
+
     private static void typeProcess(TypeDeclaration typeDeclaration) {
         List<List<ITypeBinding>> tree = typeGraph(typeDeclaration.resolveBinding());
         tree.forEach(line -> {

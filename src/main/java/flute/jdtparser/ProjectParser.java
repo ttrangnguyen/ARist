@@ -8,6 +8,7 @@ import flute.data.typemodel.ClassModel;
 import flute.data.type.TypeConstraintKey;
 import flute.jdtparser.callsequence.node.cfg.Utils;
 import flute.jdtparser.data.TypeNode;
+import flute.jdtparser.statistics.TypeDiagram;
 import flute.utils.ProgressBar;
 import flute.utils.XMLReader;
 import flute.utils.logging.Timer;
@@ -339,6 +340,10 @@ public class ProjectParser {
     }
 
     public void loadTypeTree() {
+        File checkFile = new File(Config.STORAGE_DIR + "/flute-ide/" + Config.PROJECT_NAME + "_class_tree.txt");
+        if (!checkFile.exists())
+            TypeDiagram.init(this);
+
         typeTree = loadTypeTree(Config.PROJECT_NAME);
         typeTree.addAll(loadTypeTree("rt"));
     }
