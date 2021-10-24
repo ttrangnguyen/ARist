@@ -37,6 +37,18 @@ public class Logger {
         }
     }
 
+    public static void writeData(String line, String filename) {
+        File output = new File(filename);
+        output.getParentFile().mkdirs();
+        try {
+            FileWriter fileWriter = new FileWriter(output, true);
+            fileWriter.append(line + "\n");
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void testCount(ArgRecTest test, ProjectParser projectParser) {
         if (test.getExpected_lex().equals(")")) return;
         int publicStaticCount = projectParser.getFasterPublicStaticCandidates(

@@ -53,7 +53,7 @@ public class TypeDiagram {
         }
     }
 
-    public static void init(ProjectParser projectParser){
+    public static void init(ProjectParser projectParser) {
         List<File> allJavaFiles = DirProcessor.walkJavaFile(Config.PROJECT_DIR);
 
         List<File> javaFiles = allJavaFiles.stream().filter(file -> {
@@ -90,15 +90,14 @@ public class TypeDiagram {
                 line.forEach(node -> {
                     lineText.add(node.getKey() + "||" + node.getName());
                 });
-
-                Logger.write(String.join("=->", lineText), Config.PROJECT_NAME + "_class_tree.txt");
+                Logger.writeData(String.join("=->", lineText), Config.STORAGE_DIR + "/flute-ide/" + Config.PROJECT_NAME + "_class_tree.txt");
             }
         });
     }
 
     private static List<List<ITypeBinding>> typeGraph(ITypeBinding iTypeBinding) {
         List<List<ITypeBinding>> result = new ArrayList<>();
-        if(iTypeBinding == null) return result;
+        if (iTypeBinding == null) return result;
         List<ITypeBinding> firstLine = new ArrayList<>();
         firstLine.add(iTypeBinding);
         result.add(firstLine);
