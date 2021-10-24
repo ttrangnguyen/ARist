@@ -8,7 +8,11 @@ import flute.communicate.SocketClient;
 import flute.communicate.schema.PredictResponse;
 import flute.communicate.schema.Response;
 import flute.config.Config;
+import flute.data.testcase.Candidate;
+import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
+import flute.jdtparser.PublicStaticMember;
+import flute.testing.CandidateMatcher;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
@@ -551,7 +555,6 @@ public abstract class RecClient {
         return bestModel;
     }
 
-
     public void generateTests(String fold, String setting) throws IOException {
         Timer timer = new Timer();
         timer.startCounter();
@@ -577,7 +580,15 @@ public abstract class RecClient {
             for (RecTest test : oneFileTests) {
                 Logger.write(gson.toJson(this.testClass.cast(test)), testOutputPath);
             }
-            tests.addAll((List<ArgRecTest>) oneFileTests);
+//            tests.addAll((List<ArgRecTest>) oneFileTests);
+            for (RecTest test: oneFileTests) {
+                ArgRecTest argRecTest = (ArgRecTest) test;
+                if (test.getExpected_lex().equals(")")) continue;
+                tests.add(argRecTest);
+                if (!isTestContainTarget(argRecTest, projectParser)) {
+                    Logger.write(gson.toJson(this.testClass.cast(test)), badTestOutputPath);
+                }
+            }
 //            for (RecTest test: oneFileTests)
 //                if (!test.isIgnored()) {
 //                    boolean adequateGeneratedExcode = false;
@@ -607,7 +618,7 @@ public abstract class RecClient {
         System.out.println("Ignored " + dataFrame.getVariable("Ignored test").getSum() + " tests.");
         List<MultipleArgRecTest> multiArgRecTests = multipleGenerator.generate(tests);
         this.validateTests(multiArgRecTests, true);
-        //RecClient.logTests(tests);
+        RecClient.logTests(tests);
         this.queryAndTest(multiArgRecTests, false, false);
         this.printTestResult();
         System.exit(0);
@@ -626,7 +637,37 @@ public abstract class RecClient {
 //                if (!isProcessing) isDone = true;
 //            }
 //        }
+    }
 
-        sc.close();
+    public boolean isTestContainTarget(ArgRecTest argRecTest, ProjectParser projectParser) {
+        for (int i = 0; i < argRecTest.getNext_excode().size(); ++i) {
+            for (int j = 0; j < argRecTest.getNext_lex().get(i).size(); ++j) {
+                Candidate candidate = new Candidate(argRecTest.getNext_excode().get(i), argRecTest.getNext_lex().get(i).get(j));
+                if (CandidateMatcher.matches(candidate, argRecTest.getExpected_lex())) {
+                    return true;
+                }
+            }
+        }
+        if (argRecTest.getParamTypeKey() != null) {
+            List<PublicStaticMember> publicStaticMembers;
+            if (Config.PROJECT_NAME.equals("netbeans")) {
+                FileParser fileParser = new FileParser(projectParser,
+                        new File("storage/repositories/git/" + argRecTest.getFilePath()), 1);
+                publicStaticMembers = projectParser.getFasterPublicStaticCandidates(
+                        argRecTest.getParamTypeKey(),
+                        "storage/repositories/git/" + argRecTest.getFilePath(),
+                        fileParser.getCu().getPackage().getName().toString()
+                );
+            } else {
+                publicStaticMembers = projectParser.getFasterPublicStaticCandidates(argRecTest.getParamTypeKey());
+            }
+            for (PublicStaticMember publicStaticMember: publicStaticMembers) {
+                Candidate candidate = new Candidate(publicStaticMember.excode, publicStaticMember.lexical);
+                if (CandidateMatcher.matches(candidate, argRecTest.getExpected_lex())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

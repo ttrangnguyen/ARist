@@ -168,6 +168,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             test.setNext_excode(nextExcodeList);
                             test.setNext_lex(nextLexList);
                             test.setParamTypeKey(params.getParamTypeKey());
+                            test.setParamTypeName(getFileParser().getParamTypeName(j).orElse(""));
                             test.setPackageName(getFileParser().getCu().getPackage().getName().toString());
                             //test.setCandidates_locality(getCandidatesLocality(nextLexList));
                             test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
@@ -270,6 +271,9 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 test.setNext_excode(nextExcodeList);
                 test.setNext_lex(nextLexList);
                 test.setParamTypeKey(params.getParamTypeKey());
+                if (methodCall.getArguments().size() > 0) {
+                    test.setParamTypeName(getFileParser().getParamTypeName(methodCall.getArguments().size() - 1).orElse(""));
+                }
                 //test.setCandidates_locality(getCandidatesLocality(nextLexList));
                 test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
                 test.setMethodInvoc(methodName);

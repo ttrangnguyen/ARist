@@ -13,7 +13,7 @@ public class CommentRemover {
 //        String removed = CommentRemover.removeCommentFromFileString(content);
 //        System.out.println(removed);
 //        System.out.println("----------------------------------------------");
-        File file = new File("D:/zzzzz/GuidedActionsStylist.java");
+        File file = new File("D:\\Research\\jdk-src\\openjdk\\jaxp\\src\\com\\sun\\org\\apache\\xml\\internal\\utils\\res\\XResourceBundle.java");
         String removed2 = CommentRemover.removeCommentFromFile(file);
         System.out.println(removed2);
     }

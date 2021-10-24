@@ -23,6 +23,7 @@ public class ArgRecTest extends MethodCallRecTest {
     private List<String> next_excode;
     private List<List<String>> next_lex;
     private String paramTypeKey;
+    private String paramTypeName;
     private String packageName;
     private transient List<PublicStaticMember> publicStaticCandidateList;
 
@@ -112,6 +113,14 @@ public class ArgRecTest extends MethodCallRecTest {
 
     public void setParamTypeKey(String paramTypeKey) {
         this.paramTypeKey = paramTypeKey;
+    }
+
+    public String getParamTypeName() {
+        return paramTypeName;
+    }
+
+    public void setParamTypeName(String paramTypeName) {
+        this.paramTypeName = paramTypeName;
     }
 
     public String getPackageName() {

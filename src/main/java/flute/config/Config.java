@@ -71,7 +71,7 @@ public class Config {
 
     public final static boolean FEATURE_PARAM_TYPE_TYPE_LIT = FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_NULL_LIT = FLAG_ALL;
-
+    
     public final static boolean FEATURE_PARAM_TYPE_METHOD_INVOC = FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_OBJ_CREATION = FLAG_ALL;
     public final static boolean FEATURE_PARAM_TYPE_ARR_CREATION = FLAG_ALL;
