@@ -95,7 +95,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
         // Lack of libraries
         if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
             System.err.println("ERROR: Cannot resolve: " + methodCall + ". This may be due to the absence of required libraries.");
-            System.err.println("WARNING: Corresponding tests will not be generated.");
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
             return tests;
         }
 

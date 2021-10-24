@@ -34,6 +34,7 @@ public class Config {
 
     public final static float PRINT_PROGRESS_DELTA = 0.001f; //0.1%
     public final static int PROGRESS_SIZE = 40;
+    public final static boolean LOG_WARNING = true;
 
     /***
      * For training, analyser

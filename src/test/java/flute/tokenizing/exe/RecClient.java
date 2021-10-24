@@ -73,8 +73,10 @@ public abstract class RecClient {
         try {
             Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
         } catch (NoSuchFileException nsfe) {
-            System.err.println("WARNING: Config file does not exist: " + nsfe.getFile());
-            System.err.println("Project Parser is now configured automatically.");
+            if (Config.LOG_WARNING) {
+                System.err.println("WARNING: Config file does not exist: " + nsfe.getFile());
+                System.err.println("Project Parser is now configured automatically.");
+            }
 
             if (projectDir == null) {
                 if (projectName.equals("demo")) {
