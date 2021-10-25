@@ -73,11 +73,11 @@ public class RecTester {
         if (result.compareTo(expectedLex) == 0) return true;
 
         if (expectedLex.contains(".this")) {
-            if (matchesArg(expectedLex.substring(expectedLex.indexOf("this")), result)) return true;
+            if (matchesArg(expectedLex.substring(expectedLex.indexOf(".this") + 1), result)) return true;
         }
 
         if (result.contains(".this")) {
-            if (matchesArg(expectedLex, result.substring(result.indexOf("this")))) return true;
+            if (matchesArg(expectedLex, result.substring(result.indexOf(".this") + 1))) return true;
         }
 
         if (expectedLex.startsWith("this.")) {
