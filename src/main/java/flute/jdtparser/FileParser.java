@@ -1319,7 +1319,7 @@ public class FileParser {
         return result;
     }
 
-    public boolean ignoreMethod() {
+    public boolean acceptedMethod() {
         if (curMethodInvocation.resolveMethodBinding() == null) return false;
         if (!curMethodInvocation.resolveMethodBinding().isVarargs()
                 && curMethodInvocation.arguments().size() != curMethodInvocation.resolveMethodBinding().getParameterTypes().length)
