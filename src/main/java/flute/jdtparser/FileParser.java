@@ -1319,6 +1319,18 @@ public class FileParser {
         return result;
     }
 
+    public boolean ignoreMethod() {
+        if (curMethodInvocation.resolveMethodBinding() == null) return false;
+        if (!curMethodInvocation.resolveMethodBinding().isVarargs()
+                && curMethodInvocation.arguments().size() != curMethodInvocation.resolveMethodBinding().getParameterTypes().length)
+            return false;
+        if (curMethodInvocation.resolveMethodBinding().isVarargs() &&
+                curMethodInvocation.arguments().size() < (curMethodInvocation.resolveMethodBinding().getParameterTypes().length - 1))
+            return false;
+
+        return true;
+    }
+
     private void addInitVariable(String variableName, int endPosition) {
         if (endPosition < curPosition) {
             initVariables.put(variableName, endPosition);
