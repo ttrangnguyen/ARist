@@ -348,7 +348,7 @@ public class ProjectParser {
         typeTree.addAll(loadTypeTree("rt"));
     }
 
-    static List<List<TypeNode>> typeTree;
+    static List<List<TypeNode>> typeTree = new ArrayList<>();
 
     public Set<String> findSubType(String key) {
         Set<String> result = new HashSet<>();
