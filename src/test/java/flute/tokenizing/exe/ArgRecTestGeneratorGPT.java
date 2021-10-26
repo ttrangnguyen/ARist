@@ -103,6 +103,8 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             lexContext += contextArg;
 
                             ArgRecTest test = new ArgRecTest();
+                            test.setLine(methodCall.getBegin().get().line);
+                            test.setCol(methodCall.getBegin().get().column);
                             test.setLex_context(Collections.singletonList(lexContext));
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
@@ -185,6 +187,8 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                 lexContext += contextArg;
 
                 ArgRecTest test = new ArgRecTest();
+                test.setLine(methodCall.getBegin().get().line);
+                test.setCol(methodCall.getBegin().get().column);
                 test.setLex_context(Collections.singletonList(lexContext));
                 test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                 boolean isClean = true;

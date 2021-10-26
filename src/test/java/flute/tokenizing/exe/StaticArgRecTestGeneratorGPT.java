@@ -89,6 +89,8 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
 
                             ArgRecTest test = new ArgRecTest();
+                            test.setLine(methodCall.getBegin().get().line);
+                            test.setCol(methodCall.getBegin().get().column);
                             test.setLex_context(Collections.singletonList(contextArg));
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
@@ -148,6 +150,8 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                 List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
 
                 ArgRecTest test = new ArgRecTest();
+                test.setLine(methodCall.getBegin().get().line);
+                test.setCol(methodCall.getBegin().get().column);
                 test.setLex_context(Collections.singletonList(contextArg));
                 test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                 boolean isClean = true;

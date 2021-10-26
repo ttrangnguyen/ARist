@@ -9,6 +9,8 @@ public abstract class RecTest {
     private static int count = 0;
     private transient int id;
     private String filePath;
+    private int line;
+    private int col;
 
     /**
      * Features
@@ -44,6 +46,22 @@ public abstract class RecTest {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public int getLine() {
+        return line;
+    }
+
+    public void setLine(int line) {
+        this.line = line;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public void setCol(int col) {
+        this.col = col;
     }
 
     public List<String> getClassHierarchy() {

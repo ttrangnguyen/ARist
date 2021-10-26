@@ -67,6 +67,8 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
             List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
 
             MethodCallNameRecTest test = new MethodCallNameRecTest();
+            test.setLine(methodCall.getBegin().get().line);
+            test.setCol(methodCall.getBegin().get().column);
             test.setLex_context(tokenizedContextMethodCall);
             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
             test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
