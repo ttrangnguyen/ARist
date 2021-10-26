@@ -20,12 +20,13 @@ public class MethodCallOriginPrinter extends MethodCallRecClient {
     @Override
     void setupProjectParser() throws IOException {
         if (projectParser != null) return;
-        Config.loadConfig(Config.STORAGE_DIR + "/json/" + projectName + ".json");
+        super.setupProjectParser();
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
                 Config.ENCODE_SOURCE, new String[]{}, Config.JDT_LEVEL, Config.JAVA_VERSION);
-        projectParser.initPublicStaticMembers();
         projectParser.loadPublicStaticMembers();
         projectParser.loadPublicStaticRTMembers();
+        projectParser.loadObjectMapping();
+        projectParser.loadTypeTree();
     }
 
     @Override
