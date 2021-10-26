@@ -85,11 +85,6 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
         MultiMap params = null;
         try {
             params = getFileParser().genParamsAt(methodCall.getArguments().size() - 1);
-            String parsedMethodCall = getFileParser().getLastMethodCallGen().replaceAll("[ \r\n]", "");
-            if (!parsedMethodCall.equals(methodCall.toString().replaceAll("[ \r\n]", ""))) {
-                throw new ParseException(getFileParser().getLastMethodCallGen() + " was parsed instead of " + methodCall.toString()
-                        + " at " + methodCall.getBegin().get());
-            }
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println(methodCall);
             System.out.println(methodCall.getBegin().get());
@@ -97,8 +92,6 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
         } catch (IndexOutOfBoundsException e) {
             System.out.println(methodCall);
             System.out.println(methodCall.getBegin().get());
-            e.printStackTrace();
-        } catch (ParseException e) {
             e.printStackTrace();
         }
 

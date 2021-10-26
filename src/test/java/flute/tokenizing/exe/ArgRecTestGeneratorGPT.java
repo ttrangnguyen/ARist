@@ -40,6 +40,14 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
             return tests;
         }
 
+        String parsedMethodCall = getFileParser().getLastMethodCallGen().replaceAll("[ \r\n]", "");
+        if (!parsedMethodCall.equals(methodCall.toString().replaceAll("[ \r\n]", ""))) {
+            System.err.println("ERROR: " + getFileParser().getLastMethodCallGen() + " was parsed instead of " + methodCall.toString()
+                    + " at " + methodCall.getBegin().get());
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
+            return tests;
+        }
+
         ASTNode curMethodScope = getFileParser().getCurMethodScope();
         String contextArg = MethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
 
@@ -54,16 +62,16 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                     try {
                         params = getFileParser().genParamsAt(j);
                     } catch (ArrayIndexOutOfBoundsException e) {
-                        System.out.println(methodCall);
-                        System.out.println(methodCall.getBegin().get());
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     } catch (IndexOutOfBoundsException e) {
-                        System.out.println(methodCall);
-                        System.out.println(methodCall.getBegin().get());
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     } catch (NullPointerException e) {
-                        System.out.println(methodCall);
-                        System.out.println(methodCall.getBegin().get());
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     }
 
@@ -137,20 +145,13 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
         MultiMap params = null;
         try {
             params = getFileParser().genParamsAt(methodCall.getArguments().size() - 1);
-            String parsedMethodCall = getFileParser().getLastMethodCallGen().replaceAll("[ \r\n]", "");
-            if (!parsedMethodCall.equals(methodCall.toString().replaceAll("[ \r\n]", ""))) {
-                throw new ParseException(getFileParser().getLastMethodCallGen() + " was parsed instead of " + methodCall.toString()
-                        + " at " + methodCall.getBegin().get());
-            }
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println(methodCall);
-            System.out.println(methodCall.getBegin().get());
+            System.err.println(methodCall);
+            System.err.println(methodCall.getBegin().get());
             e.printStackTrace();
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(methodCall);
-            System.out.println(methodCall.getBegin().get());
-            e.printStackTrace();
-        } catch (ParseException e) {
+            System.err.println(methodCall);
+            System.err.println(methodCall.getBegin().get());
             e.printStackTrace();
         }
 
