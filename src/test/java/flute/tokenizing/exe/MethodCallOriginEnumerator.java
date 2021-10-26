@@ -54,6 +54,8 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
                         ArgRecTest test = new ArgRecTest();
+                        test.setLine(methodCall.getBegin().get().line);
+                        test.setCol(methodCall.getBegin().get().column);
                         test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                         test.setExpected_lex(arg.toString());
                         if (methodBinding == null) {
@@ -102,6 +104,8 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
 
         if (params != null) {
             ArgRecTest test = new ArgRecTest();
+            test.setLine(methodCall.getBegin().get().line);
+            test.setCol(methodCall.getBegin().get().column);
             boolean isClean = true;
             if (methodCall.getArguments().isEmpty()) {
                 test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());

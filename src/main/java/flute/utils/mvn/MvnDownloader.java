@@ -23,10 +23,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MvnDownloader {
     public static void main(String[] args) throws IOException, XmlPullParserException {
-        System.out.println(
-                MvnDownloader.download("/Users/maytinhdibo/Project/Flute", "/Users/maytinhdibo/Project/Flute/pom.xml")
-                        .getAbsolutePath()
-        );
+        File repoDir = new File("../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred_excluded");
+        for (File project: repoDir.listFiles()) {
+            MvnDownloader.download(project.getAbsolutePath());
+        }
     }
 
     public static File download(String projectPath, String pomPath) throws IOException, XmlPullParserException {

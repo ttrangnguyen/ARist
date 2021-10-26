@@ -28,23 +28,7 @@ public class MethodExtractor extends Preprocessor {
 
     @Override
     public void preprocessProject(File project, File outputFolder) {
-        Config.PROJECT_DIR = project.getAbsolutePath();
-
-        String[] prefixSrc = new String[]{"/src", "/demosrc", "/testsrc", "/antsrc", "/src_ant", "/src/main/java"};
-        for (String str : prefixSrc) {
-            try {
-                Config.loadSrcPath(Config.PROJECT_DIR, str);
-            } catch (Exception e) {
-            }
-        }
-
-        try {
-            Config.loadJarPath(Config.PROJECT_DIR);
-            Config.loadJarPath(Config.JAVAFX_DIR);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
+        Config.autoConfigure(project.getName(), project.getAbsolutePath());
         parser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
                 Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 

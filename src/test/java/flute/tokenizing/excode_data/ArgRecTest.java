@@ -198,7 +198,10 @@ public class ArgRecTest extends MethodCallRecTest {
     public MultipleArgRecTest toSingleArgRecTest() {
         MultipleArgRecTest test = new MultipleArgRecTest();
         test.setFilePath(this.getFilePath());
+        test.setLine(this.getLine());
+        test.setCol(this.getCol());
         test.setNumArg(this.getArgPos() != 0? 1: 0);
+        test.setClassHierarchy(this.getClassHierarchy());
         test.setLex_context(this.getLex_context());
         test.setExcode_context(this.getExcode_context());
         test.setMethodScope_name(this.getMethodScope_name());

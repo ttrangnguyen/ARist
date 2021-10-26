@@ -156,6 +156,8 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                             excodeContext = truncateList(excodeContext);
 
                             ArgRecTest test = new ArgRecTest();
+                            test.setLine(methodCall.getBegin().get().line);
+                            test.setCol(methodCall.getBegin().get().column);
                             test.setClassHierarchy(getFileParser().getHierarchy());
                             test.setLex_context(tokenizedContextMethodCall);
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
@@ -244,6 +246,8 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 excodeContext = truncateList(excodeContext);
 
                 ArgRecTest test = new ArgRecTest();
+                test.setLine(methodCall.getBegin().get().line);
+                test.setCol(methodCall.getBegin().get().column);
                 test.setClassHierarchy(getFileParser().getHierarchy());
                 test.setLex_context(tokenizedContextMethodCall);
                 test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));

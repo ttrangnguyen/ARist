@@ -25,6 +25,9 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
             if (i == oneArgRecTests.size() - 1 || oneArgRecTests.get(i + 1).getArgPos() <= 1) {
                 MultipleArgRecTest test = new MultipleArgRecTest();
                 if (pile.size() > 0) {
+                    test.setLine(pile.get(0).getLine());
+                    test.setCol(pile.get(0).getCol());
+                    test.setClassHierarchy(pile.get(0).getClassHierarchy());
                     test.setLex_context(pile.get(0).getLex_context());
                     test.setExcode_context(pile.get(0).getExcode_context());
                     test.setMethodScope_name(pile.get(0).getMethodScope_name());

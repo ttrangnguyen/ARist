@@ -1,6 +1,7 @@
 package flute.tokenizing.exe;
 
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import flute.analysis.config.Config;
 import flute.data.MethodInvocationModel;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
@@ -32,8 +33,9 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
         List<RecTest> tests = new ArrayList<>();
 
         // Lack of libraries
-        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
-            System.err.println("Cannot resolve: " + methodCall);
+        if (!getFileParser().acceptedMethod()) {
+            System.err.println("ERROR: Cannot resolve: " + methodCall + ". This may be due to the absence of required libraries.");
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
             return tests;
         }
 
@@ -65,6 +67,8 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
             List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
 
             MethodCallNameRecTest test = new MethodCallNameRecTest();
+            test.setLine(methodCall.getBegin().get().line);
+            test.setCol(methodCall.getBegin().get().column);
             test.setLex_context(tokenizedContextMethodCall);
             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
             test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));

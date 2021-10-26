@@ -4,6 +4,7 @@ import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.analysis.ExpressionType;
+import flute.analysis.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
 import flute.preprocessing.StaticMethodExtractor;
@@ -34,8 +35,9 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
         List<RecTest> tests = new ArrayList<>();
 
         // Lack of libraries
-        if (getFileParser().getCurMethodInvocation().resolveMethodBinding() == null) {
-            System.err.println("Cannot resolve: " + methodCall);
+        if (!getFileParser().acceptedMethod()) {
+            System.err.println("ERROR: Cannot resolve: " + methodCall + ". This may be due to the absence of required libraries.");
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
             return tests;
         }
 
@@ -87,6 +89,8 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
 
                             ArgRecTest test = new ArgRecTest();
+                            test.setLine(methodCall.getBegin().get().line);
+                            test.setCol(methodCall.getBegin().get().column);
                             test.setLex_context(Collections.singletonList(contextArg));
                             test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                             test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
@@ -146,6 +150,8 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                 List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
 
                 ArgRecTest test = new ArgRecTest();
+                test.setLine(methodCall.getBegin().get().line);
+                test.setCol(methodCall.getBegin().get().column);
                 test.setLex_context(Collections.singletonList(contextArg));
                 test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
                 boolean isClean = true;
