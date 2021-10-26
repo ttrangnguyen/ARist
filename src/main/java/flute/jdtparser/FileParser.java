@@ -1307,14 +1307,10 @@ public class FileParser {
             return result;
         }
 
-        try {
-            if (methodDeclaration.isVarargs() && pos >= methodDeclaration.getParameterTypes().length) {
-                result = Optional.of(methodDeclaration.getParameterTypes()[(methodDeclaration.getParameterTypes().length - 1)].getName());
-            } else {
-                result = Optional.of(methodDeclaration.getParameterTypes()[pos].getName());
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            e.printStackTrace();
+        if (methodDeclaration.isVarargs() && pos >= methodDeclaration.getParameterTypes().length) {
+            result = Optional.of(methodDeclaration.getParameterTypes()[(methodDeclaration.getParameterTypes().length - 1)].getName());
+        } else {
+            result = Optional.of(methodDeclaration.getParameterTypes()[pos].getName());
         }
         return result;
     }
