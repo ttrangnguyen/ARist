@@ -7,14 +7,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.github.javaparser.*;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseStart;
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.stmt.Statement;
+import flute.config.Config;
 import flute.tokenizing.excode_data.FileInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.tokenizing.excode_data.TypeInfo;
@@ -114,8 +112,8 @@ public class JavaFileParser {
 			//cu = parser.parse(ParseStart.COMPILATION_UNIT, provider(content)).getResult().get();
         } catch (Error e) {
             e.printStackTrace();
-        } catch (RuntimeException e) {
-			e.printStackTrace();
+        } catch (ParseProblemException e) {
+        	if (Config.LOG_WARNING) System.err.println("WARNING: " + e.getMessage());
 			//Logger.error(CommentRemover.removeCommentFromFileString(content));
 		//} catch (IOException e) {
         //	e.printStackTrace();

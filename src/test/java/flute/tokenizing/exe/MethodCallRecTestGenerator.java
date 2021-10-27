@@ -46,6 +46,8 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
                 } catch (Exception e) {
                     // TODO: Handle enums
                     if (!(e instanceof ClassScopeNotFoundException)) {
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     }
                     stack.remove(stack.size() - 1);
@@ -67,6 +69,8 @@ public abstract class MethodCallRecTestGenerator extends RecTestGenerator {
                 } catch (Exception e) {
                     // TODO: Handle enums
                     if (!(e instanceof ClassScopeNotFoundException)) {
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     }
                     stack.remove(stack.size() - 1);
