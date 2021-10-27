@@ -143,13 +143,13 @@ public abstract class RecClient {
             throw new NullPointerException("Field testClass has not been set!");
         }
 
-        Scanner sc = new Scanner(new File(filePath));
         List<RecTest> tests = new ArrayList<>();
-        while (sc.hasNextLine()) {
-            String line = sc.nextLine();
-            tests.add(gson.fromJson(line, (Type) this.testClass));
+        try (Scanner sc = new Scanner(new File(filePath))) {
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine();
+                tests.add(gson.fromJson(line, (Type) this.testClass));
+            }
         }
-        sc.close();
         return tests;
     }
 
@@ -158,40 +158,39 @@ public abstract class RecClient {
             throw new NullPointerException("Field testClass has not been set!");
         }
 
-        Scanner sc = new Scanner(new File(filePath));
         String lastLine = null;
-        while (sc.hasNextLine()) {
-            lastLine = sc.nextLine();
+        try (Scanner sc = new Scanner(new File(filePath))) {
+            while (sc.hasNextLine()) {
+                lastLine = sc.nextLine();
+            }
         }
-        sc.close();
         if (lastLine == null) return null;
         return gson.fromJson(lastLine, (Type) this.testClass);
     }
 
     private List<RecTest> generateTestsFromGitProject() throws IOException {
         List<RecTest> tests = new ArrayList<>();
-        Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
-
         final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
         final List<Future<?>> futures = new ArrayList<>();
 
-        while (sc.hasNextLine()) {
-            String filePath = sc.nextLine();
-            if (Config.MULTIPROCESS) {
-                Future<?> future = executor.submit(() -> {
-                    createNewGenerator();
+        try (Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"))) {
+            while (sc.hasNextLine()) {
+                String filePath = sc.nextLine();
+                if (Config.MULTIPROCESS) {
+                    Future<?> future = executor.submit(() -> {
+                        createNewGenerator();
+                        List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+                        for (RecTest test : oneFileTests) test.setFilePath(filePath);
+                        tests.addAll(oneFileTests);
+                    });
+                    futures.add(future);
+                } else {
                     List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
                     for (RecTest test : oneFileTests) test.setFilePath(filePath);
                     tests.addAll(oneFileTests);
-                });
-                futures.add(future);
-            } else {
-                List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                for (RecTest test : oneFileTests) test.setFilePath(filePath);
-                tests.addAll(oneFileTests);
+                }
             }
         }
-        sc.close();
 
         if (Config.MULTIPROCESS) {
             boolean isDone = false;
@@ -217,12 +216,12 @@ public abstract class RecClient {
     public void generateTestsAndQuerySimultaneously(boolean verbose, boolean doPrintIncorrectPrediction) throws IOException {
         setupGenerator();
         List<String> fileList = new ArrayList<>();
-        Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"));
-        while (sc.hasNextLine()) {
-            String filePath = sc.nextLine();
-            fileList.add(filePath);
+        try (Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"))) {
+            while (sc.hasNextLine()) {
+                String filePath = sc.nextLine();
+                fileList.add(filePath);
+            }
         }
-        sc.close();
 //        Collections.reverse(fileList);
 
         RecTest lastTest = null;

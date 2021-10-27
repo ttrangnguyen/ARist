@@ -28,10 +28,8 @@ public class Logger {
     public static void write(String line, String filename) {
         File output = new File(Config.LOG_DIR + filename);
         output.getParentFile().mkdirs();
-        try {
-            FileWriter fileWriter = new FileWriter(output, true);
+        try (FileWriter fileWriter = new FileWriter(output, true)) {
             fileWriter.append(line + "\n");
-            fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -40,10 +38,8 @@ public class Logger {
     public static void writeData(String line, String filename) {
         File output = new File(filename);
         output.getParentFile().mkdirs();
-        try {
-            FileWriter fileWriter = new FileWriter(output, true);
+        try (FileWriter fileWriter = new FileWriter(output, true)) {
             fileWriter.append(line + "\n");
-            fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -81,18 +81,13 @@ public class CommentRemover {
 
     private static String readLineByLine(File file) {
         StringBuilder textFile = new StringBuilder();
-        FileInputStream fstream;
-        try {
-            fstream = new FileInputStream(file);
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    fstream));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
             String strLine;
             while ((strLine = br.readLine()) != null) {
                 String removedCommentLine = replaceComments(strLine);
                 if (!removedCommentLine.trim().equals(""))
                     textFile.append(removedCommentLine).append("\n");
             }
-            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -285,15 +285,13 @@ public class ProjectParser {
                 }
             }
         }
-        try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(
-                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME)));
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(
+                String.format(Config.PUBLIC_STATIC_MEMBER_PATH, Config.PROJECT_NAME)))) {
             Gson gson = new Gson();
             bw.write(gson.toJson(getPublicStaticFieldList()));
             bw.newLine();
             bw.write(gson.toJson(getPublicStaticMethodList()));
             bw.newLine();
-            bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -308,15 +306,13 @@ public class ProjectParser {
     }
 
     public void loadPublicStaticMembers(String project) {
-        try {
-            Gson gson = new Gson();
-            BufferedReader br = new BufferedReader(new FileReader(
-                    String.format(Config.PUBLIC_STATIC_MEMBER_PATH, project)));
+        Gson gson = new Gson();
+        try (BufferedReader br = new BufferedReader(new FileReader(
+                String.format(Config.PUBLIC_STATIC_MEMBER_PATH, project)))) {
             Type publicStaticMemberType = new TypeToken<List<PublicStaticMember>>() {
             }.getType();
             publicStaticFieldList.addAll(gson.fromJson(br.readLine(), publicStaticMemberType));
             publicStaticMethodList.addAll(gson.fromJson(br.readLine(), publicStaticMemberType));
-            br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

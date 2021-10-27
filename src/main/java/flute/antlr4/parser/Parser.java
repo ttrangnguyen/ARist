@@ -98,17 +98,13 @@ public class Parser {
     public void visitFiles() {
         Logger.initDebug("debugVisitor.txt");
         List<File> allSubFilesTmp = DirProcessor.walkJavaFile(Config.projectsPath + projectSrcPath);
-        try {
-            File fout = new File("storage/logs/srcpath/"+projectName+".txt");
-            FileOutputStream fos = new FileOutputStream(fout);
-
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        File fout = new File("storage/logs/srcpath/"+projectName+".txt");
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fout)))) {
             for (File file : allSubFilesTmp) {
                 if (!canTest(file, projectName)) continue;
                 bw.write(file.getAbsolutePath().substring(file.getAbsolutePath().indexOf(projectName)));
                 bw.newLine();
             }
-            bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -181,40 +177,38 @@ public class Parser {
         System.out.println("Checking grammar");
         long mx = 0, cnt = 0, sumExcodeSize = 0, sumBigExcodeSize = 0;
         File fout = new File(Config.parsingResult);
-        FileOutputStream fos = new FileOutputStream(fout);
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        BufferedWriter bw2 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(Config.parsingResultFast)));
-        for (FileInfo fileInfo : systemTableCrossProject.fileList) {
-            StringBuilder builder = new StringBuilder();
-            for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
-                builder.append(node.toString());
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fout)));
+             BufferedWriter bw2 = new BufferedWriter(new OutputStreamWriter(
+                     new FileOutputStream(Config.parsingResultFast)))) {
+            for (FileInfo fileInfo : systemTableCrossProject.fileList) {
+                StringBuilder builder = new StringBuilder();
+                for (NodeSequenceInfo node : fileInfo.getNodeSequenceList()) {
+                    builder.append(node.toString());
+                }
+                Instant start = Instant.now();
+                parseExcodeSequence(builder.toString(), fileInfo, bw);
+                Instant end = Instant.now();
+                Duration timeElapsed = Duration.between(start, end);
+                sumExcodeSize += builder.toString().length();
+                if (timeElapsed.toMillis() > Config.maxParsingTimeInMillis) {
+                    mx = Math.max(mx, timeElapsed.toMillis());
+                    ++cnt;
+                    sumBigExcodeSize += builder.toString().length();
+                    bw.write(fileInfo.filePath); bw.newLine();
+                    bw.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw.newLine();
+                    bw.write("Excode size: " + builder.toString().length()); bw.newLine();
+                } else {
+                    bw2.write(fileInfo.filePath); bw2.newLine();
+                    bw2.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw2.newLine();
+                    bw2.write("Excode size: " + builder.toString().length()); bw2.newLine();
+                }
             }
-            Instant start = Instant.now();
-            parseExcodeSequence(builder.toString(), fileInfo, bw);
-            Instant end = Instant.now();
-            Duration timeElapsed = Duration.between(start, end);
-            sumExcodeSize += builder.toString().length();
-            if (timeElapsed.toMillis() > Config.maxParsingTimeInMillis) {
-                mx = Math.max(mx, timeElapsed.toMillis());
-                ++cnt;
-                sumBigExcodeSize += builder.toString().length();
-                bw.write(fileInfo.filePath); bw.newLine();
-                bw.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw.newLine();
-                bw.write("Excode size: " + builder.toString().length()); bw.newLine();
-            } else {
-                bw2.write(fileInfo.filePath); bw2.newLine();
-                bw2.write("Time taken: " + timeElapsed.toMillis() +" milliseconds"); bw2.newLine();
-                bw2.write("Excode size: " + builder.toString().length()); bw2.newLine();
-            }
+            bw.newLine();
+            bw.write("Slowest file" + mx); bw.newLine();
+            bw.write("Num of slow files: " + cnt); bw.newLine();
+            bw.write("Sum of big files: " + sumBigExcodeSize); bw.newLine();
+            bw.write("Sum excode size total: " + sumExcodeSize); bw.newLine();
         }
-        bw.newLine();
-        bw.write("Slowest file" + mx); bw.newLine();
-        bw.write("Num of slow files: " + cnt); bw.newLine();
-        bw.write("Sum of big files: " + sumBigExcodeSize); bw.newLine();
-        bw.write("Sum excode size total: " + sumExcodeSize); bw.newLine();
-        bw.close();
-        bw2.close();
     }
 
     private boolean trainTestSplited(String projectName) {
@@ -314,67 +308,66 @@ public class Parser {
         if (!fout.getParentFile().exists()) {
             fout.getParentFile().mkdirs();
         }
-        FileOutputStream fos = new FileOutputStream(fout);
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        bw.write(builder.toString());
-        bw.close();
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fout)))) {
+            bw.write(builder.toString());
+        }
     }
 
     private void createJavaFile(String absolutePath, String javaFileTokenPath) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(absolutePath));
-        String currentMethodName;
-        boolean insideMethod = false;
-        boolean insideClass = false;
         StringBuilder fileContentBuilder = new StringBuilder();
-        int curLineNum = 0;
-        File curFile = new File(absolutePath);
-        FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
-        ArrayList<String> classStack = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(absolutePath))) {
+            String currentMethodName;
+            boolean insideMethod = false;
+            boolean insideClass = false;
+            int curLineNum = 0;
+            File curFile = new File(absolutePath);
+            FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
+            ArrayList<String> classStack = new ArrayList<>();
 
-        for (String line = reader.readLine(); line!=null; line=reader.readLine()) {
+            for (String line = reader.readLine(); line!=null; line=reader.readLine()) {
 //            FileParser fileParser = new FileParser(projectParser, curFile, flute.config.Config.TEST_POSITION);
-            ++curLineNum;
-            if (line.equals("")) continue;
-            try {
-                fileParser.setPosition(curLineNum, 1);
-            } catch (Exception e) {
+                ++curLineNum;
+                if (line.equals("")) continue;
+                try {
+                    fileParser.setPosition(curLineNum, 1);
+                } catch (Exception e) {
 //                e.printStackTrace();
 //                System.out.println(curLineNum);  // always exception
-            }
-            Optional<String> classScopeName = fileParser.getCurClassScopeName();
-            Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
-            if (classScopeName.isPresent()) {
-                if (!insideClass) {
-                    insideClass = true;
-                    classStack.add(classScopeName.get());
-                    fileContentBuilder.append("`").append(classScopeName.get());
-                } else if (!classScopeName.get().equals(classStack.get(classStack.size() - 1))) {
-                    if (classStack.size() > 1 && classScopeName.get().equals(classStack.get(classStack.size() - 2))) {
-                        classStack.remove(classStack.size() - 1);
-                        fileContentBuilder.append("¬");
-                    } else {
+                }
+                Optional<String> classScopeName = fileParser.getCurClassScopeName();
+                Optional<String> methodScopeName = fileParser.getCurMethodScopeName();
+                if (classScopeName.isPresent()) {
+                    if (!insideClass) {
+                        insideClass = true;
                         classStack.add(classScopeName.get());
                         fileContentBuilder.append("`").append(classScopeName.get());
+                    } else if (!classScopeName.get().equals(classStack.get(classStack.size() - 1))) {
+                        if (classStack.size() > 1 && classScopeName.get().equals(classStack.get(classStack.size() - 2))) {
+                            classStack.remove(classStack.size() - 1);
+                            fileContentBuilder.append("¬");
+                        } else {
+                            classStack.add(classScopeName.get());
+                            fileContentBuilder.append("`").append(classScopeName.get());
+                        }
                     }
+                } else if (insideClass){
+                    fileContentBuilder.append("¬");
+                    classStack.remove(0);
+                    insideClass = false;
                 }
-            } else if (insideClass){
-                fileContentBuilder.append("¬");
-                classStack.remove(0);
-                insideClass = false;
-            }
-            if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
-                if (!insideMethod) {
-                    insideMethod = true;
-                    currentMethodName = methodScopeName.get();
-                    fileContentBuilder.append("#").append(currentMethodName);
+                if (methodScopeName.isPresent() && fileParser.checkInsideMethod()) {
+                    if (!insideMethod) {
+                        insideMethod = true;
+                        currentMethodName = methodScopeName.get();
+                        fileContentBuilder.append("#").append(currentMethodName);
+                    }
+                    fileContentBuilder.append(line).append("\n");
+                } else if (insideMethod){
+                    fileContentBuilder.append("$");
+                    insideMethod = false;
                 }
-                fileContentBuilder.append(line).append("\n");
-            } else if (insideMethod){
-                fileContentBuilder.append("$");
-                insideMethod = false;
             }
         }
-
         File file = new File(javaFileTokenPath);
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();

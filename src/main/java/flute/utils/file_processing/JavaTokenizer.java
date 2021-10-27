@@ -21,10 +21,7 @@ public class JavaTokenizer{
 //            FileWriter writer = new FileWriter(path);
 //            String fileContent = JavaTokenizer.removePackagesAndImports(file.getAbsolutePath());
             StringBuilder fileContent = new StringBuilder();
-            try {
-                FileInputStream fstream = new FileInputStream(file);
-                BufferedReader br = new BufferedReader(new InputStreamReader(
-                        fstream));
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
                 String strLine;
                 while ((strLine = br.readLine()) != null) {
                     fileContent.append(strLine + "\n");
@@ -34,7 +31,7 @@ public class JavaTokenizer{
 //                writer.write(token + "\n");
 //            }
                 System.out.println(tokens);
-//            writer.close();
+//                writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -75,10 +72,7 @@ public class JavaTokenizer{
 
     public static String removePackagesAndImports(String filePath) {
         StringBuilder fileContent = new StringBuilder();
-        try {
-            FileInputStream fstream = new FileInputStream(new File(filePath));
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    fstream));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream((new File(filePath)))))) {
             String strLine;
             while ((strLine = br.readLine()) != null) {
                 if (!(strLine.startsWith("package") || strLine.startsWith("import")))

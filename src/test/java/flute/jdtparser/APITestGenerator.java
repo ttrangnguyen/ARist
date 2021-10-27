@@ -67,49 +67,45 @@ public class APITestGenerator {
         }
         outFile.createNewFile();
 
-        FileWriter fstream = new FileWriter(outFile.getAbsoluteFile());
-        BufferedWriter bw = new BufferedWriter(fstream);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outFile.getAbsoluteFile()))) {
+            inputs.forEach(input -> {
+                BaseTestCase testCase = gson.fromJson(input, BaseTestCase.class);
+                try {
+                    Pair<FileParser, Optional<List<IMethodBinding>>> result = APITest.methodTest(testCase);
+                    IMethodBinding targetMethod = result.getFirst().getCurMethodInvocation().resolveMethodBinding();
 
-        inputs.forEach(input -> {
-            BaseTestCase testCase = gson.fromJson(input, BaseTestCase.class);
-            try {
-                Pair<FileParser, Optional<List<IMethodBinding>>> result = APITest.methodTest(testCase);
-                IMethodBinding targetMethod = result.getFirst().getCurMethodInvocation().resolveMethodBinding();
+                    testCase.setTargetId(Utils.nodeToString(targetMethod));
+                    boolean isLoggingMethod = APITest.isLoggingMethod(targetMethod);
+                    if (isLoggingMethod) {
+                        numberOfLoggingMethodTest.getAndIncrement();
+                    }
+                    testCase.setLoggingMethod(isLoggingMethod);
+                    if (result.getSecond().isPresent()) {
+                        List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
+                            MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));
+                            if (method.getMethodDeclaration().isEqualTo(targetMethod.getMethodDeclaration())) {
+                                methodCandidate.setTargetMatched(true);
+                                numberOfMatchedCandidate.getAndIncrement();
+                            }
 
-                testCase.setTargetId(Utils.nodeToString(targetMethod));
-                boolean isLoggingMethod = APITest.isLoggingMethod(targetMethod);
-                if (isLoggingMethod) {
-                    numberOfLoggingMethodTest.getAndIncrement();
-                }
-                testCase.setLoggingMethod(isLoggingMethod);
-                if (result.getSecond().isPresent()) {
-                    List<MethodCandidate> methodResult = result.getSecond().get().stream().map(method -> {
-                        MethodCandidate methodCandidate = new MethodCandidate(method.getName(), Utils.nodeToString(method));
-                        if (method.getMethodDeclaration().isEqualTo(targetMethod.getMethodDeclaration())) {
-                            methodCandidate.setTargetMatched(true);
-                            numberOfMatchedCandidate.getAndIncrement();
-                        }
+                            return methodCandidate;
+                        }).collect(Collectors.toList());
 
-                        return methodCandidate;
-                    }).collect(Collectors.toList());
-
-                    testCase.setMethod_candidates(methodResult);
-                    bw.write(gson.toJson(testCase));
-                    bw.newLine();
-                    numberOfTest.getAndIncrement();
-                } else {
-                    throw new Exception("Not found");
-                }
-            } catch (TestPathDetectException e) {
-                numberOfTestFile.getAndIncrement();
-            } catch (Exception e) {
+                        testCase.setMethod_candidates(methodResult);
+                        bw.write(gson.toJson(testCase));
+                        bw.newLine();
+                        numberOfTest.getAndIncrement();
+                    } else {
+                        throw new Exception("Not found");
+                    }
+                } catch (TestPathDetectException e) {
+                    numberOfTestFile.getAndIncrement();
+                } catch (Exception e) {
 //                    e.printStackTrace();
-                numberOfErrorTest.getAndIncrement();
-            }
-        });
-
-        bw.close();
-        fstream.close();
+                    numberOfErrorTest.getAndIncrement();
+                }
+            });
+        }
 
         System.out.println("[RESULT]---[Project_Name " + PROJECT_NAME + "]---[Total_Valid_Test_Case " + numberOfTest + " tests]---"
                 + "---[Candidate_Matched_Test_Case " + numberOfMatchedCandidate + " tests]---"
@@ -138,40 +134,37 @@ public class APITestGenerator {
         }
         outFile.createNewFile();
 
-        FileWriter fstream = new FileWriter(outFile.getAbsoluteFile());
-        BufferedWriter bw = new BufferedWriter(fstream);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outFile.getAbsoluteFile()))) {
+            inputs.forEach(input -> {
+                BaseTestCase testCase = gson.fromJson(input, BaseTestCase.class);
+                try {
+                    MultiMap result = APITest.test(testCase);
+                    List<Candidate> candidates = new ArrayList<>();
+                    result.getValue().forEach((excode, value) -> {
+                        value.forEach(lexCandidate -> {
+                                    candidates.add(new Candidate(excode, lexCandidate));
+                                }
+                        );
+                    });
 
-        inputs.forEach(input -> {
-            BaseTestCase testCase = gson.fromJson(input, BaseTestCase.class);
-            try {
-                MultiMap result = APITest.test(testCase);
-                List<Candidate> candidates = new ArrayList<>();
-                result.getValue().forEach((excode, value) -> {
-                    value.forEach(lexCandidate -> {
-                                candidates.add(new Candidate(excode, lexCandidate));
-                            }
-                    );
-                });
-
-                testCase.setCandidates(candidates);
-                for (Candidate candidate : candidates)
-                    if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
-                        candidate.setTargetMatched(true);
-                        numberOfMatchedCandidate.getAndIncrement();
-                        break;
-                    }
-                bw.write(gson.toJson(testCase));
-                bw.newLine();
-                numberOfTest.getAndIncrement();
-            } catch (TestPathDetectException e) {
-                numberOfTestFile.getAndIncrement();
-            } catch (Exception e) {
+                    testCase.setCandidates(candidates);
+                    for (Candidate candidate : candidates)
+                        if (CandidateMatcher.matches(candidate, testCase.getTarget())) {
+                            candidate.setTargetMatched(true);
+                            numberOfMatchedCandidate.getAndIncrement();
+                            break;
+                        }
+                    bw.write(gson.toJson(testCase));
+                    bw.newLine();
+                    numberOfTest.getAndIncrement();
+                } catch (TestPathDetectException e) {
+                    numberOfTestFile.getAndIncrement();
+                } catch (Exception e) {
 //                e.printStackTrace();
-                numberOfErrorTest.getAndIncrement();
-            }
-        });
-        bw.close();
-        fstream.close();
+                    numberOfErrorTest.getAndIncrement();
+                }
+            });
+        }
 
         System.out.println("[RESULT]---[Project_Name " + PROJECT_NAME + "]---[Total_Valid_Test_Case " + numberOfTest + " tests]---"
                 + "---[Candidate_Matched_Test_Case " + numberOfMatchedCandidate + " tests]---"
