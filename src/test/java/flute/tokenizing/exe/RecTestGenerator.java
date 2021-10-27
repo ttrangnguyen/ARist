@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.IBinding;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +50,7 @@ public abstract class RecTestGenerator {
     public List<? extends RecTest> generateAll(int threshold) {
         List<File> javaFiles = DirProcessor.walkJavaFile(tokenizer.getProject().getAbsolutePath());
         javaFiles = FileFilter.filter(javaFiles);
+        Collections.shuffle(javaFiles);
 
         List<RecTest> tests = new ArrayList<>();
         for (File file: javaFiles) {
