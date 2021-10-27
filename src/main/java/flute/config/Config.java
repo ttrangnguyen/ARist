@@ -202,11 +202,12 @@ public class Config {
 
     public static void loadConfig(String filePath) throws IOException {
         Gson gson = new Gson();
+        ConfigSchema config = null;
         // Create a reader
-        Reader reader = Files.newBufferedReader(Paths.get(filePath));
-        // Convert JSON object
-        ConfigSchema config = gson.fromJson(reader, ConfigSchema.class);
-        reader.close();
+        try (Reader reader = Files.newBufferedReader(Paths.get(filePath))) {
+            // Convert JSON object
+            config = gson.fromJson(reader, ConfigSchema.class);
+        }
 
         PROJECT_NAME = config.getName();
         PROJECT_DIR = config.getProjectDir();

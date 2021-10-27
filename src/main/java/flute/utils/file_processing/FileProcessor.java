@@ -24,15 +24,12 @@ public class FileProcessor {
 
     public static HashSet<String> readLineByLineToSet(String path) {
         HashSet<String> lines = new HashSet<>();
-        BufferedReader reader;
-        try {
-            reader = new BufferedReader(new FileReader(path));
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
             String line = reader.readLine();
             while (line != null) {
                 lines.add(line);
                 line = reader.readLine();
             }
-            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,15 +38,12 @@ public class FileProcessor {
 
     public static List<String> readLineByLineToList(String path) {
         List<String> lines = new ArrayList<>();
-        BufferedReader reader;
-        try {
-            reader = new BufferedReader(new FileReader(path));
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
             String line = reader.readLine();
             while (line != null) {
                 lines.add(line);
                 line = reader.readLine();
             }
-            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,21 +53,19 @@ public class FileProcessor {
     public static void write(String text, String path) throws IOException {
         File fout = new File(path);
         fout.getParentFile().mkdirs();
-        FileOutputStream fos = new FileOutputStream(fout);
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        bw.write(text);
-        bw.close();
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fout)))) {
+            bw.write(text);
+        }
     }
 
     public static void writeListLineByLine(List<String> list, String path) throws IOException {
         File fout = new File(path);
-        FileOutputStream fos = new FileOutputStream(fout);
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        for (String s : list) {
-            bw.write(s);
-            bw.newLine();
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fout)))) {
+            for (String s : list) {
+                bw.write(s);
+                bw.newLine();
+            }
         }
-        bw.close();
     }
 
     public static boolean deleteFile(File file) throws IOException {

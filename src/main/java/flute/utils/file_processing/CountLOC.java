@@ -12,11 +12,7 @@ public class CountLOC {
 
     public static int count(File file) {
         int cnt = 0;
-        FileInputStream fstream;
-        try {
-            fstream = new FileInputStream(file);
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    fstream));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
             String strLine;
             boolean inCommentBlock = false;
             while ((strLine = br.readLine()) != null) {
@@ -32,7 +28,6 @@ public class CountLOC {
                     ++cnt;
                 }
             }
-            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
