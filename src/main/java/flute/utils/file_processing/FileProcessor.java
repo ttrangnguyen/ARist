@@ -1,7 +1,5 @@
 package flute.utils.file_processing;
 
-import flute.antlr4.config.Config;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
