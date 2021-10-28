@@ -35,6 +35,7 @@ public class LOCCounter {
 
     public static int countJava(File file) {
         String fileContent = CommentRemover.removeCommentFromFileAfterParsing(file);
+        if (fileContent == null) fileContent = FileProcessor.read(file);
         fileContent = EmptyStringLiteralDecorator.preprocess(fileContent);
         String[] lines = fileContent.split("\n");
         List<String> linesOfCode = Arrays.stream(lines).filter(line -> {
