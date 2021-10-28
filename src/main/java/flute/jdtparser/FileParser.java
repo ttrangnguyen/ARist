@@ -14,6 +14,7 @@ import flute.data.typemodel.*;
 import flute.jdtparser.utils.ParserCompare;
 import flute.jdtparser.utils.ParserUtils;
 import flute.utils.file_processing.FileProcessor;
+import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 
@@ -268,311 +269,316 @@ public class FileParser {
     public static int paramPos;
 
     private MultiMap genNextParams(int position, IMethodBinding method, String... keys) {
-        paramPos = position;
-        if (curMethodInvocation == null) return null;
+        try {
+            paramPos = position;
+            if (curMethodInvocation == null) return null;
 
-        String methodName = curMethodInvocation.getName().getIdentifier();
+            String methodName = curMethodInvocation.getName().getIdentifier();
 
-        boolean isStaticExpr = false;
-        String expressionTypeKey = null;
-        ITypeBinding classBinding;
+            boolean isStaticExpr = false;
+            String expressionTypeKey = null;
+            ITypeBinding classBinding;
 
-        List<ArgumentModel> preArgs = position >= 0 && method == null
-                ? curMethodInvocation.argumentTypes().subList(0, position) : curMethodInvocation.argumentTypes();
+            List<ArgumentModel> preArgs = position >= 0 && method == null
+                    ? curMethodInvocation.argumentTypes().subList(0, position) : curMethodInvocation.argumentTypes();
 
-        List<IMethodBinding> listMember = new ArrayList<>();
+            List<IMethodBinding> listMember = new ArrayList<>();
 
-        if (keys.length == 2) {
-            MethodCallTypeArgument methodCallTypeArgument = methodCallArgumentMap.get(keys[0], keys[1]);
-            expressionTypeKey = methodCallTypeArgument.getExpressionType().getKey();
-            listMember.add(methodCallTypeArgument.getMethodBinding());
-        } else {
-            expressionTypeKey = curMethodInvocation.getExpressionType() == null ? null : curMethodInvocation.getExpressionType().getKey();
-
-            if (method != null) {
-                listMember.add(method);
-            } else if (!Config.FEATURE_USER_CHOOSE_METHOD) {
-                if (curMethodInvocation.getExpression() == null) {
-                    classBinding = curClass;
-                    isStaticExpr = isStaticScope(curMethodInvocation.getOrgASTNode());
-                } else {
-                    classBinding = curMethodInvocation.getExpressionType();
-                    isStaticExpr = curMethodInvocation.isStaticExpression();
-                }
-                ClassParser classParser = new ClassParser(classBinding);
-
-                List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
-
-                for (IMethodBinding methodBinding : methodBindings) {
-                    if (methodName.equals(methodBinding.getName())) {
-                        //Add filter for parent expression
-                        if (parentValue(curMethodInvocation.getOrgASTNode()) == null
-                                || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode()))) {
-                            if (checkInvoMember(preArgs, methodBinding)) {
-                                listMember.add(methodBinding);
-                            }
-                        }
-                    }
-                }
+            if (keys.length == 2) {
+                MethodCallTypeArgument methodCallTypeArgument = methodCallArgumentMap.get(keys[0], keys[1]);
+                expressionTypeKey = methodCallTypeArgument.getExpressionType().getKey();
+                listMember.add(methodCallTypeArgument.getMethodBinding());
             } else {
-                IMethodBinding methodBinding = curMethodInvocation.resolveMethodBinding();
-                if (methodBinding != null) listMember.add(methodBinding);
-            }
-        }
+                expressionTypeKey = curMethodInvocation.getExpressionType() == null ? null : curMethodInvocation.getExpressionType().getKey();
 
-        MultiMap nextVariableMap = new MultiMap();
-
-        int methodArgLength = preArgs.size();
-        if (method == null) {
-            methodArgLength = methodArgLength > 0 && preArgs.get(methodArgLength - 1).toString().equals("$missing$")
-                    ? methodArgLength - 1 : methodArgLength;
-        } else {
-            methodArgLength = position;
-        }
-
-        int finalMethodArgLength = methodArgLength;
-
-        String finalExpressionTypeKey = expressionTypeKey;
-        listMember.forEach(methodBinding ->
-        {
-            ITypeBinding[] params = methodBinding.getParameterTypes();
-            if (finalMethodArgLength == params.length && !methodBinding.isVarargs()) {
-                nextVariableMap.put("CLOSE_PART", ")");
-            } else {
-                if (finalMethodArgLength >= params.length - 1 && methodBinding.isVarargs()) {
-                    nextVariableMap.put("CLOSE_PART", ")");
-                }
-                ITypeBinding typeNeedCheck = null;
-                if (methodBinding.isVarargs() && finalMethodArgLength >= methodBinding.getParameterTypes().length - 1) {
-                    typeNeedCheck = methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getElementType();
-                } else if (finalMethodArgLength <= methodBinding.getParameterTypes().length - 1) {
-                    typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
-                }
-
-                if (curMethodInvocation.getName().toString().equals("equals")
-                        && curMethodInvocation.arguments().size() == 1) {
-                    typeNeedCheck = curMethodInvocation.getExpressionType() == null ?
-                            curClassParser.getOrgType() : curMethodInvocation.getExpressionType();
-                } else {
-                    ITypeBinding paramSpecialType =
-                            TypeConstraintKey.getSpecialParam(this, projectParser, position);
-                    if (paramSpecialType != null) {
-                        typeNeedCheck = paramSpecialType;
-                    }
-                }
-
-                if (typeNeedCheck != null) {
-                    if (Config.FEATURE_STATIC_CONSTANT) {
-                        ITypeBinding finalTypeNeedCheckForConstant = typeNeedCheck;
-                        projectParser.getPublicStaticFieldList().forEach(fieldConstant -> {
-                            if (TypeConstraintKey.assignWith(fieldConstant.key, finalTypeNeedCheckForConstant.getKey())) {
-                                nextVariableMap.put(fieldConstant.excode, fieldConstant.lexical);
-                            }
-                        });
-                        projectParser.getPublicStaticMethodList().forEach(methodConstant -> {
-                            if (TypeConstraintKey.assignWith(methodConstant.key, finalTypeNeedCheckForConstant.getKey())) {
-                                nextVariableMap.put(methodConstant.excode, methodConstant.lexical);
-                            }
-                        });
+                if (method != null) {
+                    listMember.add(method);
+                } else if (!Config.FEATURE_USER_CHOOSE_METHOD) {
+                    if (curMethodInvocation.getExpression() == null) {
+                        classBinding = curClass;
+                        isStaticExpr = isStaticScope(curMethodInvocation.getOrgASTNode());
                     } else {
-                        nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
+                        classBinding = curMethodInvocation.getExpressionType();
+                        isStaticExpr = curMethodInvocation.isStaticExpression();
                     }
-                    if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
-                        nextVariableMap.put("LIT(num)", "0");
+                    ClassParser classParser = new ClassParser(classBinding);
 
-                        visibleVariables.forEach(variable -> {
-                            if (variable.getTypeBinding().getDimensions() > 0) {
-                                nextVariableMap.put("F_ACCESS(" + variable.getName() + ".length", variable.getName() + ".length");
-                            }
-                        });
-                    }
+                    List<IMethodBinding> methodBindings = classParser.getMethodsFrom(curClass, isStaticExpr);
 
-                    if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
-                            || TypeConstraintKey.CHAR_SEQUE_TYPE.equals(typeNeedCheck.getKey())
-                            || (methodBinding.getName().equals("equals")
-                            && finalExpressionTypeKey != null && finalExpressionTypeKey.equals(TypeConstraintKey.STRING_TYPE))) {
-                        nextVariableMap.put("LIT(String)", "\"\"");
-                    }
-
-                    if (TypeConstraintKey.OBJECT_TYPE.equals(typeNeedCheck.getKey())) {
-                        nextVariableMap.put("LIT(num)", "0");
-                        nextVariableMap.put("LIT(String)", "\"\"");
-                    }
-
-                    if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
-                        nextVariableMap.put("LIT(boolean)", "true");
-                        nextVariableMap.put("LIT(boolean)", "false");
-                    }
-
-                    //feature 13
-                    if (Config.FEATURE_PARAM_TYPE_OBJ_CREATION
-                            && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()
-                            && !TypeConstraintKey.NUM_WRAP_TYPES.contains(typeNeedCheck.getKey())
-                            && !TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())
-                            && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
-                            && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
-                    ) {
-                        String lex = "new " + typeNeedCheck.getName().replace("? extends ", "") + "(";
-                        String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
-                                + "OPEN_PART";
-                        nextVariableMap.put(excode, lex);
-
-                        Set<String> subTypes = projectParser.findSubType(typeNeedCheck.getKey());
-                        subTypes.forEach(type -> {
-                            String su_lex = "new " + type.replace("? extends ", "") + "(";
-                            String su_excode = "C_CALL(" + type + "," + type + ") "
-                                    + "OPEN_PART";
-                            nextVariableMap.put(su_excode, su_lex);
-                        });
-                    }
-
-                    //feature 14
-                    if (Config.FEATURE_PARAM_TYPE_ARR_CREATION){
-                        if(typeNeedCheck.getKey().equals(TypeConstraintKey.OBJECT_TYPE)){
-                            String lex = "new Object[0]";
-                            String excode = "C_CALL(Array_Object,Object) "
-                                    + "OPEN_PART LIT(num) CLOSE_PART";
-                            nextVariableMap.put(excode, lex);
-                        }
-                        if(typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
-                            String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
-                            String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
-                                    + "OPEN_PART LIT(num) CLOSE_PART";
-                            nextVariableMap.put(excode, lex);
-                        }
-                    }
-
-                    //feature 10
-                    if (Config.FEATURE_PARAM_TYPE_TYPE_LIT
-                            && (typeNeedCheck.getKey().replaceAll("\\<.*\\>", "<>").equals(TypeConstraintKey.CLASS_TYPE)
-                            || typeNeedCheck.getKey().equals(TypeConstraintKey.OBJECT_TYPE))) {
-                        nextVariableMap.put("LIT(Class)", ".class");
-                    }
-
-                    //feature 11
-                    if (Config.FEATURE_PARAM_TYPE_NULL_LIT && !typeNeedCheck.isPrimitive()) {
-                        nextVariableMap.put("LIT(null)", "null");
-                    }
-                }
-
-                if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
-                    for (IMethodBinding innerAndOuterMethod : ParserUtils.withOuterClassParserMethods(curClassParser)) {
-                        if (!isStatic || Modifier.isStatic(innerAndOuterMethod.getModifiers())) {
-                            ITypeBinding varMethodReturnType = innerAndOuterMethod.getReturnType();
-                            ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
-                            if (ParserCompare.isTrue(compareFieldValue)) {
-                                String nextLex = innerAndOuterMethod.getName() + "(";
-                                String exCode = "M_ACCESS(" + curClass.getName() + "," + innerAndOuterMethod.getName() + "," + innerAndOuterMethod.getParameterTypes().length + ") "
-                                        + "OPEN_PART";
-                                nextVariableMap.put(exCode, nextLex);
-                                methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(curClass, innerAndOuterMethod));
-                            }
-                        }
-                    }
-                }
-
-                //static class feature
-                if (Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {
-                    cu.imports().forEach(importItem -> {
-                        if (importItem instanceof ImportDeclaration) {
-                            ImportDeclaration importDeclaration = (ImportDeclaration) importItem;
-                            IBinding importBinding = importDeclaration.resolveBinding();
-                            if (importBinding instanceof ITypeBinding) {
-                                ITypeBinding iTypeBinding = (ITypeBinding) importBinding;
-                                ClassParser classParser = new ClassParser(iTypeBinding);
-                                classParser.getFieldsFrom(curClass, true).forEach(staticField -> {
-                                    ITypeBinding staticMemberType = staticField.getType();
-                                    ParserCompareValue compareFieldValue = compareParam(staticMemberType, methodBinding, finalMethodArgLength);
-                                    if (ParserCompare.isTrue(compareFieldValue)) {
-                                        String nextVar = importBinding.getName() + "." + staticField.getName();
-                                        String exCode = "VAR(" + importBinding.getName() + ") "
-                                                + "F_ACCESS(" + importBinding.getName() + "," + staticField.getName() + ")";
-                                        nextVariableMap.put(exCode, nextVar);
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-
-                Stream<Variable> variables = Config.FEATURE_DFG_VARIABLE ?
-                        visibleVariables.stream().filter(variable -> variable.isInitialized()) : visibleVariables.stream();
-
-                ITypeBinding finalTypeNeedCheck = typeNeedCheck;
-                variables.forEach(variable -> {
-                    ParserCompareValue compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
-
-                    //Just add cast and array access for variable
-                    if (ParserCompare.isTrue(compareValue)) {
-                        String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
-
-                        if (!Config.FEATURE_LIMIT_CANDIDATES || ParserUtils.checkImportantVariable(variable.getName(), getParamName(position).orElse(null), getLocalVariableList())) {
-                            nextVariableMap.put(exCode, variable.getName());
-                        }
-                    }
-                    if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
-                        compareValue.getCanBeCastType().forEach(type -> {
-                            String exCode = "CAST(" + type.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
-                            nextVariableMap.put(exCode, "(" + type.getName() + ") " + variable.getName());
-                        });
-                    }
-                    if (ParserCompare.isArrayType(compareValue)) {
-                        String exCode = "VAR(" + variable.getTypeBinding().getName() + ") OPEN_PART CLOSE_PART";
-                        nextVariableMap.put(exCode, variable.getName() + "[]");
-                    }
-
-                    ITypeBinding variableClass = variable.getTypeBinding();
-
-                    if (variableClass != null) {
-                        List<IVariableBinding> varFields = new ClassParser(variableClass).getFieldsFrom(curClass);
-
-                        //gen candidate with field
-                        for (IVariableBinding varField : varFields) {
-                            ITypeBinding varMemberType = varField.getType();
-                            ParserCompareValue compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
-                            if (ParserCompare.isTrue(compareFieldValue) && !Modifier.isStatic(varField.getModifiers())) {
-                                String nextVar = variable.getName() + "." + varField.getName();
-                                String exCode = "VAR(" + variableClass.getName() + ") "
-                                        + "F_ACCESS(" + variableClass.getName() + "," + varField.getName() + ")";
-                                nextVariableMap.put(exCode, nextVar);
-                            }
-                        }
-                        //gen candidate with method
-                        if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
-                            List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
-                            for (IMethodBinding varMethod : varMethods) {
-                                ITypeBinding varMethodReturnType = varMethod.getReturnType();
-                                ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
-                                if (ParserCompare.isTrue(compareFieldValue)) {
-                                    String nextLex = variable.getName() + "." + varMethod.getName() + "(";
-                                    String exCode = "VAR(" + variableClass.getName() + ") "
-                                            + "M_ACCESS(" + variableClass.getName() + "," + varMethod.getName() + "," + varMethod.getParameterTypes().length + ") "
-                                            + "OPEN_PART";
-                                    nextVariableMap.put(exCode, nextLex);
-                                    methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(variableClass, varMethod));
+                    for (IMethodBinding methodBinding : methodBindings) {
+                        if (methodName.equals(methodBinding.getName())) {
+                            //Add filter for parent expression
+                            if (parentValue(curMethodInvocation.getOrgASTNode()) == null
+                                    || compareWithMultiType(methodBinding.getReturnType(), parentValue(curMethodInvocation.getOrgASTNode()))) {
+                                if (checkInvoMember(preArgs, methodBinding)) {
+                                    listMember.add(methodBinding);
                                 }
                             }
                         }
                     }
-                });
-                if (Config.FEATURE_PARAM_TYPE_LAMBDA
-//                        && nextVariableMap.getValue().isEmpty()
-                        && typeNeedCheck.isInterface()) {
-                    nextVariableMap.put("LAMBDA", "->{}");
-                }
-                if (Config.FEATURE_PARAM_TYPE_METHOD_REF && typeNeedCheck.isInterface()) {
-                    nextVariableMap.put("M_REF(<unk>,<unk>)", "::");
-                    ITypeBinding constructorRef = ParserUtils.checkConstructorReference(typeNeedCheck);
-                    if (constructorRef != null) {
-                        String constructorRefName = constructorRef.getName().replace("? extends ", "");
-                        nextVariableMap.put("VAR(" + constructorRefName + ") M_REF(" + constructorRefName + ",new)"
-                                , constructorRefName + "::" + "new");
-                    }
+                } else {
+                    IMethodBinding methodBinding = curMethodInvocation.resolveMethodBinding();
+                    if (methodBinding != null) listMember.add(methodBinding);
                 }
             }
-        });
 
-        return nextVariableMap;
+            MultiMap nextVariableMap = new MultiMap();
+
+            int methodArgLength = preArgs.size();
+            if (method == null) {
+                methodArgLength = methodArgLength > 0 && preArgs.get(methodArgLength - 1).toString().equals("$missing$")
+                        ? methodArgLength - 1 : methodArgLength;
+            } else {
+                methodArgLength = position;
+            }
+
+            int finalMethodArgLength = methodArgLength;
+
+            String finalExpressionTypeKey = expressionTypeKey;
+            listMember.forEach(methodBinding ->
+            {
+                ITypeBinding[] params = methodBinding.getParameterTypes();
+                if (finalMethodArgLength == params.length && !methodBinding.isVarargs()) {
+                    nextVariableMap.put("CLOSE_PART", ")");
+                } else {
+                    if (finalMethodArgLength >= params.length - 1 && methodBinding.isVarargs()) {
+                        nextVariableMap.put("CLOSE_PART", ")");
+                    }
+                    ITypeBinding typeNeedCheck = null;
+                    if (methodBinding.isVarargs() && finalMethodArgLength >= methodBinding.getParameterTypes().length - 1) {
+                        typeNeedCheck = methodBinding.getParameterTypes()[methodBinding.getParameterTypes().length - 1].getElementType();
+                    } else if (finalMethodArgLength <= methodBinding.getParameterTypes().length - 1) {
+                        typeNeedCheck = methodBinding.getParameterTypes()[finalMethodArgLength];
+                    }
+
+                    if (curMethodInvocation.getName().toString().equals("equals")
+                            && curMethodInvocation.arguments().size() == 1) {
+                        typeNeedCheck = curMethodInvocation.getExpressionType() == null ?
+                                curClassParser.getOrgType() : curMethodInvocation.getExpressionType();
+                    } else {
+                        ITypeBinding paramSpecialType =
+                                TypeConstraintKey.getSpecialParam(this, projectParser, position);
+                        if (paramSpecialType != null) {
+                            typeNeedCheck = paramSpecialType;
+                        }
+                    }
+
+                    if (typeNeedCheck != null) {
+                        if (Config.FEATURE_STATIC_CONSTANT) {
+                            ITypeBinding finalTypeNeedCheckForConstant = typeNeedCheck;
+                            projectParser.getPublicStaticFieldList().forEach(fieldConstant -> {
+                                if (TypeConstraintKey.assignWith(fieldConstant.key, finalTypeNeedCheckForConstant.getKey())) {
+                                    nextVariableMap.put(fieldConstant.excode, fieldConstant.lexical);
+                                }
+                            });
+                            projectParser.getPublicStaticMethodList().forEach(methodConstant -> {
+                                if (TypeConstraintKey.assignWith(methodConstant.key, finalTypeNeedCheckForConstant.getKey())) {
+                                    nextVariableMap.put(methodConstant.excode, methodConstant.lexical);
+                                }
+                            });
+                        } else {
+                            nextVariableMap.setParamTypeKey(typeNeedCheck.getKey());
+                        }
+                        if (TypeConstraintKey.NUM_TYPES.contains(typeNeedCheck.getKey())) {
+                            nextVariableMap.put("LIT(num)", "0");
+
+                            visibleVariables.forEach(variable -> {
+                                if (variable.getTypeBinding().getDimensions() > 0) {
+                                    nextVariableMap.put("F_ACCESS(" + variable.getName() + ".length", variable.getName() + ".length");
+                                }
+                            });
+                        }
+
+                        if (TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                                || TypeConstraintKey.CHAR_SEQUE_TYPE.equals(typeNeedCheck.getKey())
+                                || (methodBinding.getName().equals("equals")
+                                && finalExpressionTypeKey != null && finalExpressionTypeKey.equals(TypeConstraintKey.STRING_TYPE))) {
+                            nextVariableMap.put("LIT(String)", "\"\"");
+                        }
+
+                        if (TypeConstraintKey.OBJECT_TYPE.equals(typeNeedCheck.getKey())) {
+                            nextVariableMap.put("LIT(num)", "0");
+                            nextVariableMap.put("LIT(String)", "\"\"");
+                        }
+
+                        if (TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())) {
+                            nextVariableMap.put("LIT(boolean)", "true");
+                            nextVariableMap.put("LIT(boolean)", "false");
+                        }
+
+                        //feature 13
+                        if (Config.FEATURE_PARAM_TYPE_OBJ_CREATION
+                                && !typeNeedCheck.isArray() && !typeNeedCheck.isPrimitive()
+                                && !TypeConstraintKey.NUM_WRAP_TYPES.contains(typeNeedCheck.getKey())
+                                && !TypeConstraintKey.BOOL_TYPES.contains(typeNeedCheck.getKey())
+                                && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
+                                && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
+                        ) {
+                            String lex = "new " + typeNeedCheck.getName().replace("? extends ", "") + "(";
+                            String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
+                                    + "OPEN_PART";
+                            nextVariableMap.put(excode, lex);
+
+                            Set<String> subTypes = projectParser.findSubType(typeNeedCheck.getKey());
+                            subTypes.forEach(type -> {
+                                String su_lex = "new " + type.replace("? extends ", "") + "(";
+                                String su_excode = "C_CALL(" + type + "," + type + ") "
+                                        + "OPEN_PART";
+                                nextVariableMap.put(su_excode, su_lex);
+                            });
+                        }
+
+                        //feature 14
+                        if (Config.FEATURE_PARAM_TYPE_ARR_CREATION) {
+                            if (typeNeedCheck.getKey().equals(TypeConstraintKey.OBJECT_TYPE)) {
+                                String lex = "new Object[0]";
+                                String excode = "C_CALL(Array_Object,Object) "
+                                        + "OPEN_PART LIT(num) CLOSE_PART";
+                                nextVariableMap.put(excode, lex);
+                            }
+                            if (typeNeedCheck.isArray() && typeNeedCheck.getDimensions() == 1) {
+                                String lex = "new " + typeNeedCheck.getElementType().getName() + "[0]";
+                                String excode = "C_CALL(Array_" + typeNeedCheck.getElementType().getName() + "," + typeNeedCheck.getElementType().getName() + ") "
+                                        + "OPEN_PART LIT(num) CLOSE_PART";
+                                nextVariableMap.put(excode, lex);
+                            }
+                        }
+
+                        //feature 10
+                        if (Config.FEATURE_PARAM_TYPE_TYPE_LIT
+                                && (typeNeedCheck.getKey().replaceAll("\\<.*\\>", "<>").equals(TypeConstraintKey.CLASS_TYPE)
+                                || typeNeedCheck.getKey().equals(TypeConstraintKey.OBJECT_TYPE))) {
+                            nextVariableMap.put("LIT(Class)", ".class");
+                        }
+
+                        //feature 11
+                        if (Config.FEATURE_PARAM_TYPE_NULL_LIT && !typeNeedCheck.isPrimitive()) {
+                            nextVariableMap.put("LIT(null)", "null");
+                        }
+                    }
+
+                    if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
+                        for (IMethodBinding innerAndOuterMethod : ParserUtils.withOuterClassParserMethods(curClassParser)) {
+                            if (!isStatic || Modifier.isStatic(innerAndOuterMethod.getModifiers())) {
+                                ITypeBinding varMethodReturnType = innerAndOuterMethod.getReturnType();
+                                ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                                if (ParserCompare.isTrue(compareFieldValue)) {
+                                    String nextLex = innerAndOuterMethod.getName() + "(";
+                                    String exCode = "M_ACCESS(" + curClass.getName() + "," + innerAndOuterMethod.getName() + "," + innerAndOuterMethod.getParameterTypes().length + ") "
+                                            + "OPEN_PART";
+                                    nextVariableMap.put(exCode, nextLex);
+                                    methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(curClass, innerAndOuterMethod));
+                                }
+                            }
+                        }
+                    }
+
+                    //static class feature
+                    if (Config.FEATURE_PARAM_STATIC_FIELD_ACCESS_FROM_CLASS) {
+                        cu.imports().forEach(importItem -> {
+                            if (importItem instanceof ImportDeclaration) {
+                                ImportDeclaration importDeclaration = (ImportDeclaration) importItem;
+                                IBinding importBinding = importDeclaration.resolveBinding();
+                                if (importBinding instanceof ITypeBinding) {
+                                    ITypeBinding iTypeBinding = (ITypeBinding) importBinding;
+                                    ClassParser classParser = new ClassParser(iTypeBinding);
+                                    classParser.getFieldsFrom(curClass, true).forEach(staticField -> {
+                                        ITypeBinding staticMemberType = staticField.getType();
+                                        ParserCompareValue compareFieldValue = compareParam(staticMemberType, methodBinding, finalMethodArgLength);
+                                        if (ParserCompare.isTrue(compareFieldValue)) {
+                                            String nextVar = importBinding.getName() + "." + staticField.getName();
+                                            String exCode = "VAR(" + importBinding.getName() + ") "
+                                                    + "F_ACCESS(" + importBinding.getName() + "," + staticField.getName() + ")";
+                                            nextVariableMap.put(exCode, nextVar);
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+
+                    Stream<Variable> variables = Config.FEATURE_DFG_VARIABLE ?
+                            visibleVariables.stream().filter(variable -> variable.isInitialized()) : visibleVariables.stream();
+
+                    ITypeBinding finalTypeNeedCheck = typeNeedCheck;
+                    variables.forEach(variable -> {
+                        ParserCompareValue compareValue = compareParam(variable.getTypeBinding(), methodBinding, finalMethodArgLength);
+
+                        //Just add cast and array access for variable
+                        if (ParserCompare.isTrue(compareValue)) {
+                            String exCode = "VAR(" + variable.getTypeBinding().getName() + ")";
+
+                            if (!Config.FEATURE_LIMIT_CANDIDATES || ParserUtils.checkImportantVariable(variable.getName(), getParamName(position).orElse(null), getLocalVariableList())) {
+                                nextVariableMap.put(exCode, variable.getName());
+                            }
+                        }
+                        if (ParserCompare.canBeCast(compareValue) && finalTypeNeedCheck != null) {
+                            compareValue.getCanBeCastType().forEach(type -> {
+                                String exCode = "CAST(" + type.getName() + ") VAR(" + variable.getTypeBinding().getName() + ")";
+                                nextVariableMap.put(exCode, "(" + type.getName() + ") " + variable.getName());
+                            });
+                        }
+                        if (ParserCompare.isArrayType(compareValue)) {
+                            String exCode = "VAR(" + variable.getTypeBinding().getName() + ") OPEN_PART CLOSE_PART";
+                            nextVariableMap.put(exCode, variable.getName() + "[]");
+                        }
+
+                        ITypeBinding variableClass = variable.getTypeBinding();
+
+                        if (variableClass != null) {
+                            List<IVariableBinding> varFields = new ClassParser(variableClass).getFieldsFrom(curClass);
+
+                            //gen candidate with field
+                            for (IVariableBinding varField : varFields) {
+                                ITypeBinding varMemberType = varField.getType();
+                                ParserCompareValue compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
+                                if (ParserCompare.isTrue(compareFieldValue) && !Modifier.isStatic(varField.getModifiers())) {
+                                    String nextVar = variable.getName() + "." + varField.getName();
+                                    String exCode = "VAR(" + variableClass.getName() + ") "
+                                            + "F_ACCESS(" + variableClass.getName() + "," + varField.getName() + ")";
+                                    nextVariableMap.put(exCode, nextVar);
+                                }
+                            }
+                            //gen candidate with method
+                            if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
+                                List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
+                                for (IMethodBinding varMethod : varMethods) {
+                                    ITypeBinding varMethodReturnType = varMethod.getReturnType();
+                                    ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
+                                    if (ParserCompare.isTrue(compareFieldValue)) {
+                                        String nextLex = variable.getName() + "." + varMethod.getName() + "(";
+                                        String exCode = "VAR(" + variableClass.getName() + ") "
+                                                + "M_ACCESS(" + variableClass.getName() + "," + varMethod.getName() + "," + varMethod.getParameterTypes().length + ") "
+                                                + "OPEN_PART";
+                                        nextVariableMap.put(exCode, nextLex);
+                                        methodCallArgumentMap.put(exCode, nextLex, new MethodCallTypeArgument(variableClass, varMethod));
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    if (Config.FEATURE_PARAM_TYPE_LAMBDA
+//                        && nextVariableMap.getValue().isEmpty()
+                            && typeNeedCheck.isInterface()) {
+                        nextVariableMap.put("LAMBDA", "->{}");
+                    }
+                    if (Config.FEATURE_PARAM_TYPE_METHOD_REF && typeNeedCheck.isInterface()) {
+                        nextVariableMap.put("M_REF(<unk>,<unk>)", "::");
+                        ITypeBinding constructorRef = ParserUtils.checkConstructorReference(typeNeedCheck);
+                        if (constructorRef != null) {
+                            String constructorRefName = constructorRef.getName().replace("? extends ", "");
+                            nextVariableMap.put("VAR(" + constructorRefName + ") M_REF(" + constructorRefName + ",new)"
+                                    , constructorRefName + "::" + "new");
+                        }
+                    }
+                }
+            });
+
+            return nextVariableMap;
+        } catch (NullPointerException e) {
+            Logger.error(String.format("%s-%s-%d", curFile.getName(), curMethodInvocation.getName(), position));
+            return null;
+        }
     }
 
     public String getTargetPattern(int pos) {
