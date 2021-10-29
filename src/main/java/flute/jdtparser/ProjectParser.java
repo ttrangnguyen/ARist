@@ -434,7 +434,10 @@ public class ProjectParser {
     }
 
     public List<PublicStaticMember> getFasterPublicStaticCandidates(String typeKey, String filePath, String packageName) {
-        List<String> dependencies = XMLReader.read(new File(XMLReader.parseConfigPath(new File(filePath))));
+        File file = new File(filePath);
+        List<String> dependencies = new ArrayList<>();
+        if (XMLReader.parseConfigPath(file) != null)
+            dependencies = XMLReader.read(new File(XMLReader.parseConfigPath(file)));
         return getFasterPublicStaticCandidates(typeKey, dependencies, packageName);
     }
 

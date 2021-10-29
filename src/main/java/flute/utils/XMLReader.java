@@ -40,7 +40,7 @@ public class XMLReader {
                 }
             }
         } catch (Exception e) {
-
+            return new ArrayList<>();
         }
         return result;
     }
