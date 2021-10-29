@@ -46,7 +46,10 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
         try {
             methodMap = ParserUtils.methodMap(getFileParser().genMethodCall());
         } catch (ArrayIndexOutOfBoundsException e) {
-            return tests;
+            System.err.println(methodCall);
+            System.err.println(methodCall.getBegin().get());
+            throw e;
+            //return tests;
         }
 
         List<String> methodExcodeList = new ArrayList<>(methodMap.getValue().keySet());
@@ -58,42 +61,38 @@ public class MethodCallNameRecTestGenerator extends MethodCallRecTestGenerator {
 
         List<NodeSequenceInfo> methodNameExcode = Collections.singletonList(excodes.get(methodCallStartIdx));
 
-        try {
-            List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall + methodScope);
-            while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
-                tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
-            }
-
-            List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-
-            MethodCallNameRecTest test = new MethodCallNameRecTest();
-            test.setLine(methodCall.getBegin().get().line);
-            test.setCol(methodCall.getBegin().get().column);
-            test.setLex_context(tokenizedContextMethodCall);
-            test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-            test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
-            test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
-            test.setExpected_excode(NodeSequenceInfo.convertListToString(methodNameExcode));
-            test.setExpected_lex(methodName);
-            test.setMethod_candidate_excode(methodExcodeList);
-            test.setMethod_candidate_lex(methodLexList);
-            test.setMethodInvocClassQualifiedName(classQualifiedName);
-            test.setMethodInvocationModel(getFileParser().getCurMethodInvocation());
-            test.setIgnored(false);
-
-            List<IMethodBinding> methodBindingList = getFileParser().genMethodCall().orElse(null);
-            List<String> methodCandidates = new ArrayList<>();
-            if (methodBindingList != null) {
-                for (IMethodBinding methodBinding: methodBindingList) {
-                    methodCandidates.add(Utils.nodeToString(methodBinding));
-                }
-            }
-            test.setNext_lex(methodCandidates);
-
-            tests.add(test);
-        } catch (IOException e) {
-            e.printStackTrace();
+        List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextMethodCall + methodScope);
+        while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
+            tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
         }
+
+        List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
+
+        MethodCallNameRecTest test = new MethodCallNameRecTest();
+        test.setLine(methodCall.getBegin().get().line);
+        test.setCol(methodCall.getBegin().get().column);
+        test.setLex_context(tokenizedContextMethodCall);
+        test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
+        test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
+        test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
+        test.setExpected_excode(NodeSequenceInfo.convertListToString(methodNameExcode));
+        test.setExpected_lex(methodName);
+        test.setMethod_candidate_excode(methodExcodeList);
+        test.setMethod_candidate_lex(methodLexList);
+        test.setMethodInvocClassQualifiedName(classQualifiedName);
+        test.setMethodInvocationModel(getFileParser().getCurMethodInvocation());
+        test.setIgnored(false);
+
+        List<IMethodBinding> methodBindingList = getFileParser().genMethodCall().orElse(null);
+        List<String> methodCandidates = new ArrayList<>();
+        if (methodBindingList != null) {
+            for (IMethodBinding methodBinding: methodBindingList) {
+                methodCandidates.add(Utils.nodeToString(methodBinding));
+            }
+        }
+        test.setNext_lex(methodCandidates);
+
+        tests.add(test);
 
         return tests;
     }

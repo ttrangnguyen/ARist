@@ -130,15 +130,15 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                     } catch (ArrayIndexOutOfBoundsException e) {
                         System.err.println(methodCall);
                         System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
+                        throw e;
                     } catch (IndexOutOfBoundsException e) {
                         System.err.println(methodCall);
                         System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
+                        throw e;
                     } catch (NullPointerException e) {
                         System.err.println(methodCall);
                         System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
+                        throw e;
                     }
 
                     if (params != null) {
@@ -153,55 +153,51 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
-                        try {
-                            List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextArg);
-                            while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
-                                tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
-                            }
-                            tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
-
-                            List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                            excodeContext = truncateList(excodeContext);
-
-                            ArgRecTest test = new ArgRecTest();
-                            test.setLine(methodCall.getBegin().get().line);
-                            test.setCol(methodCall.getBegin().get().column);
-                            test.setClassHierarchy(getFileParser().getHierarchy());
-                            test.setLex_context(tokenizedContextMethodCall);
-                            test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-                            test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
-                            test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
-                            test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
-                            test.setExpected_lex(arg.toString());
-                            test.setStaticMemberAccessLex(getFileParser().getTargetPattern(j));
-                            test.setArgType(ExpressionType.get(arg));
-                            test.setNext_excode(nextExcodeList);
-                            test.setNext_lex(nextLexList);
-                            test.setParamTypeKey(params.getParamTypeKey());
-                            test.setParamTypeName(getFileParser().getParamTypeName(j).orElse(""));
-                            if (getFileParser().getCu().getPackage() != null) {
-                                test.setPackageName(getFileParser().getCu().getPackage().getName().toString());
-                            }
-                            //test.setCandidates_locality(getCandidatesLocality(nextLexList));
-                            test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
-                            test.setMethodInvoc(methodName);
-                            if (methodCall.getScope().isPresent()) {
-                                test.setMethodInvocCaller(methodCall.getScope().get().toString());
-                            } else {
-                                test.setMethodInvocCaller("this");
-                            }
-                            test.setMethodInvocClassQualifiedName(classQualifiedName);
-                            test.setExpected_excode_ori(argExcodes);
-                            Logger.testCount(test, getProjectParser());
-                            if (RecTestFilter.predictable(argExcodes)) {
-                                RecTestNormalizer.normalize(test);
-                            } else {
-                                test.setIgnored(true);
-                            }
-                            oneArgTests.add(test);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextArg);
+                        while (tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
+                            tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
                         }
+                        tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
+
+                        List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
+                        excodeContext = truncateList(excodeContext);
+
+                        ArgRecTest test = new ArgRecTest();
+                        test.setLine(methodCall.getBegin().get().line);
+                        test.setCol(methodCall.getBegin().get().column);
+                        test.setClassHierarchy(getFileParser().getHierarchy());
+                        test.setLex_context(tokenizedContextMethodCall);
+                        test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
+                        test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
+                        test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
+                        test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
+                        test.setExpected_lex(arg.toString());
+                        test.setStaticMemberAccessLex(getFileParser().getTargetPattern(j));
+                        test.setArgType(ExpressionType.get(arg));
+                        test.setNext_excode(nextExcodeList);
+                        test.setNext_lex(nextLexList);
+                        test.setParamTypeKey(params.getParamTypeKey());
+                        test.setParamTypeName(getFileParser().getParamTypeName(j).orElse(""));
+                        if (getFileParser().getCu().getPackage() != null) {
+                            test.setPackageName(getFileParser().getCu().getPackage().getName().toString());
+                        }
+                        //test.setCandidates_locality(getCandidatesLocality(nextLexList));
+                        test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+                        test.setMethodInvoc(methodName);
+                        if (methodCall.getScope().isPresent()) {
+                            test.setMethodInvocCaller(methodCall.getScope().get().toString());
+                        } else {
+                            test.setMethodInvocCaller("this");
+                        }
+                        test.setMethodInvocClassQualifiedName(classQualifiedName);
+                        test.setExpected_excode_ori(argExcodes);
+                        Logger.testCount(test, getProjectParser());
+                        if (RecTestFilter.predictable(argExcodes)) {
+                            RecTestNormalizer.normalize(test);
+                        } else {
+                            test.setIgnored(true);
+                        }
+                        oneArgTests.add(test);
                     } else {
                         //System.out.println("No candidate generated: " + methodCall);
                     }
@@ -220,11 +216,11 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println(methodCall);
             System.err.println(methodCall.getBegin().get());
-            e.printStackTrace();
+            throw e;
         } catch (IndexOutOfBoundsException e) {
             System.err.println(methodCall);
             System.err.println(methodCall.getBegin().get());
-            e.printStackTrace();
+            throw e;
         }
 
         if (params != null) {
@@ -236,73 +232,69 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
 
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
-            try {
-                List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextArg);
-                while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
-                    tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
-                }
-                tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
-
-                List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                excodeContext = truncateList(excodeContext);
-
-                ArgRecTest test = new ArgRecTest();
-                test.setLine(methodCall.getBegin().get().line);
-                test.setCol(methodCall.getBegin().get().column);
-                test.setClassHierarchy(getFileParser().getHierarchy());
-                test.setLex_context(tokenizedContextMethodCall);
-                test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-                test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
-                test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
-                boolean isClean = true;
-                if (methodCall.getArguments().isEmpty()) {
-                    test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
-                    test.setExpected_lex(")");
-                    test.setExpected_excode_ori(Collections.singletonList(excodes.get(methodCallEndIdx)));
-                } else {
-                    List<NodeSequenceInfo> argExcodes = new ArrayList<>();
-                    for (int t = contextIdx + 1; t < methodCallEndIdx; ++t) argExcodes.add(excodes.get(t));
-
-                    // Due to Lambda expression
-                    if (argExcodes.isEmpty()) {
-                        isClean = false;
-                    } else {
-                        test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
-                    }
-                    test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
-                    test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
-                    test.setExpected_excode_ori(argExcodes);
-                    if (!RecTestFilter.predictable(argExcodes)) isClean = false;
-                }
-                test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
-                test.setNext_excode(nextExcodeList);
-                test.setNext_lex(nextLexList);
-                test.setParamTypeKey(params.getParamTypeKey());
-                if (methodCall.getArguments().size() > 0) {
-                    test.setParamTypeName(getFileParser().getParamTypeName(methodCall.getArguments().size() - 1).orElse(""));
-                }
-                if (getFileParser().getCu().getPackage() != null) {
-                    test.setPackageName(getFileParser().getCu().getPackage().getName().toString());
-                }
-                //test.setCandidates_locality(getCandidatesLocality(nextLexList));
-                test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
-                test.setMethodInvoc(methodName);
-                if (methodCall.getScope().isPresent()) {
-                    test.setMethodInvocCaller(methodCall.getScope().get().toString());
-                } else {
-                    test.setMethodInvocCaller("this");
-                }
-                test.setMethodInvocClassQualifiedName(classQualifiedName);
-                Logger.testCount(test, getProjectParser());
-                if (isClean) {
-                    RecTestNormalizer.normalize(test);
-                } else {
-                    test.setIgnored(true);
-                }
-                oneArgTests.add(test);
-            } catch (IOException e) {
-                e.printStackTrace();
+            List<String> tokenizedContextMethodCall = JavaTokenizer.tokenize(contextArg);
+            while (!tokenizedContextMethodCall.isEmpty() && tokenizedContextMethodCall.get(tokenizedContextMethodCall.size() - 1).equals("")) {
+                tokenizedContextMethodCall.remove(tokenizedContextMethodCall.size() - 1);
             }
+            tokenizedContextMethodCall = truncateList(tokenizedContextMethodCall);
+
+            List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
+            excodeContext = truncateList(excodeContext);
+
+            ArgRecTest test = new ArgRecTest();
+            test.setLine(methodCall.getBegin().get().line);
+            test.setCol(methodCall.getBegin().get().column);
+            test.setClassHierarchy(getFileParser().getHierarchy());
+            test.setLex_context(tokenizedContextMethodCall);
+            test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
+            test.setMethodScope_name(getFileParser().getCurMethodScopeName().orElse(""));
+            test.setClass_name(getFileParser().getCurClassScopeName().orElse(""));
+            boolean isClean = true;
+            if (methodCall.getArguments().isEmpty()) {
+                test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
+                test.setExpected_lex(")");
+                test.setExpected_excode_ori(Collections.singletonList(excodes.get(methodCallEndIdx)));
+            } else {
+                List<NodeSequenceInfo> argExcodes = new ArrayList<>();
+                for (int t = contextIdx + 1; t < methodCallEndIdx; ++t) argExcodes.add(excodes.get(t));
+
+                // Due to Lambda expression
+                if (argExcodes.isEmpty()) {
+                    isClean = false;
+                } else {
+                    test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
+                }
+                test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
+                test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
+                test.setExpected_excode_ori(argExcodes);
+                if (!RecTestFilter.predictable(argExcodes)) isClean = false;
+            }
+            test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
+            test.setNext_excode(nextExcodeList);
+            test.setNext_lex(nextLexList);
+            test.setParamTypeKey(params.getParamTypeKey());
+            if (methodCall.getArguments().size() > 0) {
+                test.setParamTypeName(getFileParser().getParamTypeName(methodCall.getArguments().size() - 1).orElse(""));
+            }
+            if (getFileParser().getCu().getPackage() != null) {
+                test.setPackageName(getFileParser().getCu().getPackage().getName().toString());
+            }
+            //test.setCandidates_locality(getCandidatesLocality(nextLexList));
+            test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+            test.setMethodInvoc(methodName);
+            if (methodCall.getScope().isPresent()) {
+                test.setMethodInvocCaller(methodCall.getScope().get().toString());
+            } else {
+                test.setMethodInvocCaller("this");
+            }
+            test.setMethodInvocClassQualifiedName(classQualifiedName);
+            Logger.testCount(test, getProjectParser());
+            if (isClean) {
+                RecTestNormalizer.normalize(test);
+            } else {
+                test.setIgnored(true);
+            }
+            oneArgTests.add(test);
         } else {
             //System.out.println("No candidate generated: " + methodCall);
         }

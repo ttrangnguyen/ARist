@@ -36,16 +36,16 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
                     try {
                         params = getFileParser().genParamsAt(j);
                     } catch (ArrayIndexOutOfBoundsException e) {
-                        System.out.println(methodCall);
-                        System.out.println(methodCall.getBegin().get());
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     } catch (IndexOutOfBoundsException e) {
-                        System.out.println(methodCall);
-                        System.out.println(methodCall.getBegin().get());
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     } catch (NullPointerException e) {
-                        System.out.println(methodCall);
-                        System.out.println(methodCall.getBegin().get());
+                        System.err.println(methodCall);
+                        System.err.println(methodCall.getBegin().get());
                         e.printStackTrace();
                     }
 
@@ -86,12 +86,12 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
         try {
             params = getFileParser().genParamsAt(methodCall.getArguments().size() - 1);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println(methodCall);
-            System.out.println(methodCall.getBegin().get());
+            System.err.println(methodCall);
+            System.err.println(methodCall.getBegin().get());
             e.printStackTrace();
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(methodCall);
-            System.out.println(methodCall.getBegin().get());
+            System.err.println(methodCall);
+            System.err.println(methodCall.getBegin().get());
             e.printStackTrace();
         }
 
