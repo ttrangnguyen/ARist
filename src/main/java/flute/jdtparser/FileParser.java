@@ -576,7 +576,7 @@ public class FileParser {
 
             return nextVariableMap;
         } catch (NullPointerException e) {
-            Logger.error(String.format("%s-%s-%d", curFile.getName(), curMethodInvocation.getName(), position));
+            Logger.error(String.format("%s-%s-%d", curFile != null ? curFile.getName() : "", curMethodInvocation.getName(), position));
             return null;
         }
     }
