@@ -8,6 +8,7 @@ import flute.jdtparser.ProjectParser;
 import flute.preprocessing.FileFilter;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
+import flute.utils.ResourceUtils;
 import flute.utils.file_processing.DirProcessor;
 
 import java.io.File;
@@ -93,6 +94,11 @@ public abstract class RecTestGenerator {
                 }
             }
             if (methodDeclaration == null) continue;
+        }
+        for (RecTest test: tests) {
+            File javaFile = new File(javaFilePath);
+            File projectFile = getTokenizer().getProject();
+            test.setFilePath(ResourceUtils.getRelativePath(javaFile, projectFile));
         }
         postProcess(tests);
 
