@@ -51,6 +51,14 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
         ASTNode curMethodScope = getFileParser().getCurMethodScope();
         String contextArg = MethodExtractor.preprocessCodeBlock(contextMethodCall + methodScope + methodName + '(');
 
+        String classQualifiedName;
+
+        try {
+            classQualifiedName = getFileParser().getCurMethodInvocation().getClassQualifiedName().orElse(null);
+        } catch (Exception e) {
+            classQualifiedName = null;
+        }
+
         List<ArgRecTest> oneArgTests = new ArrayList<>();
         int k = methodCallStartIdx + 1;
         int contextIdx = methodCallStartIdx + 1;
@@ -123,6 +131,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             test.setNext_lex(nextLexList);
                             test.setCandidates_locality(getCandidatesLocality(nextLexList));
                             test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+                            test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
                             if (RecTestFilter.predictable(argExcodes)) {
                                 RecTestNormalizer.normalize(test);
@@ -165,64 +174,65 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
             ContextInfo context = new ContextInfo(excodes, contextIdx);
 
 
-                List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
-                String lexContext = null;
-                Set thisfieldSet = new HashSet();
-                nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
-                    if (!candidate.endsWith("(") && !candidate.contains(".")) {
-                        thisfieldSet.add(candidate.substring(candidate.lastIndexOf('.') + 1));
-                    }
-                });
-
-                Set thisMethodSet = new HashSet();
-                nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
-                    if (candidate.endsWith("(") && !candidate.contains(".")) {
-                        thisMethodSet.add(candidate.substring(candidate.lastIndexOf('.') + 1, candidate.length() - 1));
-                    }
-                });
-                if (curMethodScope instanceof MethodDeclaration) {
-                    lexContext = this.methodExtractor.getMethodDeclarationContextForTesting((MethodDeclaration) curMethodScope, thisfieldSet, thisMethodSet, methodName);
-                } else {
-                    lexContext = this.methodExtractor.getInitializerContextForTesting((Initializer) curMethodScope, thisfieldSet, thisMethodSet, methodName);
+            List<NodeSequenceInfo> excodeContext = context.getContextFromMethodDeclaration();
+            String lexContext = null;
+            Set thisfieldSet = new HashSet();
+            nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
+                if (!candidate.endsWith("(") && !candidate.contains(".")) {
+                    thisfieldSet.add(candidate.substring(candidate.lastIndexOf('.') + 1));
                 }
-                lexContext += contextArg;
+            });
 
-                ArgRecTest test = new ArgRecTest();
-                test.setLine(methodCall.getBegin().get().line);
-                test.setCol(methodCall.getBegin().get().column);
-                test.setLex_context(Collections.singletonList(lexContext));
-                test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
-                boolean isClean = true;
-                if (methodCall.getArguments().isEmpty()) {
-                    test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
-                    test.setExpected_lex(")");
-                    test.setExpected_excode_ori(Collections.singletonList(excodes.get(methodCallEndIdx)));
-                } else {
-                    List<NodeSequenceInfo> argExcodes = new ArrayList<>();
-                    for (int t = contextIdx + 1; t < methodCallEndIdx; ++t) argExcodes.add(excodes.get(t));
+            Set thisMethodSet = new HashSet();
+            nextLexList.stream().flatMap(Collection::stream).collect(Collectors.toList()).forEach(candidate -> {
+                if (candidate.endsWith("(") && !candidate.contains(".")) {
+                    thisMethodSet.add(candidate.substring(candidate.lastIndexOf('.') + 1, candidate.length() - 1));
+                }
+            });
+            if (curMethodScope instanceof MethodDeclaration) {
+                lexContext = this.methodExtractor.getMethodDeclarationContextForTesting((MethodDeclaration) curMethodScope, thisfieldSet, thisMethodSet, methodName);
+            } else {
+                lexContext = this.methodExtractor.getInitializerContextForTesting((Initializer) curMethodScope, thisfieldSet, thisMethodSet, methodName);
+            }
+            lexContext += contextArg;
 
-                    // Due to Lambda expression
-                    if (argExcodes.isEmpty()) {
-                        isClean = false;
-                    } else {
-                        test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
-                    }
-                    test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
-                    test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
-                    test.setExpected_excode_ori(argExcodes);
-                    if (!RecTestFilter.predictable(argExcodes)) isClean = false;
-                }
-                test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
-                test.setNext_excode(nextExcodeList);
-                test.setNext_lex(nextLexList);
-                test.setCandidates_locality(getCandidatesLocality(nextLexList));
-                test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
-                if (isClean) {
-                    RecTestNormalizer.normalize(test);
+            ArgRecTest test = new ArgRecTest();
+            test.setLine(methodCall.getBegin().get().line);
+            test.setCol(methodCall.getBegin().get().column);
+            test.setLex_context(Collections.singletonList(lexContext));
+            test.setExcode_context(NodeSequenceInfo.convertListToString(excodeContext));
+            boolean isClean = true;
+            if (methodCall.getArguments().isEmpty()) {
+                test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
+                test.setExpected_lex(")");
+                test.setExpected_excode_ori(Collections.singletonList(excodes.get(methodCallEndIdx)));
+            } else {
+                List<NodeSequenceInfo> argExcodes = new ArrayList<>();
+                for (int t = contextIdx + 1; t < methodCallEndIdx; ++t) argExcodes.add(excodes.get(t));
+
+                // Due to Lambda expression
+                if (argExcodes.isEmpty()) {
+                    isClean = false;
                 } else {
-                    test.setIgnored(true);
+                    test.setExpected_excode(NodeSequenceInfo.convertListToString(argExcodes));
                 }
-                oneArgTests.add(test);
+                test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
+                test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
+                test.setExpected_excode_ori(argExcodes);
+                if (!RecTestFilter.predictable(argExcodes)) isClean = false;
+            }
+            test.setStaticMemberAccessLex(getFileParser().getTargetPattern(methodCall.getArguments().size() - 1));
+            test.setNext_excode(nextExcodeList);
+            test.setNext_lex(nextLexList);
+            test.setCandidates_locality(getCandidatesLocality(nextLexList));
+            test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+            test.setMethodInvocClassQualifiedName(classQualifiedName);
+            if (isClean) {
+                RecTestNormalizer.normalize(test);
+            } else {
+                test.setIgnored(true);
+            }
+            oneArgTests.add(test);
         } else {
             //System.out.println("No candidate generated: " + methodCall);
         }
