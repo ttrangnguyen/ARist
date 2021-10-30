@@ -20,6 +20,8 @@ public class TypeConstraintKey {
 
     final public static List<String> BOOL_TYPES = Arrays.asList(new String[]{"Ljava/lang/Boolean;", "Z"});
 
+    final public static String VOID_TYPE = "V";
+
     final public static String MAP_TYPES = "Ljava/util/Map<";
     final public static String HASHMAP_TYPES = "Ljava/util/HashMap<";
 

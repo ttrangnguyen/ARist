@@ -760,7 +760,8 @@ public class FileParser {
             if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position], methodBinding)
                     && varType.getTypeArguments().length > 0 && methodBinding.getTypeArguments().length > 0)
                 result.addValue(ParserConstant.TRUE_VALUE);
-            if (Config.FEATURE_PARAM_TYPE_CAST && varType.isCastCompatible(methodBinding.getParameterTypes()[position])) {
+            if (Config.FEATURE_PARAM_TYPE_CAST
+                    && !varType.getKey().equals(TypeConstraintKey.VOID_TYPE) && varType.isCastCompatible(methodBinding.getParameterTypes()[position])) {
                 result.addValue(ParserConstant.CAN_BE_CAST_VALUE);
                 result.addCastType(methodBinding.getParameterTypes()[position]);
             }
