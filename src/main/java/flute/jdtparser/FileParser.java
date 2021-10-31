@@ -1157,10 +1157,10 @@ public class FileParser {
                             Variable variable = addVariableToList(position, variableBinding, isStatic, true);
                             if (variable != null) {
                                 variable.setScopeDistance(getScopeDistance(variableDeclarationExpression) - 1);
-                            }
-                            if (astNode == curBlockScope.getParent()) {
-                                variable.setLocalVariable(true);
-                                variable.setLocalVariableLevel(4);
+                                if (astNode == curBlockScope.getParent()) {
+                                    variable.setLocalVariable(true);
+                                    variable.setLocalVariableLevel(4);
+                                }
                             }
                         }
                     });
