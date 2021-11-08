@@ -79,6 +79,7 @@ public class TypeDiagram {
                 }
             });
         }
+        System.out.println("Finish init...");
     }
 
     private static void typeProcess(TypeDeclaration typeDeclaration) {

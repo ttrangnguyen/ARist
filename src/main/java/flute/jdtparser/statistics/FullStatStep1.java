@@ -23,7 +23,8 @@ import java.util.stream.Collectors;
 
 class FullStatStep1 {
     public static void main(String[] args) throws IOException {
-        File fullFolder = new File("/home/hieuvd/Kien/Flute-Kien-full/storage/repositories/git/four_hundred");
+        ///home/hieuvd/Kien/Flute-Kien-full/storage/repositories/git/four_hundred/
+        File fullFolder = new File(args[2]);
         for (int i = Integer.valueOf(args[0]); i < Integer.valueOf(args[1]); i++) {
             Config.autoConfigure(fullFolder.listFiles()[i].getName(), fullFolder.listFiles()[i].getAbsolutePath());
             ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH,
@@ -53,7 +54,7 @@ class FullStatStep1 {
 
             javaFiles.forEach(file -> {
                 count.getAndIncrement();
-                progressBar.setProgress(count.get() * 1f / javaFiles.size(), true);
+//                progressBar.setProgress(count.get() * 1f / javaFiles.size(), true);
                 FileParser fileParser = new FileParser(projectParser, file, 0, 0);
                 fileParser.getCu().accept(new ASTVisitor() {
                     @Override
@@ -70,14 +71,13 @@ class FullStatStep1 {
                             for (int i = 0; i < methodInvocation.arguments().size(); i++) {
                                 //start predict
                                 MultiMap result = fileParser.genParamsAt(i);
+                                if (result == null) throw new Exception();
                                 long numberOfCandidates = 0;
                                 AtomicBoolean isMatched = new AtomicBoolean(false);
 
                                 String target = "";
 
-
                                 target = fileParser.getCurMethodInvocation().arguments().get(i).toString();
-
 
                                 for (Map.Entry<String, List<String>> entry : result.getValue().entrySet()) {
                                     numberOfCandidates = numberOfCandidates + entry.getValue().size();
@@ -90,8 +90,9 @@ class FullStatStep1 {
                                     }
                                 }
 
+                                List<PublicStaticMember> resultPublicStatic = projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey(), file.getPath(), fileParser.getCu().getPackage().getName().toString());
                                 for (PublicStaticMember item
-                                        : projectParser.getFasterPublicStaticCandidates(result.getParamTypeKey(), file.getPath(), fileParser.getCu().getPackage().getName().toString())) {
+                                        : resultPublicStatic) {
                                     if (!isMatched.get() && (CandidateMatcher.matches(new Candidate(item.excode, item.lexical), target) ||
                                             (fileParser.getTargetPattern(i) != null && CandidateMatcher.matches(new Candidate(item.excode, item.lexical), fileParser.getTargetPattern(i))))) {
                                         isMatched.set(true);
@@ -100,16 +101,18 @@ class FullStatStep1 {
                                 }
                                 numberTest.getAndIncrement();
                                 if (isMatched.get()) numberTrue.getAndIncrement();
-                                System.out.println(
-                                        String.format("%.2f%% on %d tests", numberTrue.get() * 100f / numberTest.get(), numberTest.get()));
                                 Logger.write(
-                                        String.format("%s,%d,%d,%d,%s,%s"
-                                                , file.getPath(),
+                                        String.format("%s,%d,%d,%d,%s,%d,%d,%s,%b",
+                                                file.getPath(),
                                                 fileParser.getCu().getLineNumber(fileParser.getCurPosition()),
                                                 fileParser.getCu().getColumnNumber(fileParser.getCurPosition()),
                                                 i,
                                                 result.getParamTypeKey(),
-                                                fileParser.getCurMethodInvocation().arguments().get(i).getClass().getName()), Config.PROJECT_NAME + "_stat1.csv");
+                                                numberOfCandidates,
+                                                resultPublicStatic.size(),
+                                                fileParser.getCurMethodInvocation().arguments().get(i).getClass().getName(),
+                                                isMatched.get()
+                                        ), "stat/" + Config.PROJECT_NAME + "_stat.csv");
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -120,7 +123,8 @@ class FullStatStep1 {
                 });
 
             });
-            Logger.write(String.format("%s,%.2f%% on %d tests", fullFolder.listFiles()[i].getName(), numberTrue.get() * 100f / numberTest.get(), numberTest.get()), "full_stat_s1.txt");
+            System.out.println(String.format("%s,%.2f%% on %d tests", fullFolder.listFiles()[i].getName(), numberTrue.get() * 100f / numberTest.get(), numberTest.get()));
+            Logger.write(String.format("%s,%.2f%% on %d tests", fullFolder.listFiles()[i].getName(), numberTrue.get() * 100f / numberTest.get(), numberTest.get()), "stat/full_stat_s1.txt");
         }
     }
 }
