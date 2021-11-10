@@ -14,7 +14,7 @@ public class GitCloner {
 
     public static void cloneRepoFromURL(String repoUrl) {
         try {
-            String projectDir = repoUrl.substring(repoUrl.indexOf("github.com/") + 11, repoUrl.indexOf(".git"));
+            String projectDir = repoUrl.substring(repoUrl.indexOf("github.com/") + 11);
             projectDir = projectDir.replaceAll("/", "_");
 
             System.out.println("Cloning " + repoUrl + " into " + projectDir);
