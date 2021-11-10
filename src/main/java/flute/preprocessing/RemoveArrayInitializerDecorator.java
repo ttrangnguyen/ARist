@@ -15,6 +15,9 @@ public class RemoveArrayInitializerDecorator extends Decorator {
         return RemoveArrayInitializerDecorator.preprocess(super.preprocessFile(file));
     }
 
+    /**
+     * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
+     */
     public static String preprocess(String sourceCode) {
         sourceCode = sourceCode.replaceAll("]\\{[^,;]+,", "],");
         sourceCode = sourceCode.replaceAll("]\\{[^,;]+;", "];");

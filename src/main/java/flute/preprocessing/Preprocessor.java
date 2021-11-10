@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Set;
 
 public class Preprocessor {
+    static String NAME_REGEX = "[a-zA-Z_$][a-zA-Z\\d_$]*";
+    static String IDENTIFIER_REGEX = "("+NAME_REGEX+"\\.)*"+NAME_REGEX;
+
     public String preprocessFile(File file) {
         return FileProcessor.read(file);
     }

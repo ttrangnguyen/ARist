@@ -427,8 +427,10 @@ public class MethodExtractor extends Preprocessor {
         codeBlock = RemoveAnnotationDecorator.preprocess(codeBlock);
         codeBlock = NormalizeCharLiteralDecorator.preprocess(codeBlock);
         codeBlock = NormalizeTypeLiteralDecorator.preprocess(codeBlock);
+        codeBlock = NormalizeMethodRefDecorator.preprocess(codeBlock);
         codeBlock = RemoveArrayInitializerDecorator.preprocess(codeBlock);
         //codeBlock = RemoveArrayAccessIndexDecorator.preprocess(codeBlock);
+        codeBlock = NormalizeCompoundDecorator.preprocess(codeBlock);
         codeBlock = NormalizeLambdaExprDecorator.preprocess(codeBlock);
         return codeBlock;
     }
@@ -436,12 +438,12 @@ public class MethodExtractor extends Preprocessor {
     public static void main(String[] args) {
 //        String inputFolder = Config.REPO_DIR + "oneproj/";
 //        String outputFolder = Config.LOG_DIR + "dataset-sample-method/";
-        String inputFolder = "D:\\Flute\\storage\\repositories\\git\\tmp\\";
-        String outputFolder = Config.LOG_DIR + "dataset-gpt-method/";
+        String inputFolder = "../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred_excluded/";
+        String outputFolder = "../../Tannm/storage/" + "dataset-gpt-method/";
 
         Preprocessor preprocessor = new Preprocessor();
         System.out.println("\nBacking up projects...");
-        preprocessor.preprocessProjects(new File(inputFolder), new File(Config.LOG_DIR + "backup/"));
+        preprocessor.preprocessProjects(new File(inputFolder), new File("../../Tannm/storage/" + "backup/"));
 
         System.out.println("\nPreprocessing projects...");
         preprocessor = new RemoveCommentDecorator(preprocessor);

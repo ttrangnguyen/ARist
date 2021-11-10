@@ -13,6 +13,6 @@ public class NormalizeTypeLiteralDecorator extends Decorator {
     }
 
     public static String preprocess(String sourceCode) {
-        return sourceCode.replaceAll("[a-zA-Z_$][a-zA-Z\\d_$]*\\.class", ".class");
+        return sourceCode.replaceAll(NAME_REGEX+"\\.class", ".class");
     }
 }
