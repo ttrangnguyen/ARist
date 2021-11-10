@@ -12,7 +12,7 @@ import java.util.List;
 
 public class GitCloner {
 
-    public static void cloneRepo(String repoUrl) {
+    public static void cloneRepoFromURL(String repoUrl) {
         try {
             String projectDir = repoUrl.substring(repoUrl.indexOf("github.com/") + 11, repoUrl.indexOf(".git"));
             projectDir = projectDir.replaceAll("/", "_");
@@ -27,6 +27,10 @@ public class GitCloner {
             System.out.println("Exception occurred while cloning repo");
             e.printStackTrace();
         }
+    }
+
+    public static void cloneRepo(String repoFullName) {
+        cloneRepoFromURL("https://github.com/" + repoFullName);
     }
 
     public static void main(String args[]) {
@@ -60,7 +64,7 @@ public class GitCloner {
     public static void bulkCloneRepo(List<String> repos) {
         try {
             repos.forEach(repo -> {
-                cloneRepo(repo);
+                cloneRepoFromURL(repo);
             });
         } catch (Exception e) {
             e.printStackTrace();
