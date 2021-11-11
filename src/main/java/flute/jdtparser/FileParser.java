@@ -414,8 +414,9 @@ public class FileParser {
                                 && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                                 && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
                         ) {
-                            String lex = "new " + typeNeedCheck.getName().replace("? extends ", "") + "(";
-                            String excode = "C_CALL(" + typeNeedCheck.getName() + "," + typeNeedCheck.getName() + ") "
+                            String typeName = typeNeedCheck.getName().replace("? extends ", "").replace("<?>","<>");
+                            String lex = "new " + typeName + "(";
+                            String excode = "C_CALL(" + typeName + "," + typeName + ") "
                                     + "OPEN_PART";
                             nextVariableMap.put(excode, lex);
 
