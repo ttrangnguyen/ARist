@@ -1,12 +1,11 @@
 package flute.utils.file_processing;
 
-import flute.antlr4.config.Config;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FileProcessor {
     public static String read(File f) {
@@ -48,6 +47,14 @@ public class FileProcessor {
             e.printStackTrace();
         }
         return lines;
+    }
+
+    public static String readAndDeleteBlankLines(String path) {
+        List<String> lines = readLineByLineToList(path);
+        lines = lines.stream().filter(line -> {
+            return !line.matches("^\\s*$");
+        }).collect(Collectors.toList());
+        return String.join("\n", lines);
     }
 
     public static void write(String text, String path) throws IOException {

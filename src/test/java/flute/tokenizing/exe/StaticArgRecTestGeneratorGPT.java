@@ -71,15 +71,15 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                     } catch (ArrayIndexOutOfBoundsException e) {
                         System.err.println(methodCall);
                         System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
+                        throw e;
                     } catch (IndexOutOfBoundsException e) {
                         System.err.println(methodCall);
                         System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
+                        throw e;
                     } catch (NullPointerException e) {
                         System.err.println(methodCall);
                         System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
+                        throw e;
                     }
 
                     if (params != null) {
@@ -132,11 +132,11 @@ public class StaticArgRecTestGeneratorGPT extends ArgRecTestGenerator {
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println(methodCall);
             System.err.println(methodCall.getBegin().get());
-            e.printStackTrace();
+            throw e;
         } catch (IndexOutOfBoundsException e) {
             System.err.println(methodCall);
             System.err.println(methodCall.getBegin().get());
-            e.printStackTrace();
+            throw e;
         }
 
         if (params != null) {

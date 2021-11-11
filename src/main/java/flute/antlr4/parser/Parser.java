@@ -1,6 +1,5 @@
 package flute.antlr4.parser;
 
-import flute.antlr4.listener.ThrowingErrorListener;
 import flute.antlr4.config.Config;
 import flute.tokenizing.exe.GetDirStructureCrossProject;
 import flute.tokenizing.parsing.JavaFileParser;
@@ -9,13 +8,10 @@ import flute.utils.file_processing.*;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.SystemTableCrossProject;
 import flute.utils.Pair;
-import flute.utils.file_processing.CountLOC;
+import flute.utils.file_processing.LOCCounter;
 import flute.utils.file_processing.DirProcessor;
 import flute.utils.file_processing.JavaTokenizer;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.antlr.v4.runtime.tree.ParseTree;
 import flute.utils.logging.Logger;
 import flute.utils.StringUtils;
 import flute.tokenizing.visitors.MetricsVisitor;
@@ -28,9 +24,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import flute.jdtparser.FileParser;
 import flute.jdtparser.ProjectParser;
-import org.eclipse.core.internal.resources.Project;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 // usage: generate java/excode test file
 // if data is not separated into train/test/validate yet, set CREATE_DATA_PATH to true,
 // if want to create excode, uncomment createExcodeFile
@@ -134,7 +127,7 @@ public class Parser {
             if (fileCount-1 < parseBegin || fileCount-1 > parseEnd)
                 continue;
             if (!canTest(file, projectName)) continue;
-            int thisFileLOC = CountLOC.count(file);
+            int thisFileLOC = LOCCounter.count(file);
             LOC += thisFileLOC;
 //            System.out.println(file.getAbsolutePath());
             JavaFileParser.visitFile(visitor, file, systemTableCrossProject, "xxx/");
@@ -241,15 +234,15 @@ public class Parser {
                 final String relativePath = absolutePath.substring(absolutePath.indexOf(projectName)) + "\n";
                 if (toTest() && currentTestLOC <= testLOCThresh) {
                     testFilesPath.write(relativePath);
-                    currentTestLOC += CountLOC.count(fileInfo.file);
+                    currentTestLOC += LOCCounter.count(fileInfo.file);
                     break;
                 } else if (toValidate() && currentValidateLOC <= validateLOCThresh){
                     validateFilesPath.write(relativePath);
-                    currentValidateLOC += CountLOC.count((fileInfo.file));
+                    currentValidateLOC += LOCCounter.count((fileInfo.file));
                     break;
                 } else if (currentTrainLOC <= trainLOCThresh){
                     trainFilesPath.write(relativePath);
-                    currentTrainLOC += CountLOC.count((fileInfo.file));
+                    currentTrainLOC += LOCCounter.count((fileInfo.file));
                     break;
                 }
             }

@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MvnDownloader {
     public static void main(String[] args) throws IOException, XmlPullParserException {
-        File repoDir = new File("../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred_excluded");
+        File repoDir = new File("../../Kien/Flute-Kien-full/storage/repositories/git/" + args[0]);
         for (File project: repoDir.listFiles()) {
             MvnDownloader.download(project.getAbsolutePath());
         }

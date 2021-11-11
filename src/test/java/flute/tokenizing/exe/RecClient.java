@@ -180,13 +180,11 @@ public abstract class RecClient {
                     Future<?> future = executor.submit(() -> {
                         createNewGenerator();
                         List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                        for (RecTest test : oneFileTests) test.setFilePath(filePath);
                         tests.addAll(oneFileTests);
                     });
                     futures.add(future);
                 } else {
                     List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                    for (RecTest test : oneFileTests) test.setFilePath(filePath);
                     tests.addAll(oneFileTests);
                 }
             }

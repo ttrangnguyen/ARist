@@ -14,6 +14,9 @@ public class NormalizeLambdaExprDecorator extends Decorator {
         return NormalizeLambdaExprDecorator.preprocess(super.preprocessFile(file));
     }
 
+    /**
+     * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
+     */
     public static String preprocess(String sourceCode) {
         StringBuilder newSourceCode = new StringBuilder();
         int lastIndex = 0;

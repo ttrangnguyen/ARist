@@ -84,7 +84,7 @@ public class JavaTokenizer{
         return fileContent.toString();
     }
 
-    public static ArrayList<String> tokenize(String text) throws IOException {
+    public static ArrayList<String> tokenize(String text) {
         IScanner scanner = ToolFactory.createScanner(false, false, true, "1.8");
         scanner.setSource(text.replaceAll("[a-zA-Z0-9_.]+\\.class", ".class")
                 .replaceAll("\\[.*?]", "[]").toCharArray());

@@ -9,6 +9,7 @@ import flute.utils.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class OnlineArgRecClientGPT extends ArgRecClient {
@@ -100,5 +101,10 @@ public class OnlineArgRecClientGPT extends ArgRecClient {
 //                debugTests.add(test);
 //            }
 //        client.queryAndTest(debugTests, true, false);
+
+//        List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
+//        client.validateTests(tests, false);
+//        client.queryAndTest(tests, true, true);
+//        client.printTestResult();
     }
 }

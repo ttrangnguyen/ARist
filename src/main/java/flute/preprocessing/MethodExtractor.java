@@ -27,12 +27,12 @@ public class MethodExtractor extends Preprocessor {
     }
 
     @Override
-    public void preprocessProject(File project, File outputFolder) {
+    public void preprocessProject(File project, File outputFolder, File fileList, boolean revert) {
         Config.autoConfigure(project.getName(), project.getAbsolutePath());
         parser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
                 Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
 
-        super.preprocessProject(project, outputFolder);
+        super.preprocessProject(project, outputFolder, fileList, revert);
     }
 
     public static String getTypeDeclarationContext(TypeDeclaration node) {
@@ -427,8 +427,10 @@ public class MethodExtractor extends Preprocessor {
         codeBlock = RemoveAnnotationDecorator.preprocess(codeBlock);
         codeBlock = NormalizeCharLiteralDecorator.preprocess(codeBlock);
         codeBlock = NormalizeTypeLiteralDecorator.preprocess(codeBlock);
+        codeBlock = NormalizeMethodRefDecorator.preprocess(codeBlock);
         codeBlock = RemoveArrayInitializerDecorator.preprocess(codeBlock);
         //codeBlock = RemoveArrayAccessIndexDecorator.preprocess(codeBlock);
+        codeBlock = NormalizeCompoundDecorator.preprocess(codeBlock);
         codeBlock = NormalizeLambdaExprDecorator.preprocess(codeBlock);
         return codeBlock;
     }
@@ -436,12 +438,12 @@ public class MethodExtractor extends Preprocessor {
     public static void main(String[] args) {
 //        String inputFolder = Config.REPO_DIR + "oneproj/";
 //        String outputFolder = Config.LOG_DIR + "dataset-sample-method/";
-        String inputFolder = "D:\\Flute\\storage\\repositories\\git\\tmp\\";
-        String outputFolder = Config.LOG_DIR + "dataset-gpt-method/";
+        String inputFolder = "../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred_excluded/";
+        String outputFolder = "../../Tannm/storage/" + "dataset-gpt-method/";
 
         Preprocessor preprocessor = new Preprocessor();
         System.out.println("\nBacking up projects...");
-        preprocessor.preprocessProjects(new File(inputFolder), new File(Config.LOG_DIR + "backup/"));
+        preprocessor.preprocessProjects(new File(inputFolder), new File("../../Tannm/storage/" + "backup/"));
 
         System.out.println("\nPreprocessing projects...");
         preprocessor = new RemoveCommentDecorator(preprocessor);
@@ -452,5 +454,28 @@ public class MethodExtractor extends Preprocessor {
         System.out.println("\nExtracting methods...");
         preprocessor = new MethodExtractor();
         preprocessor.preprocessProjects(new File(inputFolder), new File(outputFolder));
+
+//        String inputFolder = "D:\\Flute\\storage\\repositories\\git\\eclipse\\";
+//        String outputFolder = Config.LOG_DIR + "dataset-gpt-method/";
+//
+//        Preprocessor preprocessor = new Preprocessor();
+//        System.out.println("\nBacking up project...");
+//        preprocessor.preprocessProject(new File(inputFolder),
+//                new File(Config.LOG_DIR + "backup/"),
+//                new File(Config.LOG_DIR + "eclipse/eclipse_train.txt"));
+//
+//        System.out.println("\nPreprocessing project...");
+//        preprocessor = new RemoveCommentDecorator(preprocessor);
+//        preprocessor = new RemoveNewLineDecorator(preprocessor);
+//        preprocessor = new RemoveIndentDecorator(preprocessor);
+//        preprocessor.preprocessProject(new File(inputFolder),
+//                (new File(inputFolder)).getParentFile(),
+//                new File(Config.LOG_DIR + "eclipse/eclipse_train.txt"));
+//
+//        System.out.println("\nExtracting methods...");
+//        preprocessor = new MethodExtractor();
+//        preprocessor.preprocessProject(new File(inputFolder),
+//                new File(outputFolder),
+//                new File(Config.LOG_DIR + "eclipse/eclipse_train.txt"));
     }
 }

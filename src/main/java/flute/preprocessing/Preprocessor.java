@@ -8,8 +8,12 @@ import flute.utils.file_processing.FileProcessor;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public class Preprocessor {
+    static String NAME_REGEX = "[a-zA-Z_$][a-zA-Z\\d_$]*";
+    static String IDENTIFIER_REGEX = "("+NAME_REGEX+"\\.)*"+NAME_REGEX;
+
     public String preprocessFile(File file) {
         return FileProcessor.read(file);
     }
@@ -31,22 +35,40 @@ public class Preprocessor {
         }
     }
 
-    public void preprocessProject(File project, File outputFolder, boolean revert) {
+    public void preprocessProject(File project, File outputFolder, File fileList, boolean revert) {
         List<File> rawJavaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
         List<File> javaFiles = FileFilter.filter(rawJavaFiles);
+        Set<String> targetedFiles = null;
+        if (fileList != null) {
+            targetedFiles = FileProcessor.readLineByLineToSet(fileList.getAbsolutePath());
+        }
 
         boolean flag = true;
-        //if (project.getName().compareToIgnoreCase("amaembo_huntbugs") <= 0) flag = false;
+//        if (project.getName().compareToIgnoreCase("eclipse") <= 0) flag = false;
         for (File javaFile: javaFiles) {
-            //if (javaFile.getName().compareTo("BackLinkAnnotator.java") == 0) flag = true;
-            if (!flag) continue;
-            String sourceCode = (!revert)? preprocessFile(javaFile): revertFile(javaFile);
-            exportCode(sourceCode, outputFolder, project, javaFile);
+            String projectPath = project.getAbsolutePath();
+            String relativeFilePath = javaFile.getAbsolutePath();
+            relativeFilePath = relativeFilePath.substring(projectPath.length() - project.getName().length());
+            if (targetedFiles == null || targetedFiles.contains(relativeFilePath) ||
+                    targetedFiles.contains(relativeFilePath.replace('\\', '/'))) {
+//                if (javaFile.getName().compareTo("TargetPlatformService.java") == 0) flag = true;
+                if (!flag) continue;
+                String sourceCode = (!revert) ? preprocessFile(javaFile) : revertFile(javaFile);
+                exportCode(sourceCode, outputFolder, project, javaFile);
+            }
         }
     }
 
+    public void preprocessProject(File project, File outputFolder, boolean revert) {
+        preprocessProject(project, outputFolder, null, revert);
+    }
+
+    public void preprocessProject(File project, File outputFolder, File fileList) {
+        preprocessProject(project, outputFolder, fileList, false);
+    }
+
     public void preprocessProject(File project, File outputFolder) {
-        preprocessProjects(project, outputFolder, false);
+        preprocessProject(project, outputFolder, false);
     }
 
     public void preprocessProjects(File inputFolder, File outputFolder, boolean revert) {
