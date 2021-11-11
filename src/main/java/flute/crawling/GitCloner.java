@@ -14,13 +14,15 @@ public class GitCloner {
 
     public static void cloneRepoFromURL(String repoUrl) {
         try {
-            String projectDir = repoUrl.substring(repoUrl.indexOf("github.com/") + 11);
-            projectDir = projectDir.replaceAll("/", "_");
+            String repoFullName = repoUrl.substring(repoUrl.indexOf("github.com/") + 11);
+            repoFullName = repoFullName.replaceAll("/", "_");
+            File repoDir = new File(Config.REPO_DIR + "git/" + repoFullName);
+            if (repoDir.exists()) return;
 
-            System.out.println("Cloning " + repoUrl + " into " + projectDir);
+            System.out.println("Cloning " + repoUrl + " into " + repoFullName);
             Git result = Git.cloneRepository()
                     .setURI(repoUrl)
-                    .setDirectory(new File(Config.REPO_DIR + "git/" + projectDir))
+                    .setDirectory(repoDir)
                     .call();
 
         } catch (GitAPIException e) {
