@@ -6,7 +6,8 @@ import flute.preprocessing.RemoveArrayAccessIndexDecorator;
 import flute.preprocessing.RemoveArrayInitializerDecorator;
 
 public class CandidateMatcher {
-    private static String identifieRegex = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*";
+    //private static String identifieRegex = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]*";
+    private static String identifieRegex = "\\w+";
     private static String stringLiteralRegex = "\"([^\"]|(\\\\\"))*\"";
 
     public static String preprocess(String target) {
@@ -45,19 +46,24 @@ public class CandidateMatcher {
     }
 
     public static boolean matchesMethodCall(Candidate candidate, String target) {
-        if (!candidate.getExcode().matches(".*M_ACCESS\\("+"\\w+"+"(<.*>)?,"+"\\w+"+",\\d+\\) OPEN_PART")) return false;
-        if (!target.matches(".*"+"\\w+"+"\\(.*\\)$")) return false;
+        if (!candidate.getExcode().matches(".*M_ACCESS\\("+identifieRegex+"(<.*>)?,"+identifieRegex+",\\d+\\) OPEN_PART")) return false;
+        if (!target.matches(".*"+identifieRegex+"\\(.*\\)$")) return false;
         return target.startsWith(candidate.getName());
     }
 
     public static boolean matchesObjectCreation(Candidate candidate, String target) {
-        if (!candidate.getExcode().matches("^C_CALL\\("+"\\w+"+"(<.*>)?,"+"\\w+"+"\\) OPEN_PART")) return false;
-        if (!target.matches("^new "+"\\w+"+"\\(.*\\)$")) return false;
-        return target.startsWith(candidate.getName());
+        if (!target.matches("^new "+identifieRegex+"(<.*>)?\\(.*\\)$")) return false;
+        String typeName = candidate.getName().substring(4, candidate.getName().lastIndexOf('('));
+        if (candidate.getExcode().compareTo("C_CALL("+typeName+","+typeName.substring(0, typeName.indexOf('<'))+") OPEN_PART") != 0) return false;
+        if (candidate.getName().matches("^new "+identifieRegex+"<>\\($")) {
+            return target.startsWith(candidate.getName().substring(0, candidate.getName().indexOf('<') + 1));
+        } else {
+            return target.startsWith(candidate.getName());
+        }
     }
 
     public static boolean matchesArrayCreation(Candidate candidate, String target) {
-        if (!target.matches("^new \\w+\\[.*\\]$")) return false;
+        if (!target.matches("^new "+identifieRegex+"\\[.*\\]$")) return false;
         String className = target.substring(target.indexOf(' ') + 1, target.indexOf('['));
         if (candidate.getExcode().compareTo("C_CALL(Array_"+className+","+className+") OPEN_PART LIT(num) CLOSE_PART") != 0) return false;
         return candidate.getName().compareTo("new "+className+"[0]") == 0;
@@ -102,7 +108,7 @@ public class CandidateMatcher {
     public static boolean matchesMethodReference(Candidate candidate, String target) {
         if (!target.contains("::")) return false;
         if (target.endsWith("::new")) {
-            if (!candidate.getExcode().matches("^M_REF\\("+"\\w+"+"(<.*>)?,new\\)$")) return false;
+            if (!candidate.getExcode().matches("^M_REF\\("+identifieRegex+"(<.*>)?,new\\)$")) return false;
             return candidate.getName().compareTo(target) == 0;
         } else {
             if (!candidate.getExcode().matches("^M_REF\\([^,]*,[^,]*\\)$")) return false;
@@ -111,7 +117,7 @@ public class CandidateMatcher {
     }
 
     public static void main(String[] args) {
-        Candidate candidate = new Candidate("M_REF(<unk>,<unk>)", "::");
-        System.out.println(CandidateMatcher.matches(candidate, "Student::get"));
+        Candidate candidate = new Candidate("C_CALL(ArrayList<>,ArrayList) OPEN_PART", "new ArrayList<>(");
+        System.out.println(CandidateMatcher.matchesObjectCreation(candidate, "new ArrayList<String>()"));
     }
 }

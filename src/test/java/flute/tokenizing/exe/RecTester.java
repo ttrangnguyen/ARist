@@ -39,25 +39,39 @@ public class RecTester {
         return false;
     }
 
-    public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
-        String expectedExcode = test.getExpected_excode();
-
-        if (test.getNext_excode().contains(expectedExcode)) return true;
-        List<String> candidates = new ArrayList<>();
-        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
-            candidates.add(publicStaticCandidate.excode);
-        }
-        if (candidates.contains(expectedExcode)) return true;
+    public static boolean matchesExcode(String expectedExcode, String candidate) {
+        if (candidate.compareTo(expectedExcode) == 0) return true;
 
         //TODO: Handle unknown excode
         if (expectedExcode.contains("<unk>")) return true;
 
-        if (test.getMethodAccessExcode() != null) {
-            if (test.getNext_excode().contains(test.getMethodAccessExcode())) return true;
+        if (candidate.contains("<>")) {
+            return matchesExcode(expectedExcode.replaceAll("<[\\w.?<>]+>", "<>"),
+                    candidate.replaceAll("<[\\w.?<>]+>", "<>"));
         }
 
-        if (test.getObjectCreationExcode() != null) {
-            if (test.getNext_excode().contains(test.getObjectCreationExcode())) return true;
+        return false;
+    }
+
+    public static boolean canAcceptGeneratedExcodes(ArgRecTest test) {
+        String expectedExcode = test.getExpected_excode();
+
+        List<String> candidates = new ArrayList<>(test.getNext_excode());
+        for (PublicStaticMember publicStaticCandidate: test.getPublicStaticCandidateList()) {
+            candidates.add(publicStaticCandidate.excode);
+        }
+
+        for (String candidate: candidates) {
+            if (matchesExcode(expectedExcode, candidate)) return true;
+
+            String alternateExcode = null;
+            if (test.getMethodAccessExcode() != null) {
+                alternateExcode = test.getMethodAccessExcode();
+            }
+            if (test.getObjectCreationExcode() != null) {
+                alternateExcode = test.getObjectCreationExcode();
+            }
+            if (alternateExcode != null && matchesExcode(alternateExcode, candidate)) return true;
         }
 
         return false;
@@ -73,6 +87,11 @@ public class RecTester {
         if (result.compareTo(expectedLex) == 0) return true;
 
         if (expectedLex.contains("->") && result.contains("->")) return true;
+
+        if (result.contains("<>")) {
+            return matchesArg(expectedLex.replaceAll("<[\\w.?<>]+>", "<>"),
+                    result.replaceAll("<[\\w.?<>]+>", "<>"));
+        }
 
         if (expectedLex.contains(".this")) {
             if (matchesArg(expectedLex.substring(expectedLex.indexOf(".this") + 1), result)) return true;
