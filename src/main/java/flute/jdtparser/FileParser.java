@@ -416,7 +416,7 @@ public class FileParser {
                         ) {
                             String typeName = typeNeedCheck.getName().replace("? extends ", "").replace("<?>","<>");
                             String lex = "new " + typeName + "(";
-                            String excode = "C_CALL(" + typeName + "," + typeName + ") "
+                            String excode = "C_CALL(" + typeName + "," + typeName.replaceAll("[<].*?[>]", "") + ") "
                                     + "OPEN_PART";
                             nextVariableMap.put(excode, lex);
 
