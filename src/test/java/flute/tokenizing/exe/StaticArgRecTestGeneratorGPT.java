@@ -1,9 +1,8 @@
 package flute.tokenizing.exe;
 
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
@@ -12,7 +11,6 @@ import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.ContextInfo;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
-import flute.utils.StringUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.MethodDeclaration;

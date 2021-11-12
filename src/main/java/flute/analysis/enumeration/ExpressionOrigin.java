@@ -1,4 +1,4 @@
-package flute.analysis;
+package flute.analysis.enumeration;
 
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;

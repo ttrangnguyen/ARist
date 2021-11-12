@@ -1,6 +1,6 @@
 package flute.tokenizing.exe;
 
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.structure.DataFrame;
 import flute.communicate.SocketClient;
 import flute.communicate.schema.Response;

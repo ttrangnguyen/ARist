@@ -1,10 +1,8 @@
 package flute.tokenizing.exe;
 
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.*;
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.config.Config;
-import flute.crawling.APICrawler;
 import flute.data.MultiMap;
 import flute.data.typemodel.Variable;
 import flute.jdtparser.ProjectParser;
@@ -13,7 +11,6 @@ import flute.utils.StringUtils;
 import flute.utils.file_processing.JavaTokenizer;
 import flute.utils.logging.Logger;
 
-import java.io.IOException;
 import java.util.*;
 
 public class ArgRecTestGenerator extends MethodCallRecTestGenerator {

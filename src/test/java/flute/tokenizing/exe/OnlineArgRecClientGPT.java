@@ -1,6 +1,6 @@
 package flute.tokenizing.exe;
 
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.config.Config;
 import flute.testing.PredictionDetail;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
@@ -8,8 +8,6 @@ import flute.tokenizing.excode_data.RecTest;
 import flute.utils.logging.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class OnlineArgRecClientGPT extends ArgRecClient {

@@ -1,6 +1,6 @@
 package flute.tokenizing.excode_data;
 
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.jdtparser.PublicStaticMember;
 
 import java.util.ArrayList;
