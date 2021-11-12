@@ -38,7 +38,7 @@ public class CommentRemover {
             removedCommentfileString = StaticJavaParser.parse(file).toString();
         } catch (FileNotFoundException fnfe) {
             fnfe.printStackTrace();
-        } catch (ParseProblemException ppe) {
+        } catch (ParseProblemException | StringIndexOutOfBoundsException ppe) {
             if (Config.LOG_WARNING) System.err.println("WARNING: " + ppe.getMessage());
             try {
                 removedCommentfileString = removeCommentFromFile(file);
@@ -59,7 +59,7 @@ public class CommentRemover {
         try {
             StaticJavaParser.getConfiguration().setAttributeComments(false);
             removedCommentfileString = StaticJavaParser.parse(fileString).toString();
-        } catch (ParseProblemException ppe) {
+        } catch (ParseProblemException | StringIndexOutOfBoundsException ppe) {
             if (Config.LOG_WARNING) System.err.println("WARNING: " + ppe.getMessage());
             try {
                 removedCommentfileString = removeCommentFromFileString(fileString);
