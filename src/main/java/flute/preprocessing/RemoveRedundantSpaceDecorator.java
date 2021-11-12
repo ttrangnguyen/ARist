@@ -2,7 +2,7 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public class RemoveRedundantSpaceDecorator extends Decorator {
+public class RemoveRedundantSpaceDecorator extends PreprocessDecorator {
     public RemoveRedundantSpaceDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

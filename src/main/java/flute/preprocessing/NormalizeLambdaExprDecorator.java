@@ -4,7 +4,7 @@ import flute.config.Config;
 
 import java.io.File;
 
-public class NormalizeLambdaExprDecorator extends Decorator {
+public class NormalizeLambdaExprDecorator extends PreprocessDecorator {
     public NormalizeLambdaExprDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

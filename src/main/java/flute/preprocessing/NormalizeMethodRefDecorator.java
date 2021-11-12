@@ -2,7 +2,7 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public class NormalizeMethodRefDecorator extends Decorator {
+public class NormalizeMethodRefDecorator extends PreprocessDecorator {
     public NormalizeMethodRefDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

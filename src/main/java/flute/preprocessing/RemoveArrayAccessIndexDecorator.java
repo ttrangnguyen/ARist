@@ -5,7 +5,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RemoveArrayAccessIndexDecorator extends Decorator {
+public class RemoveArrayAccessIndexDecorator extends PreprocessDecorator {
     public RemoveArrayAccessIndexDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

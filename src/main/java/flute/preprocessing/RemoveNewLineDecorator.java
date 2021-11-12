@@ -2,7 +2,7 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public class RemoveNewLineDecorator extends Decorator {
+public class RemoveNewLineDecorator extends PreprocessDecorator {
     public RemoveNewLineDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

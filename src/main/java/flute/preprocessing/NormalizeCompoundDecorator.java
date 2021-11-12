@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class NormalizeCompoundDecorator extends Decorator {
+public class NormalizeCompoundDecorator extends PreprocessDecorator {
     public NormalizeCompoundDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

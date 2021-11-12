@@ -2,7 +2,7 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public class RemoveImportDecorator extends Decorator {
+public class RemoveImportDecorator extends PreprocessDecorator {
     public RemoveImportDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

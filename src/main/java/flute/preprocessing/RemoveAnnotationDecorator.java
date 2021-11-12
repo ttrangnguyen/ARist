@@ -1,10 +1,8 @@
 package flute.preprocessing;
 
-import flute.utils.file_processing.CommentRemover;
-
 import java.io.File;
 
-public class RemoveAnnotationDecorator extends Decorator {
+public class RemoveAnnotationDecorator extends PreprocessDecorator {
     public RemoveAnnotationDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

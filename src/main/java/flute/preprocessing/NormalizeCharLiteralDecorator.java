@@ -2,7 +2,7 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public class NormalizeCharLiteralDecorator extends Decorator {
+public class NormalizeCharLiteralDecorator extends PreprocessDecorator {
     public NormalizeCharLiteralDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }
