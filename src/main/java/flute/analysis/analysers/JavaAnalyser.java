@@ -19,6 +19,9 @@ public class JavaAnalyser {
     private final DataFrame dataFrameFile = new DataFrame();
     final DataFrame.Variable seriesMethodDeclaration = new DataFrame.Variable();
     final DataFrame.Variable seriesLOC = new DataFrame.Variable();
+    final DataFrame.Variable seriesMethodCall = new DataFrame.Variable();
+
+    long analysingTime = 0;
 
     DataFrame analyseFile(File file) {
         return new DataFrame();
@@ -59,12 +62,14 @@ public class JavaAnalyser {
         }
     }
 
-    public DataFrame.Variable getStatisticsByProject(Class clazz) {
-        return dataFrameProject.getVariable(clazz.getName());
-    }
-
-    public DataFrame.Variable getStatisticsByFile(Class clazz) {
-        return dataFrameFile.getVariable(clazz.getName());
+    public void printAnalysingTime() {
+        System.out.println("Analyzing time:");
+        JavaAnalyser currentAnalyser = this;
+        while (currentAnalyser instanceof AnalyzeDecorator) {
+            System.out.println(String.format("\t%s: %d s", currentAnalyser.getClass().getSimpleName(), currentAnalyser.analysingTime / 1000000000));
+            currentAnalyser = ((AnalyzeDecorator) currentAnalyser).analyser;
+        }
+        System.out.println();
     }
 
     private JavaAnalyser getAnalyserOfClass(Class clazz) {
@@ -76,28 +81,51 @@ public class JavaAnalyser {
         return currentAnalyser;
     }
 
+    public DataFrame.Variable getStatisticsByProject(Class clazz) {
+        return dataFrameProject.getVariable(clazz.getName());
+    }
+
+    public DataFrame.Variable getStatisticsByFile(Class clazz) {
+        return dataFrameFile.getVariable(clazz.getName());
+    }
+
     public DataFrame.Variable getStatisticsByMethodDeclaration(Class clazz) {
         return getAnalyserOfClass(clazz).seriesMethodDeclaration;
     }
 
     public DataFrame.Variable getStatisticsByLOC(Class clazz) {
         return getAnalyserOfClass(clazz).seriesLOC;
-    }   
+    }
+
+    public DataFrame.Variable getStatisticsByMethodCall(Class clazz) {
+        return getAnalyserOfClass(clazz).seriesMethodCall;
+    }
 
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
         javaAnalyser = new CountMethodCallDecorator(javaAnalyser);
+        javaAnalyser = new CountArgumentDecorator(javaAnalyser);
 
         javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
         //javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
 
+        javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;
 //        variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
 //        System.out.println("Statistics on method calls by method declaration:");
 //        System.out.println(DataFrame.describe(variable));
 
-        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
-        System.out.println("Statistics on method calls by loc:");
+//        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
+//        System.out.println("Statistics on method calls by loc:");
+//        System.out.println(DataFrame.describe(variable));
+
+        variable = javaAnalyser.getStatisticsByMethodCall(CountArgumentDecorator.class);
+        System.out.println("Statistics on arguments:");
         System.out.println(DataFrame.describe(variable));
+        System.out.println("Frequency distribution:");
+        System.out.println(String.format("\t%3d arguments: %5.2f%%", 0, variable.getProportionOfValue(0, true)));
+        System.out.println(String.format("\t%3d arguments: %5.2f%%", 1, variable.getProportionOfValue(1, true)));
+        System.out.println(String.format("\t%3d arguments: %5.2f%%", 2, variable.getProportionOfValue(2, true)));
+        System.out.println(String.format("\t>=%1d arguments: %5.2f%%", 3, variable.getProportionOfRange(3, variable.getMax(), true)));
     }
 }

@@ -37,6 +37,9 @@ public class CountMethodCallDecorator extends AnalyzeDecorator {
     @Override
     DataFrame analyseFile(File file) {
         DataFrame dataFrameOfFile = super.analyseFile(file);
+
+        long startTime = System.nanoTime();
+
         String data = FileProcessor.read(file);
         try {
             CompilationUnit cu = StaticJavaParser.parse(data);
@@ -50,6 +53,9 @@ public class CountMethodCallDecorator extends AnalyzeDecorator {
         }
         int LOCcount = LOCCounter.countJava(file);
         while (seriesLOC.getCount() < LOCcount) seriesLOC.insert(0);
+
+        analysingTime += System.nanoTime() - startTime;
+
         return dataFrameOfFile;
     }
 }
