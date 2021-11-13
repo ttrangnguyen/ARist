@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class DataFrame implements Serializable {
-    public class Variable implements Serializable {
+    public static class Variable implements Serializable {
         private Map<Double, Integer> counter = new TreeMap<Double, Integer>();
 
         private Integer count = 0;
@@ -124,6 +124,10 @@ public class DataFrame implements Serializable {
 
     private Map<String, Variable> vars = new HashMap<String, Variable>();
 
+    public Set<String> getLabels() {
+        return vars.keySet();
+    }
+
     public Variable getVariable(String label) {
         if (!vars.containsKey(label)) vars.put(label, new Variable());
         return vars.get(label);
@@ -144,6 +148,22 @@ public class DataFrame implements Serializable {
 
         StringBuilder sb = new StringBuilder();
         sb.append("Statistics on " + label + ":\n");
+        sb.append(String.format("\t%-7s%20d\n", "count:", variable.getCount()));
+        sb.append(String.format("\t%-7s%20f\n", "mean:", variable.getMean()));
+        sb.append(String.format("\t%-7s%20f\n", "std:", variable.getStd()));
+        sb.append(String.format("\t%-7s%20f\n", "mode:", variable.getMode()));
+        sb.append(String.format("\t%-7s%20f\n", "min:", variable.getMin()));
+        sb.append(String.format("\t%-7s%20f\n", "25%:", milestones.get(0)));
+        sb.append(String.format("\t%-7s%20f\n", "50%:", milestones.get(1)));
+        sb.append(String.format("\t%-7s%20f\n", "75%:", milestones.get(2)));
+        sb.append(String.format("\t%-7s%20f\n", "max:", variable.getMax()));
+        return sb.toString();
+    }
+
+    public static String describe(Variable variable) {
+        List<Double> milestones = variable.getMilestones(0.25, 0.50, 0.75);
+
+        StringBuilder sb = new StringBuilder();
         sb.append(String.format("\t%-7s%20d\n", "count:", variable.getCount()));
         sb.append(String.format("\t%-7s%20f\n", "mean:", variable.getMean()));
         sb.append(String.format("\t%-7s%20f\n", "std:", variable.getStd()));
