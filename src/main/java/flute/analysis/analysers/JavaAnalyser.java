@@ -104,28 +104,30 @@ public class JavaAnalyser {
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
         javaAnalyser = new CountMethodCallDecorator(javaAnalyser);
-        javaAnalyser = new CountArgumentDecorator(javaAnalyser);
+        //javaAnalyser = new CountArgumentDecorator(javaAnalyser);
 
         javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
         //javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;
-//        variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
-//        System.out.println("Statistics on method calls by method declaration:");
-//        System.out.println(DataFrame.describe(variable));
+        variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
+        System.out.println("Statistics on method calls by method declaration:");
+        System.out.println(DataFrame.describe(variable));
 
-//        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
-//        System.out.println("Statistics on method calls by loc:");
-//        System.out.println(DataFrame.describe(variable));
-
-        variable = javaAnalyser.getStatisticsByMethodCall(CountArgumentDecorator.class);
-        System.out.println("Statistics on arguments:");
+        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
+        System.out.println("Statistics on method calls by loc:");
         System.out.println(DataFrame.describe(variable));
         System.out.println("Frequency distribution:");
-        System.out.println(String.format("\t%3d arguments: %5.2f%%", 0, variable.getProportionOfValue(0, true)));
-        System.out.println(String.format("\t%3d arguments: %5.2f%%", 1, variable.getProportionOfValue(1, true)));
-        System.out.println(String.format("\t%3d arguments: %5.2f%%", 2, variable.getProportionOfValue(2, true)));
-        System.out.println(String.format("\t>=%1d arguments: %5.2f%%", 3, variable.getProportionOfRange(3, variable.getMax(), true)));
+        System.out.println(String.format("\t>=%1d method calls: %5.2f%%", 1, variable.getProportionOfRange(1, variable.getMax(), true)));
+
+//        variable = javaAnalyser.getStatisticsByMethodCall(CountArgumentDecorator.class);
+//        System.out.println("Statistics on arguments:");
+//        System.out.println(DataFrame.describe(variable));
+//        System.out.println("Frequency distribution:");
+//        System.out.println(String.format("\t%3d arguments: %5.2f%%", 0, variable.getProportionOfValue(0, true)));
+//        System.out.println(String.format("\t%3d arguments: %5.2f%%", 1, variable.getProportionOfValue(1, true)));
+//        System.out.println(String.format("\t%3d arguments: %5.2f%%", 2, variable.getProportionOfValue(2, true)));
+//        System.out.println(String.format("\t>=%1d arguments: %5.2f%%", 3, variable.getProportionOfRange(3, variable.getMax(), true)));
     }
 }

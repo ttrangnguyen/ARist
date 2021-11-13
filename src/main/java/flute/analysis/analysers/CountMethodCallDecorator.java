@@ -10,6 +10,7 @@ import flute.utils.file_processing.FileProcessor;
 import flute.utils.file_processing.LOCCounter;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CountMethodCallDecorator extends AnalyzeDecorator {
     public CountMethodCallDecorator(JavaAnalyser analyser) {
@@ -28,8 +29,10 @@ public class CountMethodCallDecorator extends AnalyzeDecorator {
         }
         for (int lineId = methodDeclaration.getBegin().get().line; lineId <= methodDeclaration.getEnd().get().line; ++lineId) {
             int sum = counter.countValue(lineId);
-            seriesOfMethodDeclaration.insert(sum);
-            if (sum > 0) seriesLOC.insert(sum);
+            if (sum > 0) {
+                seriesOfMethodDeclaration.insert(sum);
+                seriesLOC.insert(sum);
+            }
         }
         return seriesOfMethodDeclaration;
     }
@@ -40,19 +43,22 @@ public class CountMethodCallDecorator extends AnalyzeDecorator {
 
         long startTime = System.nanoTime();
 
+        AtomicInteger lineHavingMethodCallCount = new AtomicInteger();
         String data = FileProcessor.read(file);
         try {
             CompilationUnit cu = StaticJavaParser.parse(data);
             cu.findAll(MethodDeclaration.class).forEach(methodDeclaration -> {
-                double sum = analyseMethodDeclaration(methodDeclaration).getSum();
-                dataFrameOfFile.insert(CountMethodCallDecorator.class.getName(), sum);
-                seriesMethodDeclaration.insert(sum);
+                DataFrame.Variable seriesOfMethodDeclaration = analyseMethodDeclaration(methodDeclaration);
+
+                lineHavingMethodCallCount.addAndGet(seriesOfMethodDeclaration.getCount());
+                dataFrameOfFile.insert(CountMethodCallDecorator.class.getName(), seriesOfMethodDeclaration.getSum());
+                seriesMethodDeclaration.insert(seriesOfMethodDeclaration.getSum());
             });
         } catch (ParseProblemException ppe) {
             //ppe.printStackTrace();
         }
         int LOCcount = LOCCounter.countJava(file);
-        while (seriesLOC.getCount() < LOCcount) seriesLOC.insert(0);
+        for (int i = 0; i < LOCcount - lineHavingMethodCallCount.get(); ++i) seriesLOC.insert(0);
 
         analysingTime += System.nanoTime() - startTime;
 
