@@ -18,7 +18,7 @@ public class JavaAnalyser {
     private final DataFrame dataFrameProject = new DataFrame();
     private final DataFrame dataFrameFile = new DataFrame();
     final DataFrame.Variable seriesMethodDeclaration = new DataFrame.Variable();
-    final DataFrame.Variable seriesLine = new DataFrame.Variable();
+    final DataFrame.Variable seriesLOC = new DataFrame.Variable();
 
     DataFrame analyseFile(File file) {
         return new DataFrame();
@@ -80,8 +80,8 @@ public class JavaAnalyser {
         return getAnalyserOfClass(clazz).seriesMethodDeclaration;
     }
 
-    public DataFrame.Variable getStatisticsByLine(Class clazz) {
-        return getAnalyserOfClass(clazz).seriesLine;
+    public DataFrame.Variable getStatisticsByLOC(Class clazz) {
+        return getAnalyserOfClass(clazz).seriesLOC;
     }   
 
     public static void main(String[] args) {
@@ -89,13 +89,15 @@ public class JavaAnalyser {
         javaAnalyser = new CountMethodCallDecorator(javaAnalyser);
 
         javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+        //javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
 
-        DataFrame.Variable variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
-        System.out.println("Statistics on method calls by method declaration:");
-        System.out.println(DataFrame.describe(variable));
+        DataFrame.Variable variable = null;
+//        variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
+//        System.out.println("Statistics on method calls by method declaration:");
+//        System.out.println(DataFrame.describe(variable));
 
-        variable = javaAnalyser.getStatisticsByLine(CountMethodCallDecorator.class);
-        System.out.println("Statistics on method calls by line:");
+        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
+        System.out.println("Statistics on method calls by loc:");
         System.out.println(DataFrame.describe(variable));
     }
 }
