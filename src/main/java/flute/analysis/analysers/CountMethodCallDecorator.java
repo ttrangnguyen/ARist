@@ -6,6 +6,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.analysis.structure.DataFrame;
+import flute.config.Config;
 import flute.utils.file_processing.FileProcessor;
 import flute.utils.file_processing.LOCCounter;
 
@@ -63,5 +64,22 @@ public class CountMethodCallDecorator extends AnalyzeDecorator {
         analysingTime += System.nanoTime() - startTime;
 
         return dataFrameOfFile;
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new CountMethodCallDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+
+        javaAnalyser.printAnalysingTime();
+        DataFrame.Variable variable = null;
+
+        variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
+        System.out.println("Statistics on method calls by method declaration:");
+        System.out.println(DataFrame.describe(variable));
+        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
+        System.out.println("Statistics on method calls by loc:");
+        System.out.println(DataFrame.describe(variable));
     }
 }

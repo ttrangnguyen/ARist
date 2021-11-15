@@ -6,15 +6,19 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import flute.analysis.structure.DataFrame;
+import flute.analysis.structure.StringCounter;
 import flute.config.Config;
 import flute.preprocessing.FileFilter;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
 
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.util.List;
 
 public class JavaAnalyser {
+    final StringCounter stringCounter = new StringCounter();
+
     private final DataFrame dataFrameProject = new DataFrame();
     private final DataFrame dataFrameFile = new DataFrame();
     final DataFrame.Variable seriesMethodDeclaration = new DataFrame.Variable();
@@ -81,6 +85,10 @@ public class JavaAnalyser {
         return currentAnalyser;
     }
 
+    public StringCounter getCollection(Class clazz) {
+        return getAnalyserOfClass(clazz).stringCounter;
+    }
+
     public DataFrame.Variable getStatisticsByProject(Class clazz) {
         return dataFrameProject.getVariable(clazz.getName());
     }
@@ -103,31 +111,34 @@ public class JavaAnalyser {
 
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
-        javaAnalyser = new CountMethodCallDecorator(javaAnalyser);
-        //javaAnalyser = new CountArgumentDecorator(javaAnalyser);
+        javaAnalyser = new CollectArgumentTokenTypeDecorator(javaAnalyser);
+        javaAnalyser = new CollectArgumentUsageDecorator(javaAnalyser);
 
         javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
         //javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;
-        variable = javaAnalyser.getStatisticsByMethodDeclaration(CountMethodCallDecorator.class);
-        System.out.println("Statistics on method calls by method declaration:");
-        System.out.println(DataFrame.describe(variable));
+        StringCounter stringCounter = null;
 
-        variable = javaAnalyser.getStatisticsByLOC(CountMethodCallDecorator.class);
-        System.out.println("Statistics on method calls by loc:");
-        System.out.println(DataFrame.describe(variable));
-        System.out.println("Frequency distribution:");
-        System.out.println(String.format("\t>=%1d method calls: %5.2f%%", 1, variable.getProportionOfRange(1, variable.getMax(), true)));
+        stringCounter = javaAnalyser.getCollection(CollectArgumentTokenTypeDecorator.class);
+        System.out.println(stringCounter.describe());
 
-//        variable = javaAnalyser.getStatisticsByMethodCall(CountArgumentDecorator.class);
-//        System.out.println("Statistics on arguments:");
-//        System.out.println(DataFrame.describe(variable));
-//        System.out.println("Frequency distribution:");
-//        System.out.println(String.format("\t%3d arguments: %5.2f%%", 0, variable.getProportionOfValue(0, true)));
-//        System.out.println(String.format("\t%3d arguments: %5.2f%%", 1, variable.getProportionOfValue(1, true)));
-//        System.out.println(String.format("\t%3d arguments: %5.2f%%", 2, variable.getProportionOfValue(2, true)));
-//        System.out.println(String.format("\t>=%1d arguments: %5.2f%%", 3, variable.getProportionOfRange(3, variable.getMax(), true)));
+        stringCounter = javaAnalyser.getCollection(CollectArgumentUsageDecorator.class);
+        System.out.println(stringCounter.describe(100));
+        variable = new DataFrame.Variable();
+        for (String argUsage: stringCounter.getDistinctStrings()) {
+            variable.insert(stringCounter.getCount(argUsage));
+        }
+        System.out.println("Statistics on usage frequency of argument:");
+        System.out.println(DataFrame.describe(variable));
+        System.out.println("Frequency distribution of frequency usage of argument:");
+        for (int i = 1; i <= 9; ++i) {
+            System.out.println(String.format("\t%5d times: %5.2f%%", i, variable.getProportionOfValue(i, true)));
+        }
+        for (int i = 1; i <= 9; ++i) {
+            System.out.println(String.format("\t%4dx times: %5.2f%%", i, variable.getProportionOfRange(i*10, (i+1)*10-1, true)));
+        }
+        System.out.println(String.format("\t>=%3d times: %5.2f%%", 100, variable.getProportionOfRange(100, variable.getMax(), true)));
     }
 }
