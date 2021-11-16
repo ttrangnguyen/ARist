@@ -6,6 +6,8 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.structure.DataFrame;
+import flute.analysis.structure.StringCounter;
+import flute.config.Config;
 import flute.utils.file_processing.FileProcessor;
 
 import java.io.File;
@@ -36,5 +38,18 @@ public class CollectArgumentTokenTypeDecorator extends AnalyzeDecorator {
         analysingTime += System.nanoTime() - startTime;
 
         return dataFrameOfFile;
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new CollectArgumentTokenTypeDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+
+        javaAnalyser.printAnalysingTime();
+        StringCounter stringCounter = null;
+
+        stringCounter = javaAnalyser.getCollection(CollectArgumentTokenTypeDecorator.class);
+        System.out.println(stringCounter.describe());
     }
 }

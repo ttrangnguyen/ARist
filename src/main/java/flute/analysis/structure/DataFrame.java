@@ -24,6 +24,10 @@ public class DataFrame implements Serializable {
             if (mode.isNaN() || countValue(mode) < countValue(data)) mode = data;
         }
 
+        public Set<Double> getDistinctData() {
+            return counter.keySet();
+        }
+
         public int getCount() {
             return this.count;
         }

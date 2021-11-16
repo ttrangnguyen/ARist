@@ -11,9 +11,10 @@ import flute.config.Config;
 import flute.preprocessing.FileFilter;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
+import flute.utils.file_processing.FileProcessor;
 
-import javax.xml.crypto.Data;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class JavaAnalyser {
@@ -24,6 +25,7 @@ public class JavaAnalyser {
     final DataFrame.Variable seriesMethodDeclaration = new DataFrame.Variable();
     final DataFrame.Variable seriesLOC = new DataFrame.Variable();
     final DataFrame.Variable seriesMethodCall = new DataFrame.Variable();
+    final DataFrame.Variable seriesArgument = new DataFrame.Variable();
 
     long analysingTime = 0;
 
@@ -109,36 +111,34 @@ public class JavaAnalyser {
         return getAnalyserOfClass(clazz).seriesMethodCall;
     }
 
+    public DataFrame.Variable getStatisticsByArgument(Class clazz) {
+        return getAnalyserOfClass(clazz).seriesArgument;
+    }
+
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
-        javaAnalyser = new CollectArgumentTokenTypeDecorator(javaAnalyser);
-        javaAnalyser = new CollectArgumentUsageDecorator(javaAnalyser);
+        javaAnalyser = new CountLineFromLastUsageOfArgumentDecorator(javaAnalyser);
 
-        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
-        //javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
+        //javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+        javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;
         StringCounter stringCounter = null;
 
-        stringCounter = javaAnalyser.getCollection(CollectArgumentTokenTypeDecorator.class);
-        System.out.println(stringCounter.describe());
-
-        stringCounter = javaAnalyser.getCollection(CollectArgumentUsageDecorator.class);
-        System.out.println(stringCounter.describe(100));
-        variable = new DataFrame.Variable();
-        for (String argUsage: stringCounter.getDistinctStrings()) {
-            variable.insert(stringCounter.getCount(argUsage));
+        variable = javaAnalyser.getStatisticsByArgument(CountLineFromLastUsageOfArgumentDecorator.class);
+        System.out.println("Statistics on number of lines from last usage of argument:");
+        double realMean = (variable.getSum() + variable.countValue(-1)) / (variable.getCount() - variable.countValue(-1));
+        System.out.println(String.format("\t%-7s%20f", "mean:", realMean));
+        System.out.println(String.format("\t%-7s%20f\n", "max:", variable.getMax()));
+        StringBuilder sb = new StringBuilder();
+        for (Double d: variable.getDistinctData()) {
+            sb.append(String.format("%d %d\n", d.intValue(), variable.countValue(d)));
         }
-        System.out.println("Statistics on usage frequency of argument:");
-        System.out.println(DataFrame.describe(variable));
-        System.out.println("Frequency distribution of frequency usage of argument:");
-        for (int i = 1; i <= 9; ++i) {
-            System.out.println(String.format("\t%5d times: %5.2f%%", i, variable.getProportionOfValue(i, true)));
-        }
-        for (int i = 1; i <= 9; ++i) {
-            System.out.println(String.format("\t%4dx times: %5.2f%%", i, variable.getProportionOfRange(i*10, (i+1)*10-1, true)));
-        }
-        System.out.println(String.format("\t>=%3d times: %5.2f%%", 100, variable.getProportionOfRange(100, variable.getMax(), true)));
+//        try {
+//            FileProcessor.write(sb.toString(), "logs/line_count_from_last_usage.txt");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }
