@@ -34,6 +34,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated use {@link flute.analysis.analysers.JavaAnalyser} instead.
+ */
+@Deprecated
 public class JavaAnalyser {
     private List<File> projects;
 

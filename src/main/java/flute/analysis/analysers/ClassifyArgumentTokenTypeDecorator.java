@@ -12,8 +12,8 @@ import flute.utils.file_processing.FileProcessor;
 
 import java.io.File;
 
-public class CollectArgumentTokenTypeDecorator extends AnalyzeDecorator {
-    public CollectArgumentTokenTypeDecorator(JavaAnalyser analyser) {
+public class ClassifyArgumentTokenTypeDecorator extends AnalyzeDecorator {
+    public ClassifyArgumentTokenTypeDecorator(JavaAnalyser analyser) {
         super(analyser);
     }
 
@@ -42,14 +42,14 @@ public class CollectArgumentTokenTypeDecorator extends AnalyzeDecorator {
 
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
-        javaAnalyser = new CollectArgumentTokenTypeDecorator(javaAnalyser);
+        javaAnalyser = new ClassifyArgumentTokenTypeDecorator(javaAnalyser);
 
         javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
 
         javaAnalyser.printAnalysingTime();
         StringCounter stringCounter = null;
 
-        stringCounter = javaAnalyser.getCollection(CollectArgumentTokenTypeDecorator.class);
+        stringCounter = javaAnalyser.getCollection(ClassifyArgumentTokenTypeDecorator.class);
         System.out.println(stringCounter.describe());
     }
 }

@@ -9,6 +9,7 @@ import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.structure.DataFrame;
+import flute.config.Config;
 import flute.utils.file_processing.FileProcessor;
 
 import java.io.File;
@@ -142,5 +143,30 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
             if (midPos.line < key.line || (midPos.line == key.line && midPos.column < key.column)) l = mid + 1; else r = mid - 1;
         }
         return r < 0? null: list.get(r);
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new CountLineFromLastUsageOfArgumentDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+
+        javaAnalyser.printAnalysingTime();
+        DataFrame.Variable variable = null;
+
+        variable = javaAnalyser.getStatisticsByArgument(CountLineFromLastUsageOfArgumentDecorator.class);
+        System.out.println("Statistics on number of lines from last usage of argument:");
+        double realMean = (variable.getSum() + variable.countValue(-1)) / (variable.getCount() - variable.countValue(-1));
+        System.out.println(String.format("\t%-7s%20f", "mean:", realMean));
+        System.out.println(String.format("\t%-7s%20f\n", "max:", variable.getMax()));
+        StringBuilder sb = new StringBuilder();
+        for (Double d: variable.getDistinctData()) {
+            sb.append(String.format("%d %d\n", d.intValue(), variable.countValue(d)));
+        }
+//        try {
+//            FileProcessor.write(sb.toString(), Config.LOG_DIR + "line_count_from_last_usage.txt");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }
