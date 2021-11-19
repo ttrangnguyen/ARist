@@ -1,6 +1,11 @@
 package flute.tokenizing.exe;
 
+import com.github.javaparser.Position;
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
+import flute.analysis.analysers.CountLineFromLastUsageOfArgumentDecorator;
 import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.config.Config;
 import flute.data.MultiMap;
@@ -81,6 +86,49 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             candidatesSD.add(scope_distance);
         });
         return candidatesSD;
+    }
+
+    List<List<Integer>> getCandidatesLastUsageDistance(List<List<String>> nextLexList, MethodCallExpr methodCall, Position argPos) {
+        List<List<Integer>> candidatesLUD = new ArrayList<>();
+        Node currentNode = methodCall;
+        do {
+            if (currentNode.getParentNode().isEmpty()) {
+                nextLexList.forEach(lexemes -> {
+                    List<Integer> lastUsageDistance = new ArrayList<>();
+                    for (int i = 0; i < lexemes.size(); ++i) lastUsageDistance.add(-1);
+                    candidatesLUD.add(lastUsageDistance);
+                });
+                break;
+            }
+            currentNode = currentNode.getParentNode().get();
+            if (currentNode instanceof MethodDeclaration || currentNode instanceof ConstructorDeclaration) {
+                List<String> operandList = new ArrayList<>();
+                List<Position> operandPosList = new ArrayList<>();
+                CountLineFromLastUsageOfArgumentDecorator.visit(currentNode, operandList, operandPosList, true);
+                Map<String, List<Position>> operandMap = new HashMap<>();
+                for (int i = 0; i < operandList.size(); ++i) {
+                    if (!operandMap.containsKey(operandList.get(i))) {
+                        operandMap.put(operandList.get(i), new ArrayList<>());
+                    }
+                    operandMap.get(operandList.get(i)).add(operandPosList.get(i));
+                }
+
+                nextLexList.forEach(lexemes -> {
+                    List<Integer> lastUsageDistance = new ArrayList<>();
+                    for (String nextLex: lexemes) {
+                        Position lastUsagePos = CountLineFromLastUsageOfArgumentDecorator.searchLastUsage(operandMap.get(nextLex), argPos);
+                        if (lastUsagePos != null) {
+                            lastUsageDistance.add(argPos.line - lastUsagePos.line);
+                        } else {
+                            lastUsageDistance.add(-1);
+                        }
+                    }
+                    candidatesLUD.add(lastUsageDistance);
+                });
+                break;
+            }
+        } while (true);
+        return candidatesLUD;
     }
 
     @Override
@@ -180,6 +228,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                         }
                         //test.setCandidates_locality(getCandidatesLocality(nextLexList));
                         test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+                        test.setCandidates_last_usage_distance(getCandidatesLastUsageDistance(nextLexList, methodCall, arg.getBegin().get()));
                         test.setMethodInvoc(methodName);
                         if (methodCall.getScope().isPresent()) {
                             test.setMethodInvocCaller(methodCall.getScope().get().toString());
@@ -250,6 +299,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
             if (methodCall.getArguments().isEmpty()) {
                 test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
                 test.setExpected_lex(")");
+                test.setCandidates_last_usage_distance(Collections.singletonList(Collections.singletonList(-1)));
                 test.setExpected_excode_ori(Collections.singletonList(excodes.get(methodCallEndIdx)));
             } else {
                 List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -263,6 +313,7 @@ public class ArgRecTestGenerator extends MethodCallRecTestGenerator {
                 }
                 test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
                 test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
+                test.setCandidates_last_usage_distance(getCandidatesLastUsageDistance(nextLexList, methodCall, methodCall.getArguments().getLast().get().getBegin().get()));
                 test.setExpected_excode_ori(argExcodes);
                 if (!RecTestFilter.predictable(argExcodes)) isClean = false;
             }

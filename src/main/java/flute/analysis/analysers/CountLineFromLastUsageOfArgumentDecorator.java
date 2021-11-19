@@ -68,7 +68,7 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
         return dataFrameOfFile;
     }
 
-    private void visit(Node node, List<String> operandList, List<Position> operandPosList, boolean deepRecur) {
+    public static void visit(Node node, List<String> operandList, List<Position> operandPosList, boolean deepRecur) {
         if (node instanceof VariableDeclarator) {
             operandList.add(((VariableDeclarator) node).getNameAsString());
             operandPosList.add(node.getBegin().get());
@@ -130,7 +130,7 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
         });
     }
 
-    private Position searchLastUsage(List<Position> list, Position key) {
+    public static Position searchLastUsage(List<Position> list, Position key) {
         int l = 0, r = list.size() - 1;
         while (l <= r) {
             int mid = (l + r) / 2;

@@ -68,6 +68,7 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                 List<String> allParamTypeKeyList = new ArrayList<>();
                 List<List<List<Integer>>> allCandidatesLocality = new ArrayList<>();
                 List<List<List<Integer>>> allCandidatesScopeDistance = new ArrayList<>();
+                List<List<List<Integer>>> allCandidatesLastUsageDistance = new ArrayList<>();
                 test.setIgnored(false);
                 for (int j = 0; j < pile.size(); ++j) {
                     allNextExcodeList.add(pile.get(j).getNext_excode());
@@ -75,6 +76,7 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                     allParamTypeKeyList.add(pile.get(j).getParamTypeKey());
                     allCandidatesLocality.add(pile.get(j).getCandidates_locality());
                     allCandidatesScopeDistance.add(pile.get(j).getCandidates_scope_distance());
+                    allCandidatesLastUsageDistance.add(pile.get(j).getCandidates_last_usage_distance());
                     if (pile.get(j).isIgnored()) {
                         test.setIgnored(true);
                     }
@@ -84,6 +86,7 @@ public class AllArgRecTestGenerator extends MultipleArgRecTestGenerator {
                 test.setParamTypeKeyList(allParamTypeKeyList);
                 test.setCandidates_locality(allCandidatesLocality);
                 test.setCandidates_scope_distance(allCandidatesScopeDistance);
+                test.setCandidates_last_usage_distance(allCandidatesLastUsageDistance);
                 test.setArgRecTestList(pile);
                 test.setNumArg(pile.get(pile.size() - 1).getArgPos());
 

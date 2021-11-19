@@ -15,6 +15,7 @@ public class MultipleArgRecTest extends MethodCallRecTest {
     private List<String> param_list;
     private List<List<List<Integer>>> candidates_locality;
     private List<List<List<Integer>>> candidates_scope_distance;
+    private List<List<List<Integer>>> candidates_last_usage_distance;
 
     /**
      * Recommendations
@@ -59,6 +60,14 @@ public class MultipleArgRecTest extends MethodCallRecTest {
 
     public void setCandidates_scope_distance(List<List<List<Integer>>> candidates_scope_distance) {
         this.candidates_scope_distance = candidates_scope_distance;
+    }
+
+    public List<List<List<Integer>>> getCandidates_last_usage_distance() {
+        return candidates_last_usage_distance;
+    }
+
+    public void setCandidates_last_usage_distance(List<List<List<Integer>>> candidates_last_usage_distance) {
+        this.candidates_last_usage_distance = candidates_last_usage_distance;
     }
 
     public List<List<String>> getNext_excode() {
