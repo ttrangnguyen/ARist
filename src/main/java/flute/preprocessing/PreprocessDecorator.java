@@ -2,10 +2,10 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public abstract class Decorator extends Preprocessor {
+public abstract class PreprocessDecorator extends Preprocessor {
     private Preprocessor preprocessor;
 
-    public Decorator(Preprocessor preprocessor) {
+    public PreprocessDecorator(Preprocessor preprocessor) {
         this.preprocessor = preprocessor;
     }
 

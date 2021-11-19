@@ -2,7 +2,7 @@ package flute.preprocessing;
 
 import java.io.File;
 
-public class RemoveIndentDecorator extends Decorator {
+public class RemoveIndentDecorator extends PreprocessDecorator {
     public RemoveIndentDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

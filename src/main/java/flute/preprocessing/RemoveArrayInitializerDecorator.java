@@ -1,11 +1,8 @@
 package flute.preprocessing;
 
 import java.io.File;
-import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class RemoveArrayInitializerDecorator extends Decorator {
+public class RemoveArrayInitializerDecorator extends PreprocessDecorator {
     public RemoveArrayInitializerDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }

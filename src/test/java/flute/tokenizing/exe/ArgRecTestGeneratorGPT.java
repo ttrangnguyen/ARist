@@ -1,9 +1,8 @@
 package flute.tokenizing.exe;
 
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
@@ -12,7 +11,6 @@ import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.ContextInfo;
 import flute.tokenizing.excode_data.NodeSequenceInfo;
 import flute.tokenizing.excode_data.RecTest;
-import flute.utils.StringUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -131,6 +129,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                             test.setNext_lex(nextLexList);
                             test.setCandidates_locality(getCandidatesLocality(nextLexList));
                             test.setCandidates_scope_distance(getCandidatesScopeDistance(nextLexList));
+                            test.setCandidates_last_usage_distance(getCandidatesLastUsageDistance(nextLexList, methodCall, arg.getBegin().get()));
                             test.setMethodInvocClassQualifiedName(classQualifiedName);
                             test.setExpected_excode_ori(argExcodes);
                             if (RecTestFilter.predictable(argExcodes)) {
@@ -205,6 +204,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
             if (methodCall.getArguments().isEmpty()) {
                 test.setExpected_excode(excodes.get(methodCallEndIdx).toStringSimple());
                 test.setExpected_lex(")");
+                test.setCandidates_last_usage_distance(Collections.singletonList(Collections.singletonList(-1)));
                 test.setExpected_excode_ori(Collections.singletonList(excodes.get(methodCallEndIdx)));
             } else {
                 List<NodeSequenceInfo> argExcodes = new ArrayList<>();
@@ -218,6 +218,7 @@ public class ArgRecTestGeneratorGPT extends ArgRecTestGenerator {
                 }
                 test.setExpected_lex(methodCall.getArgument(methodCall.getArguments().size() - 1).toString());
                 test.setArgType(ExpressionType.get(methodCall.getArgument(methodCall.getArguments().size() - 1)));
+                test.setCandidates_last_usage_distance(getCandidatesLastUsageDistance(nextLexList, methodCall, methodCall.getArguments().getLast().get().getBegin().get()));
                 test.setExpected_excode_ori(argExcodes);
                 if (!RecTestFilter.predictable(argExcodes)) isClean = false;
             }

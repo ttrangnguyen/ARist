@@ -1,6 +1,6 @@
 package flute.tokenizing.excode_data;
 
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.jdtparser.PublicStaticMember;
 
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ public class ArgRecTest extends MethodCallRecTest {
     private String param_name = "";
     private List<List<Integer>> candidates_locality;
     private List<List<Integer>> candidates_scope_distance;
+    private List<List<Integer>> candidates_last_usage_distance;
 
     /**
      * Recommendations
@@ -81,6 +82,14 @@ public class ArgRecTest extends MethodCallRecTest {
 
     public void setCandidates_scope_distance(List<List<Integer>> candidates_scope_distance) {
         this.candidates_scope_distance = candidates_scope_distance;
+    }
+
+    public List<List<Integer>> getCandidates_last_usage_distance() {
+        return candidates_last_usage_distance;
+    }
+
+    public void setCandidates_last_usage_distance(List<List<Integer>> candidates_last_usage_distance) {
+        this.candidates_last_usage_distance = candidates_last_usage_distance;
     }
 
     public List<String> getNext_excode() {
@@ -217,6 +226,7 @@ public class ArgRecTest extends MethodCallRecTest {
         test.setPackageName(this.getPackageName());
         test.setCandidates_locality(Collections.singletonList(this.getCandidates_locality()));
         test.setCandidates_scope_distance(Collections.singletonList(this.getCandidates_scope_distance()));
+        test.setCandidates_last_usage_distance(Collections.singletonList(this.getCandidates_last_usage_distance()));
         test.setExpected_excode(this.getExpected_excode());
         test.setExpected_lex(this.getExpected_lex());
         test.setIgnored(this.isIgnored());

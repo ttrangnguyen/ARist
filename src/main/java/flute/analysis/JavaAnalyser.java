@@ -1,5 +1,7 @@
 package flute.analysis;
 
+import flute.analysis.enumeration.ExpressionOrigin;
+import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.structure.DataFrame;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.StaticJavaParser;

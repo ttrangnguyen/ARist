@@ -1,6 +1,6 @@
 package flute.tokenizing.exe;
 
-import flute.analysis.ExpressionType;
+import flute.analysis.enumeration.ExpressionType;
 import flute.jdtparser.PublicStaticMember;
 import flute.testing.CandidateMatcher;
 import flute.tokenizing.excode_data.ArgRecTest;

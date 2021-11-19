@@ -4,7 +4,7 @@ import flute.utils.file_processing.CommentRemover;
 
 import java.io.File;
 
-public class RemoveCommentDecorator extends Decorator {
+public class RemoveCommentDecorator extends PreprocessDecorator {
     public RemoveCommentDecorator(Preprocessor preprocessor) {
         super(preprocessor);
     }
