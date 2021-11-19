@@ -136,7 +136,7 @@ public class JavaAnalyser {
             sb.append(String.format("%d %d\n", d.intValue(), variable.countValue(d)));
         }
 //        try {
-//            FileProcessor.write(sb.toString(), "logs/line_count_from_last_usage.txt");
+//            FileProcessor.write(sb.toString(), Config.LOG_DIR + "line_count_from_last_usage.txt");
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }

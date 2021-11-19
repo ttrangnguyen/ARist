@@ -5,10 +5,7 @@ import com.github.javaparser.Position;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import flute.analysis.enumeration.ExpressionType;
 import flute.analysis.structure.DataFrame;
@@ -31,7 +28,7 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
         String data = FileProcessor.read(file);
         try {
             CompilationUnit cu = StaticJavaParser.parse(data);
-            cu.findAll(MethodDeclaration.class).forEach(methodDeclaration -> {
+            cu.findAll(CallableDeclaration.class).forEach(methodDeclaration -> {
                 List<String> operandList = new ArrayList<>();
                 List<Position> operandPosList = new ArrayList<>();
                 visit(methodDeclaration, operandList, operandPosList, true);
@@ -72,8 +69,14 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
         if (node instanceof VariableDeclarator) {
             operandList.add(((VariableDeclarator) node).getNameAsString());
             operandPosList.add(node.getBegin().get());
+        } else if (node instanceof Parameter) {
+            operandList.add(((Parameter) node).getNameAsString());
+            operandPosList.add(node.getBegin().get());
         } else if (node instanceof MethodDeclaration) {
             operandList.add(((MethodDeclaration) node).getNameAsString() + "(");
+            operandPosList.add(node.getBegin().get());
+        } else if (node instanceof ConstructorDeclaration) {
+            operandList.add(((ConstructorDeclaration) node).getNameAsString() + "(");
             operandPosList.add(node.getBegin().get());
         } else if (node instanceof ClassOrInterfaceDeclaration) {
             operandList.add(((ClassOrInterfaceDeclaration) node).getNameAsString() + "(");
