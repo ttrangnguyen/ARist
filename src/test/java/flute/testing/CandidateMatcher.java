@@ -53,7 +53,7 @@ public class CandidateMatcher {
 
     public static boolean matchesObjectCreation(Candidate candidate, String target) {
         if (!target.matches("^new "+identifieRegex+"(<.*>)?\\(.*\\)$")) return false;
-        if (candidate.getName().lastIndexOf('(') == -1) return false;
+        if (candidate.getName().lastIndexOf('(') <= 4) return false;
         String typeName = candidate.getName().substring(4, candidate.getName().lastIndexOf('('));
         String typeNameWithoutTypeArg = typeName;
         if (typeName.indexOf('<') >= 0) {
