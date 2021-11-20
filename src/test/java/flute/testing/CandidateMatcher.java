@@ -55,7 +55,11 @@ public class CandidateMatcher {
         if (!target.matches("^new "+identifieRegex+"(<.*>)?\\(.*\\)$")) return false;
         if (candidate.getName().lastIndexOf('(') == -1) return false;
         String typeName = candidate.getName().substring(4, candidate.getName().lastIndexOf('('));
-        if (candidate.getExcode().compareTo("C_CALL("+typeName+","+typeName.substring(0, typeName.indexOf('<'))+") OPEN_PART") != 0) return false;
+        String typeNameWithoutTypeArg = typeName;
+        if (typeName.indexOf('<') >= 0) {
+            typeNameWithoutTypeArg = typeName.substring(0, typeName.indexOf('<'));
+        }
+        if (candidate.getExcode().compareTo("C_CALL("+typeName+","+typeNameWithoutTypeArg+") OPEN_PART") != 0) return false;
         if (candidate.getName().matches("^new "+identifieRegex+"<>\\($")) {
             return target.startsWith(candidate.getName().substring(0, candidate.getName().indexOf('<') + 1));
         } else {
