@@ -134,6 +134,7 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
     }
 
     public static Position searchLastUsage(List<Position> list, Position key) {
+        if (list == null) return null;
         int l = 0, r = list.size() - 1;
         while (l <= r) {
             int mid = (l + r) / 2;
