@@ -244,6 +244,11 @@ public class Config {
     }
 
     public static void autoConfigure(String projectName, String projectDir) {
+        //reset all
+        SOURCE_PATH = new String[]{};
+        ENCODE_SOURCE = new String[]{};
+        CLASS_PATH = new String[]{};
+
         PROJECT_NAME = projectName;
         PROJECT_DIR = projectDir;
 
