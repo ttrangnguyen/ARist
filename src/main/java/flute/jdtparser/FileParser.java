@@ -414,7 +414,7 @@ public class FileParser {
                                 && !TypeConstraintKey.STRING_TYPE.equals(typeNeedCheck.getKey())
                                 && !TypeConstraintKey.WRAP_TYPES.contains(typeNeedCheck.getKey())
                         ) {
-                            String typeName = typeNeedCheck.getName().replace("? extends ", "").replace("<?>","<>");
+                            String typeName = typeNeedCheck.getName().replace("? extends ", "").replace("<?>", "<>");
                             String lex = "new " + typeName + "(";
                             String excode = "C_CALL(" + typeName + "," + typeName.replaceAll("[<].*?[>]", "") + ") "
                                     + "OPEN_PART";
@@ -529,8 +529,19 @@ public class FileParser {
                         if (variableClass != null) {
                             List<IVariableBinding> varFields = new ClassParser(variableClass).getFieldsFrom(curClass);
 
+                            Variable thisVariable = null;
+                            if (variable.getName().equals("super")) {
+                                if (ParserUtils.getThisVariable(visibleVariables) != null) {
+                                    thisVariable = ParserUtils.getThisVariable(visibleVariables);
+                                }
+                            }
                             //gen candidate with field
                             for (IVariableBinding varField : varFields) {
+                                if (variable.getName().equals("super") && thisVariable != null) {
+                                    if(!ParserUtils.findField(thisVariable.getTypeBinding().getDeclaredFields(), varField.getName())){
+                                        break;
+                                    }
+                                }
                                 ITypeBinding varMemberType = varField.getType();
                                 ParserCompareValue compareFieldValue = compareParam(varMemberType, methodBinding, finalMethodArgLength);
                                 if (ParserCompare.isTrue(compareFieldValue) && !Modifier.isStatic(varField.getModifiers())) {
@@ -544,6 +555,11 @@ public class FileParser {
                             if (Config.FEATURE_PARAM_TYPE_METHOD_INVOC) {
                                 List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
                                 for (IMethodBinding varMethod : varMethods) {
+                                    if (variable.getName().equals("super") && thisVariable != null) {
+                                        if(!ParserUtils.findMethod(thisVariable.getTypeBinding().getDeclaredMethods(), varMethod)){
+                                            break;
+                                        }
+                                    }
                                     ITypeBinding varMethodReturnType = varMethod.getReturnType();
                                     ParserCompareValue compareFieldValue = compareParam(varMethodReturnType, methodBinding, finalMethodArgLength);
                                     if (ParserCompare.isTrue(compareFieldValue)) {
@@ -1070,6 +1086,14 @@ public class FileParser {
                 variable.setInitialized(true);
                 variable.setLocalVariableLevel(3);
                 visibleVariables.add(variable);
+
+                if (curClass.getSuperclass() != null) {
+                    Variable variableSuper = new Variable(curClass.getSuperclass(), "super");
+                    variableSuper.setStatic(false);
+                    variableSuper.setInitialized(true);
+                    variableSuper.setLocalVariableLevel(4);
+                    visibleVariables.add(variableSuper);
+                }
             }
 
         } else if (astNode instanceof Initializer) {

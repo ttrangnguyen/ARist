@@ -2,6 +2,7 @@ package flute.jdtparser.utils;
 
 import flute.communicate.SocketClient;
 import flute.data.MultiMap;
+import flute.data.typemodel.Variable;
 import flute.jdtparser.ClassParser;
 import flute.jdtparser.ProjectParser;
 import flute.utils.file_processing.FileProcessor;
@@ -222,5 +223,30 @@ public class ParserUtils {
             }
         }
         return null;
+    }
+
+    public static Variable getThisVariable(List<Variable> list) {
+        for (Variable var : list) {
+            if (var.getName().equals("this")) return var;
+        }
+        return null;
+    }
+
+    public static boolean findField(IVariableBinding[] fields, String fieldName) {
+        for (IVariableBinding field : fields) {
+            if (field.getName().equals(fieldName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean findMethod(IMethodBinding[] methods, IMethodBinding methodBinding) {
+        for (IMethodBinding method : methods) {
+            if (ClassParser.compareMethod(method, methodBinding)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

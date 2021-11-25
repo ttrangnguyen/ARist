@@ -57,7 +57,7 @@ public class ClassParser {
         parseSuperMethod(getSuperClass(superClass));
     }
 
-    boolean compareMethod(IMethodBinding method, IMethodBinding coMethod) {
+    public static boolean compareMethod(IMethodBinding method, IMethodBinding coMethod) {
         if (method.getParameterTypes().length != coMethod.getParameterTypes().length) return false;
 
         for (int i = 0; i < method.getParameterTypes().length; i++) {
