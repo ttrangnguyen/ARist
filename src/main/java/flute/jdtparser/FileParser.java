@@ -538,7 +538,7 @@ public class FileParser {
                             //gen candidate with field
                             for (IVariableBinding varField : varFields) {
                                 if (variable.getName().equals("super") && thisVariable != null) {
-                                    if(!ParserUtils.findField(thisVariable.getTypeBinding().getDeclaredFields(), varField.getName())){
+                                    if (!ParserUtils.findField(thisVariable.getTypeBinding().getDeclaredFields(), varField.getName())) {
                                         break;
                                     }
                                 }
@@ -556,7 +556,7 @@ public class FileParser {
                                 List<IMethodBinding> varMethods = new ClassParser(variableClass).getMethodsFrom(curClass);
                                 for (IMethodBinding varMethod : varMethods) {
                                     if (variable.getName().equals("super") && thisVariable != null) {
-                                        if(!ParserUtils.findMethod(thisVariable.getTypeBinding().getDeclaredMethods(), varMethod)){
+                                        if (!ParserUtils.findMethod(thisVariable.getTypeBinding().getDeclaredMethods(), varMethod)) {
                                             break;
                                         }
                                     }
@@ -622,6 +622,16 @@ public class FileParser {
             } else if (arg instanceof ClassInstanceCreation) {
                 ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) arg;
                 return "new " + classInstanceCreation.resolveTypeBinding().getName() + "(";
+            } else if (arg instanceof SuperMethodInvocation) {
+                SuperMethodInvocation superMethodInvocation = (SuperMethodInvocation) arg;
+                if(!ParserUtils.findMethod(curClass.getDeclaredMethods(), superMethodInvocation.resolveMethodBinding())){
+                    return "this." + superMethodInvocation.getName() + "(";
+                }
+            } else if (arg instanceof SuperFieldAccess) {
+                SuperFieldAccess superFieldAccess = (SuperFieldAccess) arg;
+                if(!ParserUtils.findField(curClass.getDeclaredFields(), superFieldAccess.getName().toString())){
+                    return "this." + superFieldAccess.getName().toString();
+                }
             }
             return null;
         } catch (Exception e) {
