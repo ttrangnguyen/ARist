@@ -366,6 +366,26 @@ public class ProjectParser {
         return result;
     }
 
+    public Set<String> findParentTypeKey(String key) {
+        Set<String> result = new HashSet<>();
+        for (List<TypeNode> line : typeTree) {
+            int index = -1;
+            for (int i = 0; i < line.size(); i++) {
+                TypeNode node = line.get(i);
+                if (node.getKey().equals(key)) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index != -1) {
+                line.subList(index, line.size()).forEach(node -> {
+                    result.add(node.getKey());
+                });
+            }
+        }
+        return result;
+    }
+
     public static List<List<TypeNode>> loadTypeTree(String projectName) {
         List<List<TypeNode>> typeTree = new ArrayList();
         List<String> lines = FileProcessor.readLineByLineToList(Config.STORAGE_DIR + "/flute-ide/" + projectName + "_class_tree.txt");
@@ -464,12 +484,14 @@ public class ProjectParser {
         }
 
         if (packageName != null) {
+            Set<String> parentTypeKey = findParentTypeKey(typeKey);
             for (PublicStaticMember member : protectedDefaultStaticMemberList) {
                 if (member.packageName != null && member.packageName.equals(packageName)
                         && !Modifier.isPublic(member.modifier) && !Modifier.isPrivate(member.modifier) && !Modifier.isProtected(member.modifier)) //default
                 {
                     result.add(member);
-                } else if (member.packageName != null && packageName.startsWith(member.packageName + ".")
+                } else if (parentTypeKey.contains(member.parentTypeKey)
+                        //member.packageName != null && packageName.startsWith(member.packageName + ".")
                         && Modifier.isProtected(member.modifier)) //protected
                 {
                     result.add(member);
