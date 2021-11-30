@@ -205,14 +205,14 @@ public class ProjectParser {
         for (IVariableBinding field : fields) {
             String excode = String.format("VAR(%s) F_ACCESS(%s,%s)", className, className, field.getName());
             String lex = nextHierachy + field.getName();
-            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, field.getModifiers(), packageName, Config.PROJECT_NAME));
+            publicStaticFieldList.add(new PublicStaticMember(field.getType().getKey(), excode, lex, field.getModifiers(), packageName, Config.PROJECT_NAME, binding.getKey()));
         }
         List<IMethodBinding> methods = extractPublicStaticMethods(binding.getDeclaredMethods());
         for (IMethodBinding method : methods) {
             String excode = String.format("VAR(%s) M_ACCESS(%s,%s,%s) OPEN_PART",
                     className, className, method.getName(), method.getParameterTypes().length);
             String lex = nextHierachy + method.getName() + "(";
-            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex, method.getModifiers(), packageName, Config.PROJECT_NAME));
+            publicStaticMethodList.add(new PublicStaticMember(method.getReturnType().getKey(), excode, lex, method.getModifiers(), packageName, Config.PROJECT_NAME, binding.getKey()));
         }
 
 //        TypeDeclaration[] inner = type.getTypes();
