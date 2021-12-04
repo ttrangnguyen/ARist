@@ -20,6 +20,7 @@ public abstract class RecTest {
     private String excode_context;
     private String method_name = "";
     private String class_name = "";
+    private int test_id;
 
     /**
      * Expected result
@@ -126,5 +127,9 @@ public abstract class RecTest {
 
     public void setIgnored(boolean ignored) {
         this.ignored = ignored;
+    }
+
+    public void setTest_id(int test_id) {
+        this.test_id = test_id;
     }
 }

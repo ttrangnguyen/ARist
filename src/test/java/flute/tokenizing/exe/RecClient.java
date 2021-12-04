@@ -554,13 +554,13 @@ public abstract class RecClient {
         return bestModel;
     }
 
-    public void generateTests(String fold, String setting) throws IOException {
+    public void generateLocalModelTests(String fold) throws IOException {
         Timer timer = new Timer();
         timer.startCounter();
         setupGenerator();
         Scanner sc = new Scanner(new File("docs/testFilePath/" + "datapath/fold" + fold + "/" + projectName + ".txt"));
-        String testOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_" + setting + ".txt";
-        String badTestOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_" + setting + "_bad.txt";
+        String testOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + ".txt";
+        String badTestOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_bad.txt";
         File file = new File(Config.LOG_DIR + testOutputPath);
         file.delete();
         file = new File(Config.LOG_DIR + badTestOutputPath);
@@ -570,6 +570,7 @@ public abstract class RecClient {
         MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
                 new SingleArgRecTestGenerator((ArgRecTestGenerator) generator): new AllArgRecTestGenerator((ArgRecTestGenerator) generator);
         List<ArgRecTest> tests = new ArrayList<>();
+        int currentTestId = 0;
         while (sc.hasNextLine()) {
             String filePath = sc.nextLine();
 //            Future<?> future = executor.submit(() -> {
@@ -577,6 +578,8 @@ public abstract class RecClient {
             List<? extends RecTest> oneFileTests = generator.generate(Config.REPO_DIR + "git/" + filePath);
             for (RecTest test : oneFileTests) test.setFilePath(filePath);
             for (RecTest test : oneFileTests) {
+                test.setTest_id(currentTestId);
+                currentTestId += 1;
                 Logger.write(gson.toJson(this.testClass.cast(test)), testOutputPath);
             }
 //            tests.addAll((List<ArgRecTest>) oneFileTests);
