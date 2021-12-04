@@ -37,7 +37,7 @@ public class NormalizeCompoundDecorator extends PreprocessDecorator {
      * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
      * Note: Do not use {@link NormalizeLambdaExprDecorator#preprocess} before this.
      */
-    public static String preprocess(String sourceCode) {
+    public static String preprocess(String sourceCode, String specialToken) {
         Matcher m = Pattern.compile("\\(|\\)|,|[^\\(\\),]+").matcher(sourceCode);
         Stack<String> stack = new Stack<>();
         Stack<String> stackClose = new Stack<>();
@@ -59,7 +59,7 @@ public class NormalizeCompoundDecorator extends PreprocessDecorator {
                 for (String t: listClose) {
                     if (!notMethodCallFlag) {
                         if (t.compareTo(",") == 0 || t.compareTo("(") == 0) {
-                            if (compoundFlag) restoredListClose.add("<COMPOUND>");
+                            if (compoundFlag) restoredListClose.add(specialToken);
                             compoundFlag = false;
                         } else {
                             compoundFlag |= isCompound(t);
@@ -89,13 +89,21 @@ public class NormalizeCompoundDecorator extends PreprocessDecorator {
         return sb.toString();
     }
 
-    @Override
-    public String revertFile(File file) {
-        return NormalizeCompoundDecorator.revertPreprocessing(super.revertFile(file));
+    /**
+     * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
+     * Note: Do not use {@link NormalizeLambdaExprDecorator#preprocess} before this.
+     */
+    public static String preprocess(String sourceCode) {
+        return preprocess(sourceCode, "<COMPOUND>");
     }
 
     public static String revertPreprocessing(String sourceCode) {
         return sourceCode.replace("<COMPOUND>", "");
+    }
+
+    @Override
+    public String revertFile(File file) {
+        return NormalizeCompoundDecorator.revertPreprocessing(super.revertFile(file));
     }
 
     public static void main(String[] args) {

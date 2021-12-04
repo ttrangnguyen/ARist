@@ -14,10 +14,7 @@ public class NormalizeLambdaExprDecorator extends PreprocessDecorator {
         return NormalizeLambdaExprDecorator.preprocess(super.preprocessFile(file));
     }
 
-    /**
-     * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
-     */
-    public static String preprocess(String sourceCode) {
+    public static String preprocess(String sourceCode, String specialToken) {
         StringBuilder newSourceCode = new StringBuilder();
         int lastIndex = 0;
         for (int i = sourceCode.indexOf("->"); i >= 0; i = sourceCode.indexOf("->", i + 1)) {
@@ -42,7 +39,7 @@ public class NormalizeLambdaExprDecorator extends PreprocessDecorator {
                 }
             }
             newSourceCode.append(sourceCode.substring(lastIndex, j + 1));
-            newSourceCode.append("<LAMBDA>");
+            newSourceCode.append(specialToken);
             newSourceCode.append(sourceCode.substring(j + 1, i));
             lastIndex = i;
         }
@@ -50,13 +47,20 @@ public class NormalizeLambdaExprDecorator extends PreprocessDecorator {
         return newSourceCode.toString();
     }
 
-    @Override
-    public String revertFile(File file) {
-        return NormalizeLambdaExprDecorator.revertPreprocessing(super.revertFile(file));
+    /**
+     * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
+     */
+    public static String preprocess(String sourceCode) {
+        return preprocess(sourceCode, "<LAMBDA>");
     }
 
     public static String revertPreprocessing(String sourceCode) {
         return sourceCode.replace("<LAMBDA>", "");
+    }
+
+    @Override
+    public String revertFile(File file) {
+        return NormalizeLambdaExprDecorator.revertPreprocessing(super.revertFile(file));
     }
 
     public static void main(String[] args) {
