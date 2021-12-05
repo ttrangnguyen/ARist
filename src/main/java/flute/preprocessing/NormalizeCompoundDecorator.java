@@ -34,6 +34,8 @@ public class NormalizeCompoundDecorator extends PreprocessDecorator {
     }
 
     /**
+     * Normalize compound expressions by prepending them with a special token.
+     * Note: Currently this only works with compound expressions in method calls.
      * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
      * Note: Do not use {@link NormalizeLambdaExprDecorator#preprocess} before this.
      */
@@ -90,6 +92,8 @@ public class NormalizeCompoundDecorator extends PreprocessDecorator {
     }
 
     /**
+     * Normalize compound expressions by prepending them with special token <COMPOUND>.
+     * Note: Currently this only works with compound expressions in method calls.
      * Note: {@link EmptyStringLiteralDecorator#preprocess} must be used beforehand.
      * Note: Do not use {@link NormalizeLambdaExprDecorator#preprocess} before this.
      */
