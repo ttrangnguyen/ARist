@@ -1,5 +1,8 @@
 package flute.utils.file_processing;
 
+import flute.preprocessing.EmptyStringLiteralDecorator;
+import flute.preprocessing.NormalizeCompoundDecorator;
+import flute.preprocessing.NormalizeLambdaExprDecorator;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.IScanner;
@@ -7,9 +10,7 @@ import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,6 +86,9 @@ public class JavaTokenizer{
     }
 
     public static ArrayList<String> tokenize(String text) {
+        text = EmptyStringLiteralDecorator.preprocess(text);
+        text = NormalizeCompoundDecorator.preprocess(text, "<COMPOUND>");
+        text = NormalizeLambdaExprDecorator.preprocess(text, "<LAMBDA>");
         IScanner scanner = ToolFactory.createScanner(false, false, true, "1.8");
         scanner.setSource(text.replaceAll("[a-zA-Z0-9_.]+\\.class", ".class")
                 .replaceAll("\\[.*?]", "[]").toCharArray());
@@ -130,7 +134,7 @@ public class JavaTokenizer{
                         continue;
                     }
                 }
-                List<String> valTokens = solveLine(val);
+                List<String> valTokens = normalize(val);
                 tokens.addAll(valTokens);
                 lineTokens.addAll(valTokens);
             }
@@ -138,7 +142,7 @@ public class JavaTokenizer{
         return lineTokens;
     }
 
-    public static List<String> solveLine(String line) {
+    public static List<String> normalize(String line) {
         List<String> allTokens = new ArrayList<>();
         if (!line.isEmpty()) {
             char c = line.charAt(0);
@@ -156,22 +160,23 @@ public class JavaTokenizer{
     }
 
     public static ArrayList<String> tokenizeWord(String val) {
-        ArrayList<String> tokens = new ArrayList<>();
-        for (String word: val.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[0-9])(?=[A-Z][a-z])|(?<=[a-zA-Z])(?=[0-9])")) {
-            if (!word.isEmpty()) {
-                if (word.startsWith("'") && word.endsWith("'")) {
-                    tokens.add("''");
-                } else {
-                    String[] strs = splitKeepDelimiters(word, "[\\p{Space}]+|\"\"|[\\p{Punct}\\s]");
-                    for (String str: strs) {
-                        if (!str.trim().isEmpty()) {
-                            tokens.add(str);
-                        }
-                    }
-                }
-            }
-        }
-        return tokens;
+        return new ArrayList<>(Collections.singletonList(val));
+        //        ArrayList<String> tokens = new ArrayList<>();
+//        for (String word: val.split("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[0-9])(?=[A-Z][a-z])|(?<=[a-zA-Z])(?=[0-9])")) {
+//            if (!word.isEmpty()) {
+//                if (word.startsWith("'") && word.endsWith("'")) {
+//                    tokens.add("''");
+//                } else {
+//                    String[] strs = splitKeepDelimiters(word, "[\\p{Space}]+|\"\"|[\\p{Punct}\\s]");
+//                    for (String str: strs) {
+//                        if (!str.trim().isEmpty()) {
+//                            tokens.add(str);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return tokens;
     }
 
     public static String[] splitKeepDelimiters(String word, String regex) {
