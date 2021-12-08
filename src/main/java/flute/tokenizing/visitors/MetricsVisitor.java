@@ -2689,8 +2689,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 	// Eg: (a, b) -> { println(a + b); }
     @Override
     public void visit(LambdaExpr n, Object arg) {
-        //super.visit(n, arg);
         OldNodeSequenceVisitingProcessing.addLambdaExprNode(nodeSequenceList).oriNode = n;
+        super.visit(n, arg);
     }
     
     // TODO: handle Lambda expressions and this
