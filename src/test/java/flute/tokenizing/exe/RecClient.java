@@ -562,9 +562,13 @@ public abstract class RecClient {
         String testOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + ".txt";
         String badTestOutputPath = projectName + "_" + this.testClass.getSimpleName() + "s_fold" + fold + "_bad.txt";
         File file = new File(Config.LOG_DIR + testOutputPath);
-        file.delete();
+        if (file.exists()) {
+            file.delete();
+        }
         file = new File(Config.LOG_DIR + badTestOutputPath);
-        file.delete();
+        if (file.exists()) {
+            file.delete();
+        }
 //        final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
 //        final List<Future<?>> futures = new ArrayList<>();
         MultipleArgRecTestGenerator multipleGenerator = Config.TEST_ARG_ONE_BY_ONE?
