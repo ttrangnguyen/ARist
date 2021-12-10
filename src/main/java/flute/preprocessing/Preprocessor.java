@@ -76,6 +76,8 @@ public class Preprocessor {
 
         ProgressBar progressBar = new ProgressBar();
         for (int i = 0; i < projects.size(); ++i) {
+//            File projectOutputDir = new File(outputFolder.getAbsolutePath() + "/" + projects.get(i).getName());
+//            if (projectOutputDir.exists()) continue;
             System.out.println("Processing: " + projects.get(i).getAbsolutePath());
             preprocessProject(projects.get(i), outputFolder, revert);
             progressBar.setProgress(((float)i + 1) / projects.size(), true);
