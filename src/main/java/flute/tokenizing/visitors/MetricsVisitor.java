@@ -3014,6 +3014,8 @@ public class MetricsVisitor extends VoidVisitorAdapter<Object> {
 			if (parentNode == null) {
 				Logger.log("node: " + n);
 				Logger.log("parentNode: " + parentNode + "\t" + curTypeInfo + "\t" + fileInfo.filePath);
+				// TODO: Investigate these cases
+				break;
 			}
 
 			parentNode = parentNode.getParentNode().orElse(null);
