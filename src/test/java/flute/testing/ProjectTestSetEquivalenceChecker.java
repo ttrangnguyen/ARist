@@ -26,6 +26,6 @@ public class ProjectTestSetEquivalenceChecker {
                 } else badProjectList.add(project);
             } else badProjectList.add(project);
         }
-        FileProcessor.writeListLineByLine(badProjectList, "log_test_set_checking.txt");
+        FileProcessor.writeListLineByLine(badProjectList, "log_ProjectTestSetEquivalenceChecker.txt");
     }
 }
