@@ -17,6 +17,7 @@ import flute.utils.file_processing.FileProcessor;
 import flute.utils.logging.Logger;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.internal.compiler.lookup.IntersectionTypeBinding18;
 
 import java.io.File;
 import java.util.*;
@@ -788,7 +789,8 @@ public class FileParser {
                     && varType.getTypeArguments().length > 0 && methodBinding.getTypeArguments().length > 0)
                 result.addValue(ParserConstant.TRUE_VALUE);
             if (Config.FEATURE_PARAM_TYPE_CAST
-                    && (methodBinding.getParameterTypes()[position].getModule() == null || !methodBinding.getParameterTypes()[position].getModule().getName().equals("java.base"))
+                    && ((methodBinding.getParameterTypes()[position] instanceof IntersectionTypeBinding18 && methodBinding.getParameterTypes()[position].getPackage().toString().startsWith("java."))
+                                    || methodBinding.getParameterTypes()[position].getModule() == null || !methodBinding.getParameterTypes()[position].getModule().getName().equals("java.base"))
                     && varType.isCastCompatible(methodBinding.getParameterTypes()[position])) {
                 result.addValue(ParserConstant.CAN_BE_CAST_VALUE);
                 result.addCastType(methodBinding.getParameterTypes()[position]);
@@ -1090,7 +1092,7 @@ public class FileParser {
                 }
             });
 
-            if (!isStatic) {
+            if (!isStatic && curClass != null) {
                 Variable variable = new Variable(curClass, "this");
                 variable.setStatic(false);
                 variable.setInitialized(true);
