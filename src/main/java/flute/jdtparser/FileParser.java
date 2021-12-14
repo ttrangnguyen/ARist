@@ -788,9 +788,20 @@ public class FileParser {
             if (ParserUtils.compareSpecialCase(varType, methodBinding.getParameterTypes()[position], methodBinding)
                     && varType.getTypeArguments().length > 0 && methodBinding.getTypeArguments().length > 0)
                 result.addValue(ParserConstant.TRUE_VALUE);
+
+            boolean nullModule = false;
+            if(Config.FEATURE_PARAM_TYPE_CAST){
+                try {
+                    if (methodBinding.getParameterTypes()[position].getModule() == null)
+                        nullModule = true;
+                }catch (UnsupportedOperationException e){
+                    if(methodBinding.getParameterTypes()[position].getPackage().toString().startsWith("java."))
+                        nullModule = false;
+                }
+            }
+
             if (Config.FEATURE_PARAM_TYPE_CAST
-                    && ((methodBinding.getParameterTypes()[position] instanceof IntersectionTypeBinding18 && methodBinding.getParameterTypes()[position].getPackage().toString().startsWith("java."))
-                                    || methodBinding.getParameterTypes()[position].getModule() == null || !methodBinding.getParameterTypes()[position].getModule().getName().equals("java.base"))
+                    && (nullModule || !methodBinding.getParameterTypes()[position].getModule().getName().equals("java.base"))
                     && varType.isCastCompatible(methodBinding.getParameterTypes()[position])) {
                 result.addValue(ParserConstant.CAN_BE_CAST_VALUE);
                 result.addCastType(methodBinding.getParameterTypes()[position]);
