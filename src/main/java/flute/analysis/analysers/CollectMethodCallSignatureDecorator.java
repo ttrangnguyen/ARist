@@ -1,6 +1,8 @@
 package flute.analysis.analysers;
 
 import flute.analysis.structure.DataFrame;
+import flute.analysis.structure.StringCounter;
+import flute.config.Config;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
@@ -46,5 +48,33 @@ public class CollectMethodCallSignatureDecorator extends AnalyzeDecorator {
         analysingTime += System.nanoTime() - startTime;
 
         return dataFrameOfFile;
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new CollectMethodCallSignatureDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), false);
+
+        javaAnalyser.printAnalysingTime();
+        DataFrame.Variable variable = null;
+        StringCounter stringCounter = null;
+
+        stringCounter = javaAnalyser.getCollection(CollectMethodCallSignatureDecorator.class);
+        System.out.println(stringCounter.describe(100));
+        variable = new DataFrame.Variable();
+        for (String argUsage: stringCounter.getDistinctStrings()) {
+            variable.insert(stringCounter.getCount(argUsage));
+        }
+        System.out.println("Statistics on usage frequency of method call:");
+        System.out.println(DataFrame.describe(variable));
+        System.out.println("Frequency distribution of occurrence of method call:");
+        for (int i = 1; i <= 9; ++i) {
+            System.out.println(String.format("\t%5d times: %5.2f%%", i, variable.getProportionOfValue(i, true)));
+        }
+        for (int i = 1; i <= 9; ++i) {
+            System.out.println(String.format("\t%4dx times: %5.2f%%", i, variable.getProportionOfRange(i*10, (i+1)*10-1, true)));
+        }
+        System.out.println(String.format("\t>=%3d times: %5.2f%%", 100, variable.getProportionOfRange(100, variable.getMax(), true)));
     }
 }

@@ -1,6 +1,8 @@
 package flute.analysis.analysers;
 
 import flute.analysis.structure.DataFrame;
+import flute.analysis.structure.StringCounter;
+import flute.config.Config;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
@@ -38,5 +40,18 @@ public class CollectArgumentDataTypeDecorator extends AnalyzeDecorator {
         analysingTime += System.nanoTime() - startTime;
 
         return dataFrameOfFile;
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new CollectArgumentDataTypeDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), false);
+
+        javaAnalyser.printAnalysingTime();
+        StringCounter stringCounter = null;
+
+        stringCounter = javaAnalyser.getCollection(CollectArgumentDataTypeDecorator.class);
+        System.out.println(stringCounter.describe(100));
     }
 }

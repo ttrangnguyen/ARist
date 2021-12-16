@@ -27,7 +27,7 @@ public class CountFileDecorator extends AnalyzeDecorator {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
         javaAnalyser = new CountFileDecorator(javaAnalyser);
 
-        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), true);
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;

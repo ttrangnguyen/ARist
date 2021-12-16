@@ -40,7 +40,7 @@ public class CountArgumentDecorator extends AnalyzeDecorator {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
         javaAnalyser = new CountArgumentDecorator(javaAnalyser);
 
-        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), true);
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;

@@ -149,7 +149,7 @@ public class CountLineFromLastUsageOfArgumentDecorator extends AnalyzeDecorator 
         JavaAnalyser javaAnalyser = new JavaAnalyser();
         javaAnalyser = new CountLineFromLastUsageOfArgumentDecorator(javaAnalyser);
 
-        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), true);
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;

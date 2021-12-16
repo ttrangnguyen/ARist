@@ -1,12 +1,16 @@
 package flute.analysis.analysers;
 
 import flute.analysis.structure.DataFrame;
+import flute.analysis.structure.StringCounter;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 
+/**
+ * Warning: Must be the last decorator to work!
+ */
 public class ClassifyArgumentIdentifierDeclaringLibraryDecorator extends AnalyzeDecorator {
     public ClassifyArgumentIdentifierDeclaringLibraryDecorator(JavaAnalyser analyser) {
         super(analyser);
@@ -76,7 +80,7 @@ public class ClassifyArgumentIdentifierDeclaringLibraryDecorator extends Analyze
 
                         @Override
                         public boolean visit(FieldAccess node) {
-                            System.out.println(node);
+                            //System.out.println(node);
                             String declaringLibrary;
                             IVariableBinding variableBinding = node.resolveFieldBinding();
                             if (variableBinding == null) {
@@ -180,5 +184,18 @@ public class ClassifyArgumentIdentifierDeclaringLibraryDecorator extends Analyze
         super.setupParsers(project, parseStatically);
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
                 new String[]{}, Config.JDT_LEVEL, Config.JAVA_VERSION);
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new ClassifyArgumentIdentifierDeclaringLibraryDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), false);
+
+        javaAnalyser.printAnalysingTime();
+        StringCounter stringCounter = null;
+
+        stringCounter = javaAnalyser.getCollection(ClassifyArgumentIdentifierDeclaringLibraryDecorator.class);
+        System.out.println(stringCounter.describe());
     }
 }

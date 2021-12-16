@@ -33,7 +33,6 @@ public class CollectArgumentIdentifierDecorator extends AnalyzeDecorator {
             cu.findAll(MethodCallExpr.class).forEach(methodCallExpr -> {
                 NodeList<Expression> arguments = methodCallExpr.getArguments();
                 for (int i = 0; i < arguments.size(); ++i) {
-                    int argPos = i + 1;
                     List<String> argOperandList = new ArrayList<>();
                     visit(arguments.get(i), argOperandList);
                     argOperandList.forEach(operand -> {
@@ -105,7 +104,7 @@ public class CollectArgumentIdentifierDecorator extends AnalyzeDecorator {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
         javaAnalyser = new CollectArgumentIdentifierDecorator(javaAnalyser);
 
-        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), true);
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;

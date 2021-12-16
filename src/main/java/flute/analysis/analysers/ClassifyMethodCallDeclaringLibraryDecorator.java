@@ -1,6 +1,7 @@
 package flute.analysis.analysers;
 
 import flute.analysis.structure.DataFrame;
+import flute.analysis.structure.StringCounter;
 import flute.config.Config;
 import flute.jdtparser.ProjectParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -10,6 +11,9 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import java.io.File;
 
+/**
+ * Warning: Must be the last decorator to work!
+ */
 public class ClassifyMethodCallDeclaringLibraryDecorator extends AnalyzeDecorator {
     public ClassifyMethodCallDeclaringLibraryDecorator(JavaAnalyser analyser) {
         super(analyser);
@@ -47,5 +51,18 @@ public class ClassifyMethodCallDeclaringLibraryDecorator extends AnalyzeDecorato
         super.setupParsers(project, parseStatically);
         projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
                 new String[]{}, Config.JDT_LEVEL, Config.JAVA_VERSION);
+    }
+
+    public static void main(String[] args) {
+        JavaAnalyser javaAnalyser = new JavaAnalyser();
+        javaAnalyser = new ClassifyMethodCallDeclaringLibraryDecorator(javaAnalyser);
+
+        javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), false);
+
+        javaAnalyser.printAnalysingTime();
+        StringCounter stringCounter = null;
+
+        stringCounter = javaAnalyser.getCollection(ClassifyMethodCallDeclaringLibraryDecorator.class);
+        System.out.println(stringCounter.describe());
     }
 }
