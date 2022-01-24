@@ -6,14 +6,23 @@ import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.ArgRecTest;
 import flute.tokenizing.excode_data.MultipleArgRecTest;
 import flute.tokenizing.excode_data.RecTest;
+import flute.utils.file_processing.FileProcessor;
 import flute.utils.logging.Logger;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MethodCallOriginPrinter extends MethodCallRecClient {
     public MethodCallOriginPrinter(String projectName) {
         super(projectName);
+        setTestClass(ArgRecTest.class);
+    }
+
+    public MethodCallOriginPrinter(String projectName, String projectDir) {
+        super(projectName, projectDir);
         setTestClass(ArgRecTest.class);
     }
 
@@ -65,8 +74,13 @@ public class MethodCallOriginPrinter extends MethodCallRecClient {
     }
 
     public static void main(String[] args) throws IOException {
-        RecClient client = new MethodCallOriginPrinter("eclipse");
-        List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.getTestsAndReport(false, true);
-        //List<MultipleArgRecTest> tests = (List<MultipleArgRecTest>) client.generateTestsFromFile("lucene\\lucene\\src\\java\\org\\apache\\lucene\\search\\QueryTermVector.java");
+        List<String> projectList = FileProcessor.readLineByLineToList("../../Tannm/storage/" + args[0]);
+        for (String project: projectList) {
+            RecClient client = new MethodCallOriginPrinter(project, "../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred/" + project);
+            List<String> filePaths = FileProcessor.readLineByLineToList("../../Tannm/Flute/storage/testFilePath/" + project + "_ArgRecTests_file_path.txt");
+            List<File> fileList = filePaths.stream().map(filePath -> new File(filePath)).collect(Collectors.toList());
+            if (fileList.isEmpty()) continue;
+            client.getTests(fileList, true);
+        }
     }
 }
