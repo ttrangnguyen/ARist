@@ -106,7 +106,7 @@ public abstract class RecClient {
         if (fromSavefile) {
             tests = readTestsFromFile(Config.LOG_DIR + projectName + "_" + this.testClass.getSimpleName() + "s.txt");
         } else {
-            if (fileList != null) {
+            if (fileList == null) {
                 if (projectDir == null && !projectName.equals("demo")) {
                     tests = generateTestsFromGitProject();
                 } else {
