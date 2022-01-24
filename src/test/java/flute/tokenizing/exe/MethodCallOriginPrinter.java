@@ -76,9 +76,10 @@ public class MethodCallOriginPrinter extends MethodCallRecClient {
     public static void main(String[] args) throws IOException {
         List<String> projectList = FileProcessor.readLineByLineToList("../../Tannm/storage/" + args[0]);
         for (String project: projectList) {
-            RecClient client = new MethodCallOriginPrinter(project, "../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred/" + project);
+            String projectDir = "../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred/" + project + "/";
+            RecClient client = new MethodCallOriginPrinter(project, projectDir);
             List<String> filePaths = FileProcessor.readLineByLineToList("../../Tannm/Flute/storage/testFilePath/" + project + "_ArgRecTests_file_path.txt");
-            List<File> fileList = filePaths.stream().map(filePath -> new File(filePath)).collect(Collectors.toList());
+            List<File> fileList = filePaths.stream().map(filePath -> new File(projectDir + filePath)).collect(Collectors.toList());
             if (fileList.isEmpty()) continue;
             client.getTests(fileList, true);
         }
