@@ -3,6 +3,7 @@ package flute.tokenizing.exe;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import flute.analysis.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
@@ -22,6 +23,21 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
                                                    MethodCallExpr methodCall, String contextMethodCall, String methodScope, String methodName) {
 
         List<RecTest> tests = new ArrayList<>();
+
+        // Lack of libraries
+        if (!getFileParser().acceptedMethod()) {
+            System.err.println("ERROR: Cannot resolve: " + methodCall + ". This may be due to the absence of required libraries.");
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
+            return tests;
+        }
+
+        String parsedMethodCall = getFileParser().getLastMethodCallGen().replaceAll("[ \r\n]", "");
+        if (!parsedMethodCall.equals(methodCall.toString().replaceAll("[ \r\n]", ""))) {
+            System.err.println("ERROR: " + getFileParser().getLastMethodCallGen() + " was parsed instead of " + methodCall.toString()
+                    + " at " + methodCall.getBegin().get());
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
+            return tests;
+        }
 
         IMethodBinding methodBinding = getFileParser().getCurMethodInvocation().resolveMethodBinding();
 
@@ -49,7 +65,7 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
                         e.printStackTrace();
                     }
 
-                    if (params != null) {
+                    if (/*params != null*/true) {
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
@@ -95,7 +111,7 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
             e.printStackTrace();
         }
 
-        if (params != null) {
+        if (/*params != null*/true) {
             ArgRecTest test = new ArgRecTest();
             test.setLine(methodCall.getBegin().get().line);
             test.setCol(methodCall.getBegin().get().column);
