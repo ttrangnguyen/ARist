@@ -8,16 +8,18 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeS
 import flute.analysis.structure.DataFrame;
 import flute.analysis.structure.StringCounter;
 import flute.config.Config;
+import flute.jdtparser.ProjectParser;
 import flute.preprocessing.FileFilter;
 import flute.utils.ProgressBar;
 import flute.utils.file_processing.DirProcessor;
-import flute.utils.file_processing.FileProcessor;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 public class JavaAnalyser {
+    ProjectParser projectParser;
+    String currentProject;
+
     final StringCounter stringCounter = new StringCounter();
 
     private final DataFrame dataFrameProject = new DataFrame();
@@ -29,16 +31,28 @@ public class JavaAnalyser {
 
     long analysingTime = 0;
 
-    DataFrame analyseFile(File file) {
-        return new DataFrame();
-    }
+    void setupParsers(File project, boolean parseStatically) {
+        currentProject = project.getName();
 
-    public DataFrame analyseProject(File project) {
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
         combinedTypeSolver.add(new ReflectionTypeSolver());
         JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
         StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
         combinedTypeSolver.add(new JavaParserTypeSolver(project));
+
+        if (!parseStatically) {
+            Config.autoConfigure(project.getName(), project.getAbsolutePath());
+            projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
+                    Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+        }
+    }
+
+    DataFrame analyseFile(File file) {
+        return new DataFrame();
+    }
+
+    public DataFrame analyseProject(File project, boolean parseStatically) {
+        setupParsers(project, parseStatically);
 
         List<File> rawJavaFiles = DirProcessor.walkJavaFile(project.getAbsolutePath());
         List<File> javaFiles = FileFilter.filter(rawJavaFiles);
@@ -54,18 +68,26 @@ public class JavaAnalyser {
         return dataFrameOfProject;
     }
 
-    public void analyseProjects(File directory) {
+    public DataFrame analyseProject(File project) {
+        return analyseProject(project, false);
+    }
+
+    public void analyseProjects(File directory, boolean parseStatically) {
         List<File> projects = DirProcessor.walkData(directory.getAbsolutePath());
 
         ProgressBar progressBar = new ProgressBar();
         for (int i = 0; i < projects.size(); ++i) {
             System.out.println("Analyzing: " + projects.get(i).getAbsolutePath());
-            DataFrame dataFrameOfProject = analyseProject(projects.get(i));
+            DataFrame dataFrameOfProject = analyseProject(projects.get(i), parseStatically);
             for (String label: dataFrameOfProject.getLabels()) {
                 dataFrameProject.insert(label, dataFrameOfProject.getVariable(label).getSum());
             }
             progressBar.setProgress(((float)i + 1) / projects.size(), true);
         }
+    }
+
+    public void analyseProjects(File directory) {
+        analyseProjects(directory, false);
     }
 
     public void printAnalysingTime() {
@@ -117,28 +139,42 @@ public class JavaAnalyser {
 
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
-        javaAnalyser = new CountLineFromLastUsageOfArgumentDecorator(javaAnalyser);
+//        javaAnalyser = new CollectArgumentDataTypeDecorator(javaAnalyser);
+        javaAnalyser = new CollectMethodCallSignatureDecorator(javaAnalyser);
+//        javaAnalyser = new ClassifyMethodCallDeclaringLibraryDecorator(javaAnalyser);
+//        javaAnalyser = new ClassifyArgumentIdentifierDeclaringLibraryDecorator(javaAnalyser);
 
-        //javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"));
-        javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"));
+        //javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), false);
+        javaAnalyser.analyseProjects(new File("../../Tannm/Flute/storage/repositories/git/"), false);
 
         javaAnalyser.printAnalysingTime();
         DataFrame.Variable variable = null;
         StringCounter stringCounter = null;
 
-        variable = javaAnalyser.getStatisticsByArgument(CountLineFromLastUsageOfArgumentDecorator.class);
-        System.out.println("Statistics on number of lines from last usage of argument:");
-        double realMean = (variable.getSum() + variable.countValue(-1)) / (variable.getCount() - variable.countValue(-1));
-        System.out.println(String.format("\t%-7s%20f", "mean:", realMean));
-        System.out.println(String.format("\t%-7s%20f\n", "max:", variable.getMax()));
-        StringBuilder sb = new StringBuilder();
-        for (Double d: variable.getDistinctData()) {
-            sb.append(String.format("%d %d\n", d.intValue(), variable.countValue(d)));
+//        stringCounter = javaAnalyser.getCollection(CollectArgumentDataTypeDecorator.class);
+//        System.out.println(stringCounter.describe(100));
+
+        stringCounter = javaAnalyser.getCollection(CollectMethodCallSignatureDecorator.class);
+        System.out.println(stringCounter.describe(100));
+        variable = new DataFrame.Variable();
+        for (String argUsage: stringCounter.getDistinctStrings()) {
+            variable.insert(stringCounter.getCount(argUsage));
         }
-//        try {
-//            FileProcessor.write(sb.toString(), Config.LOG_DIR + "line_count_from_last_usage.txt");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        System.out.println("Statistics on usage frequency of method call:");
+        System.out.println(DataFrame.describe(variable));
+        System.out.println("Frequency distribution of occurrence of method call:");
+        for (int i = 1; i <= 9; ++i) {
+            System.out.println(String.format("\t%5d times: %5.2f%%", i, variable.getProportionOfValue(i, true)));
+        }
+        for (int i = 1; i <= 9; ++i) {
+            System.out.println(String.format("\t%4dx times: %5.2f%%", i, variable.getProportionOfRange(i*10, (i+1)*10-1, true)));
+        }
+        System.out.println(String.format("\t>=%3d times: %5.2f%%", 100, variable.getProportionOfRange(100, variable.getMax(), true)));
+
+//        stringCounter = javaAnalyser.getCollection(ClassifyMethodCallDeclaringLibraryDecorator.class);
+//        System.out.println(stringCounter.describe());
+
+//        stringCounter = javaAnalyser.getCollection(ClassifyArgumentIdentifierDeclaringLibraryDecorator.class);
+//        System.out.println(stringCounter.describe());
     }
 }

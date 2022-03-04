@@ -16,8 +16,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CollectArgumentUsageDecorator extends AnalyzeDecorator {
-    public CollectArgumentUsageDecorator(JavaAnalyser analyser) {
+public class CollectArgumentIdentifierDecorator extends AnalyzeDecorator {
+    public CollectArgumentIdentifierDecorator(JavaAnalyser analyser) {
         super(analyser);
     }
 
@@ -33,11 +33,10 @@ public class CollectArgumentUsageDecorator extends AnalyzeDecorator {
             cu.findAll(MethodCallExpr.class).forEach(methodCallExpr -> {
                 NodeList<Expression> arguments = methodCallExpr.getArguments();
                 for (int i = 0; i < arguments.size(); ++i) {
-                    int argPos = i + 1;
                     List<String> argOperandList = new ArrayList<>();
                     visit(arguments.get(i), argOperandList);
                     argOperandList.forEach(operand -> {
-                        stringCounter.add(String.format("%s-%d-%s", methodCallExpr.getNameAsString(), argPos, operand));
+                        stringCounter.add(String.format("%s", operand));
                     });
                 }
             });
@@ -76,9 +75,9 @@ public class CollectArgumentUsageDecorator extends AnalyzeDecorator {
 //                case NUM_LIT: case CHAR_LIT:
 //                    argOperandList.add("0");
 //                    return;
-                case TYPE_LIT:
-                    argOperandList.add(".class");
-                    return;
+//                case TYPE_LIT:
+//                    argOperandList.add(".class");
+//                    return;
                 case OBJ_CREATION:
                     argOperandList.add(((ObjectCreationExpr) node).getTypeAsString() + "(");
                     return;
@@ -103,7 +102,7 @@ public class CollectArgumentUsageDecorator extends AnalyzeDecorator {
 
     public static void main(String[] args) {
         JavaAnalyser javaAnalyser = new JavaAnalyser();
-        javaAnalyser = new CollectArgumentUsageDecorator(javaAnalyser);
+        javaAnalyser = new CollectArgumentIdentifierDecorator(javaAnalyser);
 
         javaAnalyser.analyseProjects(new File(Config.REPO_DIR + "oneproj/"), true);
 
@@ -111,15 +110,15 @@ public class CollectArgumentUsageDecorator extends AnalyzeDecorator {
         DataFrame.Variable variable = null;
         StringCounter stringCounter = null;
 
-        stringCounter = javaAnalyser.getCollection(CollectArgumentUsageDecorator.class);
+        stringCounter = javaAnalyser.getCollection(CollectArgumentIdentifierDecorator.class);
         System.out.println(stringCounter.describe(100));
         variable = new DataFrame.Variable();
         for (String argUsage: stringCounter.getDistinctStrings()) {
             variable.insert(stringCounter.getCount(argUsage));
         }
-        System.out.println("Statistics on usage frequency of argument:");
+        System.out.println("Statistics on usage frequency of argument identifier:");
         System.out.println(DataFrame.describe(variable));
-        System.out.println("Frequency distribution of occurrence of argument usage:");
+        System.out.println("Frequency distribution of occurrence of argument identifier:");
         for (int i = 1; i <= 9; ++i) {
             System.out.println(String.format("\t%5d times: %5.2f%%", i, variable.getProportionOfValue(i, true)));
         }
