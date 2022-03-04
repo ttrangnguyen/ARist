@@ -1,8 +1,23 @@
 # FluteSC
 ## How to use the parser to generate candidate expressions
+### Configuration
+All configuration storage here: `flute.config.Config`
+| Constant | Description  |
+|--|--|
+| MVN_HOME | Maven home folder |
+| TARGET_PARAM_POSITION | Use current line and column as param position, reference to `FileParser.genCurParams()` |
+| JAVAFX_DIR | JavaFX folder include all JavaFX *.jar files |
+| FEATURE_PARAM_* | Enable that expression type to predict |
+
+### Predict phase
+
 Auto load config from JSON (load source and `*.jar` path)
 ```java
 Config.loadConfig(Config.STORAGE_DIR + "/json/project.json");
+```
+or
+```java
+Config.autoConfigure(projectName, projectDir);
 ```
 
 Create `project parser` for a project
