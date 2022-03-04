@@ -1,7 +1,7 @@
 # FluteSC
 ## How to use the parser to generate candidate expressions
 ### Configuration
-All configuration storage here: `flute.config.Config`
+All configuration storage is here: `flute.config.Config`
 | Constant | Description  |
 |--|--|
 | MVN_HOME | Maven home folder |
@@ -9,7 +9,7 @@ All configuration storage here: `flute.config.Config`
 | TARGET_PARAM_POSITION | Use current line and column as param position, reference to `FileParser.genCurParams()` |
 | FEATURE_PARAM_* | Enable that expression type to predict |
 
-### Predict phase
+### Predicting phase
 
 Auto load config from JSON (load source and `*.jar` path)
 ```java
