@@ -20,17 +20,21 @@ public class MethodExtractor extends Preprocessor {
         Map<String, List<String>> methodMapByName;
     }
 
-    private ProjectParser parser;
+    ProjectParser parser;
     private TypeDeclarationData lastTypeDeclaration = new TypeDeclarationData();
 
     public MethodExtractor() {
     }
 
-    @Override
-    public void preprocessProject(File project, File outputFolder, File fileList, boolean revert) {
+    void setupProjectParser(File project) {
         Config.autoConfigure(project.getName(), project.getAbsolutePath());
         parser = new ProjectParser(Config.PROJECT_DIR, Config.SOURCE_PATH, Config.ENCODE_SOURCE,
                 Config.CLASS_PATH, Config.JDT_LEVEL, Config.JAVA_VERSION);
+    }
+
+    @Override
+    public void preprocessProject(File project, File outputFolder, File fileList, boolean revert) {
+        setupProjectParser(project);
 
         super.preprocessProject(project, outputFolder, fileList, revert);
     }
@@ -438,18 +442,18 @@ public class MethodExtractor extends Preprocessor {
     public static void main(String[] args) {
 //        String inputFolder = Config.REPO_DIR + "oneproj/";
 //        String outputFolder = Config.LOG_DIR + "dataset-sample-method/";
-        String inputFolder = "../../Kien/Flute-Kien-full/storage/repositories/git/four_hundred_excluded/";
+        String inputFolder = "../../Kien/Flute-Kien-full/storage/repositories/git/" + args[0];
         String outputFolder = "../../Tannm/storage/" + "dataset-gpt-method/";
 
         Preprocessor preprocessor = new Preprocessor();
-        System.out.println("\nBacking up projects...");
-        preprocessor.preprocessProjects(new File(inputFolder), new File("../../Tannm/storage/" + "backup/"));
+//        System.out.println("\nBacking up projects...");
+//        preprocessor.preprocessProjects(new File(inputFolder), new File("../../Tannm/storage/" + "backup/"));
 
-        System.out.println("\nPreprocessing projects...");
-        preprocessor = new RemoveCommentDecorator(preprocessor);
-        preprocessor = new RemoveNewLineDecorator(preprocessor);
-        preprocessor = new RemoveIndentDecorator(preprocessor);
-        preprocessor.preprocessProjects(new File(inputFolder), new File(inputFolder));
+//        System.out.println("\nPreprocessing projects...");
+//        preprocessor = new RemoveCommentDecorator(preprocessor);
+//        preprocessor = new RemoveNewLineDecorator(preprocessor);
+//        preprocessor = new RemoveIndentDecorator(preprocessor);
+//        preprocessor.preprocessProjects(new File(inputFolder), new File(inputFolder));
 
         System.out.println("\nExtracting methods...");
         preprocessor = new MethodExtractor();
