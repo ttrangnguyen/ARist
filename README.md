@@ -5,8 +5,8 @@ All configuration storage here: `flute.config.Config`
 | Constant | Description  |
 |--|--|
 | MVN_HOME | Maven home folder |
-| TARGET_PARAM_POSITION | Use current line and column as param position, reference to `FileParser.genCurParams()` |
 | JAVAFX_DIR | JavaFX folder include all JavaFX *.jar files |
+| TARGET_PARAM_POSITION | Use current line and column as param position, reference to `FileParser.genCurParams()` |
 | FEATURE_PARAM_* | Enable that expression type to predict |
 
 ### Predict phase
@@ -27,7 +27,7 @@ ProjectParser projectParser = new ProjectParser(Config.PROJECT_DIR, Config.SOURC
 
 Create `file parser` with position of method call
 ```java
-FileParser fileParser =  new  FileParser(projectParser, file, line, height);
+FileParser fileParser =  new  FileParser(projectParser, file, line, column);
 ```
 
 Generate excode and lexical candidates
