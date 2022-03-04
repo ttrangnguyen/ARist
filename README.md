@@ -15,7 +15,7 @@ Auto load config from JSON (load source and `*.jar` path)
 ```java
 Config.loadConfig(Config.STORAGE_DIR + "/json/project.json");
 ```
-or
+or (for Maven project)
 ```java
 Config.autoConfigure(projectName, projectDir);
 ```
