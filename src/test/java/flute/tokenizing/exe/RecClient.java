@@ -100,16 +100,20 @@ public abstract class RecClient {
 
     abstract void createNewGenerator();
 
-    public List<? extends RecTest> getTests(boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
+    private List<? extends RecTest> getTests(boolean fromSavefile, boolean doSaveTestsAfterGen, List<File> fileList) throws IOException {
         List<RecTest> tests;
         setupGenerator();
         if (fromSavefile) {
             tests = readTestsFromFile(Config.LOG_DIR + projectName + "_" + this.testClass.getSimpleName() + "s.txt");
         } else {
-            if (projectDir == null && !projectName.equals("demo")) {
-                tests = generateTestsFromGitProject();
+            if (fileList == null) {
+                if (projectDir == null && !projectName.equals("demo")) {
+                    tests = generateTestsFromGitProject();
+                } else {
+                    tests = generateTestsRecursively();
+                }
             } else {
-                tests = generateTestsRecursively();
+                tests = generateTestsFromFiles(fileList);
             }
 
             if (doSaveTestsAfterGen) saveTests(tests);
@@ -118,8 +122,16 @@ public abstract class RecClient {
         return tests;
     }
 
+    public List<? extends RecTest> getTests(boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
+        return getTests(fromSavefile, doSaveTestsAfterGen, null);
+    }
+
     public List<? extends RecTest> getTests(boolean fromSavefile) throws IOException {
         return getTests(fromSavefile, false);
+    }
+
+    public List<? extends RecTest> getTests(List<File> fileList, boolean doSaveTestsAfterGen) throws IOException {
+        return getTests(false, doSaveTestsAfterGen, fileList);
     }
 
     public List<? extends RecTest> getTestsAndReport(boolean fromSavefile, boolean doSaveTestsAfterGen) throws IOException {
@@ -168,25 +180,22 @@ public abstract class RecClient {
         return gson.fromJson(lastLine, (Type) this.testClass);
     }
 
-    private List<RecTest> generateTestsFromGitProject() throws IOException {
+    private List<RecTest> generateTestsFromFiles(List<File> fileList) {
         List<RecTest> tests = new ArrayList<>();
         final ExecutorService executor = Executors.newFixedThreadPool(Config.NUM_THREAD); // it's just an arbitrary number
         final List<Future<?>> futures = new ArrayList<>();
 
-        try (Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"))) {
-            while (sc.hasNextLine()) {
-                String filePath = sc.nextLine();
-                if (Config.MULTIPROCESS) {
-                    Future<?> future = executor.submit(() -> {
-                        createNewGenerator();
-                        List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
-                        tests.addAll(oneFileTests);
-                    });
-                    futures.add(future);
-                } else {
-                    List<RecTest> oneFileTests = (List<RecTest>) generator.generate(Config.REPO_DIR + "git/" + filePath);
+        for (File file: fileList) {
+            if (Config.MULTIPROCESS) {
+                Future<?> future = executor.submit(() -> {
+                    createNewGenerator();
+                    List<RecTest> oneFileTests = (List<RecTest>) generator.generate(file.getPath());
                     tests.addAll(oneFileTests);
-                }
+                });
+                futures.add(future);
+            } else {
+                List<RecTest> oneFileTests = (List<RecTest>) generator.generate(file.getPath());
+                tests.addAll(oneFileTests);
             }
         }
 
@@ -205,6 +214,19 @@ public abstract class RecClient {
         }
 
         return tests;
+    }
+
+    private List<RecTest> generateTestsFromGitProject() throws IOException {
+        List<File> fileList = new ArrayList<>();
+
+        try (Scanner sc = new Scanner(new File("docs/testFilePath/" + projectName + ".txt"))) {
+            while (sc.hasNextLine()) {
+                String filePath = sc.nextLine();
+                fileList.add(new File(Config.REPO_DIR + "git/" + filePath));
+            }
+        }
+
+        return generateTestsFromFiles(fileList);
     }
 
     private List<RecTest> generateTestsRecursively() {

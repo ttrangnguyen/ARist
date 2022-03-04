@@ -3,6 +3,7 @@ package flute.tokenizing.exe;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import flute.analysis.config.Config;
 import flute.data.MultiMap;
 import flute.jdtparser.ProjectParser;
 import flute.tokenizing.excode_data.*;
@@ -23,6 +24,21 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
 
         List<RecTest> tests = new ArrayList<>();
 
+        // Lack of libraries
+//        if (!getFileParser().acceptedMethod()) {
+//            System.err.println("ERROR: Cannot resolve: " + methodCall + ". This may be due to the absence of required libraries.");
+//            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
+//            return tests;
+//        }
+
+        String parsedMethodCall = getFileParser().getLastMethodCallGen().replaceAll("[ \r\n]", "");
+        if (!parsedMethodCall.equals(methodCall.toString().replaceAll("[ \r\n]", ""))) {
+            System.err.println("ERROR: " + getFileParser().getLastMethodCallGen() + " was parsed instead of " + methodCall.toString()
+                    + " at " + methodCall.getBegin().get());
+            if (Config.LOG_WARNING) System.err.println("WARNING: Corresponding tests will not be generated.");
+            return tests;
+        }
+
         IMethodBinding methodBinding = getFileParser().getCurMethodInvocation().resolveMethodBinding();
 
         List<ArgRecTest> oneArgTests = new ArrayList<>();
@@ -32,24 +48,24 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
             Expression arg = methodCall.getArgument(j);
             while (k <= methodCallEndIdx) {
                 if (NodeSequenceInfo.isSEPA(excodes.get(k), ',') && excodes.get(k).oriNode == arg) {
-                    MultiMap params = null;
-                    try {
-                        params = getFileParser().genParamsAt(j);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        System.err.println(methodCall);
-                        System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
-                    } catch (IndexOutOfBoundsException e) {
-                        System.err.println(methodCall);
-                        System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
-                    } catch (NullPointerException e) {
-                        System.err.println(methodCall);
-                        System.err.println(methodCall.getBegin().get());
-                        e.printStackTrace();
-                    }
+//                    MultiMap params = null;
+//                    try {
+//                        params = getFileParser().genParamsAt(j);
+//                    } catch (ArrayIndexOutOfBoundsException e) {
+//                        System.err.println(methodCall);
+//                        System.err.println(methodCall.getBegin().get());
+//                        e.printStackTrace();
+//                    } catch (IndexOutOfBoundsException e) {
+//                        System.err.println(methodCall);
+//                        System.err.println(methodCall.getBegin().get());
+//                        e.printStackTrace();
+//                    } catch (NullPointerException e) {
+//                        System.err.println(methodCall);
+//                        System.err.println(methodCall.getBegin().get());
+//                        e.printStackTrace();
+//                    }
 
-                    if (params != null) {
+                    if (/*params != null*/true) {
                         List<NodeSequenceInfo> argExcodes = new ArrayList<>();
                         for (int t = contextIdx + 1; t < k; ++t) argExcodes.add(excodes.get(t));
 
@@ -82,20 +98,20 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
             }
         }
 
-        MultiMap params = null;
-        try {
-            params = getFileParser().genParamsAt(methodCall.getArguments().size() - 1);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println(methodCall);
-            System.err.println(methodCall.getBegin().get());
-            e.printStackTrace();
-        } catch (IndexOutOfBoundsException e) {
-            System.err.println(methodCall);
-            System.err.println(methodCall.getBegin().get());
-            e.printStackTrace();
-        }
+//        MultiMap params = null;
+//        try {
+//            params = getFileParser().genParamsAt(methodCall.getArguments().size() - 1);
+//        } catch (ArrayIndexOutOfBoundsException e) {
+//            System.err.println(methodCall);
+//            System.err.println(methodCall.getBegin().get());
+//            e.printStackTrace();
+//        } catch (IndexOutOfBoundsException e) {
+//            System.err.println(methodCall);
+//            System.err.println(methodCall.getBegin().get());
+//            e.printStackTrace();
+//        }
 
-        if (params != null) {
+        if (/*params != null*/true) {
             ArgRecTest test = new ArgRecTest();
             test.setLine(methodCall.getBegin().get().line);
             test.setCol(methodCall.getBegin().get().column);
@@ -131,6 +147,15 @@ public class MethodCallOriginEnumerator extends MethodCallRecTestGenerator {
             oneArgTests.add(test);
         } else {
             //System.out.println("No candidate generated: " + methodCall);
+        }
+
+        for (int j = 0; j < oneArgTests.size(); ++j) {
+            ArgRecTest oneArgTest = oneArgTests.get(j);
+            if (j == oneArgTests.size() - 1) {
+                oneArgTest.setArgPos(methodCall.getArguments().size());
+            } else {
+                oneArgTest.setArgPos(j + 1);
+            }
         }
 
         tests.addAll(oneArgTests);
