@@ -1,0 +1,17 @@
+{
+  "name": "demo",
+  "project-dir": "../demo/src/main/java/",
+  "source-paths": [
+    "../demo/src/main/java/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [
+  ],
+  "jdt-level": 13,
+  "java-version": "13",
+  "ignore-files": [],
+  "test-file-path": "/Users/maytinhdibo/Project/demo/src/main/java/TestClass.java",
+  "test-position": 539
+}

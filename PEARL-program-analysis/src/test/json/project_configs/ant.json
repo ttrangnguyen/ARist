@@ -1,0 +1,36 @@
+{
+  "name": "ant",
+  "project-dir": "../../Research/java-data/ant/src/main/",
+  "source-paths": [
+    "../../Research/java-data/ant/src/main/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [
+    "../../Research/java-data/ant/lib/optional/junit-4.8.1.jar",
+    "../../Research/java-data/ant/lib/optional/junit-3.8.2.jar",
+    "../../Research/java-data/lib/ant/bcel-6.5.0/bcel-6.5.0.jar",
+    "../../Research/java-data/lib/ant/jai-codec-1.1.3.jar",
+    "../../Research/java-data/lib/ant/com.springsource.org.apache.oro-2.0.8.jar",
+    "../../Research/java-data/lib/ant/jsch-0.1.46.jar",
+    "../../Research/java-data/lib/ant/mail-1.4.7.jar",
+    "../../Research/java-data/lib/ant/activation-1.1.1.jar",
+    "../../Research/java-data/lib/ant/xalan-2.7.2.jar",
+    "../../Research/java-data/lib/ant/jai_codec-1.1.3.jar",
+    "../../Research/java-data/lib/ant/jdepend-2.9.1.jar",
+    "../../Research/java-data/lib/ant/jai-core-1.1.3.jar",
+    "../../Research/java-data/lib/ant/com.springsource.org.apache.log4j-1.2.16.jar",
+    "../../Research/java-data/lib/ant/org.apache.xml.resolver-1.2.0-20081006.jar",
+    "../../Research/java-data/lib/ant/commons-io-2.7.jar",
+    "../../Research/java-data/lib/ant/apache-commons-net.jar",
+    "../../Research/java-data/lib/ant/org-apache-commons-logging.jar",
+    "../../Research/java-data/lib/ant/bsf-2.4.0.jar",
+    "../../Research/java-data/lib/ant/com.springsource.com.ibm.netrexx-2.0.5.jar"
+  ],
+  "jdt-level": 13,
+  "java-version": "13",
+  "ignore-files": [],
+  "test-file-path": "../../Research/java-data/ant/src/main/org/apache/tools/mail/MailMessage.java",
+  "test-position": 1662
+}

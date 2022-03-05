@@ -1,0 +1,229 @@
+List of examined projects:
+	ant
+	batik
+	log4j
+	lucene
+	xalan
+	xerces
+
+Statistics on Num of Java files:
+	count:                    6
+	mean:           1313.166667
+	std:             885.067097
+	mode:           1191.000000
+	min:             353.000000
+	25%:             824.000000
+	50%:             961.000000
+	75%:            1656.000000
+	max:            2894.000000
+
+	           0 Java files:       0 -  0.00%
+	           1 Java files:       0 -  0.00%
+	           2 Java files:       0 -  0.00%
+	           3 Java files:       0 -  0.00%
+	           4 Java files:       0 -  0.00%
+	           5 Java files:       0 -  0.00%
+	           6 Java files:       0 -  0.00%
+	           7 Java files:       0 -  0.00%
+	           8 Java files:       0 -  0.00%
+	           9 Java files:       0 -  0.00%
+	          10 Java files:       0 -  0.00%
+	  11 to   20 Java files:       0 -  0.00%
+	  21 to   30 Java files:       0 -  0.00%
+	  31 to   40 Java files:       0 -  0.00%
+	  41 to   50 Java files:       0 -  0.00%
+	  51 to   60 Java files:       0 -  0.00%
+	  61 to   70 Java files:       0 -  0.00%
+	  71 to   80 Java files:       0 -  0.00%
+	  81 to   90 Java files:       0 -  0.00%
+	  91 to  100 Java files:       0 -  0.00%
+	 101 to  200 Java files:       0 -  0.00%
+	 201 to  300 Java files:       0 -  0.00%
+	 301 to  400 Java files:       1 - 16.67%
+	 401 to  500 Java files:       0 -  0.00%
+	 501 to  600 Java files:       0 -  0.00%
+	 601 to  700 Java files:       0 -  0.00%
+	 701 to  800 Java files:       0 -  0.00%
+	 801 to  900 Java files:       1 - 16.67%
+	 901 to 1000 Java files:       1 - 16.67%
+	1001 to 2000 Java files:       2 - 33.33%
+	2001 to 3000 Java files:       1 - 16.67%
+
+Num of inner method calls: 34700
+Num of java method calls: 79841
+Num of lib method calls: 201513
+
+Top 10 most called Java APIs:
+	java.lang.String.equals(java.lang.Object)
+	java.io.PrintStream.println(java.lang.String)
+	java.lang.String.length()
+	java.lang.StringBuffer.append(java.lang.String)
+	java.lang.String.charAt(int)
+	java.util.Vector.elementAt(int)
+	java.util.Map.put(K, V)
+	java.lang.StringBuilder.append(java.lang.String)
+	java.lang.StringBuffer.append(char)
+	java.util.Hashtable.put(K, V)
+
+Top 10 most called external libs' APIs:
+
+Rating of inner methods being called: 10.98%
+
+Rating of caller & callee being in the same package: 30.29%
+
+Statistics on Num of arguments:
+	count:               316062
+	mean:              1.051161
+	std:               1.263225
+	mode:              1.000000
+	min:               0.000000
+	25%:               0.000000
+	50%:               1.000000
+	75%:               1.000000
+	max:             274.000000
+
+	           0 arguments:  112072 - 35.46%
+	           1 arguments:  125061 - 39.57%
+	           2 arguments:   50615 - 16.01%
+	           3 arguments:   17312 -  5.48%
+	           4 arguments:    5965 -  1.89%
+	           5 arguments:    2875 -  0.91%
+	           6 arguments:    1390 -  0.44%
+	           7 arguments:     270 -  0.09%
+	           8 arguments:     210 -  0.07%
+	           9 arguments:      91 -  0.03%
+	          10 arguments:      55 -  0.02%
+	  11 to   20 arguments:     135 -  0.04%
+	  21 to   30 arguments:       5 -  0.00%
+	  31 to   40 arguments:       4 -  0.00%
+	  41 to   50 arguments:       0 -  0.00%
+	  51 to   60 arguments:       1 -  0.00%
+	  61 to   70 arguments:       0 -  0.00%
+	  71 to   80 arguments:       0 -  0.00%
+	  81 to   90 arguments:       0 -  0.00%
+	  91 to  100 arguments:       0 -  0.00%
+	 101 to  200 arguments:       0 -  0.00%
+	 201 to  300 arguments:       1 -  0.00%
+
+Statistics on Expression types of params:
+	NAME:                  39.58%
+	METHOD_INVOC:           9.84%
+	FIELD_ACCESS:           6.73%
+	ARRAY_ACCESS:           1.00%
+	CAST:                   1.01%
+	STRING_LIT:            17.61%
+	NUM_LIT:                7.78%
+	CHAR_LIT:               1.00%
+	TYPE_LIT:               0.51%
+	BOOL_LIT:               2.40%
+	NULL_LIT:               2.14%
+	OBJ_CREATION:           2.82%
+	ARR_CREATION:           1.31%
+	THIS:                   0.46%
+	SUPER:                  0.00%
+	COMPOUND:               5.79%
+	LAMBDA:                 0.00%
+	OTHERS:                 0.00%
+
+Statistics on origin of arguments:
+	REFLECT_FIELD:          0.04%
+	FIELD:                  8.37%
+	PARAM:                 17.32%
+	LOCAL_VAR:             28.09%
+	LIT:                   29.48%
+	ENUM_CONST:             0.00%
+	CLASS:                  0.53%
+	NULL:                   2.19%
+	OBJ_CREATION:           2.89%
+	ARR_CREATION:           1.34%
+	THIS:                   0.48%
+	SUPER:                  0.00%
+	OTHERS:                 9.27%
+
+Statistics on Num of variable uses:
+	count:               146797
+	mean:              3.685675
+	std:               7.020790
+	mode:              1.000000
+	min:               0.000000
+	25%:               1.000000
+	50%:               2.000000
+	75%:               4.000000
+	max:             627.000000
+
+	           0 variable uses:    9473 -  6.45%
+	           1 variable uses:   35579 - 24.24%
+	           2 variable uses:   33268 - 22.66%
+	           3 variable uses:   21783 - 14.84%
+	           4 variable uses:   14380 -  9.80%
+	           5 variable uses:    8950 -  6.10%
+	           6 variable uses:    5636 -  3.84%
+	           7 variable uses:    3932 -  2.68%
+	           8 variable uses:    2706 -  1.84%
+	           9 variable uses:    2058 -  1.40%
+	          10 variable uses:    1545 -  1.05%
+	  11 to   20 variable uses:    5472 -  3.73%
+	  21 to   30 variable uses:    1167 -  0.79%
+	  31 to   40 variable uses:     399 -  0.27%
+	  41 to   50 variable uses:     174 -  0.12%
+	  51 to   60 variable uses:      91 -  0.06%
+	  61 to   70 variable uses:      50 -  0.03%
+	  71 to   80 variable uses:      36 -  0.02%
+	  81 to   90 variable uses:      26 -  0.02%
+	  91 to  100 variable uses:      14 -  0.01%
+	 101 to  200 variable uses:      34 -  0.02%
+	 201 to  300 variable uses:      13 -  0.01%
+	 301 to  400 variable uses:       3 -  0.00%
+	 401 to  500 variable uses:       5 -  0.00%
+	 501 to  600 variable uses:       1 -  0.00%
+	 601 to  700 variable uses:       2 -  0.00%
+
+Statistics on Num of lines before first use:
+	count:               138602
+	mean:             29.124428
+	std:             128.052622
+	mode:              1.000000
+	min:               0.000000
+	25%:               1.000000
+	50%:               1.000000
+	75%:               7.000000
+	max:            3779.000000
+
+	           0 lines:   29896 - 21.57%
+	           1 lines:   40106 - 28.94%
+	           2 lines:   14269 - 10.29%
+	           3 lines:    6596 -  4.76%
+	           4 lines:    4692 -  3.39%
+	           5 lines:    3402 -  2.45%
+	           6 lines:    2843 -  2.05%
+	           7 lines:    2187 -  1.58%
+	           8 lines:    1876 -  1.35%
+	           9 lines:    1606 -  1.16%
+	          10 lines:    1551 -  1.12%
+	  11 to   20 lines:    8150 -  5.88%
+	  21 to   30 lines:    3987 -  2.88%
+	  31 to   40 lines:    2580 -  1.86%
+	  41 to   50 lines:    1759 -  1.27%
+	  51 to   60 lines:    1366 -  0.99%
+	  61 to   70 lines:    1124 -  0.81%
+	  71 to   80 lines:     851 -  0.61%
+	  81 to   90 lines:     743 -  0.54%
+	  91 to  100 lines:     660 -  0.48%
+	 101 to  200 lines:    3637 -  2.62%
+	 201 to  300 lines:    1597 -  1.15%
+	 301 to  400 lines:     916 -  0.66%
+	 401 to  500 lines:     502 -  0.36%
+	 501 to  600 lines:     401 -  0.29%
+	 601 to  700 lines:     259 -  0.19%
+	 701 to  800 lines:     176 -  0.13%
+	 801 to  900 lines:     134 -  0.10%
+	 901 to 1000 lines:     108 -  0.08%
+	1001 to 2000 lines:     561 -  0.40%
+	2001 to 3000 lines:      64 -  0.05%
+	3001 to 4000 lines:       3 -  0.00%
+
+Rate of casting argument: 0.01290965349514797
+Rate of casting in assignment: 0.0512557603686636
+Rate of casting in variable declaration: 0.08266717221186556
+Rate of casting in return statement: 0.04436015831134565
+Rate of casting mismatched type: 0.001539408866995074

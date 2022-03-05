@@ -1,0 +1,19 @@
+{
+  "name": "log4j",
+  "project-dir": "../../Research/java-data/log4j/src/main/java/",
+  "source-paths": [
+    "../../Research/java-data/log4j/src/main/java/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [
+    "../../Research/java-data/lib/log4j/mail-1.4.3.jar",
+    "../../Research/java-data/lib/log4j/geronimo-jms_1.1_spec-1.0.jar"
+  ],
+  "jdt-level": 13,
+  "java-version": "13",
+  "ignore-files": [],
+  "test-file-path": "../../Research/java-data/log4j/src/main/java/org/apache/log4j/EnhancedThrowableRenderer.java",
+  "test-position": 1662
+}

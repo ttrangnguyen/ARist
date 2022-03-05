@@ -1,0 +1,16 @@
+{
+  "name": "lucene",
+  "project-dir": "../../Research/java-data/lucene/lucene/src/java/",
+  "source-paths": [
+    "../../Research/java-data/lucene/lucene/src/java/"
+  ],
+  "encode-sources": [
+    "utf-8"
+  ],
+  "class-paths": [],
+  "jdt-level": 13,
+  "java-version": "13",
+  "ignore-files": [],
+  "test-file-path": "../../Research/java-data/lucene/lucene/src/java/org/apache/lucene/document/AbstractField.java",
+  "test-position": 1662
+}

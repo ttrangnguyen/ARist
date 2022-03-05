@@ -1,0 +1,29 @@
+{
+  "name": "eclipse",
+  "project-dir": "storage/repositories/git/eclipse/",
+  "source-paths": [
+  ],
+  "encode-sources": [
+  ],
+  "class-paths": [
+  ],
+  "source-folder": "storage/repositories/git/eclipse/",
+  "package-source-folders": [
+    "org.eclipse",
+    "org.osgi.service"
+  ],
+  "prefix-source-folders": [
+    "/src",
+    "/src_ant",
+    "/src/main/java"
+  ],
+  "jar-folders": [
+    "storage/repositories/git/lib/eclipse-ext/",
+    "storage/repositories/git/lib/eclipse/"
+  ],
+  "jdt-level": 8,
+  "java-version": "8",
+  "ignore-files": [],
+  "test-file-path": "storage/repositories/git/eclipse-platform-sources-4.17/eclipse.platform.ui/bundles/org.eclipse.ui.views/src/org/eclipse/ui/views/contentoutline/ContentOutlinePage.java",
+  "test-position": 4913
+}
