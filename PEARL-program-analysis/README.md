@@ -1,4 +1,4 @@
-# FluteSC
+# Flute - Program analysis module for PEARL
 ## How to use the parser to generate candidate expressions
 ### Configuration
 All configuration storage is here: `flute.config.Config`
