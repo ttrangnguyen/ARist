@@ -1,37 +1,3 @@
-## Welcome to GitHub Pages
+##Practical and Effective Argument Recommendation by Combining Program Analysis and Statistical Language Model
 
-You can use the [editor on GitHub](https://github.com/ttrangnguyen/PEARL/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ttrangnguyen/PEARL/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+Learning and remembering to use APIs are difficult. Several techniques have been proposed to assist developers in using APIs. Most existing techniques focus on recommending the right API methods to call, very few techniques focus on recommending API arguments. In this paper, we propose a novel automated argument recommendation approach, PEARL, which combines program analysis (PA) and statistical language models (LMs) in the recommendation process. We aim to benefit from both PA and LMs to suggest valid and frequent/natural arguments. In PEARL, the LMs are used to suggest the frequent/natural candidates identified by applying PA. Meanwhile, PA navigates LMs working on the set of valid candidates which satisfy syntax, accessibility, and type-compatibility constraints defined by the programming language in use. Our empirical evaluation on a large dataset of the real-world projects shows that PEARL improves the state-of-the-art approach by 19% and 18% in top-1 precision and recall for recommending arguments of frequently-used libraries. For general argument recommendation task, i.e., recommending arguments for every method call, PEARL outperforms the baseline approaches by up to 31% and 125% top-1 accuracy. Moreover, for newly-encountered projects,PEARL achieves +60% top-3 accuracy when evaluating on a larger dataset. For working/maintaining projects, with a personalized LM to capture developers' coding practice, PEARL can productively rank the expected arguments at the top-1 position in 7/10 requests while preserving the privacy of developers.
