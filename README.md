@@ -15,3 +15,9 @@ Learning and remembering to use APIs are difficult. Several techniques have been
 3. [Rank candidates](https://github.com/ttrangnguyen/PEARL/tree/gh-pages/PEARL-global-model)
 
 
+### Experimental results
+1. [Accuracy comparison](https://github.com/ttrangnguyen/PEARL/blob/gh-pages/Experimental%20results/Accuracy%20comparision.xlsx)
+2. [Sensitivity analysis](https://github.com/ttrangnguyen/PEARL/blob/gh-pages/Experimental%20results/Sensitivity%20results.xlsx)
+3. [Intrinsic analysis](https://github.com/ttrangnguyen/PEARL/blob/gh-pages/Experimental%20results/Intrinsic%20analysis.xlsx) 
+
+
