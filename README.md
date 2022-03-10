@@ -6,3 +6,5 @@ Learning and remembering to use APIs are difficult. Several techniques have been
 
 ### Data.
 1. List of 1000 most stared project in the empirical study section [here](https://github.com/ttrangnguyen/PEARL/blob/gh-pages/most_starred_repos.txt)
+2. Small corpus: Eclipse(https://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/R-4.17-202009021800/eclipse-platform-sources-4.17.tar.xz) and Netbeans(https://github.com/apache/netbeans/tree/54987ffb73ae9e17b23d4a43a23770142f93206b)
+3. Large corpus(https://github.com/ttrangnguyen/PEARL/blob/gh-pages/most_starred_repos.txt)
