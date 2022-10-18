@@ -1,7 +1,7 @@
-# PEARL
-### PEARL: An Effective Argument Recommendation Approach
+# ARist
+### ARist: An Effective API Argument Recommendation Approach
 
-Learning and remembering to use APIs are difficult. Several techniques have been proposed to assist developers in using APIs. Most existing techniques focus on recommending the right API methods to call, but very few techniques focus on recommending API arguments. In this paper, we propose PEARL, a novel automated argument recommendation approach which suggests arguments by predicting developers’ expectations when they define and use API methods. To implement this idea in the recommendation process, PEARL combines program analysis (PA), language models (LMs), and several features specialized for the recommendation task which consider the functionality of formal parameters and the positional information of code elements (e.g., variables or method calls) in the given context. In PEARL, the LMs and the recommending features are used to suggest the promising candidates identified by PA. Meanwhile, PA navigates the LMs and the features working on the set of valid candidates which satisfy syntax, accessibility, and type-compatibility constraints defined by the programming language in use. Our empirical evaluation on a large dataset of real-world projects shows that PEARL improves the state-of-the-art approach by 19% and 18% in top-1 precision and recall for recommending arguments of frequently-used libraries. For general argument recommendation task, i.e., recommending arguments for every method call, PEARL outperforms the baseline approaches by up to 125% top-1 accuracy. Moreover, for newly-encountered projects, PEARL achieves more than 60% top-3 accuracy when evaluating on a larger dataset. For working/maintaining projects, with a personalized LM to capture developers’ coding practice, PEARL can productively rank the expected arguments at the top-1 position in 7/10 requests while still preserving the privacy of developers.
+Learning and remembering to use APIs are difficult. Several techniques have been proposed to assist developers in using APIs. Most existing techniques focus on recommending the right API methods to call, but very few techniques focus on recommending API arguments. In this paper, we propose ARist, a novel automated argument recommendation approach which suggests arguments by predicting developers’ expectations when they define and use API methods. To implement this idea in the recommendation process, ARist combines program analysis (PA), language models (LMs), and several features specialized for the recommendation task which consider the functionality of formal parameters and the positional information of code elements (e.g., variables or method calls) in the given context. In ARist, the LMs and the recommending features are used to suggest the promising candidates identified by PA. Meanwhile, PA navigates the LMs and the features working on the set of valid candidates which satisfy syntax, accessibility, and type-compatibility constraints defined by the programming language in use. Our empirical evaluation on a large dataset of real-world projects shows that ARist improves the state-of-the-art approach by 19% and 18% in top-1 precision and recall for recommending arguments of frequently-used libraries. For general argument recommendation task, i.e., recommending arguments for every method call, ARist outperforms the baseline approaches by up to 125% top-1 accuracy. Moreover, for newly-encountered projects, ARist achieves more than 60% top-3 accuracy when evaluating on a larger dataset. For working/maintaining projects, with a personalized LM to capture developers’ coding practice, ARist can productively rank the expected arguments at the top-1 position in 7/10 requests.
 
 
 ### Data.
@@ -34,7 +34,7 @@ Learning and remembering to use APIs are difficult. Several techniques have been
 <thead>
   <tr>
     <th class="tg-c3ow" colspan="2" rowspan="2">Project</th>
-    <th class="tg-c3ow" colspan="2">PEARL</th>
+    <th class="tg-c3ow" colspan="2">ARist</th>
     <th class="tg-c3ow" colspan="2">PARC</th>
     <th class="tg-c3ow" colspan="2">GPT-2</th>
     <th class="tg-c3ow" colspan="2">SLP</th>
@@ -130,7 +130,7 @@ Learning and remembering to use APIs are difficult. Several techniques have been
   <tr>
     <th>Project</th>
     <th></th>
-    <th>PEARL</th>
+    <th>ARist</th>
     <th>GPT-2</th>
     <th>CodeT5</th>
     <th>SLP</th>
@@ -214,7 +214,7 @@ Learning and remembering to use APIs are difficult. Several techniques have been
 
 3. Sensitivity analysis
 
-3.1. Top-𝑘 accuracy of PEARL in different scenarios
+3.1. Top-𝑘 accuracy of ARist in different scenarios
 
 <table>
 <thead>
@@ -259,7 +259,7 @@ Learning and remembering to use APIs are difficult. Several techniques have been
 </tbody>
 </table>
 
-3.2. PEARL’s performance by the expression types of expected arguments
+3.2. ARist’s performance by the expression types of expected arguments
 
 <table>
 <thead>
